@@ -28,11 +28,16 @@ public class AppDbContext : DbContext
     public DbSet<LoyaltyPointTransaction> LoyaltyPointTransactions { get; set; }
     public DbSet<WorkingHours> WorkingHours { get; set; }
     public DbSet<DeliveryZone> DeliveryZones { get; set; }
-    public DbSet<DeliveryZonePoint> DeliveryZonePoints { get; set; }
-    public DbSet<MerchantOnboarding> MerchantOnboardings { get; set; }
     public DbSet<ProductOptionGroup> ProductOptionGroups { get; set; }
     public DbSet<ProductOption> ProductOptions { get; set; }
     public DbSet<OrderLineOption> OrderLineOptions { get; set; }
+    public DbSet<Review> Reviews { get; set; }
+    public DbSet<ReviewTag> ReviewTags { get; set; }
+    public DbSet<ReviewHelpful> ReviewHelpfuls { get; set; }
+    public DbSet<Rating> Ratings { get; set; }
+    public DbSet<RatingHistory> RatingHistories { get; set; }
+    public DbSet<DeliveryZonePoint> DeliveryZonePoints { get; set; }
+    public DbSet<MerchantOnboarding> MerchantOnboardings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -310,6 +315,103 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.ProductOptionId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Review configuration
+        modelBuilder.Entity<Review>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.RevieweeType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Comment).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.ModerationNotes).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => new { e.RevieweeId, e.RevieweeType });
+            entity.HasIndex(e => new { e.ReviewerId, e.OrderId });
+            entity.HasIndex(e => e.CreatedAt);
+            
+            entity.HasOne(e => e.Reviewer)
+                .WithMany()
+                .HasForeignKey(e => e.ReviewerId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.Reviewee)
+                .WithMany()
+                .HasForeignKey(e => e.RevieweeId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.Order)
+                .WithMany()
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.Moderator)
+                .WithMany()
+                .HasForeignKey(e => e.ModeratedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ReviewTag configuration
+        modelBuilder.Entity<ReviewTag>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Tag).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.Tag);
+            
+            entity.HasOne(e => e.Review)
+                .WithMany(r => r.ReviewTags)
+                .HasForeignKey(e => e.ReviewId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ReviewHelpful configuration
+        modelBuilder.Entity<ReviewHelpful>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => new { e.ReviewId, e.UserId }).IsUnique();
+            
+            entity.HasOne(e => e.Review)
+                .WithMany(r => r.ReviewHelpfuls)
+                .HasForeignKey(e => e.ReviewId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Rating configuration
+        modelBuilder.Entity<Rating>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.EntityType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.AverageRating).HasPrecision(3, 2);
+            entity.Property(e => e.RecentAverageRating).HasPrecision(3, 2);
+            entity.Property(e => e.ResponseRate).HasPrecision(5, 2);
+            entity.Property(e => e.PositiveReviewRate).HasPrecision(5, 2);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => new { e.EntityId, e.EntityType }).IsUnique();
+        });
+
+        // RatingHistory configuration
+        modelBuilder.Entity<RatingHistory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.EntityType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.AverageRating).HasPrecision(3, 2);
+            entity.Property(e => e.FoodQualityRating).HasPrecision(3, 2);
+            entity.Property(e => e.DeliverySpeedRating).HasPrecision(3, 2);
+            entity.Property(e => e.ServiceRating).HasPrecision(3, 2);
+            entity.Property(e => e.SnapshotDate).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => new { e.EntityId, e.EntityType, e.SnapshotDate });
         });
     }
 }

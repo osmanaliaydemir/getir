@@ -89,4 +89,37 @@ public class ReadOnlyRepository<T> : IReadOnlyRepository<T> where T : class
 
         return await query.FirstOrDefaultAsync(filter, cancellationToken);
     }
+    
+    public virtual async Task<IReadOnlyList<T>> GetPagedAsync(
+        Expression<Func<T, bool>>? filter = null,
+        Expression<Func<T, object>>? orderBy = null,
+        bool ascending = true,
+        int page = 1,
+        int pageSize = 20,
+        string? include = null,
+        CancellationToken cancellationToken = default)
+    {
+        IQueryable<T> query = _dbSet.AsNoTracking();
+
+        if (filter != null)
+        {
+            query = query.Where(filter);
+        }
+
+        if (!string.IsNullOrWhiteSpace(include))
+        {
+            foreach (var includeProperty in include.Split(',', StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty.Trim());
+            }
+        }
+
+        if (orderBy != null)
+        {
+            query = ascending ? query.OrderBy(orderBy) : query.OrderByDescending(orderBy);
+        }
+
+        var skip = (page - 1) * pageSize;
+        return await query.Skip(skip).Take(pageSize).ToListAsync(cancellationToken);
+    }
 }

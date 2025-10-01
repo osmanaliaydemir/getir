@@ -32,6 +32,8 @@ public interface IGenericRepository<T> where T : class
     
     void Delete(T entity);
     
+    Task DeleteAsync(T entity, CancellationToken cancellationToken = default);
+    
         Task<IReadOnlyList<T>> ListAsync(
             Expression<Func<T, bool>>? filter = null,
             Expression<Func<T, object>>? orderBy = null,

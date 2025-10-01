@@ -57,6 +57,14 @@ public static class ValidationConfig
         services.AddScoped<IValidator<AssignOrderRequest>, AssignOrderRequestValidator>();
         services.AddScoped<IValidator<FindNearestCouriersRequest>, FindNearestCouriersRequestValidator>();
         services.AddScoped<IValidator<CourierEarningsQuery>, CourierEarningsQueryValidator>();
+        
+        // Review validators
+        services.AddScoped<IValidator<CreateReviewRequest>, CreateReviewRequestValidator>();
+        services.AddScoped<IValidator<UpdateReviewRequest>, UpdateReviewRequestValidator>();
+        services.AddScoped<IValidator<ReviewModerationRequest>, ReviewModerationRequestValidator>();
+        services.AddScoped<IValidator<ReviewHelpfulRequest>, ReviewHelpfulRequestValidator>();
+        services.AddScoped<IValidator<ReviewSearchQuery>, ReviewSearchQueryValidator>();
+        services.AddScoped<IValidator<RatingCalculationRequest>, RatingCalculationRequestValidator>();
 
         return services;
     }

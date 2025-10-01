@@ -66,6 +66,8 @@ public class NotificationHub : Hub
     /// </summary>
     public async Task SubscribeToNotificationTypes(List<string> notificationTypes)
     {
+        ArgumentNullException.ThrowIfNull(notificationTypes);
+        
         var userId = GetUserId();
         if (userId != null)
         {

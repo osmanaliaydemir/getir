@@ -103,6 +103,11 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         _dbSet.Remove(entity);
     }
+    
+    public virtual async Task DeleteAsync(T entity, CancellationToken cancellationToken = default)
+    {
+        await Task.Run(() => _dbSet.Remove(entity), cancellationToken);
+    }
 
     public virtual async Task<IReadOnlyList<T>> ListAsync(
         Expression<Func<T, bool>>? filter = null,

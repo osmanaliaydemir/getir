@@ -15,6 +15,7 @@ using Getir.Application.Services.Notifications;
 using Getir.Application.Services.Orders;
 using Getir.Application.Services.Products;
 using Getir.Application.Services.Search;
+using Getir.Application.Services.Reviews;
 using Getir.Infrastructure.Persistence;
 using Getir.Infrastructure.Persistence.Repositories;
 using Getir.Infrastructure.Security;
@@ -97,6 +98,7 @@ builder.Services.AddScoped<IMerchantDashboardService, MerchantDashboardService>(
 builder.Services.AddScoped<IMerchantOnboardingService, MerchantOnboardingService>();
 builder.Services.AddScoped<IProductOptionGroupService, ProductOptionGroupService>();
 builder.Services.AddScoped<IProductOptionService, ProductOptionService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 
 // ============= CONFIGURATION =============
 builder.Services.AddAuthConfiguration(builder.Configuration);
@@ -175,6 +177,7 @@ app.MapMerchantProductEndpoints();
 app.MapMerchantOrderEndpoints();
 app.MapProductOptionEndpoints();
 app.MapCourierEndpoints();
+app.MapReviewEndpoints();
 
 // ============= SIGNALR HUBS =============
 app.MapHub<Getir.WebApi.Hubs.NotificationHub>("/hubs/notifications");

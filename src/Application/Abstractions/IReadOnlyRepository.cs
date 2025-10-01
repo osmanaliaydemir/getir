@@ -24,4 +24,13 @@ public interface IReadOnlyRepository<T> where T : class
         Expression<Func<T, bool>> filter,
         string? include = null,
         CancellationToken cancellationToken = default);
+    
+    Task<IReadOnlyList<T>> GetPagedAsync(
+        Expression<Func<T, bool>>? filter = null,
+        Expression<Func<T, object>>? orderBy = null,
+        bool ascending = true,
+        int page = 1,
+        int pageSize = 20,
+        string? include = null,
+        CancellationToken cancellationToken = default);
 }
