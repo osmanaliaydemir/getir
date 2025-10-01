@@ -26,6 +26,9 @@ public class AppDbContext : DbContext
     public DbSet<Courier> Couriers { get; set; }
     public DbSet<UserLoyaltyPoint> UserLoyaltyPoints { get; set; }
     public DbSet<LoyaltyPointTransaction> LoyaltyPointTransactions { get; set; }
+    public DbSet<WorkingHours> WorkingHours { get; set; }
+    public DbSet<DeliveryZone> DeliveryZones { get; set; }
+    public DbSet<DeliveryZonePoint> DeliveryZonePoints { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -185,6 +188,52 @@ public class AppDbContext : DbContext
                 .WithMany(p => p.OrderLines)
                 .HasForeignKey(e => e.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // WorkingHours configuration
+        modelBuilder.Entity<WorkingHours>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.DayOfWeek).IsRequired();
+            entity.Property(e => e.OpenTime).HasConversion<string>();
+            entity.Property(e => e.CloseTime).HasConversion<string>();
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => new { e.MerchantId, e.DayOfWeek }).IsUnique();
+            
+            entity.HasOne(e => e.Merchant)
+                .WithMany(m => m.WorkingHours)
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // DeliveryZone configuration
+        modelBuilder.Entity<DeliveryZone>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.DeliveryFee).HasPrecision(18, 2);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasOne(e => e.Merchant)
+                .WithMany(m => m.DeliveryZones)
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // DeliveryZonePoint configuration
+        modelBuilder.Entity<DeliveryZonePoint>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Latitude).HasPrecision(10, 8);
+            entity.Property(e => e.Longitude).HasPrecision(11, 8);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasOne(e => e.DeliveryZone)
+                .WithMany(dz => dz.Points)
+                .HasForeignKey(e => e.DeliveryZoneId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

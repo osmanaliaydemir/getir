@@ -31,4 +31,6 @@ public class Merchant
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();
     public virtual ICollection<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+    public virtual ICollection<WorkingHours> WorkingHours { get; set; } = new List<WorkingHours>();
+    public virtual ICollection<DeliveryZone> DeliveryZones { get; set; } = new List<DeliveryZone>();
 }

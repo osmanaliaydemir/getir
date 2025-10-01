@@ -11,9 +11,9 @@
 
 📅 SPRINT 3 (3 hafta) - Merchant Panel
 - [ ] Merchant onboarding süreci
-- [ ] Working hours yönetimi
-- [ ] Delivery zones yönetimi
-- [ ] Merchant dashboard endpoint'leri
+- [x] Working hours yönetimi ✅
+- [x] Delivery zones yönetimi ✅
+- [x] Merchant dashboard endpoint'leri ✅
 - [ ] Ürün yönetimi (kendi ürünlerini CRUD)
 - [ ] Sipariş yönetimi (kabul/red/hazırla)
 

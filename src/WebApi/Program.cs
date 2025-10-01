@@ -22,6 +22,8 @@ using Getir.WebApi.Endpoints;
 using Getir.WebApi.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Getir.Application.Services.WorkingHours;
+using Getir.Application.Services.DeliveryZones;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -88,6 +90,9 @@ builder.Services.AddScoped<ICampaignService, CampaignService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ICourierService, CourierService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
+builder.Services.AddScoped<IWorkingHoursService, WorkingHoursService>();
+builder.Services.AddScoped<IDeliveryZoneService, DeliveryZoneService>();
+builder.Services.AddScoped<IMerchantDashboardService, MerchantDashboardService>();
 
 // ============= CONFIGURATION =============
 builder.Services.AddAuthConfiguration(builder.Configuration);
@@ -158,6 +163,9 @@ app.MapCampaignEndpoints();
 app.MapNotificationEndpoints();
 app.MapCourierEndpoints();
 app.MapSearchEndpoints();
+app.MapWorkingHoursEndpoints();
+app.MapDeliveryZoneEndpoints();
+app.MapMerchantDashboardEndpoints();
 
 // ============= SIGNALR HUBS =============
 app.MapHub<Getir.WebApi.Hubs.NotificationHub>("/hubs/notifications");

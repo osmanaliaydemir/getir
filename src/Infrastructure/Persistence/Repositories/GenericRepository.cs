@@ -98,4 +98,45 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         _dbSet.RemoveRange(entities);
     }
+
+    public virtual void Delete(T entity)
+    {
+        _dbSet.Remove(entity);
+    }
+
+    public virtual async Task<IReadOnlyList<T>> ListAsync(
+        Expression<Func<T, bool>>? filter = null,
+        Expression<Func<T, object>>? orderBy = null,
+        bool ascending = true,
+        int? take = null,
+        string? include = null,
+        CancellationToken cancellationToken = default)
+    {
+        IQueryable<T> query = _dbSet;
+
+        if (filter != null)
+        {
+            query = query.Where(filter);
+        }
+
+        if (!string.IsNullOrWhiteSpace(include))
+        {
+            foreach (var includeProperty in include.Split(',', StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty.Trim());
+            }
+        }
+
+        if (orderBy != null)
+        {
+            query = ascending ? query.OrderBy(orderBy) : query.OrderByDescending(orderBy);
+        }
+
+        if (take.HasValue)
+        {
+            query = query.Take(take.Value);
+        }
+
+        return await query.ToListAsync(cancellationToken);
+    }
 }

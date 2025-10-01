@@ -26,6 +26,12 @@ public static class ValidationConfig
         services.AddScoped<IValidator<UpdateProductCategoryRequest>, UpdateProductCategoryRequestValidator>();
         services.AddScoped<IValidator<CreateServiceCategoryRequest>, CreateServiceCategoryRequestValidator>();
         services.AddScoped<IValidator<UpdateServiceCategoryRequest>, UpdateServiceCategoryRequestValidator>();
+        services.AddScoped<IValidator<CreateWorkingHoursRequest>, CreateWorkingHoursRequestValidator>();
+        services.AddScoped<IValidator<UpdateWorkingHoursRequest>, UpdateWorkingHoursRequestValidator>();
+        services.AddScoped<IValidator<BulkUpdateWorkingHoursRequest>, BulkUpdateWorkingHoursRequestValidator>();
+        services.AddScoped<IValidator<CreateDeliveryZoneRequest>, CreateDeliveryZoneRequestValidator>();
+        services.AddScoped<IValidator<UpdateDeliveryZoneRequest>, UpdateDeliveryZoneRequestValidator>();
+        services.AddScoped<IValidator<CheckDeliveryZoneRequest>, CheckDeliveryZoneRequestValidator>();
 
         return services;
     }
