@@ -22,4 +22,5 @@ public class Product
     public virtual Merchant Merchant { get; set; } = default!;
     public virtual ProductCategory? ProductCategory { get; set; }
     public virtual ICollection<OrderLine> OrderLines { get; set; } = new List<OrderLine>();
+    public virtual ICollection<ProductOptionGroup> OptionGroups { get; set; } = new List<ProductOptionGroup>();
 }

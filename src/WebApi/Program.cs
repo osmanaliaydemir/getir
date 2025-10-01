@@ -10,6 +10,7 @@ using Getir.Application.Services.ProductCategories;
 using Getir.Application.Services.Coupons;
 using Getir.Application.Services.Couriers;
 using Getir.Application.Services.Merchants;
+using Getir.Application.Services.ProductOptions;
 using Getir.Application.Services.Notifications;
 using Getir.Application.Services.Orders;
 using Getir.Application.Services.Products;
@@ -94,6 +95,8 @@ builder.Services.AddScoped<IWorkingHoursService, WorkingHoursService>();
 builder.Services.AddScoped<IDeliveryZoneService, DeliveryZoneService>();
 builder.Services.AddScoped<IMerchantDashboardService, MerchantDashboardService>();
 builder.Services.AddScoped<IMerchantOnboardingService, MerchantOnboardingService>();
+builder.Services.AddScoped<IProductOptionGroupService, ProductOptionGroupService>();
+builder.Services.AddScoped<IProductOptionService, ProductOptionService>();
 
 // ============= CONFIGURATION =============
 builder.Services.AddAuthConfiguration(builder.Configuration);
@@ -170,6 +173,7 @@ app.MapMerchantDashboardEndpoints();
 app.MapMerchantOnboardingEndpoints();
 app.MapMerchantProductEndpoints();
 app.MapMerchantOrderEndpoints();
+app.MapProductOptionEndpoints();
 
 // ============= SIGNALR HUBS =============
 app.MapHub<Getir.WebApi.Hubs.NotificationHub>("/hubs/notifications");

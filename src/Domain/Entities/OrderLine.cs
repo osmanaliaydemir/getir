@@ -14,4 +14,5 @@ public class OrderLine
     // Navigation properties
     public virtual Order Order { get; set; } = default!;
     public virtual Product Product { get; set; } = default!;
+    public virtual ICollection<OrderLineOption> Options { get; set; } = new List<OrderLineOption>();
 }

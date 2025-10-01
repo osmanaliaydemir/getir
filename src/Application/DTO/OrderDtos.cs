@@ -12,7 +12,8 @@ public record CreateOrderRequest(
 public record OrderLineRequest(
     Guid ProductId,
     int Quantity,
-    string? Notes);
+    string? Notes,
+    List<CreateOrderLineOptionRequest>? Options = null);
 
 public record OrderResponse(
     Guid Id,
@@ -37,7 +38,8 @@ public record OrderLineResponse(
     string ProductName,
     int Quantity,
     decimal UnitPrice,
-    decimal TotalPrice);
+    decimal TotalPrice,
+    List<OrderLineOptionResponse> Options);
 
 // Merchant-specific DTOs
 public record RejectOrderRequest(

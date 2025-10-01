@@ -43,6 +43,13 @@ public static class ValidationConfig
         services.AddScoped<IValidator<RejectOrderRequest>, RejectOrderRequestValidator>();
         services.AddScoped<IValidator<CancelOrderRequest>, CancelOrderRequestValidator>();
         services.AddScoped<IValidator<UpdateOrderStatusRequest>, UpdateOrderStatusRequestValidator>();
+        services.AddScoped<IValidator<CreateProductOptionGroupRequest>, CreateProductOptionGroupRequestValidator>();
+        services.AddScoped<IValidator<UpdateProductOptionGroupRequest>, UpdateProductOptionGroupRequestValidator>();
+        services.AddScoped<IValidator<CreateProductOptionRequest>, CreateProductOptionRequestValidator>();
+        services.AddScoped<IValidator<UpdateProductOptionRequest>, UpdateProductOptionRequestValidator>();
+        services.AddScoped<IValidator<BulkCreateProductOptionsRequest>, BulkCreateProductOptionsRequestValidator>();
+        services.AddScoped<IValidator<BulkUpdateProductOptionsRequest>, BulkUpdateProductOptionsRequestValidator>();
+        services.AddScoped<IValidator<CreateOrderLineOptionRequest>, CreateOrderLineOptionRequestValidator>();
 
         return services;
     }

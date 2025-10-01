@@ -58,10 +58,38 @@ public class OrderService : IOrderService
                 }
 
                 var unitPrice = product.DiscountedPrice ?? product.Price;
-                var totalPrice = unitPrice * item.Quantity;
+                var optionsTotal = 0m;
+                var orderLineOptions = new List<OrderLineOption>();
+
+                // Calculate options total
+                if (item.Options != null && item.Options.Any())
+                {
+                    var productOptions = await _unitOfWork.ReadRepository<ProductOption>()
+                        .ListAsync(po => item.Options.Select(opt => opt.ProductOptionId).Contains(po.Id),
+                            cancellationToken: cancellationToken);
+
+                    foreach (var optionRequest in item.Options)
+                    {
+                        var productOption = productOptions.FirstOrDefault(po => po.Id == optionRequest.ProductOptionId);
+                        if (productOption != null)
+                        {
+                            optionsTotal += productOption.ExtraPrice;
+                            orderLineOptions.Add(new OrderLineOption
+                            {
+                                Id = Guid.NewGuid(),
+                                ProductOptionId = productOption.Id,
+                                OptionName = productOption.Name,
+                                ExtraPrice = productOption.ExtraPrice,
+                                CreatedAt = DateTime.UtcNow
+                            });
+                        }
+                    }
+                }
+
+                var totalPrice = (unitPrice + optionsTotal) * item.Quantity;
                 subTotal += totalPrice;
 
-                orderLines.Add(new OrderLine
+                var orderLine = new OrderLine
                 {
                     Id = Guid.NewGuid(),
                     ProductId = item.ProductId,
@@ -70,7 +98,16 @@ public class OrderService : IOrderService
                     UnitPrice = unitPrice,
                     TotalPrice = totalPrice,
                     Notes = item.Notes
-                });
+                };
+
+                orderLines.Add(orderLine);
+
+                // Add options to order line
+                foreach (var option in orderLineOptions)
+                {
+                    option.OrderLineId = orderLine.Id;
+                    await _unitOfWork.Repository<OrderLineOption>().AddAsync(option, cancellationToken);
+                }
 
                 // Stok güncelle
                 var productToUpdate = await _unitOfWork.Repository<Product>()
@@ -166,7 +203,14 @@ public class OrderService : IOrderService
                     ol.ProductName,
                     ol.Quantity,
                     ol.UnitPrice,
-                    ol.TotalPrice
+                    ol.TotalPrice,
+                    ol.Options.Select(opt => new OrderLineOptionResponse(
+                        opt.Id,
+                        opt.OrderLineId,
+                        opt.ProductOptionId,
+                        opt.OptionName,
+                        opt.ExtraPrice,
+                        opt.CreatedAt)).ToList()
                 )).ToList()
             );
 
@@ -216,7 +260,14 @@ public class OrderService : IOrderService
                 ol.ProductName,
                 ol.Quantity,
                 ol.UnitPrice,
-                ol.TotalPrice
+                ol.TotalPrice,
+                ol.Options.Select(opt => new OrderLineOptionResponse(
+                    opt.Id,
+                    opt.OrderLineId,
+                    opt.ProductOptionId,
+                    opt.OptionName,
+                    opt.ExtraPrice,
+                    opt.CreatedAt)).ToList()
             )).ToList()
         );
 
@@ -261,7 +312,14 @@ public class OrderService : IOrderService
                 ol.ProductName,
                 ol.Quantity,
                 ol.UnitPrice,
-                ol.TotalPrice
+                ol.TotalPrice,
+                ol.Options.Select(opt => new OrderLineOptionResponse(
+                    opt.Id,
+                    opt.OrderLineId,
+                    opt.ProductOptionId,
+                    opt.OptionName,
+                    opt.ExtraPrice,
+                    opt.CreatedAt)).ToList()
             )).ToList()
         )).ToList();
 
@@ -332,7 +390,14 @@ public class OrderService : IOrderService
                 ol.ProductName,
                 ol.Quantity,
                 ol.UnitPrice,
-                ol.TotalPrice)).ToList())).ToList();
+                ol.TotalPrice,
+                ol.Options.Select(opt => new OrderLineOptionResponse(
+                    opt.Id,
+                    opt.OrderLineId,
+                    opt.ProductOptionId,
+                    opt.OptionName,
+                    opt.ExtraPrice,
+                    opt.CreatedAt)).ToList())).ToList())).ToList();
 
         var pagedResult = PagedResult<OrderResponse>.Create(
             responses,
@@ -407,7 +472,14 @@ public class OrderService : IOrderService
                 ol.ProductName,
                 ol.Quantity,
                 ol.UnitPrice,
-                ol.TotalPrice)).ToList());
+                ol.TotalPrice,
+                ol.Options.Select(opt => new OrderLineOptionResponse(
+                    opt.Id,
+                    opt.OrderLineId,
+                    opt.ProductOptionId,
+                    opt.OptionName,
+                    opt.ExtraPrice,
+                    opt.CreatedAt)).ToList())).ToList());
 
         return Result.Ok(response);
     }

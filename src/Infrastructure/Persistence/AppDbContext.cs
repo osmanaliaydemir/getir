@@ -30,6 +30,9 @@ public class AppDbContext : DbContext
     public DbSet<DeliveryZone> DeliveryZones { get; set; }
     public DbSet<DeliveryZonePoint> DeliveryZonePoints { get; set; }
     public DbSet<MerchantOnboarding> MerchantOnboardings { get; set; }
+    public DbSet<ProductOptionGroup> ProductOptionGroups { get; set; }
+    public DbSet<ProductOption> ProductOptions { get; set; }
+    public DbSet<OrderLineOption> OrderLineOptions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -254,6 +257,58 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.Owner)
                 .WithMany()
                 .HasForeignKey(e => e.OwnerId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ProductOptionGroup configuration
+        modelBuilder.Entity<ProductOptionGroup>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => new { e.ProductId, e.DisplayOrder });
+            
+            entity.HasOne(e => e.Product)
+                .WithMany(p => p.OptionGroups)
+                .HasForeignKey(e => e.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ProductOption configuration
+        modelBuilder.Entity<ProductOption>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.ExtraPrice).HasPrecision(10, 2);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => new { e.ProductOptionGroupId, e.DisplayOrder });
+            
+            entity.HasOne(e => e.ProductOptionGroup)
+                .WithMany(pog => pog.Options)
+                .HasForeignKey(e => e.ProductOptionGroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // OrderLineOption configuration
+        modelBuilder.Entity<OrderLineOption>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.OptionName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.ExtraPrice).HasPrecision(10, 2);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasOne(e => e.OrderLine)
+                .WithMany(ol => ol.Options)
+                .HasForeignKey(e => e.OrderLineId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.ProductOption)
+                .WithMany()
+                .HasForeignKey(e => e.ProductOptionId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }
