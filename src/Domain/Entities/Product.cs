@@ -4,7 +4,7 @@ public class Product
 {
     public Guid Id { get; set; }
     public Guid MerchantId { get; set; }
-    public Guid? CategoryId { get; set; }
+    public Guid? ProductCategoryId { get; set; }
     public string Name { get; set; } = default!;
     public string? Description { get; set; }
     public string? ImageUrl { get; set; }
@@ -20,6 +20,6 @@ public class Product
 
     // Navigation properties
     public virtual Merchant Merchant { get; set; } = default!;
-    public virtual Category? Category { get; set; }
+    public virtual ProductCategory? ProductCategory { get; set; }
     public virtual ICollection<OrderLine> OrderLines { get; set; } = new List<OrderLine>();
 }

@@ -1,10 +1,12 @@
 using FluentValidation;
+using Microsoft.AspNetCore.SignalR;
 using Getir.Application.Abstractions;
 using Getir.Application.Services.Addresses;
 using Getir.Application.Services.Auth;
 using Getir.Application.Services.Campaigns;
 using Getir.Application.Services.Cart;
-using Getir.Application.Services.Categories;
+using Getir.Application.Services.ServiceCategories;
+using Getir.Application.Services.ProductCategories;
 using Getir.Application.Services.Coupons;
 using Getir.Application.Services.Couriers;
 using Getir.Application.Services.Merchants;
@@ -60,12 +62,25 @@ builder.Services.AddScoped(typeof(IReadOnlyRepository<>), typeof(ReadOnlyReposit
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasherService>();
 
+// SignalR Services
+builder.Services.AddScoped<ISignalRService, Getir.Infrastructure.SignalR.SignalRService>();
+builder.Services.AddScoped<ISignalRNotificationSender>(sp => 
+    new Getir.Infrastructure.SignalR.SignalRNotificationSender(
+        sp.GetRequiredService<IHubContext<Getir.WebApi.Hubs.NotificationHub>>()));
+builder.Services.AddScoped<ISignalROrderSender>(sp => 
+    new Getir.Infrastructure.SignalR.SignalROrderSender(
+        sp.GetRequiredService<IHubContext<Getir.WebApi.Hubs.OrderHub>>()));
+builder.Services.AddScoped<ISignalRCourierSender>(sp => 
+    new Getir.Infrastructure.SignalR.SignalRCourierSender(
+        sp.GetRequiredService<IHubContext<Getir.WebApi.Hubs.CourierHub>>()));
+
 // Application Services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IServiceCategoryService, ServiceCategoryService>();
+builder.Services.AddScoped<IProductCategoryService, ProductCategoryService>();
 builder.Services.AddScoped<IMerchantService, MerchantService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
-builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IUserAddressService, UserAddressService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
@@ -83,6 +98,26 @@ builder.Services.AddSwaggerConfiguration();
 
 // FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+// SignalR
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+});
+
+// CORS for SignalR
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("SignalRCorsPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000", "https://localhost:3000") // Frontend URL
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
 
 // ============= BUILD APP =============
 var app = builder.Build();
@@ -103,12 +138,16 @@ app.UseSwaggerConfiguration();
 
 app.UseHttpsRedirection();
 
+// CORS for SignalR
+app.UseCors("SignalRCorsPolicy");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 // ============= ENDPOINTS =============
 app.MapAuthEndpoints();
-app.MapCategoryEndpoints();
+app.MapServiceCategoryEndpoints();
+app.MapProductCategoryEndpoints();
 app.MapMerchantEndpoints();
 app.MapProductEndpoints();
 app.MapOrderEndpoints();
@@ -119,6 +158,11 @@ app.MapCampaignEndpoints();
 app.MapNotificationEndpoints();
 app.MapCourierEndpoints();
 app.MapSearchEndpoints();
+
+// ============= SIGNALR HUBS =============
+app.MapHub<Getir.WebApi.Hubs.NotificationHub>("/hubs/notifications");
+app.MapHub<Getir.WebApi.Hubs.OrderHub>("/hubs/orders");
+app.MapHub<Getir.WebApi.Hubs.CourierHub>("/hubs/courier");
 
 app.UseHealthChecksConfiguration();
 

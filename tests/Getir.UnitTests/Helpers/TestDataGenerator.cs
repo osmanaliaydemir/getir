@@ -22,19 +22,6 @@ public static class TestDataGenerator
         };
     }
 
-    public static Category CreateCategory(string? name = null)
-    {
-        var faker = new Faker();
-        return new Category
-        {
-            Id = Guid.NewGuid(),
-            Name = name ?? faker.Commerce.Categories(1)[0],
-            Description = faker.Lorem.Sentence(),
-            IsActive = true,
-            DisplayOrder = faker.Random.Int(1, 10),
-            CreatedAt = DateTime.UtcNow
-        };
-    }
 
     public static Merchant CreateMerchant(Guid? categoryId = null)
     {
@@ -43,7 +30,7 @@ public static class TestDataGenerator
         {
             Id = Guid.NewGuid(),
             Name = faker.Company.CompanyName(),
-            CategoryId = categoryId ?? Guid.NewGuid(),
+            ServiceCategoryId = categoryId ?? Guid.NewGuid(),
             Address = faker.Address.FullAddress(),
             Latitude = (decimal)faker.Address.Latitude(),
             Longitude = (decimal)faker.Address.Longitude(),

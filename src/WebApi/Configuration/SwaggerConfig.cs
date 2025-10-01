@@ -52,6 +52,7 @@ public static class SwaggerConfig
 
     public static WebApplication UseSwaggerConfiguration(this WebApplication app)
     {
+        ArgumentNullException.ThrowIfNull(app);
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();

@@ -1,23 +1,27 @@
 namespace Getir.Application.DTO;
 
-public record CreateCategoryRequest(
+public record CreateServiceCategoryRequest(
     string Name,
     string? Description,
     string? ImageUrl,
+    string? IconUrl,
     int DisplayOrder);
 
-public record UpdateCategoryRequest(
+public record UpdateServiceCategoryRequest(
     string Name,
     string? Description,
     string? ImageUrl,
+    string? IconUrl,
     int DisplayOrder,
     bool IsActive);
 
-public record CategoryResponse(
+public record ServiceCategoryResponse(
     Guid Id,
     string Name,
     string? Description,
     string? ImageUrl,
+    string? IconUrl,
     int DisplayOrder,
     bool IsActive,
-    DateTime CreatedAt);
+    int MerchantCount);
+

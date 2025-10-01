@@ -43,18 +43,18 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
 
     private void SeedTestData(AppDbContext context)
     {
-        // Seed test categories
-        var category = new Category
+        // Seed test service categories
+        var serviceCategory = new ServiceCategory
         {
             Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
-            Name = "Test Category",
-            Description = "Test Description",
+            Name = "Test Service Category",
+            Description = "Test Service Description",
             IsActive = true,
             DisplayOrder = 1,
             CreatedAt = DateTime.UtcNow
         };
 
-        context.Categories.Add(category);
+        context.ServiceCategories.Add(serviceCategory);
         context.SaveChanges();
     }
 }

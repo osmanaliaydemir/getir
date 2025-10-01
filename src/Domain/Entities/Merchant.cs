@@ -3,9 +3,10 @@ namespace Getir.Domain.Entities;
 public class Merchant
 {
     public Guid Id { get; set; }
+    public Guid OwnerId { get; set; } // Merchant sahibi (User)
     public string Name { get; set; } = default!;
     public string? Description { get; set; }
-    public Guid CategoryId { get; set; }
+    public Guid ServiceCategoryId { get; set; }
     public string? LogoUrl { get; set; }
     public string? CoverImageUrl { get; set; }
     public string Address { get; set; } = default!;
@@ -25,7 +26,9 @@ public class Merchant
     public DateTime? UpdatedAt { get; set; }
 
     // Navigation properties
-    public virtual Category Category { get; set; } = default!;
+    public virtual User Owner { get; set; } = default!;
+    public virtual ServiceCategory ServiceCategory { get; set; } = default!;
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+    public virtual ICollection<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 }

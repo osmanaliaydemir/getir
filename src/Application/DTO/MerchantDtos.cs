@@ -3,7 +3,7 @@ namespace Getir.Application.DTO;
 public record CreateMerchantRequest(
     string Name,
     string? Description,
-    Guid CategoryId,
+    Guid ServiceCategoryId,
     string Address,
     decimal Latitude,
     decimal Longitude,
@@ -23,10 +23,12 @@ public record UpdateMerchantRequest(
 
 public record MerchantResponse(
     Guid Id,
+    Guid OwnerId,
+    string OwnerName,
     string Name,
     string? Description,
-    Guid CategoryId,
-    string CategoryName,
+    Guid ServiceCategoryId,
+    string ServiceCategoryName,
     string? LogoUrl,
     string Address,
     decimal Latitude,

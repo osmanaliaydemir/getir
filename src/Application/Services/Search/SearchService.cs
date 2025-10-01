@@ -22,7 +22,7 @@ public class SearchService : ISearchService
             filter: p => p.IsActive && 
                         (string.IsNullOrEmpty(query.Query) || p.Name.Contains(query.Query)) &&
                         (!query.MerchantId.HasValue || p.MerchantId == query.MerchantId) &&
-                        (!query.CategoryId.HasValue || p.CategoryId == query.CategoryId) &&
+                        (!query.CategoryId.HasValue || p.ProductCategoryId == query.CategoryId) &&
                         (!query.MinPrice.HasValue || p.Price >= query.MinPrice) &&
                         (!query.MaxPrice.HasValue || p.Price <= query.MaxPrice),
             orderBy: p => p.Name,
@@ -41,6 +41,8 @@ public class SearchService : ISearchService
             p.Id,
             p.MerchantId,
             p.Merchant.Name,
+            p.ProductCategoryId,
+            p.ProductCategory?.Name,
             p.Name,
             p.Description,
             p.ImageUrl,
@@ -63,12 +65,12 @@ public class SearchService : ISearchService
         var merchants = await _unitOfWork.Repository<Merchant>().GetPagedAsync(
             filter: m => m.IsActive && 
                         (string.IsNullOrEmpty(query.Query) || m.Name.Contains(query.Query)) &&
-                        (!query.CategoryId.HasValue || m.CategoryId == query.CategoryId),
+                        (!query.CategoryId.HasValue || m.ServiceCategoryId == query.CategoryId),
             orderBy: m => m.Rating,
             ascending: false,
             page: query.Page,
             pageSize: query.PageSize,
-            include: "Category",
+            include: "ServiceCategory,Owner",
             cancellationToken: cancellationToken);
 
         var total = await _unitOfWork.ReadRepository<Merchant>()
@@ -78,10 +80,12 @@ public class SearchService : ISearchService
 
         var response = merchants.Select(m => new MerchantResponse(
             m.Id,
+            m.OwnerId,
+            $"{m.Owner.FirstName} {m.Owner.LastName}",
             m.Name,
             m.Description,
-            m.CategoryId,
-            m.Category.Name,
+            m.ServiceCategoryId,
+            m.ServiceCategory.Name,
             m.LogoUrl,
             m.Address,
             m.Latitude,

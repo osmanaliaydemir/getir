@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getir SignalR Client Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #5d3ebc;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+        .notification {
+            background: #e3f2fd;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #2196F3;
+            border-radius: 4px;
+        }
+        .notification.order { border-color: #FF9800; background: #fff3e0; }
+        .notification.courier { border-color: #4CAF50; background: #e8f5e9; }
+        button {
+            background: #5d3ebc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #4a2f9a;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        .timestamp {
+            color: #666;
+            font-size: 0.9em;
+        }
+        #map {
+            height: 300px;
+            background: #e0e0e0;
+            margin: 10px 0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Getir SignalR Real-Time Demo</h1>
+
+    <!-- Connection Status -->
+    <div class="container">
+        <h2>📡 Connection Status</h2>
+        <div id="connectionStatus" class="status disconnected">Disconnected</div>
+        <input type="text" id="tokenInput" placeholder="Bearer Token (from Postman)" style="width: 500px;">
+        <button onclick="connect()">Connect All Hubs</button>
+        <button onclick="disconnect()">Disconnect</button>
+    </div>
+
+    <!-- Notifications -->
+    <div class="container">
+        <h2>🔔 Real-Time Notifications</h2>
+        <div id="notifications">
+            <p style="color: #666;">Waiting for notifications...</p>
+        </div>
+        <button onclick="testNotification()">Test Notification</button>
+    </div>
+
+    <!-- Order Tracking -->
+    <div class="container">
+        <h2>📦 Order Tracking</h2>
+        <input type="text" id="orderIdInput" placeholder="Order ID (from Postman)">
+        <button onclick="subscribeToOrder()">Subscribe to Order</button>
+        <button onclick="unsubscribeFromOrder()">Unsubscribe</button>
+        <div id="orderUpdates">
+            <p style="color: #666;">Subscribe to an order to see updates...</p>
+        </div>
+    </div>
+
+    <!-- Courier Tracking -->
+    <div class="container">
+        <h2>🚴 Courier Live Location</h2>
+        <div id="map">🗺️ Courier location will appear here (real-time)</div>
+        <div id="courierLocation">
+            <p style="color: #666;">Waiting for courier location updates...</p>
+        </div>
+        <button onclick="simulateCourierMovement()">Simulate Courier Movement</button>
+    </div>
+
+    <script>
+        let notificationConnection;
+        let orderConnection;
+        let courierConnection;
+        let currentToken = '';
+        let subscribedOrderId = '';
+
+        // ============================================
+        // CONNECTION MANAGEMENT
+        // ============================================
+
+        async function connect() {
+            const token = document.getElementById('tokenInput').value;
+            if (!token) {
+                alert('Please enter Bearer token first!');
+                return;
+            }
+            currentToken = token;
+
+            try {
+                await connectNotificationHub();
+                await connectOrderHub();
+                await connectCourierHub();
+                
+                document.getElementById('connectionStatus').className = 'status connected';
+                document.getElementById('connectionStatus').textContent = '✅ All Hubs Connected';
+            } catch (err) {
+                console.error('Connection error:', err);
+                alert('Connection failed! Check token and API.');
+            }
+        }
+
+        async function disconnect() {
+            if (notificationConnection) await notificationConnection.stop();
+            if (orderConnection) await orderConnection.stop();
+            if (courierConnection) await courierConnection.stop();
+            
+            document.getElementById('connectionStatus').className = 'status disconnected';
+            document.getElementById('connectionStatus').textContent = '❌ Disconnected';
+        }
+
+        // ============================================
+        // NOTIFICATION HUB
+        // ============================================
+
+        async function connectNotificationHub() {
+            notificationConnection = new signalR.HubConnectionBuilder()
+                .withUrl("https://localhost:7001/hubs/notifications", {
+                    accessTokenFactory: () => currentToken,
+                    skipNegotiation: true,
+                    transport: signalR.HttpTransportType.WebSockets
+                })
+                .withAutomaticReconnect()
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+            notificationConnection.on("ReceiveNotification", (notification) => {
+                console.log('Notification received:', notification);
+                addNotification(notification);
+            });
+
+            notificationConnection.on("NotificationRead", (notificationId) => {
+                console.log('Notification marked as read:', notificationId);
+            });
+
+            notificationConnection.onreconnecting(() => {
+                console.log('Reconnecting to NotificationHub...');
+            });
+
+            notificationConnection.onreconnected(() => {
+                console.log('Reconnected to NotificationHub');
+            });
+
+            await notificationConnection.start();
+            console.log('✅ NotificationHub connected');
+        }
+
+        function addNotification(notification) {
+            const container = document.getElementById('notifications');
+            const div = document.createElement('div');
+            div.className = 'notification';
+            div.innerHTML = `
+                <strong>${notification.title}</strong><br>
+                ${notification.message}<br>
+                <span class="timestamp">Type: ${notification.type} | ${new Date(notification.timestamp).toLocaleTimeString()}</span>
+            `;
+            container.insertBefore(div, container.firstChild);
+        }
+
+        function testNotification() {
+            if (!notificationConnection || notificationConnection.state !== 'Connected') {
+                alert('Please connect first!');
+                return;
+            }
+            
+            // Simulate notification (normally comes from server)
+            addNotification({
+                title: 'Test Notification',
+                message: 'This is a test notification to verify SignalR is working!',
+                type: 'System',
+                timestamp: new Date()
+            });
+        }
+
+        // ============================================
+        // ORDER HUB
+        // ============================================
+
+        async function connectOrderHub() {
+            orderConnection = new signalR.HubConnectionBuilder()
+                .withUrl("https://localhost:7001/hubs/orders", {
+                    accessTokenFactory: () => currentToken,
+                    skipNegotiation: true,
+                    transport: signalR.HttpTransportType.WebSockets
+                })
+                .withAutomaticReconnect()
+                .build();
+
+            orderConnection.on("OrderStatusChanged", (update) => {
+                console.log('Order status changed:', update);
+                addOrderUpdate(update);
+            });
+
+            await orderConnection.start();
+            console.log('✅ OrderHub connected');
+        }
+
+        async function subscribeToOrder() {
+            const orderId = document.getElementById('orderIdInput').value;
+            if (!orderId) {
+                alert('Please enter Order ID!');
+                return;
+            }
+
+            if (!orderConnection || orderConnection.state !== 'Connected') {
+                alert('Please connect first!');
+                return;
+            }
+
+            try {
+                await orderConnection.invoke("SubscribeToOrder", orderId);
+                subscribedOrderId = orderId;
+                document.getElementById('orderUpdates').innerHTML = 
+                    `<p style="color: green;">✅ Subscribed to order: ${orderId}</p>`;
+                console.log('Subscribed to order:', orderId);
+            } catch (err) {
+                console.error('Subscribe error:', err);
+            }
+        }
+
+        async function unsubscribeFromOrder() {
+            if (!subscribedOrderId) return;
+
+            try {
+                await orderConnection.invoke("UnsubscribeFromOrder", subscribedOrderId);
+                subscribedOrderId = '';
+                document.getElementById('orderUpdates').innerHTML = 
+                    '<p style="color: #666;">Unsubscribed from order</p>';
+            } catch (err) {
+                console.error('Unsubscribe error:', err);
+            }
+        }
+
+        function addOrderUpdate(update) {
+            const container = document.getElementById('orderUpdates');
+            const div = document.createElement('div');
+            div.className = 'notification order';
+            div.innerHTML = `
+                <strong>📦 Order ${update.orderId.substring(0, 8)}...</strong><br>
+                Status: <strong>${update.status}</strong><br>
+                ${update.message}<br>
+                <span class="timestamp">${new Date(update.timestamp).toLocaleTimeString()}</span>
+            `;
+            container.insertBefore(div, container.firstChild);
+        }
+
+        // ============================================
+        // COURIER HUB
+        // ============================================
+
+        async function connectCourierHub() {
+            courierConnection = new signalR.HubConnectionBuilder()
+                .withUrl("https://localhost:7001/hubs/courier", {
+                    accessTokenFactory: () => currentToken,
+                    skipNegotiation: true,
+                    transport: signalR.HttpTransportType.WebSockets
+                })
+                .withAutomaticReconnect()
+                .build();
+
+            courierConnection.on("CourierLocationUpdated", (location) => {
+                console.log('Courier location updated:', location);
+                updateCourierLocation(location);
+            });
+
+            await courierConnection.start();
+            console.log('✅ CourierHub connected');
+
+            // Subscribe to order for courier tracking
+            if (subscribedOrderId) {
+                await courierConnection.invoke("TrackOrder", subscribedOrderId);
+            }
+        }
+
+        function updateCourierLocation(location) {
+            const container = document.getElementById('courierLocation');
+            const map = document.getElementById('map');
+            
+            map.innerHTML = `
+                🗺️ Courier Location<br>
+                📍 Lat: ${location.latitude.toFixed(6)}<br>
+                📍 Lng: ${location.longitude.toFixed(6)}
+            `;
+
+            const div = document.createElement('div');
+            div.className = 'notification courier';
+            div.innerHTML = `
+                <strong>🚴 Courier Location Update</strong><br>
+                Order: ${location.orderId.substring(0, 8)}...<br>
+                Location: ${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}<br>
+                <span class="timestamp">${new Date(location.timestamp).toLocaleTimeString()}</span>
+            `;
+            container.insertBefore(div, container.firstChild);
+        }
+
+        async function simulateCourierMovement() {
+            if (!subscribedOrderId) {
+                alert('Please subscribe to an order first!');
+                return;
+            }
+
+            // Simulate: Use Postman to call POST /api/v1/courier/location/update
+            alert('Use Postman to call:\nPOST /api/v1/courier/location/update\nBody: { "latitude": 40.9900, "longitude": 29.0260 }');
+        }
+
+        // ============================================
+        // AUTO-CONNECT ON PAGE LOAD (if token in localStorage)
+        // ============================================
+
+        window.onload = function() {
+            const savedToken = localStorage.getItem('bearerToken');
+            if (savedToken) {
+                document.getElementById('tokenInput').value = savedToken;
+                console.log('Token loaded from localStorage');
+            }
+        };
+
+        // Save token to localStorage on input change
+        document.getElementById('tokenInput')?.addEventListener('change', function() {
+            localStorage.setItem('bearerToken', this.value);
+        });
+    </script>
+</head>
+<body>
+    <div class="container" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <h1 style="margin: 0; color: white;">🚀 Getir SignalR Real-Time Demo</h1>
+        <p style="margin: 10px 0 0 0;">Real-time notifications, order tracking, and courier location updates</p>
+    </div>
+
+    <div class="container" style="background: #fff9c4; border-left: 4px solid #fdd835;">
+        <h3>📋 How to Use:</h3>
+        <ol>
+            <li>Use Postman to <strong>Register</strong> or <strong>Login</strong></li>
+            <li>Copy the <strong>accessToken</strong> from response</li>
+            <li>Paste token above and click <strong>"Connect All Hubs"</strong></li>
+            <li>Create an order in Postman → See real-time notification here! 🎉</li>
+            <li>Update courier location in Postman → See live tracking! 📍</li>
+        </ol>
+    </div>
+
+    <div class="container">
+        <h3>🎯 Test Scenarios:</h3>
+        <ul>
+            <li><strong>Order Created:</strong> POST /api/v1/orders → Instant notification appears</li>
+            <li><strong>Order Status Update:</strong> Update order status → Real-time status change</li>
+            <li><strong>Courier Location:</strong> POST /api/v1/courier/location/update → Live map update</li>
+            <li><strong>Multiple Devices:</strong> Open this page in 2 tabs → Both receive updates!</li>
+        </ul>
+    </div>
+
+    <div class="container">
+        <h3>💡 Technical Details:</h3>
+        <ul>
+            <li><strong>Transport:</strong> WebSockets (fallback: Server-Sent Events, Long Polling)</li>
+            <li><strong>Authentication:</strong> JWT Bearer Token</li>
+            <li><strong>Reconnection:</strong> Automatic with exponential backoff</li>
+            <li><strong>Keep-Alive:</strong> 15 seconds</li>
+            <li><strong>Timeout:</strong> 30 seconds</li>
+        </ul>
+    </div>
+</body>
+</html>

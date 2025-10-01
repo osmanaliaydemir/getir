@@ -11,7 +11,8 @@ public class AppDbContext : DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
-    public DbSet<Category> Categories { get; set; }
+    public DbSet<ServiceCategory> ServiceCategories { get; set; }
+    public DbSet<ProductCategory> ProductCategories { get; set; }
     public DbSet<Merchant> Merchants { get; set; }
     public DbSet<Product> Products { get; set; }
     public DbSet<Order> Orders { get; set; }
@@ -23,6 +24,8 @@ public class AppDbContext : DbContext
     public DbSet<Campaign> Campaigns { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<Courier> Couriers { get; set; }
+    public DbSet<UserLoyaltyPoint> UserLoyaltyPoints { get; set; }
+    public DbSet<LoyaltyPointTransaction> LoyaltyPointTransactions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,6 +41,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
             entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
             entity.Property(e => e.PhoneNumber).HasMaxLength(20);
+            entity.Property(e => e.Role).IsRequired().HasConversion<int>().HasDefaultValue(Domain.Enums.UserRole.Customer);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         });
 
@@ -55,13 +59,33 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // Category configuration
-        modelBuilder.Entity<Category>(entity =>
+        // ServiceCategory configuration
+        modelBuilder.Entity<ServiceCategory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.ImageUrl).HasMaxLength(500);
+            entity.Property(e => e.IconUrl).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        });
+
+        // ProductCategory configuration
+        modelBuilder.Entity<ProductCategory>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.ImageUrl).HasMaxLength(500);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(e => e.Merchant)
+                .WithMany(m => m.ProductCategories)
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.ParentCategory)
+                .WithMany(c => c.SubCategories)
+                .HasForeignKey(e => e.ParentCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Merchant configuration
@@ -81,9 +105,14 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Rating).HasPrecision(3, 2);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
-            entity.HasOne(e => e.Category)
+            entity.HasOne(e => e.Owner)
+                .WithMany(u => u.OwnedMerchants)
+                .HasForeignKey(e => e.OwnerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.ServiceCategory)
                 .WithMany(c => c.Merchants)
-                .HasForeignKey(e => e.CategoryId)
+                .HasForeignKey(e => e.ServiceCategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -103,10 +132,10 @@ public class AppDbContext : DbContext
                 .HasForeignKey(e => e.MerchantId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasOne(e => e.Category)
+            entity.HasOne(e => e.ProductCategory)
                 .WithMany(c => c.Products)
-                .HasForeignKey(e => e.CategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasForeignKey(e => e.ProductCategoryId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         // Order configuration

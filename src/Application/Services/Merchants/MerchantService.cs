@@ -24,7 +24,7 @@ public class MerchantService : IMerchantService
             ascending: query.IsAscending,
             page: query.Page,
             pageSize: query.PageSize,
-            include: "Category",
+            include: "ServiceCategory,Owner",
             cancellationToken: cancellationToken);
 
         var total = await _unitOfWork.ReadRepository<Merchant>()
@@ -32,10 +32,12 @@ public class MerchantService : IMerchantService
 
         var response = merchants.Select(m => new MerchantResponse(
             m.Id,
+            m.OwnerId,
+            $"{m.Owner.FirstName} {m.Owner.LastName}",
             m.Name,
             m.Description,
-            m.CategoryId,
-            m.Category.Name,
+            m.ServiceCategoryId,
+            m.ServiceCategory.Name,
             m.LogoUrl,
             m.Address,
             m.Latitude,
@@ -58,7 +60,7 @@ public class MerchantService : IMerchantService
         CancellationToken cancellationToken = default)
     {
         var merchant = await _unitOfWork.Repository<Merchant>()
-            .GetAsync(m => m.Id == id, include: "Category", cancellationToken: cancellationToken);
+            .GetAsync(m => m.Id == id, include: "ServiceCategory,Owner", cancellationToken: cancellationToken);
 
         if (merchant == null)
         {
@@ -67,10 +69,12 @@ public class MerchantService : IMerchantService
 
         var response = new MerchantResponse(
             merchant.Id,
+            merchant.OwnerId,
+            $"{merchant.Owner.FirstName} {merchant.Owner.LastName}",
             merchant.Name,
             merchant.Description,
-            merchant.CategoryId,
-            merchant.Category.Name,
+            merchant.ServiceCategoryId,
+            merchant.ServiceCategory.Name,
             merchant.LogoUrl,
             merchant.Address,
             merchant.Latitude,
@@ -88,11 +92,21 @@ public class MerchantService : IMerchantService
 
     public async Task<Result<MerchantResponse>> CreateMerchantAsync(
         CreateMerchantRequest request,
+        Guid ownerId,
         CancellationToken cancellationToken = default)
     {
-        // Category var mı kontrol et
-        var categoryExists = await _unitOfWork.ReadRepository<Category>()
-            .AnyAsync(c => c.Id == request.CategoryId, cancellationToken);
+        // Owner var mı kontrol et
+        var ownerExists = await _unitOfWork.ReadRepository<User>()
+            .AnyAsync(u => u.Id == ownerId && u.IsActive, cancellationToken);
+
+        if (!ownerExists)
+        {
+            return Result.Fail<MerchantResponse>("Owner user not found or inactive", "NOT_FOUND_OWNER");
+        }
+
+        // ServiceCategory var mı kontrol et
+        var categoryExists = await _unitOfWork.ReadRepository<ServiceCategory>()
+            .AnyAsync(c => c.Id == request.ServiceCategoryId, cancellationToken);
 
         if (!categoryExists)
         {
@@ -102,9 +116,10 @@ public class MerchantService : IMerchantService
         var merchant = new Merchant
         {
             Id = Guid.NewGuid(),
+            OwnerId = ownerId,
             Name = request.Name,
             Description = request.Description,
-            CategoryId = request.CategoryId,
+            ServiceCategoryId = request.ServiceCategoryId,
             Address = request.Address,
             Latitude = request.Latitude,
             Longitude = request.Longitude,
@@ -122,16 +137,18 @@ public class MerchantService : IMerchantService
         await _unitOfWork.Repository<Merchant>().AddAsync(merchant, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Category bilgisi için yeniden çek
+        // ServiceCategory ve Owner bilgisi için yeniden çek
         var createdMerchant = await _unitOfWork.Repository<Merchant>()
-            .GetAsync(m => m.Id == merchant.Id, include: "Category", cancellationToken: cancellationToken);
+            .GetAsync(m => m.Id == merchant.Id, include: "ServiceCategory,Owner", cancellationToken: cancellationToken);
 
         var response = new MerchantResponse(
             createdMerchant!.Id,
+            createdMerchant.OwnerId,
+            $"{createdMerchant.Owner.FirstName} {createdMerchant.Owner.LastName}",
             createdMerchant.Name,
             createdMerchant.Description,
-            createdMerchant.CategoryId,
-            createdMerchant.Category.Name,
+            createdMerchant.ServiceCategoryId,
+            createdMerchant.ServiceCategory.Name,
             createdMerchant.LogoUrl,
             createdMerchant.Address,
             createdMerchant.Latitude,
@@ -150,14 +167,21 @@ public class MerchantService : IMerchantService
     public async Task<Result<MerchantResponse>> UpdateMerchantAsync(
         Guid id,
         UpdateMerchantRequest request,
+        Guid currentUserId,
         CancellationToken cancellationToken = default)
     {
         var merchant = await _unitOfWork.Repository<Merchant>()
-            .GetByIdAsync(id, cancellationToken);
+            .GetAsync(m => m.Id == id, include: "Owner", cancellationToken: cancellationToken);
 
         if (merchant == null)
         {
             return Result.Fail<MerchantResponse>("Merchant not found", "NOT_FOUND_MERCHANT");
+        }
+
+        // Sadece merchant sahibi güncelleyebilir (Admin kontrolü endpoint'te yapılacak)
+        if (merchant.OwnerId != currentUserId)
+        {
+            return Result.Fail<MerchantResponse>("You are not authorized to update this merchant", "FORBIDDEN_NOT_OWNER");
         }
 
         merchant.Name = request.Name;
@@ -172,16 +196,18 @@ public class MerchantService : IMerchantService
         _unitOfWork.Repository<Merchant>().Update(merchant);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Category bilgisi için yeniden çek
+        // ServiceCategory ve Owner bilgisi için yeniden çek
         var updatedMerchant = await _unitOfWork.Repository<Merchant>()
-            .GetAsync(m => m.Id == id, include: "Category", cancellationToken: cancellationToken);
+            .GetAsync(m => m.Id == id, include: "ServiceCategory,Owner", cancellationToken: cancellationToken);
 
         var response = new MerchantResponse(
             updatedMerchant!.Id,
+            updatedMerchant.OwnerId,
+            $"{updatedMerchant.Owner.FirstName} {updatedMerchant.Owner.LastName}",
             updatedMerchant.Name,
             updatedMerchant.Description,
-            updatedMerchant.CategoryId,
-            updatedMerchant.Category.Name,
+            updatedMerchant.ServiceCategoryId,
+            updatedMerchant.ServiceCategory.Name,
             updatedMerchant.LogoUrl,
             updatedMerchant.Address,
             updatedMerchant.Latitude,

@@ -1,3 +1,5 @@
+using Getir.Domain.Enums;
+
 namespace Getir.Application.DTO;
 
 public record RegisterRequest(
@@ -5,7 +7,8 @@ public record RegisterRequest(
     string Password,
     string FirstName,
     string LastName,
-    string? PhoneNumber);
+    string? PhoneNumber,
+    UserRole? Role = null); // Optional, default Customer
 
 public record LoginRequest(
     string Email,
@@ -17,7 +20,11 @@ public record RefreshTokenRequest(
 public record AuthResponse(
     string AccessToken,
     string RefreshToken,
-    DateTime ExpiresAt);
+    DateTime ExpiresAt,
+    UserRole Role,
+    Guid UserId,
+    string Email,
+    string FullName);
 
 public record UserProfileResponse(
     Guid Id,
@@ -25,5 +32,6 @@ public record UserProfileResponse(
     string FirstName,
     string LastName,
     string? PhoneNumber,
+    UserRole Role,
     bool IsEmailVerified,
     DateTime CreatedAt);

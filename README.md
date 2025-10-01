@@ -1,5 +1,13 @@
 # 🚀 Getir Clone API - .NET 9
 
+![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?style=flat-square&logo=dotnet)
+![C#](https://img.shields.io/badge/C%23-13.0-239120?style=flat-square&logo=csharp)
+![Build](https://img.shields.io/github/actions/workflow/status/osmanaliaydemir/GetirV2/ci.yml?branch=main&style=flat-square)
+![Tests](https://img.shields.io/badge/tests-22%20passing-success?style=flat-square)
+![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
+![Docker](https://img.shields.io/badge/docker-ready-2496ED?style=flat-square&logo=docker)
+
 Modern, scalable ve production-ready bir e-ticaret/delivery API'si. Clean Architecture, DDD prensipleri ve best practice'lerle geliştirilmiştir.
 
 ## 📋 Özellikler
@@ -141,25 +149,34 @@ API başarıyla başladığında:
 
 ## 📮 Postman Collection
 
-Tüm endpoint'leri test etmek için hazır Postman collection:
+### ⭐ Sprint 1: Role-Based Authorization Collection (YENİ)
 
 ```bash
 # Postman'de import edin
-docs/Getir-API.postman_collection.json
+docs/Getir-API-v2.postman_collection.json
 ```
 
-**Özellikler:**
-- ✅ Otomatik token yönetimi (login sonrası token'lar kaydedilir)
-- ✅ Otomatik ID tracking (merchant/product/order ID'leri)
-- ✅ Test scriptleri (her request'te validation)
-- ✅ Environment variables
-- ✅ Bearer auth otomasyonu
+**Yeni Özellikler:**
+- ✅ 4 farklı role ile test (Customer, MerchantOwner, Courier, Admin)
+- ✅ Otomatik role-based token yönetimi
+- ✅ Owner bilgisi tracking (merchant ownerId, ownerName)
+- ✅ Role test scenarios (403 Forbidden testleri)
+- ✅ Console log'lar ile detaylı bilgi
 
 **Hızlı başlangıç:**
-1. Collection'ı import et
-2. `Register` endpoint'ini çalıştır (token otomatik kaydedilir)
+1. Collection'ı import et: `Getir-API-v2.postman_collection.json`
+2. `Register MerchantOwner` endpoint'ini çalıştır
 3. Category ID'yi manuel set et: `{{categoryId}}`
-4. Diğer endpoint'leri sırayla çalıştır
+4. `Create Merchant` endpoint'ini çalıştır (otomatik owner atanır)
+5. Role test scenarios'ı çalıştır
+
+Detaylı kullanım: [POSTMAN-SPRINT1-GUIDE.md](docs/POSTMAN-SPRINT1-GUIDE.md)
+
+### 📦 Klasik Collection (Sprint 1 Öncesi)
+
+```bash
+docs/Getir-API.postman_collection.json
+```
 
 Detaylı kullanım: [POSTMAN-GUIDE.md](docs/POSTMAN-GUIDE.md)
 
@@ -426,9 +443,9 @@ Response:
 ## 📊 Implemented Features
 
 ### ✅ **Core Modules (8)**
-1. 🔐 **Authentication** - JWT with Access/Refresh tokens
-2. 📂 **Categories** - Full CRUD
-3. 🏪 **Merchants** - Store management
+1. 🔐 **Authentication** - JWT with Access/Refresh tokens + **Role-Based Authorization** ⭐ Sprint 1
+2. 📂 **Categories** - **Hierarchical Category System** (ServiceCategory + ProductCategory) ⭐ Sprint 2
+3. 🏪 **Merchants** - Store management with **Owner relationship** ⭐ Sprint 1
 4. 🍔 **Products** - Inventory management
 5. 📦 **Orders** - Transaction-based ordering
 6. 👤 **User Addresses** - Location management
@@ -440,6 +457,8 @@ Response:
 - 🔔 **Notifications** - User notification system
 - 🚴 **Courier Management** - Delivery tracking
 - ❤️ **Health Checks** - System monitoring
+- 🛡️ **Role-Based Access Control** - Customer, MerchantOwner, Courier, Admin ⭐ Sprint 1
+- 🌳 **Hierarchical Categories** - Merchant-specific product categories with parent-child structure ⭐ Sprint 2
 
 ### 📊 **Statistics**
 - **Total Endpoints:** 44
@@ -470,6 +489,8 @@ Response:
 - **[Docker Guide](docs/DOCKER-GUIDE.md)** - 🐳 Docker deployment & commands
 - **[Testing Guide](docs/TESTING-GUIDE.md)** - Unit tests & coverage
 - **[Connection String Guide](docs/CONNECTION-STRING-GUIDE.md)** - Database configuration
+- **[Sprint 1 Summary](docs/SPRINT-1-SUMMARY.md)** - ⭐ Role-Based Authorization implementation
+- **[Sprint 2 Summary](docs/SPRINT-2-SUMMARY.md)** - ⭐ Hierarchical Category System
 
 ---
 

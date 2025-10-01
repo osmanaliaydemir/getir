@@ -8,10 +8,12 @@ namespace Getir.Application.Services.Notifications;
 public class NotificationService : INotificationService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISignalRService? _signalRService;
 
-    public NotificationService(IUnitOfWork unitOfWork)
+    public NotificationService(IUnitOfWork unitOfWork, ISignalRService? signalRService = null)
     {
         _unitOfWork = unitOfWork;
+        _signalRService = signalRService;
     }
 
     public async Task<Result<PagedResult<NotificationResponse>>> GetUserNotificationsAsync(
@@ -90,6 +92,16 @@ public class NotificationService : INotificationService
 
         await _unitOfWork.Repository<Notification>().AddAsync(notification, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Send real-time notification via SignalR
+        if (_signalRService != null)
+        {
+            await _signalRService.SendNotificationToUserAsync(
+                request.UserId,
+                request.Title,
+                request.Message,
+                request.Type);
+        }
 
         var response = new NotificationResponse(
             notification.Id,

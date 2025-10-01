@@ -47,6 +47,7 @@ public class AuthService : IAuthService
             FirstName = request.FirstName,
             LastName = request.LastName,
             PhoneNumber = request.PhoneNumber,
+            Role = request.Role ?? Domain.Enums.UserRole.Customer, // Default Customer
             IsEmailVerified = false,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
@@ -55,8 +56,9 @@ public class AuthService : IAuthService
         await _unitOfWork.Repository<User>().AddAsync(user, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Token oluştur
-        var accessToken = _jwtTokenService.CreateAccessToken(user.Id, user.Email);
+        // Token oluştur - Role claim'i ile
+        var roleClaim = new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, user.Role.ToString());
+        var accessToken = _jwtTokenService.CreateAccessToken(user.Id, user.Email, new[] { roleClaim });
         var refreshTokenValue = _jwtTokenService.CreateRefreshToken();
 
         var refreshToken = new RefreshToken
@@ -75,7 +77,11 @@ public class AuthService : IAuthService
         return Result.Ok(new AuthResponse(
             accessToken,
             refreshTokenValue,
-            DateTime.UtcNow.AddMinutes(_accessTokenMinutes)
+            DateTime.UtcNow.AddMinutes(_accessTokenMinutes),
+            user.Role,
+            user.Id,
+            user.Email,
+            $"{user.FirstName} {user.LastName}"
         ));
     }
 
@@ -105,8 +111,9 @@ public class AuthService : IAuthService
         user.LastLoginAt = DateTime.UtcNow;
         _unitOfWork.Repository<User>().Update(user);
 
-        // Token oluştur
-        var accessToken = _jwtTokenService.CreateAccessToken(user.Id, user.Email);
+        // Token oluştur - Role claim'i ile
+        var roleClaim = new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, user.Role.ToString());
+        var accessToken = _jwtTokenService.CreateAccessToken(user.Id, user.Email, new[] { roleClaim });
         var refreshTokenValue = _jwtTokenService.CreateRefreshToken();
 
         var refreshToken = new RefreshToken
@@ -125,7 +132,11 @@ public class AuthService : IAuthService
         return Result.Ok(new AuthResponse(
             accessToken,
             refreshTokenValue,
-            DateTime.UtcNow.AddMinutes(_accessTokenMinutes)
+            DateTime.UtcNow.AddMinutes(_accessTokenMinutes),
+            user.Role,
+            user.Id,
+            user.Email,
+            $"{user.FirstName} {user.LastName}"
         ));
     }
 
@@ -160,8 +171,9 @@ public class AuthService : IAuthService
             _unitOfWork.Repository<RefreshToken>().Update(oldToken);
         }
 
-        // Yeni token oluştur
-        var accessToken = _jwtTokenService.CreateAccessToken(refreshToken.UserId, refreshToken.User.Email);
+        // Yeni token oluştur - Role claim'i ile
+        var roleClaim = new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, refreshToken.User.Role.ToString());
+        var accessToken = _jwtTokenService.CreateAccessToken(refreshToken.UserId, refreshToken.User.Email, new[] { roleClaim });
         var newRefreshTokenValue = _jwtTokenService.CreateRefreshToken();
 
         var newRefreshToken = new RefreshToken
@@ -180,7 +192,11 @@ public class AuthService : IAuthService
         return Result.Ok(new AuthResponse(
             accessToken,
             newRefreshTokenValue,
-            DateTime.UtcNow.AddMinutes(_accessTokenMinutes)
+            DateTime.UtcNow.AddMinutes(_accessTokenMinutes),
+            refreshToken.User.Role,
+            refreshToken.UserId,
+            refreshToken.User.Email,
+            $"{refreshToken.User.FirstName} {refreshToken.User.LastName}"
         ));
     }
 

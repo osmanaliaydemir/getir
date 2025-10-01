@@ -8,10 +8,12 @@ namespace Getir.Application.Services.Orders;
 public class OrderService : IOrderService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISignalRService? _signalRService;
 
-    public OrderService(IUnitOfWork unitOfWork)
+    public OrderService(IUnitOfWork unitOfWork, ISignalRService? signalRService = null)
     {
         _unitOfWork = unitOfWork;
+        _signalRService = signalRService;
     }
 
     public async Task<Result<OrderResponse>> CreateOrderAsync(
@@ -124,6 +126,22 @@ public class OrderService : IOrderService
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             await _unitOfWork.CommitAsync(cancellationToken);
+
+            // Send real-time notification via SignalR
+            if (_signalRService != null)
+            {
+                await _signalRService.SendOrderStatusUpdateAsync(
+                    order.Id,
+                    userId,
+                    order.Status,
+                    $"Your order {order.OrderNumber} has been created successfully!");
+
+                await _signalRService.SendNotificationToUserAsync(
+                    userId,
+                    "Order Created",
+                    $"Your order {order.OrderNumber} has been placed successfully. Estimated delivery: {order.EstimatedDeliveryTime:HH:mm}",
+                    "Order");
+            }
 
             // Response oluştur
             var response = new OrderResponse(

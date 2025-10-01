@@ -15,11 +15,13 @@ public interface IMerchantService
     
     Task<Result<MerchantResponse>> CreateMerchantAsync(
         CreateMerchantRequest request,
+        Guid ownerId,
         CancellationToken cancellationToken = default);
     
     Task<Result<MerchantResponse>> UpdateMerchantAsync(
         Guid id,
         UpdateMerchantRequest request,
+        Guid currentUserId,
         CancellationToken cancellationToken = default);
     
     Task<Result> DeleteMerchantAsync(

@@ -11,7 +11,7 @@ public class CreateMerchantRequestValidator : AbstractValidator<CreateMerchantRe
             .NotEmpty().WithMessage("Merchant name is required")
             .MaximumLength(200).WithMessage("Name must not exceed 200 characters");
 
-        RuleFor(x => x.CategoryId)
+        RuleFor(x => x.ServiceCategoryId)
             .NotEmpty().WithMessage("Category is required");
 
         RuleFor(x => x.Address)

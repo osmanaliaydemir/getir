@@ -9,6 +9,7 @@ public static class AuthConfig
 {
     public static IServiceCollection AddAuthConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
+        ArgumentNullException.ThrowIfNull(configuration);
         var jwtOptions = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
             ?? throw new InvalidOperationException("JWT configuration is missing");
 

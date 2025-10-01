@@ -17,13 +17,15 @@ public static class ValidationConfig
         services.AddScoped<IValidator<CreateProductRequest>, CreateProductRequestValidator>();
         services.AddScoped<IValidator<UpdateProductRequest>, UpdateProductRequestValidator>();
         services.AddScoped<IValidator<CreateOrderRequest>, CreateOrderRequestValidator>();
-        services.AddScoped<IValidator<CreateCategoryRequest>, CreateCategoryRequestValidator>();
-        services.AddScoped<IValidator<UpdateCategoryRequest>, UpdateCategoryRequestValidator>();
         services.AddScoped<IValidator<CreateAddressRequest>, CreateAddressRequestValidator>();
         services.AddScoped<IValidator<UpdateAddressRequest>, UpdateAddressRequestValidator>();
         services.AddScoped<IValidator<AddToCartRequest>, AddToCartRequestValidator>();
         services.AddScoped<IValidator<UpdateCartItemRequest>, UpdateCartItemRequestValidator>();
         services.AddScoped<IValidator<CreateCouponRequest>, CreateCouponRequestValidator>();
+        services.AddScoped<IValidator<CreateProductCategoryRequest>, CreateProductCategoryRequestValidator>();
+        services.AddScoped<IValidator<UpdateProductCategoryRequest>, UpdateProductCategoryRequestValidator>();
+        services.AddScoped<IValidator<CreateServiceCategoryRequest>, CreateServiceCategoryRequestValidator>();
+        services.AddScoped<IValidator<UpdateServiceCategoryRequest>, UpdateServiceCategoryRequestValidator>();
 
         return services;
     }

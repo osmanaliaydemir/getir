@@ -8,10 +8,12 @@ namespace Getir.Application.Services.Couriers;
 public class CourierService : ICourierService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISignalRService? _signalRService;
 
-    public CourierService(IUnitOfWork unitOfWork)
+    public CourierService(IUnitOfWork unitOfWork, ISignalRService? signalRService = null)
     {
         _unitOfWork = unitOfWork;
+        _signalRService = signalRService;
     }
 
     public async Task<Result<PagedResult<CourierOrderResponse>>> GetAssignedOrdersAsync(
@@ -65,6 +67,24 @@ public class CourierService : ICourierService
 
         _unitOfWork.Repository<Courier>().Update(courier);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Send real-time location update via SignalR to all active orders
+        if (_signalRService != null)
+        {
+            var activeOrders = await _unitOfWork.ReadRepository<Order>()
+                .ListAsync(
+                    filter: o => o.CourierId == courierId && 
+                                (o.Status == "Ready" || o.Status == "OnTheWay"),
+                    cancellationToken: cancellationToken);
+
+            foreach (var order in activeOrders)
+            {
+                await _signalRService.SendCourierLocationUpdateAsync(
+                    order.Id,
+                    request.Latitude,
+                    request.Longitude);
+            }
+        }
 
         return Result.Ok();
     }

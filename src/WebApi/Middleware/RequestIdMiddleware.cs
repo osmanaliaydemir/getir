@@ -14,6 +14,7 @@ public class RequestIdMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        ArgumentNullException.ThrowIfNull(context);
         var requestId = context.Request.Headers[RequestIdHeader].FirstOrDefault() 
                        ?? Guid.NewGuid().ToString();
 
