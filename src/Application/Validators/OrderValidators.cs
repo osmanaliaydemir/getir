@@ -39,3 +39,51 @@ public class OrderLineRequestValidator : AbstractValidator<OrderLineRequest>
             .GreaterThan(0).WithMessage("Quantity must be greater than zero");
     }
 }
+
+// Merchant-specific validators
+public class RejectOrderRequestValidator : AbstractValidator<RejectOrderRequest>
+{
+    public RejectOrderRequestValidator()
+    {
+        RuleFor(x => x.OrderId)
+            .NotEmpty().WithMessage("Order ID is required");
+
+        RuleFor(x => x.Reason)
+            .MaximumLength(500).WithMessage("Reason must not exceed 500 characters");
+    }
+}
+
+public class CancelOrderRequestValidator : AbstractValidator<CancelOrderRequest>
+{
+    public CancelOrderRequestValidator()
+    {
+        RuleFor(x => x.OrderId)
+            .NotEmpty().WithMessage("Order ID is required");
+
+        RuleFor(x => x.Reason)
+            .NotEmpty().WithMessage("Cancellation reason is required")
+            .MaximumLength(500).WithMessage("Reason must not exceed 500 characters");
+    }
+}
+
+public class UpdateOrderStatusRequestValidator : AbstractValidator<UpdateOrderStatusRequest>
+{
+    public UpdateOrderStatusRequestValidator()
+    {
+        RuleFor(x => x.OrderId)
+            .NotEmpty().WithMessage("Order ID is required");
+
+        RuleFor(x => x.NewStatus)
+            .NotEmpty().WithMessage("Status is required")
+            .Must(BeValidStatus).WithMessage("Invalid order status");
+
+        RuleFor(x => x.Reason)
+            .MaximumLength(500).WithMessage("Reason must not exceed 500 characters");
+    }
+
+    private static bool BeValidStatus(string status)
+    {
+        var validStatuses = new[] { "Pending", "Confirmed", "Preparing", "Ready", "OnTheWay", "Delivered", "Cancelled" };
+        return validStatuses.Contains(status);
+    }
+}

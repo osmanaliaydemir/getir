@@ -38,3 +38,32 @@ public record OrderLineResponse(
     int Quantity,
     decimal UnitPrice,
     decimal TotalPrice);
+
+// Merchant-specific DTOs
+public record RejectOrderRequest(
+    Guid OrderId,
+    string? Reason = null);
+
+public record CancelOrderRequest(
+    Guid OrderId,
+    string Reason);
+
+public record OrderStatisticsResponse(
+    int TotalOrders,
+    int PendingOrders,
+    int ConfirmedOrders,
+    int PreparingOrders,
+    int ReadyOrders,
+    int DeliveredOrders,
+    int CancelledOrders,
+    decimal TotalRevenue,
+    decimal AverageOrderValue,
+    int TodayOrders,
+    int ThisWeekOrders,
+    int ThisMonthOrders,
+    DateTime GeneratedAt);
+
+public record UpdateOrderStatusRequest(
+    Guid OrderId,
+    string NewStatus,
+    string? Reason = null);

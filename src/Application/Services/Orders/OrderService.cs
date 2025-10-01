@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
@@ -272,5 +273,377 @@ public class OrderService : IOrderService
     private static string GenerateOrderNumber()
     {
         return $"ORD-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}";
+    }
+
+    // Merchant-specific methods
+    public async Task<Result<PagedResult<OrderResponse>>> GetMerchantOrdersAsync(
+        Guid merchantOwnerId,
+        PaginationQuery query,
+        string? status = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        // Get merchant owned by this user
+        var merchant = await _unitOfWork.ReadRepository<Merchant>()
+            .FirstOrDefaultAsync(m => m.OwnerId == merchantOwnerId, cancellationToken: cancellationToken);
+
+        if (merchant == null)
+        {
+            return Result.Fail<PagedResult<OrderResponse>>("Merchant not found", "NOT_FOUND_MERCHANT");
+        }
+
+        Expression<Func<Order, bool>> filter = o => o.MerchantId == merchant.Id;
+        if (!string.IsNullOrEmpty(status))
+        {
+            filter = o => o.MerchantId == merchant.Id && o.Status == status;
+        }
+
+        var orders = await _unitOfWork.Repository<Order>().GetPagedAsync(
+            filter: filter,
+            orderBy: o => o.CreatedAt,
+            ascending: false,
+            page: query.Page,
+            pageSize: query.PageSize,
+            include: "User,OrderLines",
+            cancellationToken: cancellationToken);
+
+        var total = await _unitOfWork.ReadRepository<Order>()
+            .CountAsync(filter, cancellationToken);
+
+        var responses = orders.Select(o => new OrderResponse(
+            o.Id,
+            o.OrderNumber,
+            o.MerchantId,
+            merchant.Name,
+            o.Status,
+            o.SubTotal,
+            o.DeliveryFee,
+            o.Discount,
+            o.Total,
+            o.PaymentMethod,
+            o.PaymentStatus,
+            o.DeliveryAddress,
+            o.EstimatedDeliveryTime,
+            o.CreatedAt,
+            o.OrderLines.Select(ol => new OrderLineResponse(
+                ol.Id,
+                ol.ProductId,
+                ol.ProductName,
+                ol.Quantity,
+                ol.UnitPrice,
+                ol.TotalPrice)).ToList())).ToList();
+
+        var pagedResult = PagedResult<OrderResponse>.Create(
+            responses,
+            total,
+            query.Page,
+            query.PageSize);
+
+        return Result.Ok(pagedResult);
+    }
+
+    public async Task<Result<OrderResponse>> AcceptOrderAsync(
+        Guid orderId,
+        Guid merchantOwnerId,
+        CancellationToken cancellationToken = default)
+    {
+        var order = await _unitOfWork.ReadRepository<Order>()
+            .FirstOrDefaultAsync(o => o.Id == orderId, 
+                include: "Merchant,User,OrderLines", 
+                cancellationToken: cancellationToken);
+
+        if (order == null)
+        {
+            return Result.Fail<OrderResponse>("Order not found", "NOT_FOUND_ORDER");
+        }
+
+        // Verify merchant ownership
+        if (order.Merchant.OwnerId != merchantOwnerId)
+        {
+            return Result.Fail<OrderResponse>("Access denied", "FORBIDDEN_ORDER");
+        }
+
+        // Check if order can be accepted
+        if (order.Status != "Pending")
+        {
+            return Result.Fail<OrderResponse>("Order cannot be accepted in current status", "INVALID_STATUS");
+        }
+
+        order.Status = "Confirmed";
+        order.UpdatedAt = DateTime.UtcNow;
+
+        _unitOfWork.Repository<Order>().Update(order);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Send notification
+        if (_signalRService != null)
+        {
+            await _signalRService.SendOrderStatusUpdateAsync(
+                order.Id,
+                order.UserId,
+                order.Status,
+                $"Your order {order.OrderNumber} has been confirmed by {order.Merchant.Name}!");
+        }
+
+        var response = new OrderResponse(
+            order.Id,
+            order.OrderNumber,
+            order.MerchantId,
+            order.Merchant.Name,
+            order.Status,
+            order.SubTotal,
+            order.DeliveryFee,
+            order.Discount,
+            order.Total,
+            order.PaymentMethod,
+            order.PaymentStatus,
+            order.DeliveryAddress,
+            order.EstimatedDeliveryTime,
+            order.CreatedAt,
+            order.OrderLines.Select(ol => new OrderLineResponse(
+                ol.Id,
+                ol.ProductId,
+                ol.ProductName,
+                ol.Quantity,
+                ol.UnitPrice,
+                ol.TotalPrice)).ToList());
+
+        return Result.Ok(response);
+    }
+
+    public async Task<Result> RejectOrderAsync(
+        Guid orderId,
+        Guid merchantOwnerId,
+        string? reason = null,
+        CancellationToken cancellationToken = default)
+    {
+        var order = await _unitOfWork.ReadRepository<Order>()
+            .FirstOrDefaultAsync(o => o.Id == orderId, 
+                include: "Merchant,User", 
+                cancellationToken: cancellationToken);
+
+        if (order == null)
+        {
+            return Result.Fail("Order not found", "NOT_FOUND_ORDER");
+        }
+
+        // Verify merchant ownership
+        if (order.Merchant.OwnerId != merchantOwnerId)
+        {
+            return Result.Fail("Access denied", "FORBIDDEN_ORDER");
+        }
+
+        // Check if order can be rejected
+        if (order.Status != "Pending")
+        {
+            return Result.Fail("Order cannot be rejected in current status", "INVALID_STATUS");
+        }
+
+        order.Status = "Cancelled";
+        order.CancellationReason = reason ?? "Order rejected by merchant";
+        order.UpdatedAt = DateTime.UtcNow;
+
+        _unitOfWork.Repository<Order>().Update(order);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Send notification
+        if (_signalRService != null)
+        {
+            await _signalRService.SendOrderStatusUpdateAsync(
+                order.Id,
+                order.UserId,
+                order.Status,
+                $"Your order {order.OrderNumber} has been rejected by {order.Merchant.Name}. Reason: {order.CancellationReason}");
+        }
+
+        return Result.Ok();
+    }
+
+    public async Task<Result> StartPreparingOrderAsync(
+        Guid orderId,
+        Guid merchantOwnerId,
+        CancellationToken cancellationToken = default)
+    {
+        var order = await _unitOfWork.ReadRepository<Order>()
+            .FirstOrDefaultAsync(o => o.Id == orderId, 
+                include: "Merchant,User", 
+                cancellationToken: cancellationToken);
+
+        if (order == null)
+        {
+            return Result.Fail("Order not found", "NOT_FOUND_ORDER");
+        }
+
+        // Verify merchant ownership
+        if (order.Merchant.OwnerId != merchantOwnerId)
+        {
+            return Result.Fail("Access denied", "FORBIDDEN_ORDER");
+        }
+
+        // Check if order can start preparing
+        if (order.Status != "Confirmed")
+        {
+            return Result.Fail("Order cannot start preparing in current status", "INVALID_STATUS");
+        }
+
+        order.Status = "Preparing";
+        order.UpdatedAt = DateTime.UtcNow;
+
+        _unitOfWork.Repository<Order>().Update(order);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Send notification
+        if (_signalRService != null)
+        {
+            await _signalRService.SendOrderStatusUpdateAsync(
+                order.Id,
+                order.UserId,
+                order.Status,
+                $"Your order {order.OrderNumber} is now being prepared by {order.Merchant.Name}!");
+        }
+
+        return Result.Ok();
+    }
+
+    public async Task<Result> MarkOrderAsReadyAsync(
+        Guid orderId,
+        Guid merchantOwnerId,
+        CancellationToken cancellationToken = default)
+    {
+        var order = await _unitOfWork.ReadRepository<Order>()
+            .FirstOrDefaultAsync(o => o.Id == orderId, 
+                include: "Merchant,User", 
+                cancellationToken: cancellationToken);
+
+        if (order == null)
+        {
+            return Result.Fail("Order not found", "NOT_FOUND_ORDER");
+        }
+
+        // Verify merchant ownership
+        if (order.Merchant.OwnerId != merchantOwnerId)
+        {
+            return Result.Fail("Access denied", "FORBIDDEN_ORDER");
+        }
+
+        // Check if order can be marked as ready
+        if (order.Status != "Preparing")
+        {
+            return Result.Fail("Order cannot be marked as ready in current status", "INVALID_STATUS");
+        }
+
+        order.Status = "Ready";
+        order.UpdatedAt = DateTime.UtcNow;
+
+        _unitOfWork.Repository<Order>().Update(order);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Send notification
+        if (_signalRService != null)
+        {
+            await _signalRService.SendOrderStatusUpdateAsync(
+                order.Id,
+                order.UserId,
+                order.Status,
+                $"Your order {order.OrderNumber} is ready for pickup from {order.Merchant.Name}!");
+        }
+
+        return Result.Ok();
+    }
+
+    public async Task<Result> CancelOrderAsync(
+        Guid orderId,
+        Guid merchantOwnerId,
+        string reason,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(reason);
+
+        var order = await _unitOfWork.ReadRepository<Order>()
+            .FirstOrDefaultAsync(o => o.Id == orderId, 
+                include: "Merchant,User", 
+                cancellationToken: cancellationToken);
+
+        if (order == null)
+        {
+            return Result.Fail("Order not found", "NOT_FOUND_ORDER");
+        }
+
+        // Verify merchant ownership
+        if (order.Merchant.OwnerId != merchantOwnerId)
+        {
+            return Result.Fail("Access denied", "FORBIDDEN_ORDER");
+        }
+
+        // Check if order can be cancelled
+        if (order.Status == "Delivered" || order.Status == "Cancelled")
+        {
+            return Result.Fail("Order cannot be cancelled in current status", "INVALID_STATUS");
+        }
+
+        order.Status = "Cancelled";
+        order.CancellationReason = reason;
+        order.UpdatedAt = DateTime.UtcNow;
+
+        _unitOfWork.Repository<Order>().Update(order);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Send notification
+        if (_signalRService != null)
+        {
+            await _signalRService.SendOrderStatusUpdateAsync(
+                order.Id,
+                order.UserId,
+                order.Status,
+                $"Your order {order.OrderNumber} has been cancelled by {order.Merchant.Name}. Reason: {reason}");
+        }
+
+        return Result.Ok();
+    }
+
+    public async Task<Result<OrderStatisticsResponse>> GetOrderStatisticsAsync(
+        Guid merchantOwnerId,
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Get merchant owned by this user
+        var merchant = await _unitOfWork.ReadRepository<Merchant>()
+            .FirstOrDefaultAsync(m => m.OwnerId == merchantOwnerId, cancellationToken: cancellationToken);
+
+        if (merchant == null)
+        {
+            return Result.Fail<OrderStatisticsResponse>("Merchant not found", "NOT_FOUND_MERCHANT");
+        }
+
+        var start = startDate ?? DateTime.UtcNow.Date.AddMonths(-1);
+        var end = endDate ?? DateTime.UtcNow.Date.AddDays(1);
+
+        Expression<Func<Order, bool>> dateFilter = o => o.MerchantId == merchant.Id && o.CreatedAt >= start && o.CreatedAt < end;
+        var orders = await _unitOfWork.Repository<Order>().ListAsync(
+            filter: dateFilter,
+            cancellationToken: cancellationToken);
+
+        var today = DateTime.UtcNow.Date;
+        var thisWeek = today.AddDays(-(int)today.DayOfWeek);
+        var thisMonth = new DateTime(today.Year, today.Month, 1);
+
+        var stats = new OrderStatisticsResponse(
+            TotalOrders: orders.Count,
+            PendingOrders: orders.Count(o => o.Status == "Pending"),
+            ConfirmedOrders: orders.Count(o => o.Status == "Confirmed"),
+            PreparingOrders: orders.Count(o => o.Status == "Preparing"),
+            ReadyOrders: orders.Count(o => o.Status == "Ready"),
+            DeliveredOrders: orders.Count(o => o.Status == "Delivered"),
+            CancelledOrders: orders.Count(o => o.Status == "Cancelled"),
+            TotalRevenue: orders.Where(o => o.Status == "Delivered").Sum(o => o.Total),
+            AverageOrderValue: orders.Any() ? orders.Average(o => o.Total) : 0,
+            TodayOrders: orders.Count(o => o.CreatedAt.Date == today),
+            ThisWeekOrders: orders.Count(o => o.CreatedAt.Date >= thisWeek),
+            ThisMonthOrders: orders.Count(o => o.CreatedAt.Date >= thisMonth),
+            GeneratedAt: DateTime.UtcNow);
+
+        return Result.Ok(stats);
     }
 }

@@ -33,3 +33,19 @@ public record ProductResponse(
     int StockQuantity,
     string? Unit,
     bool IsAvailable);
+
+// Merchant-specific DTOs
+public record UpdateProductStockRequest(
+    Guid ProductId,
+    int NewStockQuantity);
+
+public record UpdateProductOrderRequest(
+    Guid ProductId,
+    int NewDisplayOrder);
+
+public record BulkUpdateProductOrderRequest(
+    List<UpdateProductOrderRequest> Products);
+
+public record ToggleProductAvailabilityRequest(
+    Guid ProductId,
+    bool IsAvailable);

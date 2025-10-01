@@ -139,4 +139,23 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 
         return await query.ToListAsync(cancellationToken);
     }
+
+    public virtual async Task<T?> FirstOrDefaultAsync(
+        Expression<Func<T, bool>> filter,
+        string? include = null,
+        CancellationToken cancellationToken = default)
+    {
+        IQueryable<T> query = _dbSet;
+
+        if (!string.IsNullOrEmpty(include))
+        {
+            var includes = include.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var inc in includes)
+            {
+                query = query.Include(inc.Trim());
+            }
+        }
+
+        return await query.FirstOrDefaultAsync(filter, cancellationToken);
+    }
 }

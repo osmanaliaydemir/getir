@@ -32,11 +32,16 @@ public interface IGenericRepository<T> where T : class
     
     void Delete(T entity);
     
-    Task<IReadOnlyList<T>> ListAsync(
-        Expression<Func<T, bool>>? filter = null,
-        Expression<Func<T, object>>? orderBy = null,
-        bool ascending = true,
-        int? take = null,
-        string? include = null,
-        CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<T>> ListAsync(
+            Expression<Func<T, bool>>? filter = null,
+            Expression<Func<T, object>>? orderBy = null,
+            bool ascending = true,
+            int? take = null,
+            string? include = null,
+            CancellationToken cancellationToken = default);
+
+        Task<T?> FirstOrDefaultAsync(
+            Expression<Func<T, bool>> filter,
+            string? include = null,
+            CancellationToken cancellationToken = default);
 }

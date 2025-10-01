@@ -26,4 +26,42 @@ public interface IProductService
     Task<Result> DeleteProductAsync(
         Guid id,
         CancellationToken cancellationToken = default);
+
+    // Merchant-specific methods
+    Task<Result<PagedResult<ProductResponse>>> GetMyProductsAsync(
+        Guid merchantOwnerId,
+        PaginationQuery query,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<ProductResponse>> CreateMyProductAsync(
+        CreateProductRequest request,
+        Guid merchantOwnerId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<ProductResponse>> UpdateMyProductAsync(
+        Guid id,
+        UpdateProductRequest request,
+        Guid merchantOwnerId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> DeleteMyProductAsync(
+        Guid id,
+        Guid merchantOwnerId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> UpdateProductStockAsync(
+        Guid id,
+        int newStockQuantity,
+        Guid merchantOwnerId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> ToggleProductAvailabilityAsync(
+        Guid id,
+        Guid merchantOwnerId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> BulkUpdateProductOrderAsync(
+        List<UpdateProductOrderRequest> requests,
+        Guid merchantOwnerId,
+        CancellationToken cancellationToken = default);
 }

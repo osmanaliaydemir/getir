@@ -32,6 +32,17 @@ public static class ValidationConfig
         services.AddScoped<IValidator<CreateDeliveryZoneRequest>, CreateDeliveryZoneRequestValidator>();
         services.AddScoped<IValidator<UpdateDeliveryZoneRequest>, UpdateDeliveryZoneRequestValidator>();
         services.AddScoped<IValidator<CheckDeliveryZoneRequest>, CheckDeliveryZoneRequestValidator>();
+        services.AddScoped<IValidator<CreateMerchantOnboardingRequest>, CreateMerchantOnboardingRequestValidator>();
+        services.AddScoped<IValidator<UpdateOnboardingStepRequest>, UpdateOnboardingStepRequestValidator>();
+        services.AddScoped<IValidator<CompleteOnboardingRequest>, CompleteOnboardingRequestValidator>();
+        services.AddScoped<IValidator<ApproveMerchantRequest>, ApproveMerchantRequestValidator>();
+        services.AddScoped<IValidator<UpdateProductStockRequest>, UpdateProductStockRequestValidator>();
+        services.AddScoped<IValidator<UpdateProductOrderRequest>, UpdateProductOrderRequestValidator>();
+        services.AddScoped<IValidator<BulkUpdateProductOrderRequest>, BulkUpdateProductOrderRequestValidator>();
+        services.AddScoped<IValidator<ToggleProductAvailabilityRequest>, ToggleProductAvailabilityRequestValidator>();
+        services.AddScoped<IValidator<RejectOrderRequest>, RejectOrderRequestValidator>();
+        services.AddScoped<IValidator<CancelOrderRequest>, CancelOrderRequestValidator>();
+        services.AddScoped<IValidator<UpdateOrderStatusRequest>, UpdateOrderStatusRequestValidator>();
 
         return services;
     }

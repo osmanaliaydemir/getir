@@ -93,6 +93,7 @@ builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IWorkingHoursService, WorkingHoursService>();
 builder.Services.AddScoped<IDeliveryZoneService, DeliveryZoneService>();
 builder.Services.AddScoped<IMerchantDashboardService, MerchantDashboardService>();
+builder.Services.AddScoped<IMerchantOnboardingService, MerchantOnboardingService>();
 
 // ============= CONFIGURATION =============
 builder.Services.AddAuthConfiguration(builder.Configuration);
@@ -166,6 +167,9 @@ app.MapSearchEndpoints();
 app.MapWorkingHoursEndpoints();
 app.MapDeliveryZoneEndpoints();
 app.MapMerchantDashboardEndpoints();
+app.MapMerchantOnboardingEndpoints();
+app.MapMerchantProductEndpoints();
+app.MapMerchantOrderEndpoints();
 
 // ============= SIGNALR HUBS =============
 app.MapHub<Getir.WebApi.Hubs.NotificationHub>("/hubs/notifications");

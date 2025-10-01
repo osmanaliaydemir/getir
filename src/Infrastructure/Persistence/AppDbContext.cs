@@ -29,6 +29,7 @@ public class AppDbContext : DbContext
     public DbSet<WorkingHours> WorkingHours { get; set; }
     public DbSet<DeliveryZone> DeliveryZones { get; set; }
     public DbSet<DeliveryZonePoint> DeliveryZonePoints { get; set; }
+    public DbSet<MerchantOnboarding> MerchantOnboardings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -234,6 +235,26 @@ public class AppDbContext : DbContext
                 .WithMany(dz => dz.Points)
                 .HasForeignKey(e => e.DeliveryZoneId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // MerchantOnboarding configuration
+        modelBuilder.Entity<MerchantOnboarding>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ProgressPercentage).HasPrecision(5, 2);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.MerchantId).IsUnique();
+            
+            entity.HasOne(e => e.Merchant)
+                .WithOne(m => m.Onboarding)
+                .HasForeignKey<MerchantOnboarding>(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.Owner)
+                .WithMany()
+                .HasForeignKey(e => e.OwnerId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

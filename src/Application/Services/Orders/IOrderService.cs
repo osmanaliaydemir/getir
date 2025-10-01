@@ -19,4 +19,44 @@ public interface IOrderService
         Guid userId,
         PaginationQuery query,
         CancellationToken cancellationToken = default);
+
+    // Merchant-specific methods
+    Task<Result<PagedResult<OrderResponse>>> GetMerchantOrdersAsync(
+        Guid merchantOwnerId,
+        PaginationQuery query,
+        string? status = null,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<OrderResponse>> AcceptOrderAsync(
+        Guid orderId,
+        Guid merchantOwnerId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> RejectOrderAsync(
+        Guid orderId,
+        Guid merchantOwnerId,
+        string? reason = null,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> StartPreparingOrderAsync(
+        Guid orderId,
+        Guid merchantOwnerId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> MarkOrderAsReadyAsync(
+        Guid orderId,
+        Guid merchantOwnerId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> CancelOrderAsync(
+        Guid orderId,
+        Guid merchantOwnerId,
+        string reason,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<OrderStatisticsResponse>> GetOrderStatisticsAsync(
+        Guid merchantOwnerId,
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        CancellationToken cancellationToken = default);
 }
