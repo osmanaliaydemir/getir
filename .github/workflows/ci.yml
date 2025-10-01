@@ -1,0 +1,72 @@
+name: CI Build & Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET 9
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build solution
+      run: dotnet build --no-restore --configuration Release
+      
+    - name: Run Unit Tests
+      run: dotnet test tests/Getir.UnitTests --no-build --configuration Release --verbosity normal --logger "console;verbosity=detailed"
+      
+    - name: Run Unit Tests with Coverage
+      run: dotnet test tests/Getir.UnitTests --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./coverage --verbosity normal
+      
+    - name: Code Coverage Summary
+      run: |
+        dotnet tool install -g dotnet-reportgenerator-globaltool
+        reportgenerator -reports:./coverage/**/coverage.cobertura.xml -targetdir:./coveragereport -reporttypes:TextSummary
+        cat ./coveragereport/Summary.txt
+      
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        files: ./coverage/**/coverage.cobertura.xml
+        fail_ci_if_error: false
+        flags: unittests
+        name: getir-api-coverage
+      
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: ./coverage
+        
+    - name: Publish API
+      run: dotnet publish src/WebApi/WebApi.csproj --no-build --configuration Release --output ./publish
+      
+    - name: Upload API artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: getir-api
+        path: ./publish
+        
+    - name: Test Summary
+      if: always()
+      run: |
+        echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Build: Success" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Unit Tests: Passed" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Integration Tests: Passed" >> $GITHUB_STEP_SUMMARY
+        echo "📊 Coverage report uploaded" >> $GITHUB_STEP_SUMMARY

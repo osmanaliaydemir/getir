@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # ===================================
+  # SQL Server Database
+  # ===================================
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: getir-sqlserver
+    hostname: sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=GetirDb_Strong!Pass123
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+      - ./database:/docker-entrypoint-initdb.d:ro
+    networks:
+      - getir-network
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P GetirDb_Strong!Pass123 -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  # ===================================
+  # Database Initializer (Run once)
+  # ===================================
+  db-init:
+    image: mcr.microsoft.com/mssql-tools
+    container_name: getir-db-init
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    volumes:
+      - ./database:/scripts:ro
+    networks:
+      - getir-network
+    command: >
+      bash -c "
+      sleep 5 &&
+      /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P GetirDb_Strong!Pass123 -i /scripts/schema.sql &&
+      /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P GetirDb_Strong!Pass123 -i /scripts/schema-extensions.sql &&
+      echo 'Database initialized successfully!'
+      "
+    restart: "no"
+
+  # ===================================
+  # Getir API
+  # ===================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: getir-api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=GetirDb;User Id=sa;Password=GetirDb_Strong!Pass123;TrustServerCertificate=True;MultipleActiveResultSets=true
+      - Jwt__Issuer=GetirAPI
+      - Jwt__Audience=GetirApp
+      - Jwt__Secret=YourSuperSecretKeyForJWTTokenGenerationMinimum32Characters!
+      - Jwt__AccessTokenMinutes=60
+      - Jwt__RefreshTokenMinutes=10080
+    ports:
+      - "7001:8080"
+    networks:
+      - getir-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+# ===================================
+# Networks
+# ===================================
+networks:
+  getir-network:
+    driver: bridge
+    name: getir-network
+
+# ===================================
+# Volumes
+# ===================================
+volumes:
+  sqlserver-data:
+    name: getir-sqlserver-data

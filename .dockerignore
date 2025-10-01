@@ -1,0 +1,54 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+
+# Build artifacts
+**/bin/
+**/obj/
+**/out/
+**/publish/
+
+# Test results
+**/TestResults/
+**/coverage/
+**/coveragereport/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+**/Dockerfile*
+**/docker-compose*
+.dockerignore
+
+# CI/CD
+.github/
+
+# Database
+database/*.sql
+
+# Tests
+tests/
+
+# Temp
+**/temp/
+**/tmp/
