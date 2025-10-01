@@ -1,7 +1,10 @@
-using Getir.Application.Common;
-using Getir.Application.DTO;
-using Getir.Application.Services.Couriers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Getir.Application.Services.Couriers;
+using Getir.Application.DTO;
+using Getir.Application.Common;
+using Getir.WebApi.Extensions;
+using System.Security.Claims;
 
 namespace Getir.WebApi.Endpoints;
 
@@ -9,60 +12,224 @@ public static class CourierEndpoints
 {
     public static void MapCourierEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/v1/courier")
-            .WithTags("Courier")
+        // Courier Panel
+        var courierGroup = app.MapGroup("/api/couriers")
+            .WithTags("Courier Panel")
             .RequireAuthorization();
 
-        group.MapGet("/orders", async (
-            [AsParameters] PaginationQuery query,
-            [FromServices] ICourierService courierService,
-            HttpContext httpContext,
+        // Get courier dashboard
+        courierGroup.MapGet("/dashboard", async (
+            ClaimsPrincipal user,
+            [FromServices] ICourierService service,
             CancellationToken ct) =>
         {
-            var courierId = GetCourierId(httpContext);
-            if (courierId == null) return Results.Unauthorized();
+            var courierId = user.GetUserId();
+            var result = await service.GetCourierDashboardAsync(courierId, ct);
+            return result.ToIResult();
+        })
+        .WithName("GetCourierDashboard")
+        .Produces<CourierDashboardResponse>(200)
+        .Produces(404)
+        .RequireAuthorization();
 
-            var result = await courierService.GetAssignedOrdersAsync(courierId.Value, query, ct);
+        // Get courier stats
+        courierGroup.MapGet("/stats", async (
+            ClaimsPrincipal user,
+            [FromServices] ICourierService service,
+            CancellationToken ct) =>
+        {
+            var courierId = user.GetUserId();
+            var result = await service.GetCourierStatsAsync(courierId, ct);
+            return result.ToIResult();
+        })
+        .WithName("GetCourierStats")
+        .Produces<CourierStatsResponse>(200)
+        .Produces(404)
+        .RequireAuthorization();
+
+        // Get courier earnings
+        courierGroup.MapGet("/earnings", async (
+            ClaimsPrincipal user,
+            [FromServices] ICourierService service,
+            CancellationToken ct,
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null) =>
+        {
+            var courierId = user.GetUserId();
+            var result = await service.GetCourierEarningsAsync(courierId, startDate, endDate, ct);
+            return result.ToIResult();
+        })
+        .WithName("GetCourierEarnings")
+        .Produces<CourierEarningsResponse>(200)
+        .Produces(404)
+        .RequireAuthorization();
+
+        // Get assigned orders
+        courierGroup.MapGet("/orders", async (
+            ClaimsPrincipal user,
+            [FromServices] ICourierService service,
+            CancellationToken ct,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20) =>
+        {
+            var courierId = user.GetUserId();
+            var query = new PaginationQuery { Page = page, PageSize = pageSize };
+            var result = await service.GetAssignedOrdersAsync(courierId, query, ct);
             return result.ToIResult();
         })
         .WithName("GetCourierOrders")
-        .Produces<PagedResult<CourierOrderResponse>>(200);
+        .Produces<PagedResult<CourierOrderResponse>>(200)
+        .Produces(404)
+        .RequireAuthorization();
 
-        group.MapPost("/location/update", async (
-            [FromBody] CourierLocationUpdateRequest request,
-            [FromServices] ICourierService courierService,
-            HttpContext httpContext,
+        // Accept order
+        courierGroup.MapPost("/orders/accept", async (
+            [FromBody] AcceptOrderRequest request,
+            ClaimsPrincipal user,
+            [FromServices] ICourierService service,
             CancellationToken ct) =>
         {
-            var courierId = GetCourierId(httpContext);
-            if (courierId == null) return Results.Unauthorized();
+            var courierId = user.GetUserId();
+            var result = await service.AcceptOrderAsync(courierId, request, ct);
+            return result.ToIResult();
+        })
+        .WithName("AcceptOrder")
+        .Produces(200)
+        .Produces(400)
+        .Produces(404)
+        .RequireAuthorization();
 
-            var result = await courierService.UpdateLocationAsync(courierId.Value, request, ct);
+        // Start delivery
+        courierGroup.MapPost("/orders/start-delivery", async (
+            [FromBody] StartDeliveryRequest request,
+            ClaimsPrincipal user,
+            [FromServices] ICourierService service,
+            CancellationToken ct) =>
+        {
+            var courierId = user.GetUserId();
+            var result = await service.StartDeliveryAsync(courierId, request, ct);
+            return result.ToIResult();
+        })
+        .WithName("StartDelivery")
+        .Produces(200)
+        .Produces(400)
+        .Produces(404)
+        .RequireAuthorization();
+
+        // Complete delivery
+        courierGroup.MapPost("/orders/complete-delivery", async (
+            [FromBody] CompleteDeliveryRequest request,
+            ClaimsPrincipal user,
+            [FromServices] ICourierService service,
+            CancellationToken ct) =>
+        {
+            var courierId = user.GetUserId();
+            var result = await service.CompleteDeliveryAsync(courierId, request, ct);
+            return result.ToIResult();
+        })
+        .WithName("CompleteDelivery")
+        .Produces(200)
+        .Produces(400)
+        .Produces(404)
+        .RequireAuthorization();
+
+        // Update location
+        courierGroup.MapPut("/location", async (
+            [FromBody] UpdateCourierLocationRequest request,
+            ClaimsPrincipal user,
+            [FromServices] ICourierService service,
+            CancellationToken ct) =>
+        {
+            var courierId = user.GetUserId();
+            var locationRequest = new CourierLocationUpdateRequest(
+                request.Latitude,
+                request.Longitude);
+            var result = await service.UpdateLocationAsync(courierId, locationRequest, ct);
             return result.ToIResult();
         })
         .WithName("UpdateCourierLocation")
-        .Produces(200);
+        .Produces(200)
+        .Produces(400)
+        .RequireAuthorization();
 
-        group.MapPost("/availability/set", async (
+        // Set availability
+        courierGroup.MapPut("/availability", async (
             [FromBody] SetAvailabilityRequest request,
-            [FromServices] ICourierService courierService,
-            HttpContext httpContext,
+            ClaimsPrincipal user,
+            [FromServices] ICourierService service,
             CancellationToken ct) =>
         {
-            var courierId = GetCourierId(httpContext);
-            if (courierId == null) return Results.Unauthorized();
-
-            var result = await courierService.SetAvailabilityAsync(courierId.Value, request, ct);
+            var courierId = user.GetUserId();
+            var result = await service.SetAvailabilityAsync(courierId, request, ct);
             return result.ToIResult();
         })
         .WithName("SetCourierAvailability")
-        .Produces(200);
-    }
+        .Produces(200)
+        .Produces(400)
+        .RequireAuthorization();
 
-    private static Guid? GetCourierId(HttpContext context)
-    {
-        // Courier ID claim'den veya user ID'den alınabilir
-        var claim = context.User.FindFirst("CourierId") ?? context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-        return claim != null && Guid.TryParse(claim.Value, out var courierId) ? courierId : null;
+        // Admin/System endpoints
+        var adminGroup = app.MapGroup("/api/admin/couriers")
+            .WithTags("Admin - Courier Management")
+            .RequireAuthorization("Admin");
+
+        // Assign order to courier
+        adminGroup.MapPost("/assign-order", async (
+            [FromBody] AssignOrderRequest request,
+            [FromServices] ICourierService service,
+            CancellationToken ct) =>
+        {
+            var result = await service.AssignOrderAsync(request, ct);
+            return result.ToIResult();
+        })
+        .WithName("AssignOrder")
+        .Produces<CourierAssignmentResponse>(200)
+        .Produces(400)
+        .Produces(404)
+        .RequireAuthorization("Admin");
+
+        // Find nearest couriers
+        adminGroup.MapPost("/find-nearest", async (
+            [FromBody] FindNearestCouriersRequest request,
+            [FromServices] ICourierService service,
+            CancellationToken ct) =>
+        {
+            var result = await service.FindNearestCouriersAsync(request, ct);
+            return result.ToIResult();
+        })
+        .WithName("FindNearestCouriers")
+        .Produces<FindNearestCouriersResponse>(200)
+        .Produces(400)
+        .RequireAuthorization("Admin");
+
+        // Get top performers
+        adminGroup.MapGet("/top-performers", async (
+            [FromServices] ICourierService service,
+            CancellationToken ct,
+            [FromQuery] int count = 10) =>
+        {
+            var result = await service.GetTopPerformersAsync(count, ct);
+            return result.ToIResult();
+        })
+        .WithName("GetTopPerformers")
+        .Produces<List<CourierPerformanceResponse>>(200)
+        .RequireAuthorization("Admin");
+
+        // Get earnings detail for specific courier
+        adminGroup.MapGet("/earnings-detail", async (
+            [FromServices] ICourierService service,
+            CancellationToken ct,
+            [FromQuery] Guid courierId,
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null) =>
+        {
+            var query = new CourierEarningsQuery(courierId, startDate, endDate);
+            var result = await service.GetEarningsDetailAsync(query, ct);
+            return result.ToIResult();
+        })
+        .WithName("GetCourierEarningsDetail")
+        .Produces<CourierEarningsDetailResponse>(200)
+        .Produces(404)
+        .RequireAuthorization("Admin");
     }
 }

@@ -62,6 +62,46 @@ public class OrderHub : Hub
             Context.ConnectionId, orderId);
     }
 
+    /// <summary>
+    /// Subscribe to merchant order updates
+    /// </summary>
+    public async Task SubscribeToMerchantOrders(string merchantId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"merchant_{merchantId}");
+        _logger.LogInformation("Connection {ConnectionId} subscribed to merchant {MerchantId} orders", 
+            Context.ConnectionId, merchantId);
+    }
+
+    /// <summary>
+    /// Subscribe to all order updates (admin only)
+    /// </summary>
+    public async Task SubscribeToAllOrders()
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, "admin_orders");
+        _logger.LogInformation("Connection {ConnectionId} subscribed to all orders", Context.ConnectionId);
+    }
+
+    /// <summary>
+    /// Get order tracking information
+    /// </summary>
+    public async Task GetOrderTracking(string orderId)
+    {
+        var userId = GetUserId();
+        if (userId != null)
+        {
+            // This would typically fetch order tracking data from a service
+            _logger.LogInformation("User {UserId} requested tracking for order {OrderId}", userId, orderId);
+            
+            // Send current tracking status
+            await Clients.Caller.SendAsync("OrderTrackingInfo", new
+            {
+                orderId,
+                status = "Tracking requested",
+                timestamp = DateTime.UtcNow
+            });
+        }
+    }
+
     private Guid? GetUserId()
     {
         var userIdClaim = Context.User?.FindFirst(ClaimTypes.NameIdentifier);

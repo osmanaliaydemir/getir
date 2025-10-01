@@ -174,6 +174,7 @@ app.MapMerchantOnboardingEndpoints();
 app.MapMerchantProductEndpoints();
 app.MapMerchantOrderEndpoints();
 app.MapProductOptionEndpoints();
+app.MapCourierEndpoints();
 
 // ============= SIGNALR HUBS =============
 app.MapHub<Getir.WebApi.Hubs.NotificationHub>("/hubs/notifications");

@@ -61,6 +61,77 @@ public class NotificationHub : Hub
         }
     }
 
+    /// <summary>
+    /// Subscribe to specific notification types
+    /// </summary>
+    public async Task SubscribeToNotificationTypes(List<string> notificationTypes)
+    {
+        var userId = GetUserId();
+        if (userId != null)
+        {
+            foreach (var type in notificationTypes)
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"notification_{type}_{userId}");
+            }
+            
+            _logger.LogInformation("User {UserId} subscribed to notification types: {Types}", 
+                userId, string.Join(", ", notificationTypes));
+        }
+    }
+
+    /// <summary>
+    /// Subscribe to role-based notifications
+    /// </summary>
+    public async Task SubscribeToRoleNotifications()
+    {
+        var userId = GetUserId();
+        var userRole = GetUserRole();
+        
+        if (userId != null && !string.IsNullOrEmpty(userRole))
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"role_{userRole}");
+            _logger.LogInformation("User {UserId} with role {Role} subscribed to role notifications", 
+                userId, userRole);
+        }
+    }
+
+    /// <summary>
+    /// Get unread notification count
+    /// </summary>
+    public async Task GetUnreadCount()
+    {
+        var userId = GetUserId();
+        if (userId != null)
+        {
+            // This would typically fetch from a service
+            _logger.LogInformation("User {UserId} requested unread notification count", userId);
+            
+            await Clients.Caller.SendAsync("UnreadCount", new
+            {
+                count = 0,
+                timestamp = DateTime.UtcNow
+            });
+        }
+    }
+
+    /// <summary>
+    /// Subscribe to dashboard updates
+    /// </summary>
+    public async Task SubscribeToDashboard()
+    {
+        var userId = GetUserId();
+        if (userId != null)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, "dashboard_updates");
+            _logger.LogInformation("User {UserId} subscribed to dashboard updates", userId);
+        }
+    }
+
+    private string? GetUserRole()
+    {
+        return Context.User?.FindFirst("role")?.Value;
+    }
+
     private Guid? GetUserId()
     {
         var userIdClaim = Context.User?.FindFirst(ClaimTypes.NameIdentifier);

@@ -50,6 +50,13 @@ public static class ValidationConfig
         services.AddScoped<IValidator<BulkCreateProductOptionsRequest>, BulkCreateProductOptionsRequestValidator>();
         services.AddScoped<IValidator<BulkUpdateProductOptionsRequest>, BulkUpdateProductOptionsRequestValidator>();
         services.AddScoped<IValidator<CreateOrderLineOptionRequest>, CreateOrderLineOptionRequestValidator>();
+        services.AddScoped<IValidator<UpdateCourierLocationRequest>, UpdateCourierLocationRequestValidator>();
+        services.AddScoped<IValidator<AcceptOrderRequest>, AcceptOrderRequestValidator>();
+        services.AddScoped<IValidator<StartDeliveryRequest>, StartDeliveryRequestValidator>();
+        services.AddScoped<IValidator<CompleteDeliveryRequest>, CompleteDeliveryRequestValidator>();
+        services.AddScoped<IValidator<AssignOrderRequest>, AssignOrderRequestValidator>();
+        services.AddScoped<IValidator<FindNearestCouriersRequest>, FindNearestCouriersRequestValidator>();
+        services.AddScoped<IValidator<CourierEarningsQuery>, CourierEarningsQueryValidator>();
 
         return services;
     }

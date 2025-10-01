@@ -73,6 +73,73 @@ public class CourierHub : Hub
         _logger.LogInformation("Customer subscribed to courier tracking for order {OrderId}", orderId);
     }
 
+    /// <summary>
+    /// Courier joins courier group for broadcasts
+    /// </summary>
+    public async Task JoinCourierGroup()
+    {
+        var userId = GetUserId();
+        if (userId != null)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, "all_couriers");
+            _logger.LogInformation("Courier {UserId} joined courier group", userId);
+        }
+    }
+
+    /// <summary>
+    /// Subscribe to courier-specific notifications
+    /// </summary>
+    public async Task SubscribeToCourierNotifications()
+    {
+        var userId = GetUserId();
+        if (userId != null)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"courier_notifications_{userId}");
+            _logger.LogInformation("Courier {UserId} subscribed to notifications", userId);
+        }
+    }
+
+    /// <summary>
+    /// Get courier location history
+    /// </summary>
+    public async Task GetLocationHistory(string orderId)
+    {
+        var userId = GetUserId();
+        if (userId != null)
+        {
+            _logger.LogInformation("Courier {UserId} requested location history for order {OrderId}", userId, orderId);
+            
+            // This would typically fetch location history from a service
+            await Clients.Caller.SendAsync("LocationHistory", new
+            {
+                orderId,
+                locations = new List<object>(),
+                timestamp = DateTime.UtcNow
+            });
+        }
+    }
+
+    /// <summary>
+    /// Send estimated arrival time
+    /// </summary>
+    public async Task SendEstimatedArrival(string orderId, int estimatedMinutes)
+    {
+        var userId = GetUserId();
+        if (userId != null)
+        {
+            _logger.LogInformation("Courier {UserId} sent estimated arrival for order {OrderId}: {Minutes} minutes", 
+                userId, orderId, estimatedMinutes);
+
+            await Clients.Group($"order_{orderId}")
+                .SendAsync("EstimatedArrival", new
+                {
+                    orderId,
+                    estimatedMinutes,
+                    timestamp = DateTime.UtcNow
+                });
+        }
+    }
+
     private Guid? GetUserId()
     {
         var userIdClaim = Context.User?.FindFirst(ClaimTypes.NameIdentifier);
