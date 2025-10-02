@@ -56,35 +56,7 @@ public static class GeoLocationEndpoints
             .Produces<ProblemDetails>(400);
 
         // === MERCHANT ENDPOINTS ===
-        
-        // Delivery zone yönetimi
-        group.MapPost("/delivery-zones", CreateDeliveryZone)
-            .WithName("CreateDeliveryZone")
-            .WithSummary("Create new delivery zone")
-            .RequireAuthorization()
-            .Produces<DeliveryZoneResponse>()
-            .Produces<ProblemDetails>(400);
-
-        group.MapGet("/delivery-zones", GetMerchantDeliveryZones)
-            .WithName("GetMerchantDeliveryZones")
-            .WithSummary("Get merchant's delivery zones")
-            .RequireAuthorization()
-            .Produces<IEnumerable<DeliveryZoneResponse>>()
-            .Produces<ProblemDetails>(400);
-
-        group.MapPut("/delivery-zones/{zoneId:guid}", UpdateDeliveryZone)
-            .WithName("UpdateDeliveryZone")
-            .WithSummary("Update delivery zone")
-            .RequireAuthorization()
-            .Produces<DeliveryZoneResponse>()
-            .Produces<ProblemDetails>(400);
-
-        group.MapDelete("/delivery-zones/{zoneId:guid}", DeleteDeliveryZone)
-            .WithName("DeleteDeliveryZone")
-            .WithSummary("Delete delivery zone")
-            .RequireAuthorization()
-            .Produces(204)
-            .Produces<ProblemDetails>(400);
+        // Delivery zone yönetimi DeliveryZoneEndpoints'te yapılıyor
 
         // === ADMIN ENDPOINTS ===
         
@@ -180,47 +152,7 @@ public static class GeoLocationEndpoints
     #endregion
 
     #region Merchant Endpoints
-
-    private static async Task<IResult> CreateDeliveryZone(
-        CreateDeliveryZoneRequest request,
-        ClaimsPrincipal user,
-        IGeoLocationService geoLocationService,
-        CancellationToken cancellationToken)
-    {
-        // TODO: Delivery zone creation logic
-        return Results.StatusCode(501);
-    }
-
-    private static async Task<IResult> GetMerchantDeliveryZones(
-        ClaimsPrincipal user,
-        IGeoLocationService geoLocationService,
-        CancellationToken cancellationToken)
-    {
-        // TODO: Get merchant's delivery zones
-        return Results.StatusCode(501);
-    }
-
-    private static async Task<IResult> UpdateDeliveryZone(
-        Guid zoneId,
-        UpdateDeliveryZoneRequest request,
-        ClaimsPrincipal user,
-        IGeoLocationService geoLocationService,
-        CancellationToken cancellationToken)
-    {
-        // TODO: Update delivery zone
-        return Results.StatusCode(501);
-    }
-
-    private static async Task<IResult> DeleteDeliveryZone(
-        Guid zoneId,
-        ClaimsPrincipal user,
-        IGeoLocationService geoLocationService,
-        CancellationToken cancellationToken)
-    {
-        // TODO: Delete delivery zone
-        return Results.StatusCode(501);
-    }
-
+    // Delivery zone yönetimi DeliveryZoneEndpoints'te yapılıyor
     #endregion
 
     #region Admin Endpoints

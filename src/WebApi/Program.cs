@@ -37,6 +37,7 @@ using Getir.Infrastructure.Security;
 using Getir.WebApi.Configuration;
 using Getir.WebApi.Endpoints;
 using Getir.WebApi.Middleware;
+using Getir.Application.DTO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -136,6 +137,14 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<Getir.Application.Services.Admin.IAdminService, Getir.Application.Services.Admin.AdminService>();
 builder.Services.AddScoped<Getir.Application.Services.Payments.IPaymentService, Getir.Application.Services.Payments.PaymentService>();
 builder.Services.AddScoped<Getir.Application.Services.GeoLocation.IGeoLocationService, Getir.Application.Services.GeoLocation.GeoLocationService>();
+
+// File Upload Services
+builder.Services.AddScoped<IFileStorageService, Getir.Infrastructure.Services.FileStorage.SimpleFileStorageService>();
+builder.Services.AddScoped<Getir.Application.Services.FileUpload.IFileUploadIntegrationService, Getir.Application.Services.FileUpload.FileUploadIntegrationService>();
+builder.Services.AddScoped<ICdnService, Getir.Infrastructure.Services.Cdn.SimpleCdnService>();
+
+// File Upload Settings
+builder.Services.Configure<FileUploadSettings>(builder.Configuration.GetSection("FileUpload"));
 
 // ============= CONFIGURATION =============
 builder.Services.AddAuthConfiguration(builder.Configuration);
@@ -266,6 +275,7 @@ app.MapProductOptionEndpoints();
 app.MapReviewEndpoints();
 app.MapPaymentEndpoints();
 app.MapGeoLocationEndpoints();
+app.MapFileUploadEndpoints();
 app.MapAdminEndpoints();
 app.MapDatabaseTestEndpoints();
 
