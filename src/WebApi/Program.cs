@@ -134,6 +134,8 @@ builder.Services.AddScoped<IProductOptionGroupService, ProductOptionGroupService
 builder.Services.AddScoped<IProductOptionService, ProductOptionService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<Getir.Application.Services.Admin.IAdminService, Getir.Application.Services.Admin.AdminService>();
+builder.Services.AddScoped<Getir.Application.Services.Payments.IPaymentService, Getir.Application.Services.Payments.PaymentService>();
+builder.Services.AddScoped<Getir.Application.Services.GeoLocation.IGeoLocationService, Getir.Application.Services.GeoLocation.GeoLocationService>();
 
 // ============= CONFIGURATION =============
 builder.Services.AddAuthConfiguration(builder.Configuration);
@@ -262,6 +264,8 @@ app.MapMerchantProductEndpoints();
 app.MapMerchantOrderEndpoints();
 app.MapProductOptionEndpoints();
 app.MapReviewEndpoints();
+app.MapPaymentEndpoints();
+app.MapGeoLocationEndpoints();
 app.MapAdminEndpoints();
 app.MapDatabaseTestEndpoints();
 

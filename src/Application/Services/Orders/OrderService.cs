@@ -4,6 +4,7 @@ using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
 using Getir.Domain.Enums;
+using Getir.Application.Services.Payments;
 using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Orders;
@@ -12,6 +13,7 @@ public class OrderService : BaseService, IOrderService
 {
     private readonly ISignalRService? _signalRService;
     private readonly IBackgroundTaskService _backgroundTaskService;
+    private readonly IPaymentService _paymentService;
 
     public OrderService(
         IUnitOfWork unitOfWork,
@@ -19,11 +21,13 @@ public class OrderService : BaseService, IOrderService
         ILoggingService loggingService,
         ICacheService cacheService,
         IBackgroundTaskService backgroundTaskService,
+        IPaymentService paymentService,
         ISignalRService? signalRService = null) 
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _signalRService = signalRService;
         _backgroundTaskService = backgroundTaskService;
+        _paymentService = paymentService;
     }
 
     public async Task<Result<OrderResponse>> CreateOrderAsync(
@@ -34,7 +38,7 @@ public class OrderService : BaseService, IOrderService
         return await ExecuteWithPerformanceTracking(
             async () => await CreateOrderInternalAsync(userId, request, cancellationToken),
             "CreateOrder",
-            new { UserId = userId, MerchantId = request.MerchantId, ItemCount = request.Items.Count },
+            new { userId, request.MerchantId, ItemCount = request.Items.Count },
             cancellationToken);
     }
 
@@ -187,6 +191,15 @@ public class OrderService : BaseService, IOrderService
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             await _unitOfWork.CommitAsync(cancellationToken);
 
+            // Payment oluştur
+            var paymentResult = await CreatePaymentForOrderAsync(order, cancellationToken);
+            if (!paymentResult.Success)
+            {
+                // Payment oluşturulamadı, order'ı iptal et
+                await CancelOrderDueToPaymentFailureAsync(order.Id, paymentResult.Error ?? "Unknown error", cancellationToken);
+                return ServiceResult.Failure<OrderResponse>(paymentResult.Error ?? "Unknown error", paymentResult.ErrorCode ?? "PAYMENT_ERROR");
+            }
+
             // Background task - Order oluşturuldu bildirimi
             await _backgroundTaskService.EnqueueTaskAsync(new OrderCreatedTask
             {
@@ -213,7 +226,7 @@ public class OrderService : BaseService, IOrderService
             }
 
             // Log successful order creation
-            _loggingService.LogUserAction(userId.ToString(), "OrderCreated", new { OrderId = order.Id, OrderNumber = order.OrderNumber, MerchantId = merchant.Id });
+            _loggingService.LogUserAction(userId.ToString(), "OrderCreated", new { OrderId = order.Id, order.OrderNumber, MerchantId = merchant.Id });
 
             // Response oluştur
             var response = new OrderResponse(
@@ -253,7 +266,7 @@ public class OrderService : BaseService, IOrderService
         catch (Exception ex)
         {
             await _unitOfWork.RollbackAsync(cancellationToken);
-            _loggingService.LogError("Error creating order", ex, new { UserId = userId, MerchantId = request.MerchantId });
+            _loggingService.LogError("Error creating order", ex, new { userId, request.MerchantId });
             return ServiceResult.HandleException<OrderResponse>(ex, _logger, "CreateOrder");
         }
     }
@@ -337,7 +350,7 @@ public class OrderService : BaseService, IOrderService
         return await ExecuteWithPerformanceTracking(
             async () => await GetUserOrdersInternalAsync(userId, query, cancellationToken),
             "GetUserOrders",
-            new { UserId = userId, Page = query.Page, PageSize = query.PageSize },
+            new { userId, query.Page, query.PageSize },
             cancellationToken);
     }
 
@@ -398,7 +411,7 @@ public class OrderService : BaseService, IOrderService
         }
         catch (Exception ex)
         {
-            _loggingService.LogError("Error getting user orders", ex, new { UserId = userId, Page = query.Page, PageSize = query.PageSize });
+            _loggingService.LogError("Error getting user orders", ex, new { userId, query.Page, query.PageSize });
             return ServiceResult.HandleException<PagedResult<OrderResponse>>(ex, _logger, "GetUserOrders");
         }
     }
@@ -794,6 +807,99 @@ public class OrderService : BaseService, IOrderService
 
         return ServiceResult.Success(stats);
     }
+
+    #region Payment Integration Helper Methods
+
+    private async Task<Result> CreatePaymentForOrderAsync(Order order, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // PaymentMethod string'ini enum'a çevir
+            if (!Enum.TryParse<PaymentMethod>(order.PaymentMethod, out var paymentMethod))
+            {
+                return Result.Fail($"Invalid payment method: {order.PaymentMethod}", "INVALID_PAYMENT_METHOD");
+            }
+
+            // Para üstü hesapla (sadece Cash için)
+            decimal? changeAmount = null;
+            if (paymentMethod == PaymentMethod.Cash)
+            {
+                // Cash payment için para üstü hesaplama (örnek: 100 TL verildi, 85.50 TL ödeme)
+                // Bu gerçek uygulamada frontend'den gelecek
+                changeAmount = 0; // Şimdilik 0, gerçek uygulamada hesaplanacak
+            }
+
+            var paymentRequest = new CreatePaymentRequest(
+                OrderId: order.Id,
+                PaymentMethod: paymentMethod,
+                Amount: order.Total,
+                ChangeAmount: changeAmount,
+                Notes: $"Payment for order {order.OrderNumber}"
+            );
+
+            var paymentResult = await _paymentService.CreatePaymentAsync(paymentRequest, cancellationToken);
+            
+            if (paymentResult.Success)
+            {
+                // Order'ın payment status'unu güncelle
+                order.PaymentStatus = PaymentStatus.Pending.ToString();
+                _unitOfWork.Repository<Order>().Update(order);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation("Payment created successfully for order {OrderId}: {PaymentId}", 
+                    order.Id, paymentResult.Value?.Id);
+            }
+
+            return paymentResult.Success ? Result.Ok() : Result.Fail(paymentResult.Error ?? "Unknown error", paymentResult.ErrorCode);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating payment for order {OrderId}", order.Id);
+            return Result.Fail("Failed to create payment", "PAYMENT_CREATION_ERROR");
+        }
+    }
+
+    private async Task CancelOrderDueToPaymentFailureAsync(Guid orderId, string paymentError, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _unitOfWork.BeginTransactionAsync(cancellationToken);
+
+            var order = await _unitOfWork.Repository<Order>()
+                .GetByIdAsync(orderId, cancellationToken);
+
+            if (order != null)
+            {
+                order.Status = OrderStatus.Cancelled;
+                order.CancellationReason = $"Payment failed: {paymentError}";
+                order.UpdatedAt = DateTime.UtcNow;
+
+                _unitOfWork.Repository<Order>().Update(order);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CommitAsync(cancellationToken);
+
+                _logger.LogWarning("Order {OrderId} cancelled due to payment failure: {PaymentError}", 
+                    orderId, paymentError);
+
+                // SignalR notification
+                if (_signalRService != null)
+                {
+                    await _signalRService.SendOrderStatusUpdateAsync(
+                        orderId,
+                        order.UserId,
+                        OrderStatus.Cancelled.ToStringValue(),
+                        $"Order cancelled due to payment failure: {paymentError}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error cancelling order {OrderId} due to payment failure", orderId);
+            await _unitOfWork.RollbackAsync(cancellationToken);
+        }
+    }
+
+    #endregion
 }
 
 // Background task data classes

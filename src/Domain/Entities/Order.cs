@@ -34,4 +34,5 @@ public class Order
     public virtual Courier? Courier { get; set; }
     public virtual Coupon? Coupon { get; set; }
     public virtual ICollection<OrderLine> OrderLines { get; set; } = new List<OrderLine>();
+    public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 }

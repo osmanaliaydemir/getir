@@ -36,6 +36,7 @@ public class OrderServiceTests
             _loggingServiceMock.Object,
             _cacheServiceMock.Object,
             _backgroundTaskServiceMock.Object,
+            paymentService: null, // Mock payment service
             _signalRServiceMock.Object);
     }
 

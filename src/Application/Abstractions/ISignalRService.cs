@@ -1,4 +1,5 @@
 using Getir.Application.DTO;
+using Getir.Domain.Enums;
 
 namespace Getir.Application.Abstractions;
 
@@ -34,4 +35,13 @@ public interface ISignalRService
     Task<List<ConnectionInfo>> GetActiveConnectionsAsync();
     Task<bool> IsUserConnectedAsync(Guid userId);
     Task DisconnectUserAsync(Guid userId, string reason = "Manual disconnect");
+    
+    // Payment Notifications
+    Task SendPaymentStatusUpdateAsync(Guid paymentId, Guid orderId, Guid userId, PaymentStatus status, string message);
+    Task SendPaymentCreatedNotificationAsync(Guid paymentId, Guid orderId, Guid userId, PaymentMethod method, decimal amount);
+    Task SendPaymentCollectedNotificationAsync(Guid paymentId, Guid orderId, Guid userId, decimal amount, string courierName);
+    Task SendPaymentFailedNotificationAsync(Guid paymentId, Guid orderId, Guid userId, string reason);
+    Task SendCourierPaymentNotificationAsync(Guid courierId, Guid orderId, decimal amount, string customerName);
+    Task SendMerchantPaymentNotificationAsync(Guid merchantId, Guid orderId, decimal amount, string status);
+    Task SendSettlementNotificationAsync(Guid merchantId, decimal totalAmount, decimal netAmount, string status);
 }

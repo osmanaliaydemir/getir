@@ -1,5 +1,6 @@
 using Getir.Application.Abstractions;
 using Getir.Application.DTO;
+using Getir.Domain.Enums;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Getir.Infrastructure.SignalR;
@@ -144,4 +145,58 @@ public class SignalRService : ISignalRService
     {
         await _notificationSender.SendToUserAsync(userId, "Disconnect", reason, "system");
     }
+
+    #region Payment Notifications
+
+    public async Task SendPaymentStatusUpdateAsync(Guid paymentId, Guid orderId, Guid userId, PaymentStatus status, string message)
+    {
+        await _notificationSender.SendToUserAsync(userId, "Payment Update", message, "payment");
+        
+        // Order status'u da güncelle
+        await _orderSender.SendStatusUpdateAsync(orderId, userId, status.ToString(), message);
+    }
+
+    public async Task SendPaymentCreatedNotificationAsync(Guid paymentId, Guid orderId, Guid userId, PaymentMethod method, decimal amount)
+    {
+        var message = $"Payment of {amount:C} created for your order using {method.GetDisplayName()}";
+        await _notificationSender.SendToUserAsync(userId, "Payment Created", message, "payment");
+    }
+
+    public async Task SendPaymentCollectedNotificationAsync(Guid paymentId, Guid orderId, Guid userId, decimal amount, string courierName)
+    {
+        var message = $"Payment of {amount:C} has been collected by courier {courierName}";
+        await _notificationSender.SendToUserAsync(userId, "Payment Collected", message, "payment");
+        
+        // Order delivered status'a güncelle
+        await _orderSender.SendStatusUpdateAsync(orderId, userId, "Delivered", message);
+    }
+
+    public async Task SendPaymentFailedNotificationAsync(Guid paymentId, Guid orderId, Guid userId, string reason)
+    {
+        var message = $"Payment failed: {reason}";
+        await _notificationSender.SendToUserAsync(userId, "Payment Failed", message, "payment");
+        
+        // Order cancelled status'a güncelle
+        await _orderSender.SendStatusUpdateAsync(orderId, userId, "Cancelled", message);
+    }
+
+    public async Task SendCourierPaymentNotificationAsync(Guid courierId, Guid orderId, decimal amount, string customerName)
+    {
+        var message = $"Collect {amount:C} cash payment from {customerName} for order #{orderId}";
+        await _notificationSender.SendToUserAsync(courierId, "Cash Collection Required", message, "payment");
+    }
+
+    public async Task SendMerchantPaymentNotificationAsync(Guid merchantId, Guid orderId, decimal amount, string status)
+    {
+        var message = $"Payment of {amount:C} for order #{orderId} status: {status}";
+        await _notificationSender.SendToUserAsync(merchantId, "Payment Update", message, "payment");
+    }
+
+    public async Task SendSettlementNotificationAsync(Guid merchantId, decimal totalAmount, decimal netAmount, string status)
+    {
+        var message = $"Settlement {status}: Total {totalAmount:C}, Net {netAmount:C}";
+        await _notificationSender.SendToUserAsync(merchantId, "Settlement Update", message, "settlement");
+    }
+
+    #endregion
 }
