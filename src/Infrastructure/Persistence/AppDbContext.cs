@@ -38,6 +38,8 @@ public class AppDbContext : DbContext
     public DbSet<RatingHistory> RatingHistories { get; set; }
     public DbSet<DeliveryZonePoint> DeliveryZonePoints { get; set; }
     public DbSet<MerchantOnboarding> MerchantOnboardings { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<SystemNotification> SystemNotifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -412,6 +414,56 @@ public class AppDbContext : DbContext
             entity.Property(e => e.SnapshotDate).HasDefaultValueSql("GETUTCDATE()");
             
             entity.HasIndex(e => new { e.EntityId, e.EntityType, e.SnapshotDate });
+        });
+
+        // AuditLog Configuration
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
+            entity.Property(e => e.UserName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Action).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.EntityType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.EntityId).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Details).HasMaxLength(2000);
+            entity.Property(e => e.IpAddress).HasMaxLength(45);
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.Property(e => e.SessionId).HasMaxLength(100);
+            entity.Property(e => e.RequestId).HasMaxLength(50);
+            entity.Property(e => e.ErrorMessage).HasMaxLength(500);
+            entity.Property(e => e.Timestamp).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => new { e.UserId, e.Timestamp });
+            entity.HasIndex(e => new { e.Action, e.Timestamp });
+            entity.HasIndex(e => new { e.EntityType, e.EntityId });
+            entity.HasIndex(e => e.Timestamp);
+
+            // Relationship with User
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // SystemNotification Configuration
+        modelBuilder.Entity<SystemNotification>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Message).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Type).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.TargetRoles).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => new { e.IsActive, e.Priority, e.CreatedAt });
+            entity.HasIndex(e => e.TargetRoles);
+            entity.HasIndex(e => e.Type);
+
+            // Relationship with User (Creator)
+            entity.HasOne(e => e.Creator)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.SignalR;
+using AspNetCoreRateLimit;
 using Getir.Application.Abstractions;
 using Getir.Application.Services.Addresses;
 using Getir.Application.Services.Auth;
@@ -26,6 +27,7 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Getir.Application.Services.WorkingHours;
 using Getir.Application.Services.DeliveryZones;
+using Getir.Application.Common;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,13 +51,18 @@ builder.Services.AddDbContext<AppDbContext>(options =>
                 maxRetryCount: 5,
                 maxRetryDelay: TimeSpan.FromSeconds(30),
                 errorNumbersToAdd: null);
+            
+                    // Connection pooling optimization
+                    sqlOptions.CommandTimeout(30);
         });
 
-    if (builder.Environment.IsDevelopment())
-    {
-        options.EnableSensitiveDataLogging();
-        options.EnableDetailedErrors();
-    }
+    // Query optimization
+    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+    
+            if (builder.Environment.IsDevelopment())
+            {
+                options.EnableDetailedErrors();
+            }
 });
 
 // ============= DEPENDENCY INJECTION =============
@@ -65,6 +72,24 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 builder.Services.AddScoped(typeof(IReadOnlyRepository<>), typeof(ReadOnlyRepository<>));
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasherService>();
+
+// Common Services
+builder.Services.AddScoped<ILoggingService, LoggingService>();
+builder.Services.AddScoped<ICacheService, MemoryCacheService>();
+builder.Services.AddScoped<IBackgroundTaskService, BackgroundTaskService>();
+
+// Memory Cache
+builder.Services.AddMemoryCache();
+
+// Application Insights (temporarily disabled)
+// builder.Services.AddApplicationInsightsConfiguration(builder.Configuration);
+
+// CSRF Protection
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-CSRF-TOKEN";
+    options.SuppressXFrameOptionsHeader = false;
+});
 
 // SignalR Services
 builder.Services.AddScoped<ISignalRService, Getir.Infrastructure.SignalR.SignalRService>();
@@ -99,13 +124,20 @@ builder.Services.AddScoped<IMerchantOnboardingService, MerchantOnboardingService
 builder.Services.AddScoped<IProductOptionGroupService, ProductOptionGroupService>();
 builder.Services.AddScoped<IProductOptionService, ProductOptionService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<Getir.Application.Services.Admin.IAdminService, Getir.Application.Services.Admin.AdminService>();
 
 // ============= CONFIGURATION =============
 builder.Services.AddAuthConfiguration(builder.Configuration);
+builder.Services.AddApiKeyConfiguration(builder.Configuration);
 builder.Services.AddHealthChecksConfiguration(builder.Configuration);
+
+// Health check services
+builder.Services.AddHttpClient<Getir.WebApi.HealthChecks.ExternalApiHealthCheck>();
 builder.Services.AddVersioningConfiguration();
 builder.Services.AddValidationConfiguration();
 builder.Services.AddSwaggerConfiguration();
+builder.Services.AddRateLimitConfiguration(builder.Configuration);
+builder.Services.AddMetricsConfiguration();
 
 // FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
@@ -140,6 +172,14 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseSerilogRequestLogging();
 
+// ============= MIDDLEWARE =============
+app.UseMiddleware<ValidationMiddleware>();
+app.UseMiddleware<SecurityAuditMiddleware>();
+
+// Rate limiting
+app.UseIpRateLimiting();
+app.UseClientRateLimiting();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -147,7 +187,43 @@ if (app.Environment.IsDevelopment())
 
 app.UseSwaggerConfiguration();
 
+// ============= SECURITY =============
 app.UseHttpsRedirection();
+
+// Request size limiting
+app.Use(async (context, next) =>
+{
+    context.Request.EnableBuffering();
+    var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
+    context.Request.Body.Position = 0;
+    
+    if (body.Length > 10 * 1024 * 1024) // 10MB limit
+    {
+        context.Response.StatusCode = 413; // Payload Too Large
+        await context.Response.WriteAsync("Request size exceeds 10MB limit");
+        return;
+    }
+    
+    await next();
+});
+
+// Security headers
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Add("X-Frame-Options", "DENY");
+    context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+    context.Response.Headers.Add("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+    context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;");
+    context.Response.Headers.Add("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+    context.Response.Headers.Add("X-Permitted-Cross-Domain-Policies", "none");
+    context.Response.Headers.Add("Cross-Origin-Embedder-Policy", "require-corp");
+    context.Response.Headers.Add("Cross-Origin-Opener-Policy", "same-origin");
+    context.Response.Headers.Add("Cross-Origin-Resource-Policy", "same-origin");
+    
+    await next();
+});
 
 // CORS for SignalR
 app.UseCors("SignalRCorsPolicy");
@@ -176,8 +252,9 @@ app.MapMerchantOnboardingEndpoints();
 app.MapMerchantProductEndpoints();
 app.MapMerchantOrderEndpoints();
 app.MapProductOptionEndpoints();
-app.MapCourierEndpoints();
 app.MapReviewEndpoints();
+app.MapAdminEndpoints();
+app.MapDatabaseTestEndpoints();
 
 // ============= SIGNALR HUBS =============
 app.MapHub<Getir.WebApi.Hubs.NotificationHub>("/hubs/notifications");
@@ -185,6 +262,7 @@ app.MapHub<Getir.WebApi.Hubs.OrderHub>("/hubs/orders");
 app.MapHub<Getir.WebApi.Hubs.CourierHub>("/hubs/courier");
 
 app.UseHealthChecksConfiguration();
+app.UseMetricsConfiguration();
 
 // ============= RUN =============
 try

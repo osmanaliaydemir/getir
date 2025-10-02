@@ -1,5 +1,6 @@
 using FluentValidation;
 using Getir.Application.DTO;
+using Getir.Domain.Enums;
 
 namespace Getir.Application.Validators;
 
@@ -83,7 +84,14 @@ public class UpdateOrderStatusRequestValidator : AbstractValidator<UpdateOrderSt
 
     private static bool BeValidStatus(string status)
     {
-        var validStatuses = new[] { "Pending", "Confirmed", "Preparing", "Ready", "OnTheWay", "Delivered", "Cancelled" };
-        return validStatuses.Contains(status);
+        try
+        {
+            OrderStatusExtensions.FromString(status);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

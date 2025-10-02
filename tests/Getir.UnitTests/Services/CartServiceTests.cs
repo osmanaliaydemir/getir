@@ -1,9 +1,11 @@
 using FluentAssertions;
 using Getir.Application.Abstractions;
+using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Application.Services.Cart;
 using Getir.Domain.Entities;
 using Getir.UnitTests.Helpers;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -12,12 +14,26 @@ namespace Getir.UnitTests.Services;
 public class CartServiceTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<ILogger<CartService>> _loggerMock;
+    private readonly Mock<ILoggingService> _loggingServiceMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
+    private readonly Mock<IBackgroundTaskService> _backgroundTaskServiceMock;
     private readonly CartService _cartService;
 
     public CartServiceTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
-        _cartService = new CartService(_unitOfWorkMock.Object);
+        _loggerMock = new Mock<ILogger<CartService>>();
+        _loggingServiceMock = new Mock<ILoggingService>();
+        _cacheServiceMock = new Mock<ICacheService>();
+        _backgroundTaskServiceMock = new Mock<IBackgroundTaskService>();
+        
+        _cartService = new CartService(
+            _unitOfWorkMock.Object,
+            _loggerMock.Object,
+            _loggingServiceMock.Object,
+            _cacheServiceMock.Object,
+            _backgroundTaskServiceMock.Object);
     }
 
     [Fact]

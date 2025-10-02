@@ -79,7 +79,7 @@ public static class MerchantDashboardEndpoints
             var result = await service.GetPerformanceMetricsAsync(merchantId, userId, startDate, endDate, ct);
             return result.ToIResult();
         })
-        .WithName("GetPerformanceMetrics")
+        .WithName("GetMerchantPerformanceMetrics")
         .Produces<MerchantPerformanceMetrics>(200)
         .Produces(403)
         .Produces(404);

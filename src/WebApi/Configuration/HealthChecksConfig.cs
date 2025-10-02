@@ -1,3 +1,7 @@
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using System.Net.NetworkInformation;
+using Getir.WebApi.HealthChecks;
+
 namespace Getir.WebApi.Configuration;
 
 public static class HealthChecksConfig
@@ -10,7 +14,10 @@ public static class HealthChecksConfig
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found");
 
         services.AddHealthChecks()
-            .AddSqlServer(connectionString);
+            .AddSqlServer(connectionString, name: "database", tags: new[] { "db", "sqlserver" })
+            .AddCheck<MemoryHealthCheck>("memory", tags: new[] { "memory" })
+            .AddCheck<DiskSpaceHealthCheck>("disk_space", tags: new[] { "disk" })
+            .AddCheck<ExternalApiHealthCheck>("external_apis", tags: new[] { "external" });
 
         return services;
     }

@@ -2,16 +2,23 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Campaigns;
 
-public class CampaignService : ICampaignService
+public class CampaignService : BaseService, ICampaignService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IBackgroundTaskService _backgroundTaskService;
 
-    public CampaignService(IUnitOfWork unitOfWork)
+    public CampaignService(
+        IUnitOfWork unitOfWork,
+        ILogger<CampaignService> logger,
+        ILoggingService loggingService,
+        ICacheService cacheService,
+        IBackgroundTaskService backgroundTaskService) 
+        : base(unitOfWork, logger, loggingService, cacheService)
     {
-        _unitOfWork = unitOfWork;
+        _backgroundTaskService = backgroundTaskService;
     }
 
     public async Task<Result<PagedResult<CampaignResponse>>> GetActiveCampaignsAsync(

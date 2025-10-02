@@ -25,7 +25,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         string? include = null,
         CancellationToken cancellationToken = default)
     {
-        IQueryable<T> query = _dbSet;
+        IQueryable<T> query = _dbSet.AsNoTracking(); // Performance optimization
 
         if (!string.IsNullOrWhiteSpace(include))
         {
@@ -47,7 +47,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         string? include = null,
         CancellationToken cancellationToken = default)
     {
-        IQueryable<T> query = _dbSet;
+        IQueryable<T> query = _dbSet.AsNoTracking(); // Performance optimization
 
         if (filter != null)
         {

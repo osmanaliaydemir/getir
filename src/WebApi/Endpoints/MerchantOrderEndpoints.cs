@@ -12,7 +12,7 @@ public static class MerchantOrderEndpoints
 {
     public static void MapMerchantOrderEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/merchants/orders")
+        var group = app.MapGroup("/api/v1/merchants/orders")
             .WithTags("Merchant Orders")
             .RequireAuthorization();
 
@@ -20,13 +20,11 @@ public static class MerchantOrderEndpoints
         group.MapGet("/", async (
             ClaimsPrincipal user,
             [FromServices] IOrderService service,
+            [AsParameters] PaginationQuery query,
             CancellationToken ct,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 20,
             [FromQuery] string? status = null) =>
         {
             var userId = user.GetUserId();
-            var query = new PaginationQuery { Page = page, PageSize = pageSize };
             var result = await service.GetMerchantOrdersAsync(userId, query, status, ct);
             return result.ToIResult();
         })
@@ -63,7 +61,7 @@ public static class MerchantOrderEndpoints
             var result = await service.AcceptOrderAsync(id, userId, ct);
             return result.ToIResult();
         })
-        .WithName("AcceptOrder")
+        .WithName("AcceptOrderByMerchant")
         .Produces<OrderResponse>(200)
         .Produces(400)
         .Produces(403)

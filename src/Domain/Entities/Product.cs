@@ -15,6 +15,7 @@ public class Product
     public bool IsAvailable { get; set; }
     public bool IsActive { get; set; }
     public int DisplayOrder { get; set; }
+    public byte[] RowVersion { get; set; } = default!; // Optimistic locking için
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 

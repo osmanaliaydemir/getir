@@ -1,9 +1,11 @@
 using FluentAssertions;
 using Getir.Application.Abstractions;
+using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Application.Services.Auth;
 using Getir.Domain.Entities;
 using Getir.UnitTests.Helpers;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -12,6 +14,10 @@ namespace Getir.UnitTests.Services;
 public class AuthServiceTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<ILogger<AuthService>> _loggerMock;
+    private readonly Mock<ILoggingService> _loggingServiceMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
+    private readonly Mock<IBackgroundTaskService> _backgroundTaskServiceMock;
     private readonly Mock<IJwtTokenService> _jwtTokenServiceMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
     private readonly AuthService _authService;
@@ -19,11 +25,19 @@ public class AuthServiceTests
     public AuthServiceTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
+        _loggerMock = new Mock<ILogger<AuthService>>();
+        _loggingServiceMock = new Mock<ILoggingService>();
+        _cacheServiceMock = new Mock<ICacheService>();
+        _backgroundTaskServiceMock = new Mock<IBackgroundTaskService>();
         _jwtTokenServiceMock = new Mock<IJwtTokenService>();
         _passwordHasherMock = new Mock<IPasswordHasher>();
         
         _authService = new AuthService(
             _unitOfWorkMock.Object,
+            _loggerMock.Object,
+            _loggingServiceMock.Object,
+            _cacheServiceMock.Object,
+            _backgroundTaskServiceMock.Object,
             _jwtTokenServiceMock.Object,
             _passwordHasherMock.Object);
     }
@@ -56,7 +70,7 @@ public class AuthServiceTests
         _passwordHasherMock.Setup(p => p.HashPassword(It.IsAny<string>()))
             .Returns("hashed_password");
         
-        _jwtTokenServiceMock.Setup(j => j.CreateAccessToken(It.IsAny<Guid>(), It.IsAny<string>(), null))
+        _jwtTokenServiceMock.Setup(j => j.CreateAccessToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<IEnumerable<System.Security.Claims.Claim>>()))
             .Returns("access_token");
         
         _jwtTokenServiceMock.Setup(j => j.CreateRefreshToken())
@@ -124,7 +138,7 @@ public class AuthServiceTests
         _passwordHasherMock.Setup(p => p.VerifyPassword("Test123!", "hashed_password"))
             .Returns(true);
 
-        _jwtTokenServiceMock.Setup(j => j.CreateAccessToken(It.IsAny<Guid>(), It.IsAny<string>(), null))
+        _jwtTokenServiceMock.Setup(j => j.CreateAccessToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<IEnumerable<System.Security.Claims.Claim>>()))
             .Returns("access_token");
 
         _jwtTokenServiceMock.Setup(j => j.CreateRefreshToken())

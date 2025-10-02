@@ -2,16 +2,23 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Search;
 
-public class SearchService : ISearchService
+public class SearchService : BaseService, ISearchService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IBackgroundTaskService _backgroundTaskService;
 
-    public SearchService(IUnitOfWork unitOfWork)
+    public SearchService(
+        IUnitOfWork unitOfWork,
+        ILogger<SearchService> logger,
+        ILoggingService loggingService,
+        ICacheService cacheService,
+        IBackgroundTaskService backgroundTaskService) 
+        : base(unitOfWork, logger, loggingService, cacheService)
     {
-        _unitOfWork = unitOfWork;
+        _backgroundTaskService = backgroundTaskService;
     }
 
     public async Task<Result<PagedResult<ProductResponse>>> SearchProductsAsync(

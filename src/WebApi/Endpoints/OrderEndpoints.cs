@@ -28,7 +28,6 @@ public static class OrderEndpoints
             var result = await orderService.CreateOrderAsync(userId, request, ct);
             return result.ToIResult();
         })
-        .WithName("CreateOrder")
         .Produces<OrderResponse>(200)
         .Produces(400);
 
@@ -47,7 +46,6 @@ public static class OrderEndpoints
             var result = await orderService.GetOrderByIdAsync(id, userId, ct);
             return result.ToIResult();
         })
-        .WithName("GetOrderById")
         .Produces<OrderResponse>(200)
         .Produces(404);
 
@@ -66,7 +64,6 @@ public static class OrderEndpoints
             var result = await orderService.GetUserOrdersAsync(userId, query, ct);
             return result.ToIResult();
         })
-        .WithName("GetUserOrders")
         .Produces<PagedResult<OrderResponse>>(200);
     }
 }

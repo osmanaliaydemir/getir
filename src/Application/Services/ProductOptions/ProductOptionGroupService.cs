@@ -3,16 +3,23 @@ using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.ProductOptions;
 
-public class ProductOptionGroupService : IProductOptionGroupService
+public class ProductOptionGroupService : BaseService, IProductOptionGroupService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IBackgroundTaskService _backgroundTaskService;
 
-    public ProductOptionGroupService(IUnitOfWork unitOfWork)
+    public ProductOptionGroupService(
+        IUnitOfWork unitOfWork,
+        ILogger<ProductOptionGroupService> logger,
+        ILoggingService loggingService,
+        ICacheService cacheService,
+        IBackgroundTaskService backgroundTaskService) 
+        : base(unitOfWork, logger, loggingService, cacheService)
     {
-        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _backgroundTaskService = backgroundTaskService;
     }
 
     public async Task<Result<PagedResult<ProductOptionGroupResponse>>> GetProductOptionGroupsAsync(

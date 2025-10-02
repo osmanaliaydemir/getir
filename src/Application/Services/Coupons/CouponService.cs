@@ -2,16 +2,23 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Coupons;
 
-public class CouponService : ICouponService
+public class CouponService : BaseService, ICouponService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IBackgroundTaskService _backgroundTaskService;
 
-    public CouponService(IUnitOfWork unitOfWork)
+    public CouponService(
+        IUnitOfWork unitOfWork,
+        ILogger<CouponService> logger,
+        ILoggingService loggingService,
+        ICacheService cacheService,
+        IBackgroundTaskService backgroundTaskService) 
+        : base(unitOfWork, logger, loggingService, cacheService)
     {
-        _unitOfWork = unitOfWork;
+        _backgroundTaskService = backgroundTaskService;
     }
 
     public async Task<Result<CouponValidationResponse>> ValidateCouponAsync(
@@ -35,6 +42,15 @@ public class CouponService : ICouponService
         if (coupon.UsageLimit.HasValue && coupon.UsageCount >= coupon.UsageLimit.Value)
         {
             return Result.Ok(new CouponValidationResponse(false, "Coupon usage limit reached", 0, request.Code));
+        }
+
+        // Check if user has already used this coupon
+        var existingUsage = await _unitOfWork.ReadRepository<CouponUsage>()
+            .FirstOrDefaultAsync(cu => cu.CouponId == coupon.Id && cu.UserId == userId, cancellationToken: cancellationToken);
+
+        if (existingUsage != null)
+        {
+            return Result.Ok(new CouponValidationResponse(false, "You have already used this coupon", 0, request.Code));
         }
 
         if (request.OrderAmount < coupon.MinimumOrderAmount)
@@ -149,5 +165,36 @@ public class CouponService : ICouponService
         var pagedResult = PagedResult<CouponResponse>.Create(response, total, query.Page, query.PageSize);
         
         return Result.Ok(pagedResult);
+    }
+
+    public async Task<Result> RecordCouponUsageAsync(
+        Guid couponId,
+        Guid userId,
+        Guid orderId,
+        decimal discountAmount,
+        CancellationToken cancellationToken = default)
+    {
+        var couponUsage = new CouponUsage
+        {
+            Id = Guid.NewGuid(),
+            CouponId = couponId,
+            UserId = userId,
+            OrderId = orderId,
+            DiscountAmount = discountAmount,
+            UsedAt = DateTime.UtcNow
+        };
+
+        await _unitOfWork.Repository<CouponUsage>().AddAsync(couponUsage, cancellationToken);
+
+        // Update coupon usage count
+        var coupon = await _unitOfWork.Repository<Coupon>().GetByIdAsync(couponId, cancellationToken);
+        if (coupon != null)
+        {
+            coupon.UsageCount++;
+            _unitOfWork.Repository<Coupon>().Update(coupon);
+        }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Ok();
     }
 }

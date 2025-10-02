@@ -1,0 +1,332 @@
+{
+  "info": {
+    "name": "Getir Clone API - Extended Collection",
+    "description": "Extended API collection with all endpoints including admin, merchant management, and advanced features",
+    "version": "2.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://localhost:7001",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "merchantToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "courierToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Authentication & Users",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Test123!\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"phoneNumber\": \"+905551234567\"\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/v1/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "register"]}
+          }
+        },
+        {
+          "name": "Login Customer",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "if (pm.response.code === 200) {",
+                "    const response = pm.response.json();",
+                "    if (response.data && response.data.accessToken) {",
+                "        pm.collectionVariables.set('accessToken', response.data.accessToken);",
+                "    }",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer1@example.com\",\n  \"password\": \"Test123!\"\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"]}
+          }
+        },
+        {
+          "name": "Login Admin",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "if (pm.response.code === 200) {",
+                "    const response = pm.response.json();",
+                "    if (response.data && response.data.accessToken) {",
+                "        pm.collectionVariables.set('adminToken', response.data.accessToken);",
+                "    }",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@getir.com\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏪 Merchants & Products",
+      "item": [
+        {
+          "name": "Get All Merchants",
+          "request": {
+            "method": "GET",
+            "url": {"raw": "{{baseUrl}}/api/v1/merchants?page=1&pageSize=20", "host": ["{{baseUrl}}"], "path": ["api", "v1", "merchants"], "query": [{"key": "page", "value": "1"}, {"key": "pageSize", "value": "20"}]}
+          }
+        },
+        {
+          "name": "Get Merchant Products",
+          "request": {
+            "method": "GET",
+            "url": {"raw": "{{baseUrl}}/api/v1/products/merchant/77777777-7777-7777-7777-777777777777", "host": ["{{baseUrl}}"], "path": ["api", "v1", "products", "merchant", "77777777-7777-7777-7777-777777777777"]}
+          }
+        },
+        {
+          "name": "Search Products",
+          "request": {
+            "method": "GET",
+            "url": {"raw": "{{baseUrl}}/api/v1/products/search?query=elma", "host": ["{{baseUrl}}"], "path": ["api", "v1", "products", "search"], "query": [{"key": "query", "value": "elma"}]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛒 Cart & Orders",
+      "item": [
+        {
+          "name": "Add to Cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchantId\": \"77777777-7777-7777-7777-777777777777\",\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 2\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/v1/cart/items", "host": ["{{baseUrl}}"], "path": ["api", "v1", "cart", "items"]}
+          }
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchantId\": \"77777777-7777-7777-7777-777777777777\",\n  \"deliveryAddress\": \"Kadıköy, İstanbul\",\n  \"deliveryLatitude\": 40.9923,\n  \"deliveryLongitude\": 29.0244,\n  \"paymentMethod\": \"CreditCard\"\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/v1/orders", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orders"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎫 Coupons & Reviews",
+      "item": [
+        {
+          "name": "Get Available Coupons",
+          "request": {
+            "method": "GET",
+            "url": {"raw": "{{baseUrl}}/api/v1/coupons", "host": ["{{baseUrl}}"], "path": ["api", "v1", "coupons"]}
+          }
+        },
+        {
+          "name": "Validate Coupon",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WELCOME10\",\n  \"orderAmount\": 100.00\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/v1/coupons/validate", "host": ["{{baseUrl}}"], "path": ["api", "v1", "coupons", "validate"]}
+          }
+        },
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"revieweeId\": \"77777777-7777-7777-7777-777777777777\",\n  \"revieweeType\": \"Merchant\",\n  \"orderId\": \"{{orderId}}\",\n  \"rating\": 5,\n  \"comment\": \"Great service!\"\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/v1/reviews", "host": ["{{baseUrl}}"], "path": ["api", "v1", "reviews"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "🚚 Courier & Notifications",
+      "item": [
+        {
+          "name": "Get Available Couriers",
+          "request": {
+            "method": "GET",
+            "url": {"raw": "{{baseUrl}}/api/v1/couriers/available", "host": ["{{baseUrl}}"], "path": ["api", "v1", "couriers", "available"]}
+          }
+        },
+        {
+          "name": "Get User Notifications",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/v1/notifications", "host": ["{{baseUrl}}"], "path": ["api", "v1", "notifications"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏢 Merchant Management",
+      "item": [
+        {
+          "name": "Get Merchant Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{merchantToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/v1/merchant/dashboard/stats", "host": ["{{baseUrl}}"], "path": ["api", "v1", "merchant", "dashboard", "stats"]}
+          }
+        },
+        {
+          "name": "Get Merchant Orders",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{merchantToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/v1/merchant/orders", "host": ["{{baseUrl}}"], "path": ["api", "v1", "merchant", "orders"]}
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{merchantToken}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Product\",\n  \"description\": \"A great product\",\n  \"price\": 25.50,\n  \"stockQuantity\": 100\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/v1/merchant/products", "host": ["{{baseUrl}}"], "path": ["api", "v1", "merchant", "products"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "👑 Admin Panel",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/v1/admin/users", "host": ["{{baseUrl}}"], "path": ["api", "v1", "admin", "users"]}
+          }
+        },
+        {
+          "name": "Get All Merchants",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/v1/admin/merchants", "host": ["{{baseUrl}}"], "path": ["api", "v1", "admin", "merchants"]}
+          }
+        },
+        {
+          "name": "Approve Merchant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchantId\": \"{{merchantId}}\",\n  \"isApproved\": true\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/v1/admin/merchants/approve", "host": ["{{baseUrl}}"], "path": ["api", "v1", "admin", "merchants", "approve"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔧 System & Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {"raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"]}
+          }
+        },
+        {
+          "name": "Database Test",
+          "request": {
+            "method": "GET",
+            "url": {"raw": "{{baseUrl}}/api/v1/database-test/connection", "host": ["{{baseUrl}}"], "path": ["api", "v1", "database-test", "connection"]}
+          }
+        },
+        {
+          "name": "Performance Test",
+          "request": {
+            "method": "GET",
+            "url": {"raw": "{{baseUrl}}/api/v1/database-test/performance-test", "host": ["{{baseUrl}}"], "path": ["api", "v1", "database-test", "performance-test"]}
+          }
+        }
+      ]
+    }
+  ]
+}

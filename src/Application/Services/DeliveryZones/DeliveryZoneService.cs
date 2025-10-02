@@ -2,16 +2,23 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.DeliveryZones;
 
-public class DeliveryZoneService : IDeliveryZoneService
+public class DeliveryZoneService : BaseService, IDeliveryZoneService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IBackgroundTaskService _backgroundTaskService;
 
-    public DeliveryZoneService(IUnitOfWork unitOfWork)
+    public DeliveryZoneService(
+        IUnitOfWork unitOfWork,
+        ILogger<DeliveryZoneService> logger,
+        ILoggingService loggingService,
+        ICacheService cacheService,
+        IBackgroundTaskService backgroundTaskService) 
+        : base(unitOfWork, logger, loggingService, cacheService)
     {
-        _unitOfWork = unitOfWork;
+        _backgroundTaskService = backgroundTaskService;
     }
 
     public async Task<Result<List<DeliveryZoneResponse>>> GetDeliveryZonesByMerchantAsync(

@@ -12,7 +12,7 @@ public static class MerchantProductEndpoints
 {
     public static void MapMerchantProductEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/merchants/products")
+        var group = app.MapGroup("/api/v1/merchants/products")
             .WithTags("Merchant Products")
             .RequireAuthorization();
 
@@ -20,16 +20,14 @@ public static class MerchantProductEndpoints
         group.MapGet("/", async (
             ClaimsPrincipal user,
             [FromServices] IProductService service,
-            CancellationToken ct,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 20) =>
+            [AsParameters] PaginationQuery query,
+            CancellationToken ct) =>
         {
             var userId = user.GetUserId();
-            var query = new PaginationQuery { Page = page, PageSize = pageSize };
             var result = await service.GetMyProductsAsync(userId, query, ct);
             return result.ToIResult();
         })
-        .WithName("GetMyProducts")
+        .WithName("GetMerchantProducts")
         .Produces<PagedResult<ProductResponse>>(200)
         .Produces(404)
         .RequireAuthorization();
@@ -45,7 +43,7 @@ public static class MerchantProductEndpoints
             var result = await service.CreateMyProductAsync(request, userId, ct);
             return result.ToIResult();
         })
-        .WithName("CreateMyProduct")
+        .WithName("CreateMerchantProduct")
         .Produces<ProductResponse>(201)
         .Produces(400)
         .Produces(403)
@@ -63,7 +61,7 @@ public static class MerchantProductEndpoints
             var result = await service.UpdateMyProductAsync(id, request, userId, ct);
             return result.ToIResult();
         })
-        .WithName("UpdateMyProduct")
+        .WithName("UpdateMerchantProduct")
         .Produces<ProductResponse>(200)
         .Produces(400)
         .Produces(403)
@@ -81,7 +79,7 @@ public static class MerchantProductEndpoints
             var result = await service.DeleteMyProductAsync(id, userId, ct);
             return result.ToIResult();
         })
-        .WithName("DeleteMyProduct")
+        .WithName("DeleteMerchantProduct")
         .Produces(200)
         .Produces(403)
         .Produces(404)

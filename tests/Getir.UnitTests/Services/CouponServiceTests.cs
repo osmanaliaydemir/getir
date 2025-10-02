@@ -1,9 +1,11 @@
 using FluentAssertions;
 using Getir.Application.Abstractions;
+using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Application.Services.Coupons;
 using Getir.Domain.Entities;
 using Getir.UnitTests.Helpers;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -12,12 +14,38 @@ namespace Getir.UnitTests.Services;
 public class CouponServiceTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<ILogger<CouponService>> _loggerMock;
+    private readonly Mock<ILoggingService> _loggingServiceMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
+    private readonly Mock<IBackgroundTaskService> _backgroundTaskServiceMock;
     private readonly CouponService _couponService;
 
     public CouponServiceTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
-        _couponService = new CouponService(_unitOfWorkMock.Object);
+        _loggerMock = new Mock<ILogger<CouponService>>();
+        _loggingServiceMock = new Mock<ILoggingService>();
+        _cacheServiceMock = new Mock<ICacheService>();
+        _backgroundTaskServiceMock = new Mock<IBackgroundTaskService>();
+        
+        _couponService = new CouponService(
+            _unitOfWorkMock.Object,
+            _loggerMock.Object,
+            _loggingServiceMock.Object,
+            _cacheServiceMock.Object,
+            _backgroundTaskServiceMock.Object);
+    }
+
+    private void SetupCouponUsageMock()
+    {
+        var couponUsageRepoMock = new Mock<IReadOnlyRepository<CouponUsage>>();
+        couponUsageRepoMock.Setup(r => r.FirstOrDefaultAsync(
+            It.IsAny<System.Linq.Expressions.Expression<Func<CouponUsage, bool>>>(),
+            It.IsAny<string>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync((CouponUsage)null); // User hasn't used this coupon
+
+        _unitOfWorkMock.Setup(u => u.ReadRepository<CouponUsage>()).Returns(couponUsageRepoMock.Object);
     }
 
     [Fact]
@@ -40,6 +68,7 @@ public class CouponServiceTests
             .ReturnsAsync(coupon);
 
         _unitOfWorkMock.Setup(u => u.ReadRepository<Coupon>()).Returns(readRepoMock.Object);
+        SetupCouponUsageMock();
 
         // Act
         var result = await _couponService.ValidateCouponAsync(userId, request);
@@ -71,6 +100,7 @@ public class CouponServiceTests
             .ReturnsAsync(coupon);
 
         _unitOfWorkMock.Setup(u => u.ReadRepository<Coupon>()).Returns(readRepoMock.Object);
+        SetupCouponUsageMock();
 
         // Act
         var result = await _couponService.ValidateCouponAsync(userId, request);
@@ -99,6 +129,7 @@ public class CouponServiceTests
             .ReturnsAsync(coupon);
 
         _unitOfWorkMock.Setup(u => u.ReadRepository<Coupon>()).Returns(readRepoMock.Object);
+        SetupCouponUsageMock();
 
         // Act
         var result = await _couponService.ValidateCouponAsync(userId, request);
@@ -126,6 +157,7 @@ public class CouponServiceTests
             .ReturnsAsync(coupon);
 
         _unitOfWorkMock.Setup(u => u.ReadRepository<Coupon>()).Returns(readRepoMock.Object);
+        SetupCouponUsageMock();
 
         // Act
         var result = await _couponService.ValidateCouponAsync(userId, request);
@@ -155,6 +187,7 @@ public class CouponServiceTests
             .ReturnsAsync(coupon);
 
         _unitOfWorkMock.Setup(u => u.ReadRepository<Coupon>()).Returns(readRepoMock.Object);
+        SetupCouponUsageMock();
 
         // Act
         var result = await _couponService.ValidateCouponAsync(userId, request);
@@ -184,6 +217,7 @@ public class CouponServiceTests
             .ReturnsAsync(coupon);
 
         _unitOfWorkMock.Setup(u => u.ReadRepository<Coupon>()).Returns(readRepoMock.Object);
+        SetupCouponUsageMock();
 
         // Act
         var result = await _couponService.ValidateCouponAsync(userId, request);

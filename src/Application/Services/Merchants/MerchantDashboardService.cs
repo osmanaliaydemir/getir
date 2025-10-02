@@ -2,16 +2,24 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
+using Getir.Domain.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Merchants;
 
-public class MerchantDashboardService : IMerchantDashboardService
+public class MerchantDashboardService : BaseService, IMerchantDashboardService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IBackgroundTaskService _backgroundTaskService;
 
-    public MerchantDashboardService(IUnitOfWork unitOfWork)
+    public MerchantDashboardService(
+        IUnitOfWork unitOfWork,
+        ILogger<MerchantDashboardService> logger,
+        ILoggingService loggingService,
+        ICacheService cacheService,
+        IBackgroundTaskService backgroundTaskService) 
+        : base(unitOfWork, logger, loggingService, cacheService)
     {
-        _unitOfWork = unitOfWork;
+        _backgroundTaskService = backgroundTaskService;
     }
 
     public async Task<Result<MerchantDashboardResponse>> GetDashboardAsync(
@@ -73,7 +81,7 @@ public class MerchantDashboardService : IMerchantDashboardService
             o.OrderNumber,
             $"{o.User.FirstName} {o.User.LastName}",
             o.Total,
-            o.Status,
+            o.Status.ToStringValue(),
             o.CreatedAt
         )).ToList();
 
@@ -102,7 +110,7 @@ public class MerchantDashboardService : IMerchantDashboardService
             .ListAsync(
                 ol => ol.Order.MerchantId == merchantId && 
                       ol.Order.CreatedAt >= thirtyDaysAgo &&
-                      ol.Order.Status != "Cancelled",
+                      ol.Order.Status != OrderStatus.Cancelled,
                 include: "Order,Product",
                 cancellationToken: cancellationToken);
 
@@ -161,9 +169,9 @@ public class MerchantDashboardService : IMerchantDashboardService
         }
 
         // Metrikleri hesapla
-        var totalRevenue = orders.Where(o => o.Status == "Completed").Sum(o => o.Total);
-        var completedOrders = orders.Count(o => o.Status == "Completed");
-        var cancelledOrders = orders.Count(o => o.Status == "Cancelled");
+        var totalRevenue = orders.Where(o => o.Status == OrderStatus.Delivered).Sum(o => o.Total);
+        var completedOrders = orders.Count(o => o.Status == OrderStatus.Delivered);
+        var cancelledOrders = orders.Count(o => o.Status == OrderStatus.Cancelled);
         var totalOrders = orders.Count;
 
         var averageOrderValue = completedOrders > 0 ? totalRevenue / completedOrders : 0;
@@ -214,14 +222,14 @@ public class MerchantDashboardService : IMerchantDashboardService
             .ListAsync(o => o.MerchantId == merchantId && 
                           o.CreatedAt >= today && 
                           o.CreatedAt < tomorrow &&
-                          o.Status == "Completed", 
+                          o.Status == OrderStatus.Delivered, 
                       cancellationToken: cancellationToken);
 
         var todayRevenueSum = todayRevenue.Sum(o => o.Total);
 
         // Toplam gelir
         var totalRevenueOrders = await _unitOfWork.ReadRepository<Order>()
-            .ListAsync(o => o.MerchantId == merchantId && o.Status == "Completed", 
+            .ListAsync(o => o.MerchantId == merchantId && o.Status == OrderStatus.Delivered, 
                       cancellationToken: cancellationToken);
 
         var totalRevenueSum = totalRevenueOrders.Sum(o => o.Total);
@@ -236,7 +244,7 @@ public class MerchantDashboardService : IMerchantDashboardService
         // Bekleyen siparişler
         var pendingOrders = await _unitOfWork.ReadRepository<Order>()
             .CountAsync(o => o.MerchantId == merchantId && 
-                           (o.Status == "Pending" || o.Status == "Confirmed"), 
+                           (o.Status == OrderStatus.Pending || o.Status == OrderStatus.Confirmed), 
                        cancellationToken);
 
         // Toplam sipariş sayısı

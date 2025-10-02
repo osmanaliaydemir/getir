@@ -66,6 +66,13 @@ public static class ValidationConfig
         services.AddScoped<IValidator<ReviewSearchQuery>, ReviewSearchQueryValidator>();
         services.AddScoped<IValidator<RatingCalculationRequest>, RatingCalculationRequestValidator>();
 
+        // Admin Validators
+        services.AddScoped<IValidator<MerchantApprovalRequest>, MerchantApprovalRequestValidator>();
+        services.AddScoped<IValidator<AdminCreateUserRequest>, AdminCreateUserRequestValidator>();
+        services.AddScoped<IValidator<AdminUpdateUserRequest>, AdminUpdateUserRequestValidator>();
+        services.AddScoped<IValidator<AuditLogQuery>, AuditLogQueryValidator>();
+        services.AddScoped<IValidator<AdminSearchQuery>, AdminSearchQueryValidator>();
+
         return services;
     }
 }

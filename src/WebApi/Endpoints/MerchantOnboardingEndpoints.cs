@@ -12,7 +12,7 @@ public static class MerchantOnboardingEndpoints
 {
     public static void MapMerchantOnboardingEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/merchants/{merchantId:guid}/onboarding")
+        var group = app.MapGroup("/api/v1/merchants/{merchantId:guid}/onboarding")
             .WithTags("Merchant Onboarding");
 
         // Get onboarding status
@@ -137,7 +137,7 @@ public static class MerchantOnboardingEndpoints
         .RequireAuthorization();
 
         // Admin endpoints
-        var adminGroup = app.MapGroup("/api/admin/merchants/onboarding")
+        var adminGroup = app.MapGroup("/api/v1/admin/merchants/onboarding")
             .WithTags("Admin - Merchant Onboarding")
             .RequireAuthorization("Admin");
 

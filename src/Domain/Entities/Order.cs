@@ -1,3 +1,5 @@
+using Getir.Domain.Enums;
+
 namespace Getir.Domain.Entities;
 
 public class Order
@@ -9,7 +11,7 @@ public class Order
     public Guid? CourierId { get; set; }
     public Guid? CouponId { get; set; }
     public string? CouponCode { get; set; }
-    public string Status { get; set; } = default!;
+    public OrderStatus Status { get; set; } = OrderStatus.Pending;
     public decimal SubTotal { get; set; }
     public decimal DeliveryFee { get; set; }
     public decimal Discount { get; set; }

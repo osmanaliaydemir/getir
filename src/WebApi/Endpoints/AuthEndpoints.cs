@@ -20,7 +20,6 @@ public static class AuthEndpoints
             var result = await authService.RegisterAsync(request, ct);
             return result.ToIResult();
         })
-        .WithName("Register")
         .Produces<AuthResponse>(200)
         .Produces(400);
 
@@ -32,7 +31,6 @@ public static class AuthEndpoints
             var result = await authService.LoginAsync(request, ct);
             return result.ToIResult();
         })
-        .WithName("Login")
         .Produces<AuthResponse>(200)
         .Produces(401);
 
@@ -44,7 +42,6 @@ public static class AuthEndpoints
             var result = await authService.RefreshAsync(request, ct);
             return result.ToIResult();
         })
-        .WithName("RefreshToken")
         .Produces<AuthResponse>(200)
         .Produces(401);
 
@@ -62,7 +59,6 @@ public static class AuthEndpoints
             var result = await authService.LogoutAsync(userId, ct);
             return result.ToIResult();
         })
-        .WithName("Logout")
         .RequireAuthorization()
         .Produces(200)
         .Produces(401);

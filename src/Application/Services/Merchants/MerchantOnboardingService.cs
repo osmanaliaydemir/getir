@@ -2,16 +2,23 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Merchants;
 
-public class MerchantOnboardingService : IMerchantOnboardingService
+public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IBackgroundTaskService _backgroundTaskService;
 
-    public MerchantOnboardingService(IUnitOfWork unitOfWork)
+    public MerchantOnboardingService(
+        IUnitOfWork unitOfWork,
+        ILogger<MerchantOnboardingService> logger,
+        ILoggingService loggingService,
+        ICacheService cacheService,
+        IBackgroundTaskService backgroundTaskService) 
+        : base(unitOfWork, logger, loggingService, cacheService)
     {
-        _unitOfWork = unitOfWork;
+        _backgroundTaskService = backgroundTaskService;
     }
 
     public async Task<Result<MerchantOnboardingResponse>> CreateOnboardingAsync(

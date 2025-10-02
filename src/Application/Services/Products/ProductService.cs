@@ -2,16 +2,23 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Products;
 
-public class ProductService : IProductService
+public class ProductService : BaseService, IProductService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IBackgroundTaskService _backgroundTaskService;
 
-    public ProductService(IUnitOfWork unitOfWork)
+    public ProductService(
+        IUnitOfWork unitOfWork,
+        ILogger<ProductService> logger,
+        ILoggingService loggingService,
+        ICacheService cacheService,
+        IBackgroundTaskService backgroundTaskService) 
+        : base(unitOfWork, logger, loggingService, cacheService)
     {
-        _unitOfWork = unitOfWork;
+        _backgroundTaskService = backgroundTaskService;
     }
 
     public async Task<Result<PagedResult<ProductResponse>>> GetProductsByMerchantAsync(
@@ -19,37 +26,66 @@ public class ProductService : IProductService
         PaginationQuery query,
         CancellationToken cancellationToken = default)
     {
-        var products = await _unitOfWork.Repository<Product>().GetPagedAsync(
-            filter: p => p.MerchantId == merchantId && p.IsActive,
-            orderBy: p => p.DisplayOrder,
-            ascending: true,
-            page: query.Page,
-            pageSize: query.PageSize,
-            include: "Merchant",
-            cancellationToken: cancellationToken);
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetProductsByMerchantInternalAsync(merchantId, query, cancellationToken),
+            "GetProductsByMerchant",
+            new { MerchantId = merchantId, Page = query.Page, PageSize = query.PageSize },
+            cancellationToken);
+    }
 
-        var total = await _unitOfWork.ReadRepository<Product>()
-            .CountAsync(p => p.MerchantId == merchantId && p.IsActive, cancellationToken);
+    private async Task<Result<PagedResult<ProductResponse>>> GetProductsByMerchantInternalAsync(
+        Guid merchantId,
+        PaginationQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var cacheKey = $"products_merchant_{merchantId}_{query.Page}_{query.PageSize}";
+            
+            return await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    var products = await _unitOfWork.Repository<Product>().GetPagedAsync(
+                        filter: p => p.MerchantId == merchantId && p.IsActive,
+                        orderBy: p => p.DisplayOrder,
+                        ascending: true,
+                        page: query.Page,
+                        pageSize: query.PageSize,
+                        include: "Merchant",
+                        cancellationToken: cancellationToken);
 
-        var response = products.Select(p => new ProductResponse(
-            p.Id,
-            p.MerchantId,
-            p.Merchant.Name,
-            p.ProductCategoryId,
-            p.ProductCategory?.Name,
-            p.Name,
-            p.Description,
-            p.ImageUrl,
-            p.Price,
-            p.DiscountedPrice,
-            p.StockQuantity,
-            p.Unit,
-            p.IsAvailable
-        )).ToList();
+                    var total = await _unitOfWork.ReadRepository<Product>()
+                        .CountAsync(p => p.MerchantId == merchantId && p.IsActive, cancellationToken);
 
-        var pagedResult = PagedResult<ProductResponse>.Create(response, total, query.Page, query.PageSize);
-        
-        return Result.Ok(pagedResult);
+                    var response = products.Select(p => new ProductResponse(
+                        p.Id,
+                        p.MerchantId,
+                        p.Merchant.Name,
+                        p.ProductCategoryId,
+                        p.ProductCategory?.Name,
+                        p.Name,
+                        p.Description,
+                        p.ImageUrl,
+                        p.Price,
+                        p.DiscountedPrice,
+                        p.StockQuantity,
+                        p.Unit,
+                        p.IsAvailable
+                    )).ToList();
+
+                    var pagedResult = PagedResult<ProductResponse>.Create(response, total, query.Page, query.PageSize);
+                    
+                    return ServiceResult.Success(pagedResult);
+                },
+                TimeSpan.FromMinutes(10), // 10 dakika cache
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _loggingService.LogError("Error getting products by merchant", ex, new { MerchantId = merchantId, Page = query.Page, PageSize = query.PageSize });
+            return ServiceResult.HandleException<PagedResult<ProductResponse>>(ex, _logger, "GetProductsByMerchant");
+        }
     }
 
     public async Task<Result<ProductResponse>> GetProductByIdAsync(
@@ -502,4 +538,20 @@ public class ProductService : IProductService
 
         return Result.Ok();
     }
+}
+
+// Background task data classes
+public class ProductCreatedTask
+{
+    public Guid ProductId { get; set; }
+    public Guid MerchantId { get; set; }
+    public string Name { get; set; } = string.Empty;
+}
+
+public class ProductUpdatedTask
+{
+    public Guid ProductId { get; set; }
+    public Guid MerchantId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Field { get; set; } = string.Empty;
 }

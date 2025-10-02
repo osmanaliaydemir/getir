@@ -1,3 +1,4 @@
+using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Application.Services.Reviews;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +11,7 @@ public static class ReviewEndpoints
 {
     public static void MapReviewEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/reviews")
+        var group = app.MapGroup("/api/v1/reviews")
             .WithTags("Reviews");
 
         // Review CRUD operations
@@ -130,7 +131,7 @@ public static class ReviewEndpoints
     {
         var userId = GetUserId(user);
         var result = await reviewService.CreateReviewAsync(request, userId, ct);
-        return result.Success ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+        return result.ToIResult();
     }
 
     private static async Task<IResult> UpdateReview(
@@ -142,7 +143,7 @@ public static class ReviewEndpoints
     {
         var userId = GetUserId(user);
         var result = await reviewService.UpdateReviewAsync(reviewId, request, userId, ct);
-        return result.Success ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+        return result.ToIResult();
     }
 
     private static async Task<IResult> DeleteReview(
@@ -172,7 +173,7 @@ public static class ReviewEndpoints
         CancellationToken ct)
     {
         var result = await reviewService.GetReviewsAsync(query, ct);
-        return result.Success ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+        return result.ToIResult();
     }
 
     private static async Task<IResult> GetReviewsByEntity(
@@ -183,7 +184,7 @@ public static class ReviewEndpoints
         CancellationToken ct)
     {
         var result = await reviewService.GetReviewsByRevieweeAsync(entityId, entityType, query, ct);
-        return result.Success ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+        return result.ToIResult();
     }
 
     private static async Task<IResult> GetReviewsByUser(
@@ -193,7 +194,7 @@ public static class ReviewEndpoints
         CancellationToken ct)
     {
         var result = await reviewService.GetReviewsByReviewerAsync(userId, query, ct);
-        return result.Success ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+        return result.ToIResult();
     }
 
     private static async Task<IResult> GetReviewsByOrder(
@@ -202,7 +203,7 @@ public static class ReviewEndpoints
         CancellationToken ct)
     {
         var result = await reviewService.GetReviewsByOrderAsync(orderId, ct);
-        return result.Success ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+        return result.ToIResult();
     }
 
     // Rating operations
@@ -232,7 +233,7 @@ public static class ReviewEndpoints
         CancellationToken ct)
     {
         var result = await reviewService.CalculateRatingAsync(request, ct);
-        return result.Success ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+        return result.ToIResult();
     }
 
     // Review moderation
@@ -242,7 +243,7 @@ public static class ReviewEndpoints
         CancellationToken ct)
     {
         var result = await reviewService.GetPendingReviewsAsync(query, ct);
-        return result.Success ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+        return result.ToIResult();
     }
 
     private static async Task<IResult> ModerateReview(
@@ -254,7 +255,7 @@ public static class ReviewEndpoints
     {
         var moderatorId = GetUserId(user);
         var result = await reviewService.ModerateReviewAsync(reviewId, request, moderatorId, ct);
-        return result.Success ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+        return result.ToIResult();
     }
 
     private static async Task<IResult> BulkModerateReviews(
@@ -266,7 +267,7 @@ public static class ReviewEndpoints
         var moderatorId = GetUserId(user);
         var moderationRequest = new ReviewModerationRequest(request.IsApproved, request.ModerationNotes);
         var result = await reviewService.BulkModerateReviewsAsync(request.ReviewIds, moderationRequest, moderatorId, ct);
-        return result.Success ? Results.Ok() : Results.BadRequest(result.Error);
+        return result.ToIResult();
     }
 
     // Review helpful votes
@@ -279,7 +280,7 @@ public static class ReviewEndpoints
     {
         var userId = GetUserId(user);
         var result = await reviewService.VoteHelpfulAsync(reviewId, request, userId, ct);
-        return result.Success ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+        return result.ToIResult();
     }
 
     private static async Task<IResult> RemoveHelpfulVote(
@@ -310,7 +311,7 @@ public static class ReviewEndpoints
         CancellationToken ct)
     {
         var result = await reviewService.SearchReviewsAsync(query, ct);
-        return result.Success ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+        return result.ToIResult();
     }
 
     // Review validation
@@ -324,7 +325,7 @@ public static class ReviewEndpoints
     {
         var userId = GetUserId(user);
         var result = await reviewService.CanUserReviewAsync(userId, revieweeId, revieweeType, orderId, ct);
-        return result.Success ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+        return result.ToIResult();
     }
 
     private static async Task<IResult> HasUserReviewedOrder(
@@ -335,7 +336,7 @@ public static class ReviewEndpoints
     {
         var userId = GetUserId(user);
         var result = await reviewService.HasUserReviewedOrderAsync(userId, orderId, ct);
-        return result.Success ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+        return result.ToIResult();
     }
 
     // Review tags
@@ -345,7 +346,7 @@ public static class ReviewEndpoints
         CancellationToken ct)
     {
         var result = await reviewService.GetAvailableTagsAsync(revieweeType, ct);
-        return result.Success ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+        return result.ToIResult();
     }
 
     private static async Task<IResult> GetTagFrequencies(
@@ -355,7 +356,7 @@ public static class ReviewEndpoints
         CancellationToken ct)
     {
         var result = await reviewService.GetTagFrequenciesAsync(entityId, entityType, ct);
-        return result.Success ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+        return result.ToIResult();
     }
 
     // Helper methods

@@ -1,9 +1,11 @@
 using FluentAssertions;
 using Getir.Application.Abstractions;
+using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Application.Services.Orders;
 using Getir.Domain.Entities;
 using Getir.UnitTests.Helpers;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -12,12 +14,29 @@ namespace Getir.UnitTests.Services;
 public class OrderServiceTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<ILogger<OrderService>> _loggerMock;
+    private readonly Mock<ILoggingService> _loggingServiceMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
+    private readonly Mock<IBackgroundTaskService> _backgroundTaskServiceMock;
+    private readonly Mock<ISignalRService> _signalRServiceMock;
     private readonly OrderService _orderService;
 
     public OrderServiceTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
-        _orderService = new OrderService(_unitOfWorkMock.Object);
+        _loggerMock = new Mock<ILogger<OrderService>>();
+        _loggingServiceMock = new Mock<ILoggingService>();
+        _cacheServiceMock = new Mock<ICacheService>();
+        _backgroundTaskServiceMock = new Mock<IBackgroundTaskService>();
+        _signalRServiceMock = new Mock<ISignalRService>();
+        
+        _orderService = new OrderService(
+            _unitOfWorkMock.Object,
+            _loggerMock.Object,
+            _loggingServiceMock.Object,
+            _cacheServiceMock.Object,
+            _backgroundTaskServiceMock.Object,
+            _signalRServiceMock.Object);
     }
 
     [Fact]
@@ -200,7 +219,7 @@ public class OrderServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.ErrorCode.Should().Be("NOT_FOUND_MERCHANT");
+        result.ErrorCode.Should().Be("MERCHANT_NOT_FOUND");
     }
 
     // Helper methods

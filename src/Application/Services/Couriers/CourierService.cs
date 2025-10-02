@@ -2,18 +2,27 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
+using Getir.Domain.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Couriers;
 
-public class CourierService : ICourierService
+public class CourierService : BaseService, ICourierService
 {
-    private readonly IUnitOfWork _unitOfWork;
     private readonly ISignalRService? _signalRService;
+    private readonly IBackgroundTaskService _backgroundTaskService;
 
-    public CourierService(IUnitOfWork unitOfWork, ISignalRService? signalRService = null)
+    public CourierService(
+        IUnitOfWork unitOfWork,
+        ILogger<CourierService> logger,
+        ILoggingService loggingService,
+        ICacheService cacheService,
+        IBackgroundTaskService backgroundTaskService,
+        ISignalRService? signalRService = null) 
+        : base(unitOfWork, logger, loggingService, cacheService)
     {
-        _unitOfWork = unitOfWork;
         _signalRService = signalRService;
+        _backgroundTaskService = backgroundTaskService;
     }
 
     public async Task<Result<PagedResult<CourierOrderResponse>>> GetAssignedOrdersAsync(
@@ -22,7 +31,7 @@ public class CourierService : ICourierService
         CancellationToken cancellationToken = default)
     {
         var orders = await _unitOfWork.Repository<Order>().GetPagedAsync(
-            filter: o => o.CourierId == courierId && (o.Status == "Ready" || o.Status == "OnTheWay"),
+            filter: o => o.CourierId == courierId && (o.Status == OrderStatus.Ready || o.Status == OrderStatus.OnTheWay),
             orderBy: o => o.CreatedAt,
             ascending: false,
             page: query.Page,
@@ -37,7 +46,7 @@ public class CourierService : ICourierService
             o.OrderNumber,
             o.MerchantId,
             o.Merchant.Name,
-            o.Status,
+            o.Status.ToStringValue(),
             o.Total,
             o.DeliveryAddress,
             o.EstimatedDeliveryTime,
@@ -75,7 +84,7 @@ public class CourierService : ICourierService
             var activeOrders = await _unitOfWork.ReadRepository<Order>()
                 .ListAsync(
                     filter: o => o.CourierId == courierId && 
-                                (o.Status == "Ready" || o.Status == "OnTheWay"),
+                                (o.Status == OrderStatus.Ready || o.Status == OrderStatus.OnTheWay),
                     cancellationToken: cancellationToken);
 
             foreach (var order in activeOrders)
@@ -142,7 +151,7 @@ public class CourierService : ICourierService
         // Get recent deliveries (completed orders)
         var recentDeliveries = await _unitOfWork.Repository<Order>()
             .ListAsync(
-                filter: o => o.CourierId == courierId && o.Status == "Delivered",
+                filter: o => o.CourierId == courierId && o.Status == OrderStatus.Delivered,
                 orderBy: o => o.UpdatedAt,
                 ascending: false,
                 take: 5,
@@ -154,7 +163,7 @@ public class CourierService : ICourierService
             o.OrderNumber,
             o.MerchantId,
             o.Merchant.Name,
-            o.Status,
+            o.Status.ToStringValue(),
             o.Total,
             o.DeliveryAddress,
             o.EstimatedDeliveryTime,
@@ -190,17 +199,17 @@ public class CourierService : ICourierService
 
         // Count active orders
         var activeOrdersCount = await _unitOfWork.ReadRepository<Order>()
-            .CountAsync(o => o.CourierId == courierId && (o.Status == "Ready" || o.Status == "OnTheWay"), cancellationToken);
+            .CountAsync(o => o.CourierId == courierId && (o.Status == OrderStatus.Ready || o.Status == OrderStatus.OnTheWay), cancellationToken);
 
         // Count completed today
         var today = DateTime.UtcNow.Date;
         var completedToday = await _unitOfWork.ReadRepository<Order>()
-            .CountAsync(o => o.CourierId == courierId && o.Status == "Delivered" && o.UpdatedAt.HasValue && o.UpdatedAt.Value.Date == today, cancellationToken);
+            .CountAsync(o => o.CourierId == courierId && o.Status == OrderStatus.Delivered && o.UpdatedAt.HasValue && o.UpdatedAt.Value.Date == today, cancellationToken);
 
         // Get last delivery time
         var lastDelivery = await _unitOfWork.ReadRepository<Order>()
             .FirstOrDefaultAsync(
-                o => o.CourierId == courierId && o.Status == "Delivered",
+                o => o.CourierId == courierId && o.Status == OrderStatus.Delivered,
                 cancellationToken: cancellationToken);
 
         var stats = new CourierStatsResponse(
@@ -234,22 +243,22 @@ public class CourierService : ICourierService
 
         // Today's earnings
         var todayOrders = await _unitOfWork.ReadRepository<Order>()
-            .ListAsync(o => o.CourierId == courierId && o.Status == "Delivered" && o.UpdatedAt.HasValue && o.UpdatedAt.Value.Date == today, cancellationToken: cancellationToken);
+            .ListAsync(o => o.CourierId == courierId && o.Status == OrderStatus.Delivered && o.UpdatedAt.HasValue && o.UpdatedAt.Value.Date == today, cancellationToken: cancellationToken);
         var todayEarnings = todayOrders.Sum(o => o.DeliveryFee);
 
         // This week's earnings
         var thisWeekOrders = await _unitOfWork.ReadRepository<Order>()
-            .ListAsync(o => o.CourierId == courierId && o.Status == "Delivered" && o.UpdatedAt.HasValue && o.UpdatedAt.Value.Date >= thisWeekStart, cancellationToken: cancellationToken);
+            .ListAsync(o => o.CourierId == courierId && o.Status == OrderStatus.Delivered && o.UpdatedAt.HasValue && o.UpdatedAt.Value.Date >= thisWeekStart, cancellationToken: cancellationToken);
         var thisWeekEarnings = thisWeekOrders.Sum(o => o.DeliveryFee);
 
         // This month's earnings
         var thisMonthOrders = await _unitOfWork.ReadRepository<Order>()
-            .ListAsync(o => o.CourierId == courierId && o.Status == "Delivered" && o.UpdatedAt.HasValue && o.UpdatedAt.Value.Date >= thisMonthStart, cancellationToken: cancellationToken);
+            .ListAsync(o => o.CourierId == courierId && o.Status == OrderStatus.Delivered && o.UpdatedAt.HasValue && o.UpdatedAt.Value.Date >= thisMonthStart, cancellationToken: cancellationToken);
         var thisMonthEarnings = thisMonthOrders.Sum(o => o.DeliveryFee);
 
         // Total earnings
         var allOrders = await _unitOfWork.ReadRepository<Order>()
-            .ListAsync(o => o.CourierId == courierId && o.Status == "Delivered", cancellationToken: cancellationToken);
+            .ListAsync(o => o.CourierId == courierId && o.Status == OrderStatus.Delivered, cancellationToken: cancellationToken);
         var totalEarnings = allOrders.Sum(o => o.DeliveryFee);
 
         var earnings = new CourierEarningsResponse(
@@ -279,7 +288,7 @@ public class CourierService : ICourierService
             return Result.Fail("Order not found", "NOT_FOUND");
         }
 
-        if (order.Status != "Ready")
+        if (order.Status != OrderStatus.Ready)
         {
             return Result.Fail("Order is not ready for pickup", "INVALID_STATUS");
         }
@@ -293,7 +302,7 @@ public class CourierService : ICourierService
         }
 
         order.CourierId = courierId;
-        order.Status = "OnTheWay";
+        order.Status = OrderStatus.OnTheWay;
         order.UpdatedAt = DateTime.UtcNow;
 
         _unitOfWork.Repository<Order>().Update(order);
@@ -302,7 +311,7 @@ public class CourierService : ICourierService
         // Send SignalR notification
         if (_signalRService != null)
         {
-            await _signalRService.SendOrderStatusUpdateAsync(order.UserId, order.Id, "OnTheWay", "Order accepted by courier");
+            await _signalRService.SendOrderStatusUpdateAsync(order.UserId, order.Id, OrderStatus.OnTheWay.ToStringValue(), "Order accepted by courier");
         }
 
         return Result.Ok();
@@ -323,12 +332,12 @@ public class CourierService : ICourierService
             return Result.Fail("Order not found", "NOT_FOUND");
         }
 
-        if (order.Status != "OnTheWay")
+        if (order.Status != OrderStatus.OnTheWay)
         {
             return Result.Fail("Order is not on the way", "INVALID_STATUS");
         }
 
-        order.Status = "Delivering";
+        order.Status = OrderStatus.OnTheWay; // Delivering is same as OnTheWay
         order.UpdatedAt = DateTime.UtcNow;
 
         _unitOfWork.Repository<Order>().Update(order);
@@ -337,7 +346,7 @@ public class CourierService : ICourierService
         // Send SignalR notification
         if (_signalRService != null)
         {
-            await _signalRService.SendOrderStatusUpdateAsync(order.UserId, order.Id, "Delivering", "Order delivery started");
+            await _signalRService.SendOrderStatusUpdateAsync(order.UserId, order.Id, OrderStatus.OnTheWay.ToStringValue(), "Order delivery started");
         }
 
         return Result.Ok();
@@ -358,12 +367,12 @@ public class CourierService : ICourierService
             return Result.Fail("Order not found", "NOT_FOUND");
         }
 
-        if (order.Status != "Delivering")
+        if (order.Status != OrderStatus.OnTheWay) // Delivering is same as OnTheWay
         {
             return Result.Fail("Order is not being delivered", "INVALID_STATUS");
         }
 
-        order.Status = "Delivered";
+        order.Status = OrderStatus.Delivered;
         order.UpdatedAt = DateTime.UtcNow;
 
         // Update courier stats
@@ -403,7 +412,7 @@ public class CourierService : ICourierService
             return Result.Fail<CourierAssignmentResponse>("Order not found", "NOT_FOUND");
         }
 
-        if (order.Status != "Ready")
+        if (order.Status != OrderStatus.Ready)
         {
             return Result.Fail<CourierAssignmentResponse>("Order is not ready for assignment", "INVALID_STATUS");
         }
@@ -440,7 +449,7 @@ public class CourierService : ICourierService
 
         // Assign order to courier
         order.CourierId = assignedCourier.Id;
-        order.Status = "OnTheWay";
+        order.Status = OrderStatus.OnTheWay;
         order.UpdatedAt = DateTime.UtcNow;
 
         _unitOfWork.Repository<Order>().Update(order);
@@ -506,7 +515,7 @@ public class CourierService : ICourierService
         foreach (var courier in couriers)
         {
             var orders = await _unitOfWork.ReadRepository<Order>()
-                .ListAsync(o => o.CourierId == courier.Id && o.Status == "Delivered", cancellationToken: cancellationToken);
+                .ListAsync(o => o.CourierId == courier.Id && o.Status == OrderStatus.Delivered, cancellationToken: cancellationToken);
 
             var totalEarnings = orders.Sum(o => o.DeliveryFee);
             var thisWeek = DateTime.UtcNow.AddDays(-7);
@@ -546,7 +555,7 @@ public class CourierService : ICourierService
 
         var orders = await _unitOfWork.ReadRepository<Order>()
             .ListAsync(o => o.CourierId == query.CourierId && 
-                           o.Status == "Delivered" && 
+                           o.Status == OrderStatus.Delivered && 
                            o.UpdatedAt >= startDate && 
                            o.UpdatedAt <= endDate,
                 orderBy: o => o.UpdatedAt,

@@ -2,16 +2,23 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.ServiceCategories;
 
-public class ServiceCategoryService : IServiceCategoryService
+public class ServiceCategoryService : BaseService, IServiceCategoryService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IBackgroundTaskService _backgroundTaskService;
 
-    public ServiceCategoryService(IUnitOfWork unitOfWork)
+    public ServiceCategoryService(
+        IUnitOfWork unitOfWork,
+        ILogger<ServiceCategoryService> logger,
+        ILoggingService loggingService,
+        ICacheService cacheService,
+        IBackgroundTaskService backgroundTaskService) 
+        : base(unitOfWork, logger, loggingService, cacheService)
     {
-        _unitOfWork = unitOfWork;
+        _backgroundTaskService = backgroundTaskService;
     }
 
     public async Task<Result<PagedResult<ServiceCategoryResponse>>> GetServiceCategoriesAsync(

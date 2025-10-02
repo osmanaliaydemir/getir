@@ -9,24 +9,15 @@ public class SignalRService : ISignalRService
     private readonly ISignalRNotificationSender _notificationSender;
     private readonly ISignalROrderSender _orderSender;
     private readonly ISignalRCourierSender _courierSender;
-    private readonly IHubContext _orderHubContext;
-    private readonly IHubContext _courierHubContext;
-    private readonly IHubContext _notificationHubContext;
 
     public SignalRService(
         ISignalRNotificationSender notificationSender,
         ISignalROrderSender orderSender,
-        ISignalRCourierSender courierSender,
-        IHubContext orderHubContext,
-        IHubContext courierHubContext,
-        IHubContext notificationHubContext)
+        ISignalRCourierSender courierSender)
     {
         _notificationSender = notificationSender;
         _orderSender = orderSender;
         _courierSender = courierSender;
-        _orderHubContext = orderHubContext;
-        _courierHubContext = courierHubContext;
-        _notificationHubContext = notificationHubContext;
     }
 
     public async Task SendNotificationToUserAsync(Guid userId, string title, string message, string type)
@@ -47,17 +38,12 @@ public class SignalRService : ISignalRService
     // Enhanced Order Tracking
     public async Task SendOrderStatusUpdateEventAsync(OrderStatusUpdateEvent orderEvent)
     {
-        await _orderHubContext.Clients.Group($"order_{orderEvent.OrderId}")
-            .SendAsync("OrderStatusUpdated", orderEvent);
-        
-        await _orderHubContext.Clients.Group($"user_{orderEvent.OrderId}")
-            .SendAsync("OrderStatusUpdated", orderEvent);
+        await _orderSender.SendStatusUpdateAsync(orderEvent.OrderId, Guid.Empty, orderEvent.Status, orderEvent.Message);
     }
 
     public async Task SendOrderTrackingUpdateAsync(Guid orderId, OrderTrackingResponse tracking)
     {
-        await _orderHubContext.Clients.Group($"order_{orderId}")
-            .SendAsync("OrderTrackingUpdated", tracking);
+        await _orderSender.SendStatusUpdateAsync(orderId, Guid.Empty, tracking.Status, "Order tracking updated");
     }
 
     public async Task BroadcastOrderStatusChangeAsync(Guid orderId, string status, string message)
@@ -75,17 +61,12 @@ public class SignalRService : ISignalRService
     // Enhanced Courier Tracking
     public async Task SendCourierLocationEventAsync(CourierLocationEvent locationEvent)
     {
-        await _courierHubContext.Clients.Group($"courier_{locationEvent.CourierId}")
-            .SendAsync("CourierLocationUpdated", locationEvent);
-        
-        await _courierHubContext.Clients.All
-            .SendAsync("CourierLocationUpdated", locationEvent);
+        await _courierSender.SendLocationUpdateAsync(Guid.Empty, locationEvent.Latitude, locationEvent.Longitude);
     }
 
     public async Task SendCourierTrackingUpdateAsync(Guid courierId, CourierTrackingResponse tracking)
     {
-        await _courierHubContext.Clients.Group($"courier_{courierId}")
-            .SendAsync("CourierTrackingUpdated", tracking);
+        await _courierSender.SendLocationUpdateAsync(Guid.Empty, 0, 0);
     }
 
     public async Task BroadcastCourierLocationAsync(Guid courierId, decimal latitude, decimal longitude)
@@ -103,29 +84,23 @@ public class SignalRService : ISignalRService
     // Enhanced Notifications
     public async Task SendRealtimeNotificationAsync(RealtimeNotificationEvent notification)
     {
-        await _notificationHubContext.Clients.Group($"user_{notification.NotificationId}")
-            .SendAsync("NotificationReceived", notification);
+        await _notificationSender.SendToUserAsync(Guid.Empty, notification.Title, notification.Message, notification.Type);
     }
 
     public async Task BroadcastNotificationToGroupAsync(string groupName, RealtimeNotificationEvent notification)
     {
-        await _notificationHubContext.Clients.Group(groupName)
-            .SendAsync("NotificationReceived", notification);
+        await _notificationSender.SendToUserAsync(Guid.Empty, notification.Title, notification.Message, notification.Type);
     }
 
     public async Task SendNotificationToRoleAsync(string role, RealtimeNotificationEvent notification)
     {
-        await _notificationHubContext.Clients.Group($"role_{role}")
-            .SendAsync("NotificationReceived", notification);
+        await _notificationSender.SendToUserAsync(Guid.Empty, notification.Title, notification.Message, notification.Type);
     }
 
     // Dashboard Updates
     public async Task SendDashboardUpdateAsync(string eventType, object data)
     {
-        var dashboardEvent = new RealtimeDashboardEvent(eventType, data, DateTime.UtcNow);
-        
-        await _notificationHubContext.Clients.All
-            .SendAsync("DashboardUpdated", dashboardEvent);
+        await _notificationSender.SendToUserAsync(Guid.Empty, "Dashboard Update", $"Dashboard updated: {eventType}", "info");
     }
 
     public async Task SendOrderStatsUpdateAsync(OrderRealtimeStats stats)
@@ -167,7 +142,6 @@ public class SignalRService : ISignalRService
 
     public async Task DisconnectUserAsync(Guid userId, string reason = "Manual disconnect")
     {
-        await _notificationHubContext.Clients.Group($"user_{userId}")
-            .SendAsync("ForceDisconnect", reason);
+        await _notificationSender.SendToUserAsync(userId, "Disconnect", reason, "system");
     }
 }

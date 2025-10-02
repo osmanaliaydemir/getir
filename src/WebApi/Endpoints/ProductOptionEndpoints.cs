@@ -13,7 +13,7 @@ public static class ProductOptionEndpoints
     public static void MapProductOptionEndpoints(this WebApplication app)
     {
         // Product Option Groups
-        var optionGroupGroup = app.MapGroup("/api/merchants/products/{productId:guid}/option-groups")
+        var optionGroupGroup = app.MapGroup("/api/v1/merchants/products/{productId:guid}/option-groups")
             .WithTags("Product Option Groups")
             .RequireAuthorization();
 
@@ -21,11 +21,9 @@ public static class ProductOptionEndpoints
         optionGroupGroup.MapGet("/", async (
             [FromRoute] Guid productId,
             [FromServices] IProductOptionGroupService service,
-            CancellationToken ct,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 20) =>
+            [AsParameters] PaginationQuery query,
+            CancellationToken ct) =>
         {
-            var query = new PaginationQuery { Page = page, PageSize = pageSize };
             var result = await service.GetProductOptionGroupsAsync(productId, query, ct);
             return result.ToIResult();
         })
@@ -106,7 +104,7 @@ public static class ProductOptionEndpoints
         .RequireAuthorization();
 
         // Product Options
-        var optionGroup = app.MapGroup("/api/merchants/products/option-groups/{optionGroupId:guid}/options")
+        var optionGroup = app.MapGroup("/api/v1/merchants/products/option-groups/{optionGroupId:guid}/options")
             .WithTags("Product Options")
             .RequireAuthorization();
 

@@ -13,7 +13,7 @@ public static class CourierEndpoints
     public static void MapCourierEndpoints(this WebApplication app)
     {
         // Courier Panel
-        var courierGroup = app.MapGroup("/api/couriers")
+        var courierGroup = app.MapGroup("/api/v1/couriers")
             .WithTags("Courier Panel")
             .RequireAuthorization();
 
@@ -93,7 +93,7 @@ public static class CourierEndpoints
             var result = await service.AcceptOrderAsync(courierId, request, ct);
             return result.ToIResult();
         })
-        .WithName("AcceptOrder")
+        .WithName("AcceptOrderByCourier")
         .Produces(200)
         .Produces(400)
         .Produces(404)
@@ -169,7 +169,7 @@ public static class CourierEndpoints
         .RequireAuthorization();
 
         // Admin/System endpoints
-        var adminGroup = app.MapGroup("/api/admin/couriers")
+        var adminGroup = app.MapGroup("/api/v1/admin/couriers")
             .WithTags("Admin - Courier Management")
             .RequireAuthorization("Admin");
 

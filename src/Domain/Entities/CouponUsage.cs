@@ -9,7 +9,7 @@ public class CouponUsage
     public decimal DiscountAmount { get; set; }
     public DateTime UsedAt { get; set; }
 
-    // Navigation
+    // Navigation properties
     public virtual Coupon Coupon { get; set; } = default!;
     public virtual User User { get; set; } = default!;
     public virtual Order Order { get; set; } = default!;

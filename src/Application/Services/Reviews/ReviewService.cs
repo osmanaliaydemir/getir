@@ -3,18 +3,27 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
+using Getir.Domain.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Reviews;
 
-public class ReviewService : IReviewService
+public class ReviewService : BaseService, IReviewService
 {
-    private readonly IUnitOfWork _unitOfWork;
     private readonly ISignalRService? _signalRService;
+    private readonly IBackgroundTaskService _backgroundTaskService;
 
-    public ReviewService(IUnitOfWork unitOfWork, ISignalRService? signalRService = null)
+    public ReviewService(
+        IUnitOfWork unitOfWork,
+        ILogger<ReviewService> logger,
+        ILoggingService loggingService,
+        ICacheService cacheService,
+        IBackgroundTaskService backgroundTaskService,
+        ISignalRService? signalRService = null) 
+        : base(unitOfWork, logger, loggingService, cacheService)
     {
-        _unitOfWork = unitOfWork;
         _signalRService = signalRService;
+        _backgroundTaskService = backgroundTaskService;
     }
 
     public async Task<Result<ReviewResponse>> CreateReviewAsync(
@@ -38,7 +47,7 @@ public class ReviewService : IReviewService
 
         // Validate order exists and is completed
         var order = await _unitOfWork.ReadRepository<Order>()
-            .FirstOrDefaultAsync(o => o.Id == request.OrderId && o.Status == "Delivered", cancellationToken: cancellationToken);
+            .FirstOrDefaultAsync(o => o.Id == request.OrderId && o.Status == OrderStatus.Delivered, cancellationToken: cancellationToken);
         
         if (order == null)
         {
@@ -635,7 +644,7 @@ public class ReviewService : IReviewService
             .FirstOrDefaultAsync(
                 o => o.Id == orderId && 
                      o.UserId == userId && 
-                     o.Status == "Delivered",
+                     o.Status == OrderStatus.Delivered,
                 cancellationToken: cancellationToken);
 
         return Result.Ok(order != null);
