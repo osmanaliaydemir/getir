@@ -1,8 +1,13 @@
+// System namespaces
+using Microsoft.Extensions.Logging;
+
+// Application namespaces
 using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
+
+// Domain namespaces
 using Getir.Domain.Entities;
-using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Search;
 
@@ -44,21 +49,26 @@ public class SearchService : BaseService, ISearchService
                            (string.IsNullOrEmpty(query.Query) || p.Name.Contains(query.Query)), 
                         cancellationToken);
 
-        var response = products.Select(p => new ProductResponse(
-            p.Id,
-            p.MerchantId,
-            p.Merchant.Name,
-            p.ProductCategoryId,
-            p.ProductCategory?.Name,
-            p.Name,
-            p.Description,
-            p.ImageUrl,
-            p.Price,
-            p.DiscountedPrice,
-            p.StockQuantity,
-            p.Unit,
-            p.IsAvailable
-        )).ToList();
+        var response = products.Select(p => new ProductResponse
+        {
+            Id = p.Id,
+            Name = p.Name,
+            Description = p.Description,
+            CreatedAt = p.CreatedAt,
+            UpdatedAt = p.UpdatedAt,
+            IsActive = p.IsActive,
+            IsDeleted = false,
+            MerchantId = p.MerchantId,
+            MerchantName = p.Merchant.Name,
+            ProductCategoryId = p.ProductCategoryId,
+            ProductCategoryName = p.ProductCategory?.Name,
+            ImageUrl = p.ImageUrl,
+            Price = p.Price,
+            DiscountedPrice = p.DiscountedPrice,
+            StockQuantity = p.StockQuantity,
+            Unit = p.Unit,
+            IsAvailable = p.IsAvailable
+        }).ToList();
 
         var pagedResult = PagedResult<ProductResponse>.Create(response, total, query.Page, query.PageSize);
         
@@ -85,25 +95,30 @@ public class SearchService : BaseService, ISearchService
                            (string.IsNullOrEmpty(query.Query) || m.Name.Contains(query.Query)), 
                         cancellationToken);
 
-        var response = merchants.Select(m => new MerchantResponse(
-            m.Id,
-            m.OwnerId,
-            $"{m.Owner.FirstName} {m.Owner.LastName}",
-            m.Name,
-            m.Description,
-            m.ServiceCategoryId,
-            m.ServiceCategory.Name,
-            m.LogoUrl,
-            m.Address,
-            m.Latitude,
-            m.Longitude,
-            m.MinimumOrderAmount,
-            m.DeliveryFee,
-            m.AverageDeliveryTime,
-            m.Rating,
-            m.IsActive,
-            m.IsOpen
-        )).ToList();
+        var response = merchants.Select(m => new MerchantResponse
+        {
+            Id = m.Id,
+            Name = m.Name,
+            Description = m.Description,
+            CreatedAt = m.CreatedAt,
+            UpdatedAt = m.UpdatedAt,
+            IsActive = m.IsActive,
+            IsDeleted = false,
+            Rating = m.Rating,
+            TotalReviews = m.TotalReviews,
+            OwnerId = m.OwnerId,
+            OwnerName = string.Concat(m.Owner.FirstName, " ", m.Owner.LastName),
+            ServiceCategoryId = m.ServiceCategoryId,
+            ServiceCategoryName = m.ServiceCategory.Name,
+            LogoUrl = m.LogoUrl,
+            Address = m.Address,
+            Latitude = m.Latitude,
+            Longitude = m.Longitude,
+            MinimumOrderAmount = m.MinimumOrderAmount,
+            DeliveryFee = m.DeliveryFee,
+            AverageDeliveryTime = m.AverageDeliveryTime,
+            IsOpen = m.IsOpen
+        }).ToList();
 
         var pagedResult = PagedResult<MerchantResponse>.Create(response, total, query.Page, query.PageSize);
         

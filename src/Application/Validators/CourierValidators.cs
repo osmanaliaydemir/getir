@@ -1,4 +1,5 @@
 using FluentValidation;
+using Getir.Application.Common;
 using Getir.Application.DTO;
 
 namespace Getir.Application.Validators;
@@ -41,7 +42,7 @@ public class CompleteDeliveryRequestValidator : AbstractValidator<CompleteDelive
             .NotEmpty().WithMessage("Order ID is required");
 
         RuleFor(x => x.DeliveryNotes)
-            .MaximumLength(500).WithMessage("Delivery notes must not exceed 500 characters");
+            .MaximumLength(ApplicationConstants.MaxCommentLength).WithMessage($"Delivery notes must not exceed {ApplicationConstants.MaxCommentLength} characters");
     }
 }
 
@@ -66,11 +67,11 @@ public class FindNearestCouriersRequestValidator : AbstractValidator<FindNearest
 
         RuleFor(x => x.MaxDistanceKm)
             .GreaterThan(0).WithMessage("Max distance must be greater than 0")
-            .LessThanOrEqualTo(100).WithMessage("Max distance cannot exceed 100 km");
+            .LessThanOrEqualTo(ApplicationConstants.MaxQuantity).WithMessage($"Max distance cannot exceed {ApplicationConstants.MaxQuantity} km");
 
         RuleFor(x => x.MaxCouriers)
             .GreaterThan(0).WithMessage("Max couriers must be greater than 0")
-            .LessThanOrEqualTo(20).WithMessage("Max couriers cannot exceed 20");
+            .LessThanOrEqualTo(ApplicationConstants.MaxRecentItems).WithMessage($"Max couriers cannot exceed {ApplicationConstants.MaxRecentItems}");
     }
 }
 

@@ -1,4 +1,5 @@
 using FluentValidation;
+using Getir.Application.Common;
 using Getir.Application.DTO;
 
 namespace Getir.Application.Validators;
@@ -12,8 +13,8 @@ public class MerchantApprovalRequestValidator : AbstractValidator<MerchantApprov
             .WithMessage("Application ID is required");
 
         RuleFor(x => x.Comments)
-            .MaximumLength(500)
-            .WithMessage("Comments cannot exceed 500 characters")
+            .MaximumLength(ApplicationConstants.MaxCommentLength)
+            .WithMessage($"Comments cannot exceed {ApplicationConstants.MaxCommentLength} characters")
             .When(x => !string.IsNullOrEmpty(x.Comments));
 
         RuleFor(x => x.Comments)
@@ -30,36 +31,36 @@ public class AdminCreateUserRequestValidator : AbstractValidator<AdminCreateUser
         RuleFor(x => x.FirstName)
             .NotEmpty()
             .WithMessage("First name is required")
-            .MaximumLength(50)
-            .WithMessage("First name cannot exceed 50 characters");
+            .MaximumLength(ApplicationConstants.MaxNameLength)
+            .WithMessage($"First name cannot exceed {ApplicationConstants.MaxNameLength} characters");
 
         RuleFor(x => x.LastName)
             .NotEmpty()
             .WithMessage("Last name is required")
-            .MaximumLength(50)
-            .WithMessage("Last name cannot exceed 50 characters");
+            .MaximumLength(ApplicationConstants.MaxNameLength)
+            .WithMessage($"Last name cannot exceed {ApplicationConstants.MaxNameLength} characters");
 
         RuleFor(x => x.Email)
             .NotEmpty()
             .WithMessage("Email is required")
             .EmailAddress()
             .WithMessage("Invalid email format")
-            .MaximumLength(100)
-            .WithMessage("Email cannot exceed 100 characters");
+            .MaximumLength(ApplicationConstants.MaxEmailLength)
+            .WithMessage($"Email cannot exceed {ApplicationConstants.MaxEmailLength} characters");
 
         RuleFor(x => x.Phone)
             .NotEmpty()
             .WithMessage("Phone is required")
-            .MaximumLength(20)
-            .WithMessage("Phone cannot exceed 20 characters");
+            .MaximumLength(ApplicationConstants.MaxPhoneNumberLength)
+            .WithMessage($"Phone cannot exceed {ApplicationConstants.MaxPhoneNumberLength} characters");
 
         RuleFor(x => x.Password)
             .NotEmpty()
             .WithMessage("Password is required")
-            .MinimumLength(6)
-            .WithMessage("Password must be at least 6 characters")
-            .MaximumLength(100)
-            .WithMessage("Password cannot exceed 100 characters");
+            .MinimumLength(ApplicationConstants.MinPasswordLength)
+            .WithMessage($"Password must be at least {ApplicationConstants.MinPasswordLength} characters")
+            .MaximumLength(ApplicationConstants.MaxPasswordLength)
+            .WithMessage($"Password cannot exceed {ApplicationConstants.MaxPasswordLength} characters");
 
         RuleFor(x => x.Role)
             .NotEmpty()
@@ -76,28 +77,28 @@ public class AdminUpdateUserRequestValidator : AbstractValidator<AdminUpdateUser
         RuleFor(x => x.FirstName)
             .NotEmpty()
             .WithMessage("First name is required")
-            .MaximumLength(50)
-            .WithMessage("First name cannot exceed 50 characters");
+            .MaximumLength(ApplicationConstants.MaxNameLength)
+            .WithMessage($"First name cannot exceed {ApplicationConstants.MaxNameLength} characters");
 
         RuleFor(x => x.LastName)
             .NotEmpty()
             .WithMessage("Last name is required")
-            .MaximumLength(50)
-            .WithMessage("Last name cannot exceed 50 characters");
+            .MaximumLength(ApplicationConstants.MaxNameLength)
+            .WithMessage($"Last name cannot exceed {ApplicationConstants.MaxNameLength} characters");
 
         RuleFor(x => x.Email)
             .NotEmpty()
             .WithMessage("Email is required")
             .EmailAddress()
             .WithMessage("Invalid email format")
-            .MaximumLength(100)
-            .WithMessage("Email cannot exceed 100 characters");
+            .MaximumLength(ApplicationConstants.MaxEmailLength)
+            .WithMessage($"Email cannot exceed {ApplicationConstants.MaxEmailLength} characters");
 
         RuleFor(x => x.Phone)
             .NotEmpty()
             .WithMessage("Phone is required")
-            .MaximumLength(20)
-            .WithMessage("Phone cannot exceed 20 characters");
+            .MaximumLength(ApplicationConstants.MaxPhoneNumberLength)
+            .WithMessage($"Phone cannot exceed {ApplicationConstants.MaxPhoneNumberLength} characters");
 
         RuleFor(x => x.Role)
             .NotEmpty()
@@ -126,17 +127,17 @@ public class AuditLogQueryValidator : AbstractValidator<AuditLogQuery>
             .WithMessage("Page must be greater than 0");
 
         RuleFor(x => x.PageSize)
-            .InclusiveBetween(1, 100)
-            .WithMessage("Page size must be between 1 and 100");
+            .InclusiveBetween(1, ApplicationConstants.MaxPageSize)
+            .WithMessage($"Page size must be between 1 and {ApplicationConstants.MaxPageSize}");
 
         RuleFor(x => x.Action)
-            .MaximumLength(100)
-            .WithMessage("Action cannot exceed 100 characters")
+            .MaximumLength(ApplicationConstants.MaxNameLength)
+            .WithMessage($"Action cannot exceed {ApplicationConstants.MaxNameLength} characters")
             .When(x => !string.IsNullOrEmpty(x.Action));
 
         RuleFor(x => x.EntityType)
-            .MaximumLength(100)
-            .WithMessage("Entity type cannot exceed 100 characters")
+            .MaximumLength(ApplicationConstants.MaxNameLength)
+            .WithMessage($"Entity type cannot exceed {ApplicationConstants.MaxNameLength} characters")
             .When(x => !string.IsNullOrEmpty(x.EntityType));
     }
 }
@@ -146,18 +147,18 @@ public class AdminSearchQueryValidator : AbstractValidator<AdminSearchQuery>
     public AdminSearchQueryValidator()
     {
         RuleFor(x => x.SearchTerm)
-            .MaximumLength(200)
-            .WithMessage("Search term cannot exceed 200 characters")
+            .MaximumLength(ApplicationConstants.MaxDescriptionLength)
+            .WithMessage($"Search term cannot exceed {ApplicationConstants.MaxDescriptionLength} characters")
             .When(x => !string.IsNullOrEmpty(x.SearchTerm));
 
         RuleFor(x => x.EntityType)
-            .MaximumLength(100)
-            .WithMessage("Entity type cannot exceed 100 characters")
+            .MaximumLength(ApplicationConstants.MaxNameLength)
+            .WithMessage($"Entity type cannot exceed {ApplicationConstants.MaxNameLength} characters")
             .When(x => !string.IsNullOrEmpty(x.EntityType));
 
         RuleFor(x => x.Status)
-            .MaximumLength(50)
-            .WithMessage("Status cannot exceed 50 characters")
+            .MaximumLength(ApplicationConstants.MaxNameLength)
+            .WithMessage($"Status cannot exceed {ApplicationConstants.MaxNameLength} characters")
             .When(x => !string.IsNullOrEmpty(x.Status));
 
         RuleFor(x => x.FromDate)
@@ -175,7 +176,7 @@ public class AdminSearchQueryValidator : AbstractValidator<AdminSearchQuery>
             .WithMessage("Page must be greater than 0");
 
         RuleFor(x => x.PageSize)
-            .InclusiveBetween(1, 100)
-            .WithMessage("Page size must be between 1 and 100");
+            .InclusiveBetween(1, ApplicationConstants.MaxPageSize)
+            .WithMessage($"Page size must be between 1 and {ApplicationConstants.MaxPageSize}");
     }
 }

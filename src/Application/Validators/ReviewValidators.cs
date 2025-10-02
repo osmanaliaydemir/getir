@@ -1,4 +1,5 @@
 using FluentValidation;
+using Getir.Application.Common;
 using Getir.Application.DTO;
 
 namespace Getir.Application.Validators;
@@ -22,20 +23,20 @@ public class CreateReviewRequestValidator : AbstractValidator<CreateReviewReques
             .WithMessage("Order ID is required");
 
         RuleFor(x => x.Rating)
-            .InclusiveBetween(1, 5)
-            .WithMessage("Rating must be between 1 and 5");
+            .InclusiveBetween(ApplicationConstants.MinRating, ApplicationConstants.MaxRating)
+            .WithMessage($"Rating must be between {ApplicationConstants.MinRating} and {ApplicationConstants.MaxRating}");
 
         RuleFor(x => x.Comment)
             .NotEmpty()
             .WithMessage("Comment is required")
-            .MaximumLength(500)
-            .WithMessage("Comment cannot exceed 500 characters");
+            .MaximumLength(ApplicationConstants.MaxCommentLength)
+            .WithMessage($"Comment cannot exceed {ApplicationConstants.MaxCommentLength} characters");
 
         RuleFor(x => x.Tags)
-            .Must(tags => tags == null || tags.Count <= 10)
-            .WithMessage("Maximum 10 tags allowed")
-            .Must(tags => tags == null || tags.All(tag => !string.IsNullOrWhiteSpace(tag) && tag.Length <= 50))
-            .WithMessage("Each tag must be between 1 and 50 characters");
+            .Must(tags => tags == null || tags.Count <= ApplicationConstants.MaxRecentItems)
+            .WithMessage($"Maximum {ApplicationConstants.MaxRecentItems} tags allowed")
+            .Must(tags => tags == null || tags.All(tag => !string.IsNullOrWhiteSpace(tag) && tag.Length <= ApplicationConstants.MaxNameLength))
+            .WithMessage($"Each tag must be between 1 and {ApplicationConstants.MaxNameLength} characters");
     }
 }
 
@@ -44,20 +45,20 @@ public class UpdateReviewRequestValidator : AbstractValidator<UpdateReviewReques
     public UpdateReviewRequestValidator()
     {
         RuleFor(x => x.Rating)
-            .InclusiveBetween(1, 5)
-            .WithMessage("Rating must be between 1 and 5");
+            .InclusiveBetween(ApplicationConstants.MinRating, ApplicationConstants.MaxRating)
+            .WithMessage($"Rating must be between {ApplicationConstants.MinRating} and {ApplicationConstants.MaxRating}");
 
         RuleFor(x => x.Comment)
             .NotEmpty()
             .WithMessage("Comment is required")
-            .MaximumLength(500)
-            .WithMessage("Comment cannot exceed 500 characters");
+            .MaximumLength(ApplicationConstants.MaxCommentLength)
+            .WithMessage($"Comment cannot exceed {ApplicationConstants.MaxCommentLength} characters");
 
         RuleFor(x => x.Tags)
-            .Must(tags => tags == null || tags.Count <= 10)
-            .WithMessage("Maximum 10 tags allowed")
-            .Must(tags => tags == null || tags.All(tag => !string.IsNullOrWhiteSpace(tag) && tag.Length <= 50))
-            .WithMessage("Each tag must be between 1 and 50 characters");
+            .Must(tags => tags == null || tags.Count <= ApplicationConstants.MaxRecentItems)
+            .WithMessage($"Maximum {ApplicationConstants.MaxRecentItems} tags allowed")
+            .Must(tags => tags == null || tags.All(tag => !string.IsNullOrWhiteSpace(tag) && tag.Length <= ApplicationConstants.MaxNameLength))
+            .WithMessage($"Each tag must be between 1 and {ApplicationConstants.MaxNameLength} characters");
     }
 }
 
@@ -66,8 +67,8 @@ public class ReviewModerationRequestValidator : AbstractValidator<ReviewModerati
     public ReviewModerationRequestValidator()
     {
         RuleFor(x => x.ModerationNotes)
-            .MaximumLength(500)
-            .WithMessage("Moderation notes cannot exceed 500 characters")
+            .MaximumLength(ApplicationConstants.MaxCommentLength)
+            .WithMessage($"Moderation notes cannot exceed {ApplicationConstants.MaxCommentLength} characters")
             .When(x => !string.IsNullOrEmpty(x.ModerationNotes));
     }
 }
@@ -87,13 +88,13 @@ public class ReviewSearchQueryValidator : AbstractValidator<ReviewSearchQuery>
     public ReviewSearchQueryValidator()
     {
         RuleFor(x => x.MinRating)
-            .InclusiveBetween(1, 5)
-            .WithMessage("Minimum rating must be between 1 and 5")
+            .InclusiveBetween(ApplicationConstants.MinRating, ApplicationConstants.MaxRating)
+            .WithMessage($"Minimum rating must be between {ApplicationConstants.MinRating} and {ApplicationConstants.MaxRating}")
             .When(x => x.MinRating.HasValue);
 
         RuleFor(x => x.MaxRating)
-            .InclusiveBetween(1, 5)
-            .WithMessage("Maximum rating must be between 1 and 5")
+            .InclusiveBetween(ApplicationConstants.MinRating, ApplicationConstants.MaxRating)
+            .WithMessage($"Maximum rating must be between {ApplicationConstants.MinRating} and {ApplicationConstants.MaxRating}")
             .When(x => x.MaxRating.HasValue);
 
         RuleFor(x => x.MaxRating)
@@ -111,8 +112,8 @@ public class ReviewSearchQueryValidator : AbstractValidator<ReviewSearchQuery>
             .WithMessage("Page must be greater than 0");
 
         RuleFor(x => x.PageSize)
-            .InclusiveBetween(1, 100)
-            .WithMessage("Page size must be between 1 and 100");
+            .InclusiveBetween(1, ApplicationConstants.MaxPageSize)
+            .WithMessage($"Page size must be between 1 and {ApplicationConstants.MaxPageSize}");
 
         RuleFor(x => x.RevieweeType)
             .Must(type => type == null || type.ToLower() == "merchant" || type.ToLower() == "courier")

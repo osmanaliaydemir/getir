@@ -1,4 +1,5 @@
 using FluentValidation;
+using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Enums;
 
@@ -20,7 +21,7 @@ public class CreateOrderRequestValidator : AbstractValidator<CreateOrderRequest>
 
         RuleFor(x => x.DeliveryAddress)
             .NotEmpty().WithMessage("Delivery address is required")
-            .MaximumLength(500).WithMessage("Address must not exceed 500 characters");
+            .MaximumLength(ApplicationConstants.MaxAddressLength).WithMessage($"Address must not exceed {ApplicationConstants.MaxAddressLength} characters");
 
         RuleFor(x => x.PaymentMethod)
             .NotEmpty().WithMessage("Payment method is required")
@@ -37,7 +38,8 @@ public class OrderLineRequestValidator : AbstractValidator<OrderLineRequest>
             .NotEmpty().WithMessage("Product is required");
 
         RuleFor(x => x.Quantity)
-            .GreaterThan(0).WithMessage("Quantity must be greater than zero");
+            .GreaterThan(0).WithMessage("Quantity must be greater than zero")
+            .LessThanOrEqualTo(ApplicationConstants.MaxQuantity).WithMessage($"Quantity must not exceed {ApplicationConstants.MaxQuantity}");
     }
 }
 
@@ -50,7 +52,7 @@ public class RejectOrderRequestValidator : AbstractValidator<RejectOrderRequest>
             .NotEmpty().WithMessage("Order ID is required");
 
         RuleFor(x => x.Reason)
-            .MaximumLength(500).WithMessage("Reason must not exceed 500 characters");
+            .MaximumLength(ApplicationConstants.MaxCommentLength).WithMessage($"Reason must not exceed {ApplicationConstants.MaxCommentLength} characters");
     }
 }
 
@@ -63,7 +65,7 @@ public class CancelOrderRequestValidator : AbstractValidator<CancelOrderRequest>
 
         RuleFor(x => x.Reason)
             .NotEmpty().WithMessage("Cancellation reason is required")
-            .MaximumLength(500).WithMessage("Reason must not exceed 500 characters");
+            .MaximumLength(ApplicationConstants.MaxCommentLength).WithMessage($"Reason must not exceed {ApplicationConstants.MaxCommentLength} characters");
     }
 }
 
@@ -79,7 +81,7 @@ public class UpdateOrderStatusRequestValidator : AbstractValidator<UpdateOrderSt
             .Must(BeValidStatus).WithMessage("Invalid order status");
 
         RuleFor(x => x.Reason)
-            .MaximumLength(500).WithMessage("Reason must not exceed 500 characters");
+            .MaximumLength(ApplicationConstants.MaxCommentLength).WithMessage($"Reason must not exceed {ApplicationConstants.MaxCommentLength} characters");
     }
 
     private static bool BeValidStatus(string status)

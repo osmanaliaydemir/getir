@@ -1,4 +1,5 @@
 using FluentValidation;
+using Getir.Application.Common;
 using Getir.Application.DTO;
 
 namespace Getir.Application.Validators;
@@ -9,12 +10,12 @@ public class CreateCouponRequestValidator : AbstractValidator<CreateCouponReques
     {
         RuleFor(x => x.Code)
             .NotEmpty().WithMessage("Coupon code is required")
-            .MaximumLength(50).WithMessage("Code must not exceed 50 characters")
+            .MaximumLength(ApplicationConstants.MaxNameLength).WithMessage($"Code must not exceed {ApplicationConstants.MaxNameLength} characters")
             .Matches("^[A-Z0-9]+$").WithMessage("Code must contain only uppercase letters and numbers");
 
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Title is required")
-            .MaximumLength(200).WithMessage("Title must not exceed 200 characters");
+            .MaximumLength(ApplicationConstants.MaxDescriptionLength).WithMessage($"Title must not exceed {ApplicationConstants.MaxDescriptionLength} characters");
 
         RuleFor(x => x.DiscountType)
             .NotEmpty()

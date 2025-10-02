@@ -21,21 +21,18 @@ public record UpdateMerchantRequest(
     decimal MinimumOrderAmount,
     decimal DeliveryFee);
 
-public record MerchantResponse(
-    Guid Id,
-    Guid OwnerId,
-    string OwnerName,
-    string Name,
-    string? Description,
-    Guid ServiceCategoryId,
-    string ServiceCategoryName,
-    string? LogoUrl,
-    string Address,
-    decimal Latitude,
-    decimal Longitude,
-    decimal MinimumOrderAmount,
-    decimal DeliveryFee,
-    int AverageDeliveryTime,
-    decimal? Rating,
-    bool IsActive,
-    bool IsOpen);
+public record MerchantResponse : BaseRatedEntityResponse
+{
+    public Guid OwnerId { get; init; }
+    public string OwnerName { get; init; } = string.Empty;
+    public Guid ServiceCategoryId { get; init; }
+    public string ServiceCategoryName { get; init; } = string.Empty;
+    public string? LogoUrl { get; init; }
+    public string Address { get; init; } = string.Empty;
+    public decimal Latitude { get; init; }
+    public decimal Longitude { get; init; }
+    public decimal MinimumOrderAmount { get; init; }
+    public decimal DeliveryFee { get; init; }
+    public int AverageDeliveryTime { get; init; }
+    public bool IsOpen { get; init; }
+}

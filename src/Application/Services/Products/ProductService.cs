@@ -1,15 +1,31 @@
+// System namespaces
+using Microsoft.Extensions.Logging;
+
+// Application namespaces
 using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
+
+// Domain namespaces
 using Getir.Domain.Entities;
-using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Products;
 
+/// <summary>
+/// Service for managing products and their operations
+/// </summary>
 public class ProductService : BaseService, IProductService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
 
+    /// <summary>
+    /// Initializes a new instance of the ProductService class
+    /// </summary>
+    /// <param name="unitOfWork">The unit of work for database operations</param>
+    /// <param name="logger">The logger for logging operations</param>
+    /// <param name="loggingService">The logging service for structured logging</param>
+    /// <param name="cacheService">The cache service for caching operations</param>
+    /// <param name="backgroundTaskService">The background task service for async operations</param>
     public ProductService(
         IUnitOfWork unitOfWork,
         ILogger<ProductService> logger,
@@ -40,7 +56,7 @@ public class ProductService : BaseService, IProductService
     {
         try
         {
-            var cacheKey = $"products_merchant_{merchantId}_{query.Page}_{query.PageSize}";
+            var cacheKey = string.Concat("products_merchant_", merchantId, "_", query.Page, "_", query.PageSize);
             
             return await GetOrSetCacheAsync(
                 cacheKey,
@@ -58,27 +74,32 @@ public class ProductService : BaseService, IProductService
                     var total = await _unitOfWork.ReadRepository<Product>()
                         .CountAsync(p => p.MerchantId == merchantId && p.IsActive, cancellationToken);
 
-                    var response = products.Select(p => new ProductResponse(
-                        p.Id,
-                        p.MerchantId,
-                        p.Merchant.Name,
-                        p.ProductCategoryId,
-                        p.ProductCategory?.Name,
-                        p.Name,
-                        p.Description,
-                        p.ImageUrl,
-                        p.Price,
-                        p.DiscountedPrice,
-                        p.StockQuantity,
-                        p.Unit,
-                        p.IsAvailable
-                    )).ToList();
+                    var response = products.Select(p => new ProductResponse
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        Description = p.Description,
+                        CreatedAt = p.CreatedAt,
+                        UpdatedAt = p.UpdatedAt,
+                        IsActive = p.IsActive,
+                        IsDeleted = false,
+                        MerchantId = p.MerchantId,
+                        MerchantName = p.Merchant.Name,
+                        ProductCategoryId = p.ProductCategoryId,
+                        ProductCategoryName = p.ProductCategory?.Name,
+                        ImageUrl = p.ImageUrl,
+                        Price = p.Price,
+                        DiscountedPrice = p.DiscountedPrice,
+                        StockQuantity = p.StockQuantity,
+                        Unit = p.Unit,
+                        IsAvailable = p.IsAvailable
+                    }).ToList();
 
                     var pagedResult = PagedResult<ProductResponse>.Create(response, total, query.Page, query.PageSize);
                     
                     return ServiceResult.Success(pagedResult);
                 },
-                TimeSpan.FromMinutes(10), // 10 dakika cache
+                TimeSpan.FromMinutes(ApplicationConstants.ShortCacheMinutes), // Short cache duration
                 cancellationToken);
         }
         catch (Exception ex)
@@ -100,21 +121,26 @@ public class ProductService : BaseService, IProductService
             return Result.Fail<ProductResponse>("Product not found", "NOT_FOUND_PRODUCT");
         }
 
-        var response = new ProductResponse(
-            product.Id,
-            product.MerchantId,
-            product.Merchant.Name,
-            product.ProductCategoryId,
-            product.ProductCategory?.Name,
-            product.Name,
-            product.Description,
-            product.ImageUrl,
-            product.Price,
-            product.DiscountedPrice,
-            product.StockQuantity,
-            product.Unit,
-            product.IsAvailable
-        );
+        var response = new ProductResponse
+        {
+            Id = product.Id,
+            Name = product.Name,
+            Description = product.Description,
+            CreatedAt = product.CreatedAt,
+            UpdatedAt = product.UpdatedAt,
+            IsActive = product.IsActive,
+            IsDeleted = false,
+            MerchantId = product.MerchantId,
+            MerchantName = product.Merchant.Name,
+            ProductCategoryId = product.ProductCategoryId,
+            ProductCategoryName = product.ProductCategory?.Name,
+            ImageUrl = product.ImageUrl,
+            Price = product.Price,
+            DiscountedPrice = product.DiscountedPrice,
+            StockQuantity = product.StockQuantity,
+            Unit = product.Unit,
+            IsAvailable = product.IsAvailable
+        };
 
         return Result.Ok(response);
     }
@@ -154,21 +180,26 @@ public class ProductService : BaseService, IProductService
         var createdProduct = await _unitOfWork.Repository<Product>()
             .GetAsync(p => p.Id == product.Id, include: "Merchant", cancellationToken: cancellationToken);
 
-        var response = new ProductResponse(
-            createdProduct!.Id,
-            createdProduct.MerchantId,
-            createdProduct.Merchant.Name,
-            createdProduct.ProductCategoryId,
-            createdProduct.ProductCategory?.Name,
-            createdProduct.Name,
-            createdProduct.Description,
-            createdProduct.ImageUrl,
-            createdProduct.Price,
-            createdProduct.DiscountedPrice,
-            createdProduct.StockQuantity,
-            createdProduct.Unit,
-            createdProduct.IsAvailable
-        );
+        var response = new ProductResponse
+        {
+            Id = createdProduct!.Id,
+            Name = createdProduct.Name,
+            Description = createdProduct.Description,
+            CreatedAt = createdProduct.CreatedAt,
+            UpdatedAt = createdProduct.UpdatedAt,
+            IsActive = createdProduct.IsActive,
+            IsDeleted = false,
+            MerchantId = createdProduct.MerchantId,
+            MerchantName = createdProduct.Merchant.Name,
+            ProductCategoryId = createdProduct.ProductCategoryId,
+            ProductCategoryName = createdProduct.ProductCategory?.Name,
+            ImageUrl = createdProduct.ImageUrl,
+            Price = createdProduct.Price,
+            DiscountedPrice = createdProduct.DiscountedPrice,
+            StockQuantity = createdProduct.StockQuantity,
+            Unit = createdProduct.Unit,
+            IsAvailable = createdProduct.IsAvailable
+        };
 
         return Result.Ok(response);
     }
@@ -201,21 +232,26 @@ public class ProductService : BaseService, IProductService
         var updatedProduct = await _unitOfWork.Repository<Product>()
             .GetAsync(p => p.Id == id, include: "Merchant", cancellationToken: cancellationToken);
 
-        var response = new ProductResponse(
-            updatedProduct!.Id,
-            updatedProduct.MerchantId,
-            updatedProduct.Merchant.Name,
-            updatedProduct.ProductCategoryId,
-            updatedProduct.ProductCategory?.Name,
-            updatedProduct.Name,
-            updatedProduct.Description,
-            updatedProduct.ImageUrl,
-            updatedProduct.Price,
-            updatedProduct.DiscountedPrice,
-            updatedProduct.StockQuantity,
-            updatedProduct.Unit,
-            updatedProduct.IsAvailable
-        );
+        var response = new ProductResponse
+        {
+            Id = updatedProduct!.Id,
+            Name = updatedProduct.Name,
+            Description = updatedProduct.Description,
+            CreatedAt = updatedProduct.CreatedAt,
+            UpdatedAt = updatedProduct.UpdatedAt,
+            IsActive = updatedProduct.IsActive,
+            IsDeleted = false,
+            MerchantId = updatedProduct.MerchantId,
+            MerchantName = updatedProduct.Merchant.Name,
+            ProductCategoryId = updatedProduct.ProductCategoryId,
+            ProductCategoryName = updatedProduct.ProductCategory?.Name,
+            ImageUrl = updatedProduct.ImageUrl,
+            Price = updatedProduct.Price,
+            DiscountedPrice = updatedProduct.DiscountedPrice,
+            StockQuantity = updatedProduct.StockQuantity,
+            Unit = updatedProduct.Unit,
+            IsAvailable = updatedProduct.IsAvailable
+        };
 
         return Result.Ok(response);
     }
@@ -271,20 +307,26 @@ public class ProductService : BaseService, IProductService
         var total = await _unitOfWork.ReadRepository<Product>()
             .CountAsync(p => p.MerchantId == merchant.Id, cancellationToken);
 
-        var responses = products.Select(p => new ProductResponse(
-            p.Id,
-            p.MerchantId,
-            merchant.Name,
-            p.ProductCategoryId,
-            p.ProductCategory?.Name,
-            p.Name,
-            p.Description,
-            p.ImageUrl,
-            p.Price,
-            p.DiscountedPrice,
-            p.StockQuantity,
-            p.Unit,
-            p.IsAvailable)).ToList();
+        var responses = products.Select(p => new ProductResponse
+        {
+            Id = p.Id,
+            Name = p.Name,
+            Description = p.Description,
+            CreatedAt = p.CreatedAt,
+            UpdatedAt = p.UpdatedAt,
+            IsActive = p.IsActive,
+            IsDeleted = false,
+            MerchantId = p.MerchantId,
+            MerchantName = merchant.Name,
+            ProductCategoryId = p.ProductCategoryId,
+            ProductCategoryName = p.ProductCategory?.Name,
+            ImageUrl = p.ImageUrl,
+            Price = p.Price,
+            DiscountedPrice = p.DiscountedPrice,
+            StockQuantity = p.StockQuantity,
+            Unit = p.Unit,
+            IsAvailable = p.IsAvailable
+        }).ToList();
 
         var pagedResult = PagedResult<ProductResponse>.Create(
             responses,
@@ -332,20 +374,26 @@ public class ProductService : BaseService, IProductService
         await _unitOfWork.Repository<Product>().AddAsync(product, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var response = new ProductResponse(
-            product.Id,
-            product.MerchantId,
-            merchant.Name,
-            product.ProductCategoryId,
-            null, // Will be loaded if needed
-            product.Name,
-            product.Description,
-            product.ImageUrl,
-            product.Price,
-            product.DiscountedPrice,
-            product.StockQuantity,
-            product.Unit,
-            product.IsAvailable);
+        var response = new ProductResponse
+        {
+            Id = product.Id,
+            Name = product.Name,
+            Description = product.Description,
+            CreatedAt = product.CreatedAt,
+            UpdatedAt = product.UpdatedAt,
+            IsActive = product.IsActive,
+            IsDeleted = false,
+            MerchantId = product.MerchantId,
+            MerchantName = merchant.Name,
+            ProductCategoryId = product.ProductCategoryId,
+            ProductCategoryName = null, // Will be loaded if needed
+            ImageUrl = product.ImageUrl,
+            Price = product.Price,
+            DiscountedPrice = product.DiscountedPrice,
+            StockQuantity = product.StockQuantity,
+            Unit = product.Unit,
+            IsAvailable = product.IsAvailable
+        };
 
         return Result.Ok(response);
     }
@@ -386,20 +434,26 @@ public class ProductService : BaseService, IProductService
         _unitOfWork.Repository<Product>().Update(product);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var response = new ProductResponse(
-            product.Id,
-            product.MerchantId,
-            product.Merchant.Name,
-            product.ProductCategoryId,
-            product.ProductCategory?.Name,
-            product.Name,
-            product.Description,
-            product.ImageUrl,
-            product.Price,
-            product.DiscountedPrice,
-            product.StockQuantity,
-            product.Unit,
-            product.IsAvailable);
+        var response = new ProductResponse
+        {
+            Id = product.Id,
+            Name = product.Name,
+            Description = product.Description,
+            CreatedAt = product.CreatedAt,
+            UpdatedAt = product.UpdatedAt,
+            IsActive = product.IsActive,
+            IsDeleted = false,
+            MerchantId = product.MerchantId,
+            MerchantName = product.Merchant.Name,
+            ProductCategoryId = product.ProductCategoryId,
+            ProductCategoryName = product.ProductCategory?.Name,
+            ImageUrl = product.ImageUrl,
+            Price = product.Price,
+            DiscountedPrice = product.DiscountedPrice,
+            StockQuantity = product.StockQuantity,
+            Unit = product.Unit,
+            IsAvailable = product.IsAvailable
+        };
 
         return Result.Ok(response);
     }

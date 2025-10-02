@@ -1,9 +1,14 @@
+// System namespaces
+using Microsoft.Extensions.Logging;
+
+// Application namespaces
 using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
+
+// Domain namespaces
 using Getir.Domain.Entities;
 using Getir.Domain.Enums;
-using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Couriers;
 

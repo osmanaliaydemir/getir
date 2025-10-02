@@ -1,4 +1,5 @@
 using FluentValidation;
+using Getir.Application.Common;
 using Getir.Application.DTO;
 
 namespace Getir.Application.Validators;
@@ -14,7 +15,8 @@ public class AddToCartRequestValidator : AbstractValidator<AddToCartRequest>
             .NotEmpty().WithMessage("Product is required");
 
         RuleFor(x => x.Quantity)
-            .GreaterThan(0).WithMessage("Quantity must be greater than zero");
+            .GreaterThan(0).WithMessage("Quantity must be greater than zero")
+            .LessThanOrEqualTo(ApplicationConstants.MaxQuantity).WithMessage($"Quantity must not exceed {ApplicationConstants.MaxQuantity}");
     }
 }
 
@@ -23,6 +25,7 @@ public class UpdateCartItemRequestValidator : AbstractValidator<UpdateCartItemRe
     public UpdateCartItemRequestValidator()
     {
         RuleFor(x => x.Quantity)
-            .GreaterThan(0).WithMessage("Quantity must be greater than zero");
+            .GreaterThan(0).WithMessage("Quantity must be greater than zero")
+            .LessThanOrEqualTo(ApplicationConstants.MaxQuantity).WithMessage($"Quantity must not exceed {ApplicationConstants.MaxQuantity}");
     }
 }

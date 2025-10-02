@@ -1,9 +1,14 @@
+// System namespaces
+using Microsoft.Extensions.Logging;
+
+// Application namespaces
 using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
+
+// Domain namespaces
 using Getir.Domain.Entities;
 using Getir.Domain.Enums;
-using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Admin;
 
@@ -71,7 +76,7 @@ public class AdminService : BaseService, IAdminService
         var applicationResponses = recentApplications.Select(app => new RecentMerchantApplicationResponse(
             app.Id,
             "Business Name", // Placeholder
-            $"{app.Owner.FirstName} {app.Owner.LastName}",
+            string.Concat(app.Owner.FirstName, " ", app.Owner.LastName),
             app.Owner.Email,
             "Pending",
             app.CreatedAt,
@@ -216,7 +221,7 @@ public class AdminService : BaseService, IAdminService
         var applicationResponses = applications.Select(app => new RecentMerchantApplicationResponse(
             app.Id,
             "Business Name", // Placeholder
-            $"{app.Owner.FirstName} {app.Owner.LastName}",
+            string.Concat(app.Owner.FirstName, " ", app.Owner.LastName),
             app.Owner.Email,
             app.IsApproved ? "Approved" : "Pending",
             app.CreatedAt,
@@ -255,7 +260,7 @@ public class AdminService : BaseService, IAdminService
             application.Id,
             "Business Name", // Placeholder
             "Business Type", // Placeholder
-            $"{application.Owner.FirstName} {application.Owner.LastName}",
+            string.Concat(application.Owner.FirstName, " ", application.Owner.LastName),
             application.Owner.Email,
             application.Owner.PhoneNumber ?? "",
             "", // Business address placeholder
@@ -308,7 +313,7 @@ public class AdminService : BaseService, IAdminService
             application.Id,
             true,
             request.Comments ?? "",
-            $"{admin?.FirstName} {admin?.LastName}",
+            string.Concat(admin?.FirstName, " ", admin?.LastName),
             DateTime.UtcNow
         );
 
@@ -337,7 +342,7 @@ public class AdminService : BaseService, IAdminService
             "REJECT_MERCHANT",
             "MerchantOnboarding",
             application.Id.ToString(),
-            $"Rejected merchant application. Reason: {request.Comments}",
+            string.Concat("Rejected merchant application. Reason: ", request.Comments),
             "",
             "",
             cancellationToken);
@@ -454,7 +459,7 @@ public class AdminService : BaseService, IAdminService
             "CREATE_USER",
             "User",
             user.Id.ToString(),
-            $"Created user: {user.Email} with role: {user.Role}",
+            string.Concat("Created user: ", user.Email, " with role: ", user.Role),
             "",
             "",
             cancellationToken);
@@ -486,7 +491,7 @@ public class AdminService : BaseService, IAdminService
             return Result.Fail<AdminUserResponse>("User not found", "NOT_FOUND");
         }
 
-        var oldData = $"Email: {user.Email}, Role: {user.Role}, Active: {user.IsActive}";
+        var oldData = string.Concat("Email: ", user.Email, ", Role: ", user.Role, ", Active: ", user.IsActive);
 
         user.FirstName = request.FirstName;
         user.LastName = request.LastName;
@@ -504,7 +509,7 @@ public class AdminService : BaseService, IAdminService
             "UPDATE_USER",
             "User",
             user.Id.ToString(),
-            $"Updated user: {user.Email}. Old: {oldData}",
+            string.Concat("Updated user: ", user.Email, ". Old: ", oldData),
             "",
             "",
             cancellationToken);
@@ -551,7 +556,7 @@ public class AdminService : BaseService, IAdminService
             "DELETE_USER",
             "User",
             user.Id.ToString(),
-            $"Deleted user: {user.Email}",
+            string.Concat("Deleted user: ", user.Email),
             "",
             "",
             cancellationToken);
@@ -580,7 +585,7 @@ public class AdminService : BaseService, IAdminService
             "ACTIVATE_USER",
             "User",
             user.Id.ToString(),
-            $"Activated user: {user.Email}",
+            string.Concat("Activated user: ", user.Email),
             "",
             "",
             cancellationToken);
@@ -609,7 +614,7 @@ public class AdminService : BaseService, IAdminService
             "DEACTIVATE_USER",
             "User",
             user.Id.ToString(),
-            $"Deactivated user: {user.Email}",
+            string.Concat("Deactivated user: ", user.Email),
             "",
             "",
             cancellationToken);
@@ -728,7 +733,7 @@ public class AdminService : BaseService, IAdminService
         {
             Id = Guid.NewGuid(),
             UserId = userId,
-            UserName = user != null ? $"{user.FirstName} {user.LastName}" : "System",
+            UserName = user != null ? string.Concat(user.FirstName, " ", user.LastName) : "System",
             Action = action,
             EntityType = entityType,
             EntityId = entityId,

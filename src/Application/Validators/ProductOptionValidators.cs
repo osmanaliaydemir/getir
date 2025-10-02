@@ -1,4 +1,5 @@
 using FluentValidation;
+using Getir.Application.Common;
 using Getir.Application.DTO;
 
 namespace Getir.Application.Validators;
@@ -12,10 +13,10 @@ public class CreateProductOptionGroupRequestValidator : AbstractValidator<Create
 
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Name is required")
-            .MaximumLength(100).WithMessage("Name must not exceed 100 characters");
+            .MaximumLength(ApplicationConstants.MaxNameLength).WithMessage($"Name must not exceed {ApplicationConstants.MaxNameLength} characters");
 
         RuleFor(x => x.Description)
-            .MaximumLength(500).WithMessage("Description must not exceed 500 characters");
+            .MaximumLength(ApplicationConstants.MaxDescriptionLength).WithMessage($"Description must not exceed {ApplicationConstants.MaxDescriptionLength} characters");
 
         RuleFor(x => x.MinSelection)
             .GreaterThanOrEqualTo(0).WithMessage("Minimum selection must be 0 or greater");
@@ -35,10 +36,10 @@ public class UpdateProductOptionGroupRequestValidator : AbstractValidator<Update
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Name is required")
-            .MaximumLength(100).WithMessage("Name must not exceed 100 characters");
+            .MaximumLength(ApplicationConstants.MaxNameLength).WithMessage($"Name must not exceed {ApplicationConstants.MaxNameLength} characters");
 
         RuleFor(x => x.Description)
-            .MaximumLength(500).WithMessage("Description must not exceed 500 characters");
+            .MaximumLength(ApplicationConstants.MaxDescriptionLength).WithMessage($"Description must not exceed {ApplicationConstants.MaxDescriptionLength} characters");
 
         RuleFor(x => x.MinSelection)
             .GreaterThanOrEqualTo(0).WithMessage("Minimum selection must be 0 or greater");
@@ -61,10 +62,10 @@ public class CreateProductOptionRequestValidator : AbstractValidator<CreateProdu
 
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Name is required")
-            .MaximumLength(100).WithMessage("Name must not exceed 100 characters");
+            .MaximumLength(ApplicationConstants.MaxNameLength).WithMessage($"Name must not exceed {ApplicationConstants.MaxNameLength} characters");
 
         RuleFor(x => x.Description)
-            .MaximumLength(500).WithMessage("Description must not exceed 500 characters");
+            .MaximumLength(ApplicationConstants.MaxDescriptionLength).WithMessage($"Description must not exceed {ApplicationConstants.MaxDescriptionLength} characters");
 
         RuleFor(x => x.ExtraPrice)
             .GreaterThanOrEqualTo(0).WithMessage("Extra price must be 0 or greater");
@@ -80,10 +81,10 @@ public class UpdateProductOptionRequestValidator : AbstractValidator<UpdateProdu
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Name is required")
-            .MaximumLength(100).WithMessage("Name must not exceed 100 characters");
+            .MaximumLength(ApplicationConstants.MaxNameLength).WithMessage($"Name must not exceed {ApplicationConstants.MaxNameLength} characters");
 
         RuleFor(x => x.Description)
-            .MaximumLength(500).WithMessage("Description must not exceed 500 characters");
+            .MaximumLength(ApplicationConstants.MaxDescriptionLength).WithMessage($"Description must not exceed {ApplicationConstants.MaxDescriptionLength} characters");
 
         RuleFor(x => x.ExtraPrice)
             .GreaterThanOrEqualTo(0).WithMessage("Extra price must be 0 or greater");

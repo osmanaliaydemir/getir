@@ -1,33 +1,42 @@
-using FluentValidation;
+// System namespaces
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+
+// Third-party namespaces
 using AspNetCoreRateLimit;
+using FluentValidation;
+using Serilog;
+
+// Application namespaces
 using Getir.Application.Abstractions;
+using Getir.Application.Common;
 using Getir.Application.Services.Addresses;
 using Getir.Application.Services.Auth;
 using Getir.Application.Services.Campaigns;
 using Getir.Application.Services.Cart;
-using Getir.Application.Services.ServiceCategories;
-using Getir.Application.Services.ProductCategories;
 using Getir.Application.Services.Coupons;
 using Getir.Application.Services.Couriers;
+using Getir.Application.Services.DeliveryZones;
 using Getir.Application.Services.Merchants;
-using Getir.Application.Services.ProductOptions;
 using Getir.Application.Services.Notifications;
 using Getir.Application.Services.Orders;
+using Getir.Application.Services.ProductCategories;
+using Getir.Application.Services.ProductOptions;
 using Getir.Application.Services.Products;
-using Getir.Application.Services.Search;
 using Getir.Application.Services.Reviews;
+using Getir.Application.Services.Search;
+using Getir.Application.Services.ServiceCategories;
+using Getir.Application.Services.WorkingHours;
+
+// Infrastructure namespaces
 using Getir.Infrastructure.Persistence;
 using Getir.Infrastructure.Persistence.Repositories;
 using Getir.Infrastructure.Security;
+
+// WebApi namespaces
 using Getir.WebApi.Configuration;
 using Getir.WebApi.Endpoints;
 using Getir.WebApi.Middleware;
-using Microsoft.EntityFrameworkCore;
-using Serilog;
-using Getir.Application.Services.WorkingHours;
-using Getir.Application.Services.DeliveryZones;
-using Getir.Application.Common;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,11 +58,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         {
             sqlOptions.EnableRetryOnFailure(
                 maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(30),
+                maxRetryDelay: TimeSpan.FromSeconds(ApplicationConstants.MaxDatabaseRetryDelaySeconds),
                 errorNumbersToAdd: null);
             
                     // Connection pooling optimization
-                    sqlOptions.CommandTimeout(30);
+                    sqlOptions.CommandTimeout(ApplicationConstants.DatabaseCommandTimeoutSeconds);
         });
 
     // Query optimization
@@ -147,7 +156,7 @@ builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = builder.Environment.IsDevelopment();
     options.KeepAliveInterval = TimeSpan.FromSeconds(15);
-    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(ApplicationConstants.SignalRClientTimeoutSeconds);
 });
 
 // CORS for SignalR
@@ -197,7 +206,7 @@ app.Use(async (context, next) =>
     var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
     context.Request.Body.Position = 0;
     
-    if (body.Length > 10 * 1024 * 1024) // 10MB limit
+    if (body.Length > ApplicationConstants.MaxRequestSizeBytes) // Request size limit
     {
         context.Response.StatusCode = 413; // Payload Too Large
         await context.Response.WriteAsync("Request size exceeds 10MB limit");

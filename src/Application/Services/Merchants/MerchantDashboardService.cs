@@ -55,7 +55,7 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
     public async Task<Result<List<RecentOrderResponse>>> GetRecentOrdersAsync(
         Guid merchantId,
         Guid merchantOwnerId,
-        int limit = 10,
+        int limit = ApplicationConstants.MaxRecentItems,
         CancellationToken cancellationToken = default)
     {
         // Merchant ownership kontrolü
@@ -79,7 +79,7 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
         var response = recentOrders.Select(o => new RecentOrderResponse(
             o.Id,
             o.OrderNumber,
-            $"{o.User.FirstName} {o.User.LastName}",
+            string.Concat(o.User.FirstName, " ", o.User.LastName),
             o.Total,
             o.Status.ToStringValue(),
             o.CreatedAt
@@ -91,7 +91,7 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
     public async Task<Result<List<TopProductResponse>>> GetTopProductsAsync(
         Guid merchantId,
         Guid merchantOwnerId,
-        int limit = 10,
+        int limit = ApplicationConstants.MaxRecentItems,
         CancellationToken cancellationToken = default)
     {
         // Merchant ownership kontrolü
@@ -104,7 +104,7 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
         }
 
         // Son 30 günlük veriler
-        var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+        var thirtyDaysAgo = DateTime.UtcNow.AddDays(-ApplicationConstants.RecentDataDays);
 
         var topProducts = await _unitOfWork.ReadRepository<OrderLine>()
             .ListAsync(
@@ -153,7 +153,7 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
             return Result.Fail<MerchantPerformanceMetrics>("Merchant not found or access denied", "NOT_FOUND_MERCHANT");
         }
 
-        var start = startDate ?? DateTime.UtcNow.AddDays(-30);
+        var start = startDate ?? DateTime.UtcNow.AddDays(-ApplicationConstants.RecentDataDays);
         var end = endDate ?? DateTime.UtcNow;
 
         var orders = await _unitOfWork.ReadRepository<Order>()
@@ -176,7 +176,7 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
 
         var averageOrderValue = completedOrders > 0 ? totalRevenue / completedOrders : 0;
         var ordersPerDay = (decimal)totalOrders / (end - start).Days;
-        var completionRate = totalOrders > 0 ? (decimal)completedOrders / totalOrders * 100 : 0;
+        var completionRate = totalOrders > 0 ? (decimal)completedOrders / totalOrders * ApplicationConstants.MaxCompletionRatePercentage : 0;
 
         // Ortalama hazırlık süresi (şimdilik sabit değer)
         var averagePreparationTime = 25; // dakika
