@@ -313,6 +313,7 @@ ALTER TABLE MarketProductVariants ADD CONSTRAINT CK_MarketProductVariants_Price 
 ALTER TABLE MarketProductVariants ADD CONSTRAINT CK_MarketProductVariants_DiscountedPrice CHECK (DiscountedPrice IS NULL OR DiscountedPrice >= 0);
 
 -- 13. View'lar oluştur
+GO
 CREATE VIEW vw_RestaurantDetails AS
 SELECT 
     r.Id,
@@ -345,6 +346,7 @@ SELECT
 FROM Restaurants r
 INNER JOIN Merchants m ON r.MerchantId = m.Id;
 
+GO
 CREATE VIEW vw_MarketDetails AS
 SELECT 
     mk.Id,
@@ -380,6 +382,7 @@ FROM Markets mk
 INNER JOIN Merchants m ON mk.MerchantId = m.Id;
 
 -- 14. Stored procedure'lar
+GO
 CREATE PROCEDURE sp_GetRestaurantsByCuisineType
     @CuisineType NVARCHAR(100)
 AS
@@ -409,6 +412,7 @@ BEGIN
     ORDER BY m.Rating DESC, m.Name;
 END;
 
+GO
 CREATE PROCEDURE sp_GetMarketsByType
     @MarketType NVARCHAR(100)
 AS

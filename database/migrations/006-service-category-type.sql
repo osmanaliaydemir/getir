@@ -18,15 +18,41 @@ ALTER COLUMN Type INT NOT NULL;
 CREATE INDEX IX_ServiceCategories_Type ON ServiceCategories (Type);
 
 -- 5. Seed data - Varsayılan kategoriler
-INSERT INTO ServiceCategories (Id, Name, Description, Type, ImageUrl, IconUrl, DisplayOrder, IsActive, CreatedAt, UpdatedAt)
-VALUES 
-    (NEWID(), 'Restoran', 'Yemek siparişi ve teslimatı', 1, '/images/categories/restaurant.jpg', '/icons/restaurant.svg', 1, 1, GETUTCDATE(), GETUTCDATE()),
-    (NEWID(), 'Market', 'Gıda ve temizlik ürünleri', 2, '/images/categories/market.jpg', '/icons/market.svg', 2, 1, GETUTCDATE(), GETUTCDATE()),
-    (NEWID(), 'Eczane', 'İlaç ve sağlık ürünleri', 3, '/images/categories/pharmacy.jpg', '/icons/pharmacy.svg', 3, 1, GETUTCDATE(), GETUTCDATE()),
-    (NEWID(), 'Su', 'Su teslimatı', 4, '/images/categories/water.jpg', '/icons/water.svg', 4, 1, GETUTCDATE(), GETUTCDATE()),
-    (NEWID(), 'Kafe', 'Kahve ve atıştırmalık', 5, '/images/categories/cafe.jpg', '/icons/cafe.svg', 5, 1, GETUTCDATE(), GETUTCDATE()),
-    (NEWID(), 'Pastane', 'Tatlı ve hamur işi', 6, '/images/categories/bakery.jpg', '/icons/bakery.svg', 6, 1, GETUTCDATE(), GETUTCDATE())
-ON CONFLICT (Name) DO NOTHING;
+IF NOT EXISTS (SELECT 1 FROM ServiceCategories WHERE Name = 'Restoran')
+BEGIN
+    INSERT INTO ServiceCategories (Id, Name, Description, Type, ImageUrl, IconUrl, DisplayOrder, IsActive, CreatedAt, UpdatedAt)
+    VALUES (NEWID(), 'Restoran', 'Yemek siparişi ve teslimatı', 1, '/images/categories/restaurant.jpg', '/icons/restaurant.svg', 1, 1, GETUTCDATE(), GETUTCDATE());
+END
+
+IF NOT EXISTS (SELECT 1 FROM ServiceCategories WHERE Name = 'Market')
+BEGIN
+    INSERT INTO ServiceCategories (Id, Name, Description, Type, ImageUrl, IconUrl, DisplayOrder, IsActive, CreatedAt, UpdatedAt)
+    VALUES (NEWID(), 'Market', 'Gıda ve temizlik ürünleri', 2, '/images/categories/market.jpg', '/icons/market.svg', 2, 1, GETUTCDATE(), GETUTCDATE());
+END
+
+IF NOT EXISTS (SELECT 1 FROM ServiceCategories WHERE Name = 'Eczane')
+BEGIN
+    INSERT INTO ServiceCategories (Id, Name, Description, Type, ImageUrl, IconUrl, DisplayOrder, IsActive, CreatedAt, UpdatedAt)
+    VALUES (NEWID(), 'Eczane', 'İlaç ve sağlık ürünleri', 3, '/images/categories/pharmacy.jpg', '/icons/pharmacy.svg', 3, 1, GETUTCDATE(), GETUTCDATE());
+END
+
+IF NOT EXISTS (SELECT 1 FROM ServiceCategories WHERE Name = 'Su')
+BEGIN
+    INSERT INTO ServiceCategories (Id, Name, Description, Type, ImageUrl, IconUrl, DisplayOrder, IsActive, CreatedAt, UpdatedAt)
+    VALUES (NEWID(), 'Su', 'Su teslimatı', 4, '/images/categories/water.jpg', '/icons/water.svg', 4, 1, GETUTCDATE(), GETUTCDATE());
+END
+
+IF NOT EXISTS (SELECT 1 FROM ServiceCategories WHERE Name = 'Kafe')
+BEGIN
+    INSERT INTO ServiceCategories (Id, Name, Description, Type, ImageUrl, IconUrl, DisplayOrder, IsActive, CreatedAt, UpdatedAt)
+    VALUES (NEWID(), 'Kafe', 'Kahve ve atıştırmalık', 5, '/images/categories/cafe.jpg', '/icons/cafe.svg', 5, 1, GETUTCDATE(), GETUTCDATE());
+END
+
+IF NOT EXISTS (SELECT 1 FROM ServiceCategories WHERE Name = 'Pastane')
+BEGIN
+    INSERT INTO ServiceCategories (Id, Name, Description, Type, ImageUrl, IconUrl, DisplayOrder, IsActive, CreatedAt, UpdatedAt)
+    VALUES (NEWID(), 'Pastane', 'Tatlı ve hamur işi', 6, '/images/categories/bakery.jpg', '/icons/bakery.svg', 6, 1, GETUTCDATE(), GETUTCDATE());
+END
 
 -- 6. Merchant tablosundaki mevcut ServiceCategoryId'leri kontrol et ve güncelle
 -- (Eğer mevcut merchant'lar varsa, onları uygun kategoriye atayın)
@@ -43,6 +69,7 @@ CHECK (Type IN (1, 2, 3, 4, 5, 6, 99));
 CREATE INDEX IX_ServiceCategories_Type_IsActive ON ServiceCategories (Type, IsActive);
 
 -- 10. View oluştur (kategori tiplerini daha kolay sorgulamak için)
+GO
 CREATE OR ALTER VIEW vw_ServiceCategoriesWithType AS
 SELECT 
     sc.Id,
@@ -78,6 +105,7 @@ SELECT
 FROM ServiceCategories sc;
 
 -- 11. Stored procedure - Kategori tipine göre merchant'ları getir
+GO
 CREATE OR ALTER PROCEDURE sp_GetMerchantsByCategoryType
     @CategoryType INT
 AS
@@ -106,6 +134,7 @@ BEGIN
 END;
 
 -- 12. Function - Kategori tipinin yemek ile ilgili olup olmadığını kontrol et
+GO
 CREATE OR ALTER FUNCTION fn_IsFoodRelatedCategory(@CategoryType INT)
 RETURNS BIT
 AS
@@ -119,6 +148,7 @@ BEGIN
 END;
 
 -- 13. Function - Kategori tipinin ürün ile ilgili olup olmadığını kontrol et
+GO
 CREATE OR ALTER FUNCTION fn_IsProductRelatedCategory(@CategoryType INT)
 RETURNS BIT
 AS

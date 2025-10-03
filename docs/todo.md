@@ -4,23 +4,23 @@
 
 ### 1. Restoran ve Market Ayrımını Netleştir
 - [x] ServiceCategory enum'ını genişlet
-- [ ] Restaurant ve Market için ayrı entity'ler oluştur
-- [ ] Her kategori için özel özellikler tanımla
+- [x] Restaurant ve Market için ayrı entity'ler oluştur
+- [x] Her kategori için özel özellikler tanımla
 - [ ] UI'da kategori bazlı filtreleme ekle
 
 ### 2. Restoran Ürünleri için Özel Özellikler
-- [ ] Hazırlık süresi (PreparationTimeMinutes)
-- [ ] Porsiyon bilgisi (PortionSize)
-- [ ] Alerjen bilgileri (Allergens)
-- [ ] Acılık seviyesi (IsSpicy)
-- [ ] Besin değerleri (NutritionInfo)
+- [x] Hazırlık süresi (PreparationTimeMinutes)
+- [x] Porsiyon bilgisi (PortionSize)
+- [x] Alerjen bilgileri (Allergens)
+- [x] Acılık seviyesi (IsSpicy)
+- [x] Besin değerleri (NutritionInfo)
 
 ### 3. Market Ürünleri için Özel Özellikler
-- [ ] Son kullanma tarihi (ExpiryDate)
-- [ ] Marka bilgisi (Brand)
-- [ ] Barkod (Barcode)
-- [ ] Ağırlık/hacim (Weight/Volume)
-- [ ] Menşei bilgisi (Origin)
+- [x] Son kullanma tarihi (ExpiryDate)
+- [x] Marka bilgisi (Brand)
+- [x] Barkod (Barcode)
+- [x] Ağırlık/hacim (Weight/Volume)
+- [x] Menşei bilgisi (Origin)
 
 ### 4. Nakit Ödeme Güvenliği Artır
 - [ ] Kurye para toplama fotoğraf kanıtı
