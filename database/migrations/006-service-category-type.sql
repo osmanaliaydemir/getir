@@ -1,17 +1,24 @@
--- Migration: 006-service-category-type.sql
--- Description: ServiceCategory tablosuna Type kolonu ekleme ve ServiceCategoryType enum desteği
+-- Migration 006: ServiceCategory Type Column
+-- Bu migration ServiceCategory tablosuna Type kolonu ekler ve enum değerlerini tanımlar
 
--- 1. ServiceCategory tablosuna Type kolonu ekle
-ALTER TABLE ServiceCategories 
-ADD Type INT NOT NULL DEFAULT 1;
+-- 1. Önce Type kolonunu ekle (NULL olarak)
+ALTER TABLE ServiceCategories
+ADD Type INT NULL;
 
--- 2. Mevcut verileri güncelle (varsayılan olarak Restaurant)
+-- 2. Mevcut verileri güncelle (Name'e göre)
 UPDATE ServiceCategories 
-SET Type = 1 
-WHERE Type IS NULL OR Type = 0;
+SET Type = CASE 
+    WHEN Name = 'Yemek' OR Name = 'Restoran' THEN 1
+    WHEN Name = 'Market' THEN 2
+    WHEN Name = 'Eczane' THEN 3
+    WHEN Name = 'Su' THEN 4
+    WHEN Name = 'Kafe' THEN 5
+    WHEN Name = 'Fırın' OR Name = 'Pastane' THEN 6
+    ELSE 1 -- Default to Restaurant
+END;
 
 -- 3. Type kolonunu NOT NULL yap
-ALTER TABLE ServiceCategories 
+ALTER TABLE ServiceCategories
 ALTER COLUMN Type INT NOT NULL;
 
 -- 4. Index ekle (performans için)
@@ -54,112 +61,12 @@ BEGIN
     VALUES (NEWID(), 'Pastane', 'Tatlı ve hamur işi', 6, '/images/categories/bakery.jpg', '/icons/bakery.svg', 6, 1, GETUTCDATE(), GETUTCDATE());
 END
 
--- 6. Merchant tablosundaki mevcut ServiceCategoryId'leri kontrol et ve güncelle
--- (Eğer mevcut merchant'lar varsa, onları uygun kategoriye atayın)
+-- 6. Check constraint ekle (enum değerlerini sınırla)
+ALTER TABLE ServiceCategories
+ADD CONSTRAINT CK_ServiceCategories_Type CHECK (Type IN (1, 2, 3, 4, 5, 6));
 
--- 7. Check constraint ekle (enum değerlerini sınırla)
-ALTER TABLE ServiceCategories 
-ADD CONSTRAINT CK_ServiceCategories_Type 
-CHECK (Type IN (1, 2, 3, 4, 5, 6, 99));
-
--- 8. Foreign key constraint'leri kontrol et
--- (ServiceCategory tablosu referans eden tablolar varsa)
-
--- 9. Performance için composite index
+-- 7. Performance için composite index
 CREATE INDEX IX_ServiceCategories_Type_IsActive ON ServiceCategories (Type, IsActive);
-
--- 10. View oluştur (kategori tiplerini daha kolay sorgulamak için)
-GO
-CREATE OR ALTER VIEW vw_ServiceCategoriesWithType AS
-SELECT 
-    sc.Id,
-    sc.Name,
-    sc.Description,
-    sc.Type,
-    CASE sc.Type
-        WHEN 1 THEN 'Restoran'
-        WHEN 2 THEN 'Market'
-        WHEN 3 THEN 'Eczane'
-        WHEN 4 THEN 'Su'
-        WHEN 5 THEN 'Kafe'
-        WHEN 6 THEN 'Pastane'
-        WHEN 99 THEN 'Diğer'
-        ELSE 'Bilinmeyen'
-    END AS TypeName,
-    CASE sc.Type
-        WHEN 1 THEN 'Yemek siparişi ve teslimatı'
-        WHEN 2 THEN 'Gıda ve temizlik ürünleri'
-        WHEN 3 THEN 'İlaç ve sağlık ürünleri'
-        WHEN 4 THEN 'Su teslimatı'
-        WHEN 5 THEN 'Kahve ve atıştırmalık'
-        WHEN 6 THEN 'Tatlı ve hamur işi'
-        WHEN 99 THEN 'Diğer hizmetler'
-        ELSE 'Bilinmeyen'
-    END AS TypeDescription,
-    sc.ImageUrl,
-    sc.IconUrl,
-    sc.DisplayOrder,
-    sc.IsActive,
-    sc.CreatedAt,
-    sc.UpdatedAt
-FROM ServiceCategories sc;
-
--- 11. Stored procedure - Kategori tipine göre merchant'ları getir
-GO
-CREATE OR ALTER PROCEDURE sp_GetMerchantsByCategoryType
-    @CategoryType INT
-AS
-BEGIN
-    SET NOCOUNT ON;
-    
-    SELECT 
-        m.Id,
-        m.Name,
-        m.Description,
-        m.Address,
-        m.PhoneNumber,
-        m.Email,
-        m.Rating,
-        m.TotalReviews,
-        m.IsActive,
-        m.IsOpen,
-        sc.Name AS CategoryName,
-        sc.Type AS CategoryType
-    FROM Merchants m
-    INNER JOIN ServiceCategories sc ON m.ServiceCategoryId = sc.Id
-    WHERE sc.Type = @CategoryType 
-        AND m.IsActive = 1
-        AND sc.IsActive = 1
-    ORDER BY m.Rating DESC, m.Name;
-END;
-
--- 12. Function - Kategori tipinin yemek ile ilgili olup olmadığını kontrol et
-GO
-CREATE OR ALTER FUNCTION fn_IsFoodRelatedCategory(@CategoryType INT)
-RETURNS BIT
-AS
-BEGIN
-    DECLARE @IsFoodRelated BIT = 0;
-    
-    IF @CategoryType IN (1, 5, 6) -- Restaurant, Cafe, Bakery
-        SET @IsFoodRelated = 1;
-    
-    RETURN @IsFoodRelated;
-END;
-
--- 13. Function - Kategori tipinin ürün ile ilgili olup olmadığını kontrol et
-GO
-CREATE OR ALTER FUNCTION fn_IsProductRelatedCategory(@CategoryType INT)
-RETURNS BIT
-AS
-BEGIN
-    DECLARE @IsProductRelated BIT = 0;
-    
-    IF @CategoryType IN (2, 3, 4) -- Market, Pharmacy, Water
-        SET @IsProductRelated = 1;
-    
-    RETURN @IsProductRelated;
-END;
 
 -- Migration tamamlandı
 PRINT 'Migration 006: ServiceCategory Type column added successfully';
