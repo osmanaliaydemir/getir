@@ -2,6 +2,7 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
+using Getir.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.ServiceCategories;
@@ -40,6 +41,7 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
             c.Id,
             c.Name,
             c.Description,
+            c.Type,
             c.ImageUrl,
             c.IconUrl,
             c.DisplayOrder,
@@ -68,6 +70,7 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
             category.Id,
             category.Name,
             category.Description,
+            category.Type,
             category.ImageUrl,
             category.IconUrl,
             category.DisplayOrder,
@@ -87,6 +90,7 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
             Id = Guid.NewGuid(),
             Name = request.Name,
             Description = request.Description,
+            Type = request.Type,
             ImageUrl = request.ImageUrl,
             IconUrl = request.IconUrl,
             DisplayOrder = request.DisplayOrder,
@@ -101,6 +105,7 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
             category.Id,
             category.Name,
             category.Description,
+            category.Type,
             category.ImageUrl,
             category.IconUrl,
             category.DisplayOrder,
@@ -126,6 +131,7 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
 
         category.Name = request.Name;
         category.Description = request.Description;
+        category.Type = request.Type;
         category.ImageUrl = request.ImageUrl;
         category.IconUrl = request.IconUrl;
         category.DisplayOrder = request.DisplayOrder;
@@ -142,6 +148,7 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
             category.Id,
             category.Name,
             category.Description,
+            category.Type,
             category.ImageUrl,
             category.IconUrl,
             category.DisplayOrder,
@@ -172,6 +179,66 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Ok();
+    }
+
+    public async Task<Result<PagedResult<ServiceCategoryResponse>>> GetServiceCategoriesByTypeAsync(
+        ServiceCategoryType type,
+        PaginationQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        var categories = await _unitOfWork.Repository<ServiceCategory>().GetPagedAsync(
+            filter: c => c.IsActive && c.Type == type,
+            orderBy: c => c.DisplayOrder,
+            ascending: true,
+            page: query.Page,
+            pageSize: query.PageSize,
+            cancellationToken: cancellationToken);
+
+        var total = await _unitOfWork.ReadRepository<ServiceCategory>()
+            .CountAsync(c => c.IsActive && c.Type == type, cancellationToken);
+
+        var response = categories.Select(c => new ServiceCategoryResponse(
+            c.Id,
+            c.Name,
+            c.Description,
+            c.Type,
+            c.ImageUrl,
+            c.IconUrl,
+            c.DisplayOrder,
+            c.IsActive,
+            c.Merchants?.Count ?? 0
+        )).ToList();
+
+        var pagedResult = PagedResult<ServiceCategoryResponse>.Create(response, total, query.Page, query.PageSize);
+        
+        return Result.Ok(pagedResult);
+    }
+
+    public async Task<Result<IEnumerable<ServiceCategoryResponse>>> GetActiveServiceCategoriesByTypeAsync(
+        ServiceCategoryType type,
+        CancellationToken cancellationToken = default)
+    {
+        var categories = await _unitOfWork.Repository<ServiceCategory>().GetPagedAsync(
+            filter: c => c.IsActive && c.Type == type,
+            orderBy: c => c.DisplayOrder,
+            ascending: true,
+            page: 1,
+            pageSize: 1000, // Büyük sayı ile tüm kayıtları al
+            cancellationToken: cancellationToken);
+
+        var response = categories.Select(c => new ServiceCategoryResponse(
+            c.Id,
+            c.Name,
+            c.Description,
+            c.Type,
+            c.ImageUrl,
+            c.IconUrl,
+            c.DisplayOrder,
+            c.IsActive,
+            c.Merchants?.Count ?? 0
+        )).ToList();
+
+        return Result.Ok((IEnumerable<ServiceCategoryResponse>)response);
     }
 }
 

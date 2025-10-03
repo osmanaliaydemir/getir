@@ -1,5 +1,6 @@
 using Getir.Application.Common;
 using Getir.Application.DTO;
+using Getir.Domain.Enums;
 
 namespace Getir.Application.Services.ServiceCategories;
 
@@ -24,6 +25,15 @@ public interface IServiceCategoryService
     
     Task<Result> DeleteServiceCategoryAsync(
         Guid id,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<PagedResult<ServiceCategoryResponse>>> GetServiceCategoriesByTypeAsync(
+        ServiceCategoryType type,
+        PaginationQuery query,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<IEnumerable<ServiceCategoryResponse>>> GetActiveServiceCategoriesByTypeAsync(
+        ServiceCategoryType type,
         CancellationToken cancellationToken = default);
 }
 

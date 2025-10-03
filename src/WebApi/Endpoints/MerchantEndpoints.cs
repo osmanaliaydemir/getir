@@ -2,6 +2,7 @@ using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Application.Services.Merchants;
 using Getir.WebApi.Extensions;
+using Getir.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -86,5 +87,30 @@ public static class MerchantEndpoints
         .Produces(200)
         .Produces(403)
         .Produces(404);
+
+        // Kategori tipine göre merchant filtreleme
+        group.MapGet("/by-category-type/{categoryType}", async (
+            [FromRoute] ServiceCategoryType categoryType,
+            [AsParameters] PaginationQuery query,
+            [FromServices] IMerchantService merchantService,
+            CancellationToken ct) =>
+        {
+            var result = await merchantService.GetMerchantsByCategoryTypeAsync(categoryType, query, ct);
+            return result.ToIResult();
+        })
+        .WithName("GetMerchantsByCategoryType")
+        .Produces<PagedResult<MerchantResponse>>(200);
+
+        // Aktif merchantları kategori tipine göre getir (pagination olmadan)
+        group.MapGet("/active/by-category-type/{categoryType}", async (
+            [FromRoute] ServiceCategoryType categoryType,
+            [FromServices] IMerchantService merchantService,
+            CancellationToken ct) =>
+        {
+            var result = await merchantService.GetActiveMerchantsByCategoryTypeAsync(categoryType, ct);
+            return result.ToIResult();
+        })
+        .WithName("GetActiveMerchantsByCategoryType")
+        .Produces<IEnumerable<MerchantResponse>>(200);
     }
 }

@@ -10,6 +10,7 @@ using Getir.Application.DTO;
 
 // Domain namespaces
 using Getir.Domain.Entities;
+using Getir.Domain.Enums;
 
 namespace Getir.Application.Services.Merchants;
 
@@ -417,6 +418,151 @@ public class MerchantService : BaseService, IMerchantService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Ok();
+    }
+
+    public async Task<Result<PagedResult<MerchantResponse>>> GetMerchantsByCategoryTypeAsync(
+        ServiceCategoryType categoryType,
+        PaginationQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetMerchantsByCategoryTypeInternalAsync(categoryType, query, cancellationToken),
+            "GetMerchantsByCategoryType",
+            new { CategoryType = categoryType, Page = query.Page, PageSize = query.PageSize },
+            cancellationToken);
+    }
+
+    private async Task<Result<PagedResult<MerchantResponse>>> GetMerchantsByCategoryTypeInternalAsync(
+        ServiceCategoryType categoryType,
+        PaginationQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var cacheKey = $"merchants_by_type_{categoryType}_{query.Page}_{query.PageSize}";
+            
+            return await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    var merchants = await _unitOfWork.Repository<Merchant>().GetPagedAsync(
+                        filter: m => m.IsActive && m.ServiceCategory.Type == categoryType,
+                        orderBy: m => m.CreatedAt,
+                        ascending: query.IsAscending,
+                        page: query.Page,
+                        pageSize: query.PageSize,
+                        include: "ServiceCategory,Owner",
+                        cancellationToken: cancellationToken);
+
+                    var total = await _unitOfWork.ReadRepository<Merchant>()
+                        .CountAsync(m => m.IsActive && m.ServiceCategory.Type == categoryType, cancellationToken);
+
+                    var response = merchants.Select(m => new MerchantResponse
+                    {
+                        Id = m.Id,
+                        Name = m.Name,
+                        Description = m.Description,
+                        CreatedAt = m.CreatedAt,
+                        UpdatedAt = m.UpdatedAt,
+                        IsActive = m.IsActive,
+                        IsDeleted = false,
+                        Rating = m.Rating,
+                        TotalReviews = m.TotalReviews,
+                        OwnerId = m.OwnerId,
+                        OwnerName = $"{m.Owner.FirstName} {m.Owner.LastName}",
+                        ServiceCategoryId = m.ServiceCategoryId,
+                        ServiceCategoryName = m.ServiceCategory.Name,
+                        LogoUrl = m.LogoUrl,
+                        Address = m.Address,
+                        Latitude = m.Latitude,
+                        Longitude = m.Longitude,
+                        MinimumOrderAmount = m.MinimumOrderAmount,
+                        DeliveryFee = m.DeliveryFee,
+                        AverageDeliveryTime = m.AverageDeliveryTime,
+                        IsOpen = m.IsOpen
+                    }).ToList();
+
+                    var pagedResult = PagedResult<MerchantResponse>.Create(response, total, query.Page, query.PageSize);
+                    
+                    return ServiceResult.Success(pagedResult);
+                },
+                TimeSpan.FromMinutes(10), // 10 dakika cache
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogException(ex, "GetMerchantsByCategoryType", new { CategoryType = categoryType, Page = query.Page, PageSize = query.PageSize });
+            return ServiceResult.HandleException<PagedResult<MerchantResponse>>(ex, _logger, "GetMerchantsByCategoryType");
+        }
+    }
+
+    public async Task<Result<IEnumerable<MerchantResponse>>> GetActiveMerchantsByCategoryTypeAsync(
+        ServiceCategoryType categoryType,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetActiveMerchantsByCategoryTypeInternalAsync(categoryType, cancellationToken),
+            "GetActiveMerchantsByCategoryType",
+            new { CategoryType = categoryType },
+            cancellationToken);
+    }
+
+    private async Task<Result<IEnumerable<MerchantResponse>>> GetActiveMerchantsByCategoryTypeInternalAsync(
+        ServiceCategoryType categoryType,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var cacheKey = $"active_merchants_by_type_{categoryType}";
+            
+            return await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    var merchants = await _unitOfWork.Repository<Merchant>().GetPagedAsync(
+                        filter: m => m.IsActive && m.IsOpen && m.ServiceCategory.Type == categoryType,
+                        orderBy: m => m.Rating,
+                        ascending: false,
+                        page: 1,
+                        pageSize: 1000, // Büyük sayı ile tüm kayıtları al
+                        include: "ServiceCategory,Owner",
+                        cancellationToken: cancellationToken);
+
+                    var response = merchants.Select(m => new MerchantResponse
+                    {
+                        Id = m.Id,
+                        Name = m.Name,
+                        Description = m.Description,
+                        CreatedAt = m.CreatedAt,
+                        UpdatedAt = m.UpdatedAt,
+                        IsActive = m.IsActive,
+                        IsDeleted = false,
+                        Rating = m.Rating,
+                        TotalReviews = m.TotalReviews,
+                        OwnerId = m.OwnerId,
+                        OwnerName = $"{m.Owner.FirstName} {m.Owner.LastName}",
+                        ServiceCategoryId = m.ServiceCategoryId,
+                        ServiceCategoryName = m.ServiceCategory.Name,
+                        LogoUrl = m.LogoUrl,
+                        Address = m.Address,
+                        Latitude = m.Latitude,
+                        Longitude = m.Longitude,
+                        MinimumOrderAmount = m.MinimumOrderAmount,
+                        DeliveryFee = m.DeliveryFee,
+                        AverageDeliveryTime = m.AverageDeliveryTime,
+                        IsOpen = m.IsOpen
+                    }).ToList();
+
+                    return ServiceResult.Success((IEnumerable<MerchantResponse>)response);
+                },
+                TimeSpan.FromMinutes(5), // 5 dakika cache
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogException(ex, "GetActiveMerchantsByCategoryType", new { CategoryType = categoryType });
+            return ServiceResult.HandleException<IEnumerable<MerchantResponse>>(ex, _logger, "GetActiveMerchantsByCategoryType");
+        }
     }
 }
 

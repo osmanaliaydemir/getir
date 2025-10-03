@@ -1,5 +1,6 @@
 using Getir.Application.Common;
 using Getir.Application.DTO;
+using Getir.Domain.Enums;
 
 namespace Getir.Application.Services.Merchants;
 
@@ -26,5 +27,14 @@ public interface IMerchantService
     
     Task<Result> DeleteMerchantAsync(
         Guid id,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<PagedResult<MerchantResponse>>> GetMerchantsByCategoryTypeAsync(
+        ServiceCategoryType categoryType,
+        PaginationQuery query,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<IEnumerable<MerchantResponse>>> GetActiveMerchantsByCategoryTypeAsync(
+        ServiceCategoryType categoryType,
         CancellationToken cancellationToken = default);
 }

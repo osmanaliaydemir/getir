@@ -1,72 +1,87 @@
 -- Migration 006: ServiceCategory Type Column
--- Bu migration ServiceCategory tablosuna Type kolonu ekler ve enum değerlerini tanımlar
+-- Bu migration ServiceCategory tablosuna Type kolonu ekler
 
--- 1. Önce Type kolonunu ekle (NULL olarak)
+-- 1. Type kolonunu ekle
 ALTER TABLE ServiceCategories
 ADD Type INT NULL;
 
--- 2. Mevcut verileri güncelle (Name'e göre)
+-- 2. Mevcut verileri güncelle
 UPDATE ServiceCategories 
-SET Type = CASE 
-    WHEN Name = 'Yemek' OR Name = 'Restoran' THEN 1
-    WHEN Name = 'Market' THEN 2
-    WHEN Name = 'Eczane' THEN 3
-    WHEN Name = 'Su' THEN 4
-    WHEN Name = 'Kafe' THEN 5
-    WHEN Name = 'Fırın' OR Name = 'Pastane' THEN 6
-    ELSE 1 -- Default to Restaurant
-END;
+SET Type = 1
+WHERE Name = 'Yemek' OR Name = 'Restoran';
 
--- 3. Type kolonunu NOT NULL yap
+UPDATE ServiceCategories 
+SET Type = 2
+WHERE Name = 'Market';
+
+UPDATE ServiceCategories 
+SET Type = 3
+WHERE Name = 'Eczane';
+
+UPDATE ServiceCategories 
+SET Type = 4
+WHERE Name = 'Su';
+
+UPDATE ServiceCategories 
+SET Type = 5
+WHERE Name = 'Kafe';
+
+UPDATE ServiceCategories 
+SET Type = 6
+WHERE Name = 'Fırın' OR Name = 'Pastane';
+
+-- 3. Kalan kayıtları default değerle güncelle
+UPDATE ServiceCategories 
+SET Type = 1
+WHERE Type IS NULL;
+
+-- 4. Type kolonunu NOT NULL yap
 ALTER TABLE ServiceCategories
 ALTER COLUMN Type INT NOT NULL;
 
--- 4. Index ekle (performans için)
+-- 5. Index ekle
 CREATE INDEX IX_ServiceCategories_Type ON ServiceCategories (Type);
 
--- 5. Seed data - Varsayılan kategoriler
+-- 6. Check constraint ekle
+ALTER TABLE ServiceCategories
+ADD CONSTRAINT CK_ServiceCategories_Type CHECK (Type IN (1, 2, 3, 4, 5, 6));
+
+-- 7. Yeni kategoriler ekle (eğer yoksa)
 IF NOT EXISTS (SELECT 1 FROM ServiceCategories WHERE Name = 'Restoran')
 BEGIN
-    INSERT INTO ServiceCategories (Id, Name, Description, Type, ImageUrl, IconUrl, DisplayOrder, IsActive, CreatedAt, UpdatedAt)
-    VALUES (NEWID(), 'Restoran', 'Yemek siparişi ve teslimatı', 1, '/images/categories/restaurant.jpg', '/icons/restaurant.svg', 1, 1, GETUTCDATE(), GETUTCDATE());
+    INSERT INTO ServiceCategories (Id, Name, Description, Type, DisplayOrder, IsActive, CreatedAt)
+    VALUES (NEWID(), 'Restoran', 'Yemek siparişi ve teslimatı', 1, 1, 1, GETUTCDATE());
 END
 
 IF NOT EXISTS (SELECT 1 FROM ServiceCategories WHERE Name = 'Market')
 BEGIN
-    INSERT INTO ServiceCategories (Id, Name, Description, Type, ImageUrl, IconUrl, DisplayOrder, IsActive, CreatedAt, UpdatedAt)
-    VALUES (NEWID(), 'Market', 'Gıda ve temizlik ürünleri', 2, '/images/categories/market.jpg', '/icons/market.svg', 2, 1, GETUTCDATE(), GETUTCDATE());
+    INSERT INTO ServiceCategories (Id, Name, Description, Type, DisplayOrder, IsActive, CreatedAt)
+    VALUES (NEWID(), 'Market', 'Gıda ve temizlik ürünleri', 2, 2, 1, GETUTCDATE());
 END
 
 IF NOT EXISTS (SELECT 1 FROM ServiceCategories WHERE Name = 'Eczane')
 BEGIN
-    INSERT INTO ServiceCategories (Id, Name, Description, Type, ImageUrl, IconUrl, DisplayOrder, IsActive, CreatedAt, UpdatedAt)
-    VALUES (NEWID(), 'Eczane', 'İlaç ve sağlık ürünleri', 3, '/images/categories/pharmacy.jpg', '/icons/pharmacy.svg', 3, 1, GETUTCDATE(), GETUTCDATE());
+    INSERT INTO ServiceCategories (Id, Name, Description, Type, DisplayOrder, IsActive, CreatedAt)
+    VALUES (NEWID(), 'Eczane', 'İlaç ve sağlık ürünleri', 3, 3, 1, GETUTCDATE());
 END
 
 IF NOT EXISTS (SELECT 1 FROM ServiceCategories WHERE Name = 'Su')
 BEGIN
-    INSERT INTO ServiceCategories (Id, Name, Description, Type, ImageUrl, IconUrl, DisplayOrder, IsActive, CreatedAt, UpdatedAt)
-    VALUES (NEWID(), 'Su', 'Su teslimatı', 4, '/images/categories/water.jpg', '/icons/water.svg', 4, 1, GETUTCDATE(), GETUTCDATE());
+    INSERT INTO ServiceCategories (Id, Name, Description, Type, DisplayOrder, IsActive, CreatedAt)
+    VALUES (NEWID(), 'Su', 'Su teslimatı', 4, 4, 1, GETUTCDATE());
 END
 
 IF NOT EXISTS (SELECT 1 FROM ServiceCategories WHERE Name = 'Kafe')
 BEGIN
-    INSERT INTO ServiceCategories (Id, Name, Description, Type, ImageUrl, IconUrl, DisplayOrder, IsActive, CreatedAt, UpdatedAt)
-    VALUES (NEWID(), 'Kafe', 'Kahve ve atıştırmalık', 5, '/images/categories/cafe.jpg', '/icons/cafe.svg', 5, 1, GETUTCDATE(), GETUTCDATE());
+    INSERT INTO ServiceCategories (Id, Name, Description, Type, DisplayOrder, IsActive, CreatedAt)
+    VALUES (NEWID(), 'Kafe', 'Kahve ve atıştırmalık', 5, 5, 1, GETUTCDATE());
 END
 
 IF NOT EXISTS (SELECT 1 FROM ServiceCategories WHERE Name = 'Pastane')
 BEGIN
-    INSERT INTO ServiceCategories (Id, Name, Description, Type, ImageUrl, IconUrl, DisplayOrder, IsActive, CreatedAt, UpdatedAt)
-    VALUES (NEWID(), 'Pastane', 'Tatlı ve hamur işi', 6, '/images/categories/bakery.jpg', '/icons/bakery.svg', 6, 1, GETUTCDATE(), GETUTCDATE());
+    INSERT INTO ServiceCategories (Id, Name, Description, Type, DisplayOrder, IsActive, CreatedAt)
+    VALUES (NEWID(), 'Pastane', 'Tatlı ve hamur işi', 6, 6, 1, GETUTCDATE());
 END
-
--- 6. Check constraint ekle (enum değerlerini sınırla)
-ALTER TABLE ServiceCategories
-ADD CONSTRAINT CK_ServiceCategories_Type CHECK (Type IN (1, 2, 3, 4, 5, 6));
-
--- 7. Performance için composite index
-CREATE INDEX IX_ServiceCategories_Type_IsActive ON ServiceCategories (Type, IsActive);
 
 -- Migration tamamlandı
 PRINT 'Migration 006: ServiceCategory Type column added successfully';

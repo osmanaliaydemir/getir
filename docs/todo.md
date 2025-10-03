@@ -6,7 +6,7 @@
 - [x] ServiceCategory enum'ını genişlet
 - [x] Restaurant ve Market için ayrı entity'ler oluştur
 - [x] Her kategori için özel özellikler tanımla
-- [ ] UI'da kategori bazlı filtreleme ekle
+- [x] UI'da kategori bazlı filtreleme ekle
 
 ### 2. Restoran Ürünleri için Özel Özellikler
 - [x] Hazırlık süresi (PreparationTimeMinutes)
@@ -23,10 +23,10 @@
 - [x] Menşei bilgisi (Origin)
 
 ### 4. Nakit Ödeme Güvenliği Artır
-- [ ] Kurye para toplama fotoğraf kanıtı
+- [x] Kurye para toplama fotoğraf kanıtı
 - [ ] Müşteri imza sistemi
 - [ ] Sahte para kontrolü mekanizması
-- [ ] Para üstü hesaplama iyileştirmesi
+- [x] Para üstü hesaplama iyileştirmesi
 - [ ] Nakit ödeme audit log'u
 
 ### 5. Merchant Onboarding Sürecini Detaylandır
@@ -150,9 +150,9 @@
 ## 📊 İlerleme Takibi
 
 - **Toplam Todo**: 20 ana başlık
-- **Tamamlanan**: 0
+- **Tamamlanan**: 1 (Nakit Ödeme Güvenliği - Kısmen)
 - **Devam Eden**: 0
-- **Bekleyen**: 20
+- **Bekleyen**: 19
 
 ## 🎯 Hedefler
 
@@ -168,5 +168,25 @@
 - Performance impact değerlendirmesi yapılmalı
 
 ---
-*Son güncelleme: $(date)*
+*Son güncelleme: 2025-01-03*
 *Güncelleyen: Development Team*
+
+## 🎉 Son Tamamlanan İşler
+
+### Nakit Ödeme Güvenliği Artır (Kısmen Tamamlandı)
+- ✅ **Kurye para toplama fotoğraf kanıtı sistemi**
+  - CashPaymentEvidence entity'si oluşturuldu
+  - EvidenceType ve EvidenceStatus enum'ları tanımlandı
+  - Kanıt oluşturma, güncelleme ve sorgulama API'leri
+  - Veritabanı migrasyonu (008-cash-payment-security.sql)
+
+- ✅ **Para üstü hesaplama iyileştirmesi**
+  - CalculateChangeAsync method'u implementasyonu
+  - Para üstü doğrulama sistemi
+  - Hesaplama hatası toleransı (1 kuruş)
+  - Güvenlik risk değerlendirme sistemi
+
+- 🔄 **Devam Eden İşler**
+  - Müşteri imza sistemi
+  - Sahte para kontrolü mekanizması
+  - Nakit ödeme audit log sistemi
