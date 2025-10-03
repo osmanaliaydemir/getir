@@ -64,4 +64,5 @@ public interface IProductService
         List<UpdateProductOrderRequest> requests,
         Guid merchantOwnerId,
         CancellationToken cancellationToken = default);
+
 }

@@ -73,4 +73,5 @@ public interface IFileUploadIntegrationService
     Task<Result<string?>> GetProductImageAsync(
         Guid productId, 
         CancellationToken cancellationToken = default);
+
 }

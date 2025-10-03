@@ -72,13 +72,6 @@ public record MerchantApplicationDetailsResponse(
     List<MerchantDocumentResponse> Documents,
     MerchantBusinessInfoResponse BusinessInfo);
 
-public record MerchantDocumentResponse(
-    string DocumentType,
-    string FileName,
-    string FileUrl,
-    DateTime UploadedAt,
-    string Status);
-
 public record MerchantBusinessInfoResponse(
     string TaxNumber,
     string BusinessRegistrationNumber,

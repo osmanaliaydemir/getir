@@ -64,3 +64,71 @@ public record LocationSearchQuery(
     double? Longitude = null,
     int MaxResults = 10);
 
+/// <summary>
+/// Kullanıcı konumu kaydetme isteği
+/// </summary>
+public record SaveUserLocationRequest(
+    double Latitude,
+    double Longitude,
+    string? Address = null);
+
+/// <summary>
+/// Bölgedeki merchantları getirme isteği
+/// </summary>
+public record GetMerchantsInAreaRequest(
+    double LatitudeMin,
+    double LongitudeMin,
+    double LatitudeMax,
+    double LongitudeMax);
+
+/// <summary>
+/// Kullanıcı konum geçmişi
+/// </summary>
+public record UserLocationResponse(
+    Guid Id,
+    double Latitude,
+    double Longitude,
+    string? Address,
+    DateTime CreatedAt);
+
+/// <summary>
+/// Bölgedeki merchant bilgisi
+/// </summary>
+public record MerchantInAreaResponse(
+    Guid Id,
+    string Name,
+    double Latitude,
+    double Longitude,
+    string? Description);
+
+/// <summary>
+/// Konum analitiği
+/// </summary>
+public record LocationAnalyticsResponse(
+    int TotalLocations,
+    int UniqueUsers,
+    List<LocationHeatmapData> HeatmapData);
+
+/// <summary>
+/// Konum ısı haritası verisi
+/// </summary>
+public record LocationHeatmapData(
+    double Latitude,
+    double Longitude,
+    int Count);
+
+/// <summary>
+/// Teslimat bölgesi kapsama bilgisi
+/// </summary>
+public record DeliveryZoneCoverageResponse(
+    int TotalZones,
+    List<DeliveryZoneSummary> Zones);
+
+/// <summary>
+/// Teslimat bölgesi özeti
+/// </summary>
+public record DeliveryZoneSummary(
+    Guid Id,
+    string Name,
+    int MerchantCount);
+

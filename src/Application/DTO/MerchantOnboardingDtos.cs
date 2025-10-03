@@ -68,3 +68,20 @@ public record GetOnboardingStatusQuery(
 
 public record GetPendingApprovalsQuery(
     PaginationQuery Pagination);
+
+public record CompleteOnboardingStepRequest(
+    string StepName,
+    Dictionary<string, string>? Data = null);
+
+public record OnboardingChecklistResponse(
+    Guid MerchantId,
+    List<OnboardingChecklistItem> Items,
+    int CompletedCount,
+    int TotalCount,
+    decimal CompletionPercentage);
+
+public record OnboardingChecklistItem(
+    string Name,
+    string Description,
+    bool IsCompleted,
+    bool IsRequired);

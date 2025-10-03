@@ -61,4 +61,5 @@ public interface IGeoLocationService
         double? latitude = null, 
         double? longitude = null,
         CancellationToken cancellationToken = default);
+
 }

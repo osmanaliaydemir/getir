@@ -72,3 +72,19 @@ public record BulkUpdateProductOrderRequest(
 public record ToggleProductAvailabilityRequest(
     Guid ProductId,
     bool IsAvailable);
+
+public record BulkUpdateProductStatusRequest(
+    List<Guid> ProductIds,
+    bool IsAvailable);
+
+public record BulkUpdateProductStatusResponse(
+    int TotalUpdated,
+    List<Guid> UpdatedProductIds,
+    List<string> Errors);
+
+public record ProductStatisticsResponse(
+    int TotalProducts,
+    int ActiveProducts,
+    int OutOfStockProducts,
+    decimal TotalInventoryValue,
+    DateTime LastUpdated);

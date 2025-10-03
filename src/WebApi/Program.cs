@@ -36,7 +36,6 @@ using Getir.Infrastructure.Security;
 
 // WebApi namespaces
 using Getir.WebApi.Configuration;
-using Getir.WebApi.Endpoints;
 using Getir.WebApi.Middleware;
 using Getir.Application.DTO;
 
@@ -152,6 +151,9 @@ builder.Services.AddScoped<ICdnService, Getir.Infrastructure.Services.Cdn.Simple
 builder.Services.Configure<FileUploadSettings>(builder.Configuration.GetSection("FileUpload"));
 
 // ============= CONFIGURATION =============
+// Add Controllers
+builder.Services.AddControllers();
+
 builder.Services.AddAuthConfiguration(builder.Configuration);
 builder.Services.AddApiKeyConfiguration(builder.Configuration);
 builder.Services.AddHealthChecksConfiguration(builder.Configuration);
@@ -256,37 +258,8 @@ app.UseCors("SignalRCorsPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 
-// ============= ENDPOINTS =============
-app.MapAuthEndpoints();
-app.MapServiceCategoryEndpoints();
-app.MapProductCategoryEndpoints();
-app.MapMerchantEndpoints();
-app.MapProductEndpoints();
-app.MapOrderEndpoints();
-app.MapUserEndpoints();
-app.MapCartEndpoints();
-app.MapCouponEndpoints();
-app.MapCampaignEndpoints();
-app.MapNotificationEndpoints();
-app.MapCourierEndpoints();
-app.MapSearchEndpoints();
-app.MapWorkingHoursEndpoints();
-app.MapDeliveryZoneEndpoints();
-app.MapMerchantDashboardEndpoints();
-app.MapMerchantOnboardingEndpoints();
-app.MapMerchantProductEndpoints();
-app.MapMerchantOrderEndpoints();
-app.MapProductOptionEndpoints();
-app.MapReviewEndpoints();
-app.MapPaymentEndpoints();
-app.MapGeoLocationEndpoints();
-app.MapFileUploadEndpoints();
-app.MapAdminEndpoints();
-app.MapDatabaseTestEndpoints();
-
-// Cash Payment Security Endpoints
-app.MapCashPaymentSecurityEndpoints();
-app.MapCashPaymentAuditEndpoints();
+// ============= CONTROLLERS =============
+app.MapControllers();
 
 // ============= SIGNALR HUBS =============
 app.MapHub<Getir.WebApi.Hubs.NotificationHub>("/hubs/notifications");

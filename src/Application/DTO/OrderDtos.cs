@@ -69,3 +69,38 @@ public record UpdateOrderStatusRequest(
     Guid OrderId,
     string NewStatus,
     string? Reason = null);
+
+public record OrderDetailsResponse(
+    Guid Id,
+    string OrderNumber,
+    Guid MerchantId,
+    string MerchantName,
+    Guid CustomerId,
+    string CustomerName,
+    string Status,
+    decimal SubTotal,
+    decimal DeliveryFee,
+    decimal Discount,
+    decimal Total,
+    string PaymentMethod,
+    string PaymentStatus,
+    string DeliveryAddress,
+    DateTime? EstimatedDeliveryTime,
+    DateTime CreatedAt,
+    DateTime? CompletedAt,
+    List<OrderLineResponse> Items,
+    List<OrderTimelineResponse> Timeline);
+
+public record OrderAnalyticsResponse(
+    int TotalOrders,
+    decimal TotalRevenue,
+    decimal AverageOrderValue,
+    Dictionary<string, int> OrdersByStatus,
+    Dictionary<string, decimal> RevenueByDay,
+    DateTime GeneratedAt);
+
+public record OrderTimelineResponse(
+    DateTime Timestamp,
+    string Status,
+    string Description,
+    string? ActorName);

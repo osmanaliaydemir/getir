@@ -140,3 +140,12 @@ public record CdnStats(
     long TotalSizeBytes,
     long CacheHitRate,
     DateTime LastActivityDate);
+
+/// <summary>
+/// File statistics response
+/// </summary>
+public record FileStatisticsResponse(
+    long TotalFiles,
+    long TotalSizeBytes,
+    Dictionary<string, int> FilesByCategory,
+    DateTime LastUploadDate);

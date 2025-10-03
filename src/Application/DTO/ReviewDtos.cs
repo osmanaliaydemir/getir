@@ -172,3 +172,23 @@ public record ComparisonResponse(
     decimal PlatformAverage,
     int CategoryRank,
     int PlatformRank);
+
+public record ReviewQuery(
+    Guid? RevieweeId = null,
+    string? RevieweeType = null,
+    int? MinRating = null,
+    int? MaxRating = null,
+    DateTime? FromDate = null,
+    DateTime? ToDate = null,
+    int Page = 1,
+    int PageSize = 20);
+
+public record ReportReviewRequest(
+    string Reason,
+    string? Details = null);
+
+public record ReviewStatisticsResponse(
+    decimal AverageRating,
+    int TotalReviews,
+    Dictionary<int, int> RatingDistribution,
+    decimal PositiveReviewRate);
