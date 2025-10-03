@@ -3,7 +3,7 @@
 ## 🔥 Yüksek Öncelik (Kritik)
 
 ### 1. Restoran ve Market Ayrımını Netleştir
-- [ ] ServiceCategory enum'ını genişlet
+- [x] ServiceCategory enum'ını genişlet
 - [ ] Restaurant ve Market için ayrı entity'ler oluştur
 - [ ] Her kategori için özel özellikler tanımla
 - [ ] UI'da kategori bazlı filtreleme ekle
