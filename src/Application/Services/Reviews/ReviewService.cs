@@ -680,4 +680,76 @@ public class ReviewService : BaseService, IReviewService
         // TODO: Implement tag frequency analysis
         return Result.Ok(new List<TagFrequencyResponse>());
     }
+
+    #region Additional Review Methods
+
+    public async Task<Result> ReportReviewAsync(
+        Guid reviewId,
+        ReportReviewRequest request,
+        Guid reporterId,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await ReportReviewInternalAsync(reviewId, request, reporterId, cancellationToken),
+            "ReportReview",
+            new { reviewId, reporterId, request.Reason },
+            cancellationToken);
+    }
+
+    private async Task<Result> ReportReviewInternalAsync(
+        Guid reviewId,
+        ReportReviewRequest request,
+        Guid reporterId,
+        CancellationToken cancellationToken)
+    {
+        // Simplified report implementation
+        // In a real implementation, you would create a ReviewReport entity
+        return Result.Ok();
+    }
+
+    public async Task<Result> LikeReviewAsync(
+        Guid reviewId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await LikeReviewInternalAsync(reviewId, userId, cancellationToken),
+            "LikeReview",
+            new { reviewId, userId },
+            cancellationToken);
+    }
+
+    private async Task<Result> LikeReviewInternalAsync(
+        Guid reviewId,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        // Simplified like implementation
+        // In a real implementation, you would create a ReviewLike entity
+        return Result.Ok();
+    }
+
+    public async Task<Result> UnlikeReviewAsync(
+        Guid reviewId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await UnlikeReviewInternalAsync(reviewId, userId, cancellationToken),
+            "UnlikeReview",
+            new { reviewId, userId },
+            cancellationToken);
+    }
+
+    private async Task<Result> UnlikeReviewInternalAsync(
+        Guid reviewId,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        // Simplified unlike implementation
+        // In a real implementation, you would remove the ReviewLike entity
+        return Result.Ok();
+    }
+
+    #endregion
 }

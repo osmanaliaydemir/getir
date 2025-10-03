@@ -79,12 +79,16 @@ public record BulkUpdateProductStatusRequest(
 
 public record BulkUpdateProductStatusResponse(
     int TotalUpdated,
+    int SuccessCount,
+    int FailureCount,
     List<Guid> UpdatedProductIds,
     List<string> Errors);
 
 public record ProductStatisticsResponse(
     int TotalProducts,
     int ActiveProducts,
+    int InactiveProducts,
     int OutOfStockProducts,
+    int LowStockProducts,
     decimal TotalInventoryValue,
     DateTime LastUpdated);

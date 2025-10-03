@@ -65,4 +65,14 @@ public interface IProductService
         Guid merchantOwnerId,
         CancellationToken cancellationToken = default);
 
+    // Additional merchant product methods
+    Task<Result<ProductStatisticsResponse>> GetMyProductStatisticsAsync(
+        Guid merchantOwnerId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<BulkUpdateProductStatusResponse>> BulkUpdateMyProductStatusAsync(
+        BulkUpdateProductStatusRequest request,
+        Guid merchantOwnerId,
+        CancellationToken cancellationToken = default);
+
 }

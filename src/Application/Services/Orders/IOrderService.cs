@@ -60,4 +60,32 @@ public interface IOrderService
         DateTime? endDate = null,
         CancellationToken cancellationToken = default);
 
+    // Additional merchant order methods
+    Task<Result<OrderDetailsResponse>> GetMerchantOrderDetailsAsync(
+        Guid orderId,
+        Guid merchantOwnerId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> UpdateOrderStatusAsync(
+        Guid orderId,
+        UpdateOrderStatusRequest request,
+        Guid merchantOwnerId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<OrderAnalyticsResponse>> GetOrderAnalyticsAsync(
+        Guid merchantOwnerId,
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<PagedResult<OrderResponse>>> GetPendingOrdersAsync(
+        Guid merchantOwnerId,
+        PaginationQuery query,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<OrderTimelineResponse>> GetOrderTimelineAsync(
+        Guid orderId,
+        Guid merchantOwnerId,
+        CancellationToken cancellationToken = default);
+
 }

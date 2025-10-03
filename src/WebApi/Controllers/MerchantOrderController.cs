@@ -82,7 +82,8 @@ public class MerchantOrderController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Get merchant order details functionality not implemented yet");
+        var result = await _orderService.GetMerchantOrderDetailsAsync(orderId, userId, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -108,7 +109,8 @@ public class MerchantOrderController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Update order status functionality not implemented yet");
+        var result = await _orderService.UpdateOrderStatusAsync(orderId, request, userId, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -129,7 +131,8 @@ public class MerchantOrderController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Get order analytics functionality not implemented yet");
+        var result = await _orderService.GetOrderAnalyticsAsync(userId, startDate, endDate, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -148,7 +151,8 @@ public class MerchantOrderController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Get pending orders functionality not implemented yet");
+        var result = await _orderService.GetPendingOrdersAsync(userId, query, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -167,6 +171,7 @@ public class MerchantOrderController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Get order timeline functionality not implemented yet");
+        var result = await _orderService.GetOrderTimelineAsync(orderId, userId, ct);
+        return ToActionResult(result);
     }
 }

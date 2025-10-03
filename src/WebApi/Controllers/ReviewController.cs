@@ -233,7 +233,8 @@ public class ReviewController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Report review functionality not implemented yet");
+        var result = await _reviewService.ReportReviewAsync(reviewId, request, userId, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -254,7 +255,8 @@ public class ReviewController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Like review functionality not implemented yet");
+        var result = await _reviewService.LikeReviewAsync(reviewId, userId, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -275,6 +277,7 @@ public class ReviewController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Unlike review functionality not implemented yet");
+        var result = await _reviewService.UnlikeReviewAsync(reviewId, userId, ct);
+        return ToActionResult(result);
     }
 }

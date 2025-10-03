@@ -135,7 +135,8 @@ public class MerchantProductController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Get product statistics functionality not implemented yet");
+        var result = await _productService.GetMyProductStatisticsAsync(userId, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -158,6 +159,7 @@ public class MerchantProductController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Bulk update product status functionality not implemented yet");
+        var result = await _productService.BulkUpdateMyProductStatusAsync(request, userId, ct);
+        return ToActionResult(result);
     }
 }

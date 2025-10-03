@@ -25,6 +25,11 @@ public interface IReviewService
     
     // Review moderation
     Task<Result<PagedResult<PendingReviewResponse>>> GetPendingReviewsAsync(PaginationQuery query, CancellationToken cancellationToken = default);
+    
+    // Additional review methods
+    Task<Result> ReportReviewAsync(Guid reviewId, ReportReviewRequest request, Guid reporterId, CancellationToken cancellationToken = default);
+    Task<Result> LikeReviewAsync(Guid reviewId, Guid userId, CancellationToken cancellationToken = default);
+    Task<Result> UnlikeReviewAsync(Guid reviewId, Guid userId, CancellationToken cancellationToken = default);
     Task<Result<ReviewModerationResponse>> ModerateReviewAsync(Guid reviewId, ReviewModerationRequest request, Guid moderatorId, CancellationToken cancellationToken = default);
     Task<Result> BulkModerateReviewsAsync(List<Guid> reviewIds, ReviewModerationRequest request, Guid moderatorId, CancellationToken cancellationToken = default);
     
