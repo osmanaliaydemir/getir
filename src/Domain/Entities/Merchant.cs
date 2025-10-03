@@ -34,4 +34,5 @@ public class Merchant
     public virtual ICollection<WorkingHours> WorkingHours { get; set; } = new List<WorkingHours>();
     public virtual ICollection<DeliveryZone> DeliveryZones { get; set; } = new List<DeliveryZone>();
     public virtual MerchantOnboarding? Onboarding { get; set; }
+    public virtual ICollection<RatingHistory> RatingHistories { get; set; } = new List<RatingHistory>();
 }

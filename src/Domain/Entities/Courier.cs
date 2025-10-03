@@ -18,4 +18,5 @@ public class Courier
     // Navigation
     public virtual User User { get; set; } = default!;
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+    public virtual ICollection<RatingHistory> RatingHistories { get; set; } = new List<RatingHistory>();
 }

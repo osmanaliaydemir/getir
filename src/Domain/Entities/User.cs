@@ -22,4 +22,9 @@ public class User
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
     public virtual ICollection<Merchant> OwnedMerchants { get; set; } = new List<Merchant>();
     public virtual UserNotificationPreferences? NotificationPreferences { get; set; }
+    public virtual ICollection<DeviceToken> DeviceTokens { get; set; } = new List<DeviceToken>();
+    public virtual ICollection<NotificationLog> NotificationLogs { get; set; } = new List<NotificationLog>();
+    public virtual ICollection<ReviewHelpful> ReviewHelpfuls { get; set; } = new List<ReviewHelpful>();
+    public virtual ICollection<SystemNotification> CreatedSystemNotifications { get; set; } = new List<SystemNotification>();
+    public virtual ICollection<SystemNotification> ReadSystemNotifications { get; set; } = new List<SystemNotification>();
 }

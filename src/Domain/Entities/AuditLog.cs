@@ -55,39 +55,3 @@ public class AuditLog
     public virtual User? User { get; set; }
 }
 
-/// <summary>
-/// System notification entity for admin notifications
-/// </summary>
-public class SystemNotification
-{
-    public Guid Id { get; set; }
-    
-    [Required]
-    [MaxLength(200)]
-    public string Title { get; set; } = string.Empty;
-    
-    [Required]
-    [MaxLength(1000)]
-    public string Message { get; set; } = string.Empty;
-    
-    [Required]
-    [MaxLength(50)]
-    public string Type { get; set; } = string.Empty; // INFO, WARNING, ERROR, SUCCESS
-    
-    [Required]
-    [MaxLength(100)]
-    public string TargetRoles { get; set; } = string.Empty; // Comma-separated roles
-    
-    public Guid? CreatedBy { get; set; }
-    
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
-    public DateTime? ExpiresAt { get; set; }
-    
-    public bool IsActive { get; set; } = true;
-    
-    public int Priority { get; set; } = 1; // 1=Low, 2=Medium, 3=High, 4=Critical
-    
-    // Navigation properties
-    public virtual User? Creator { get; set; }
-}

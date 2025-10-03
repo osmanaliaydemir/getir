@@ -17,4 +17,5 @@ public class Notification
 
     // Navigation
     public virtual User User { get; set; } = default!;
+    public virtual ICollection<NotificationLog> NotificationLogs { get; set; } = new List<NotificationLog>();
 }

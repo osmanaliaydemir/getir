@@ -41,27 +41,3 @@ public class Rating
     public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
 }
 
-/// <summary>
-/// Rating history for tracking rating changes over time
-/// </summary>
-public class RatingHistory
-{
-    public Guid Id { get; set; }
-    
-    [Required]
-    public Guid EntityId { get; set; }
-    
-    [Required]
-    public string EntityType { get; set; } = string.Empty;
-    
-    public decimal AverageRating { get; set; }
-    public int TotalReviews { get; set; }
-    public int NewReviews { get; set; } // Reviews since last snapshot
-    
-    public DateTime SnapshotDate { get; set; } = DateTime.UtcNow;
-    
-    // Optional: Track specific metrics
-    public decimal? FoodQualityRating { get; set; }
-    public decimal? DeliverySpeedRating { get; set; }
-    public decimal? ServiceRating { get; set; }
-}

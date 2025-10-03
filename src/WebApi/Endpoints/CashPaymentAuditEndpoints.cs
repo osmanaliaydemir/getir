@@ -56,25 +56,26 @@ public static class CashPaymentAuditEndpoints
             [FromQuery] DateTime? startDate,
             [FromQuery] DateTime? endDate,
             [FromQuery] string? searchTerm,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 20,
             [FromServices] ICashPaymentAuditService service,
-            CancellationToken ct) =>
+            CancellationToken ct,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20) =>
         {
-            var query = new CashPaymentAuditLogQuery(
-                paymentId,
-                courierId,
-                customerId,
-                adminId,
-                eventType.HasValue ? (Domain.Enums.AuditEventType?)eventType.Value : null,
-                severityLevel.HasValue ? (Domain.Enums.AuditSeverityLevel?)severityLevel.Value : null,
-                riskLevel.HasValue ? (Domain.Enums.SecurityRiskLevel?)riskLevel.Value : null,
-                startDate,
-                endDate,
-                searchTerm,
-                page,
-                pageSize
-            );
+            var query = new CashPaymentAuditLogQuery
+            {
+                PaymentId = paymentId,
+                CourierId = courierId,
+                CustomerId = customerId,
+                AdminId = adminId,
+                EventType = eventType.HasValue ? (Domain.Enums.AuditEventType?)eventType.Value : null,
+                SeverityLevel = severityLevel.HasValue ? (Domain.Enums.AuditSeverityLevel?)severityLevel.Value : null,
+                RiskLevel = riskLevel.HasValue ? (Domain.Enums.SecurityRiskLevel?)riskLevel.Value : null,
+                StartDate = startDate,
+                EndDate = endDate,
+                SearchTerm = searchTerm,
+                Page = page,
+                PageSize = pageSize
+            };
 
             var result = await service.GetAuditLogsAsync(query, ct);
             return result.ToIResult();
@@ -117,7 +118,7 @@ public static class CashPaymentAuditEndpoints
             CancellationToken ct) =>
         {
             // Kurye sadece kendi log'larını görebilir
-            var currentCourierId = user.GetCourierId();
+            var currentCourierId = user.GetUserId();
             if (currentCourierId != Guid.Empty && currentCourierId != courierId)
             {
                 return Results.Forbid();
