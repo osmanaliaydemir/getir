@@ -1,0 +1,41 @@
+import 'package:flutter/material.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_typography.dart';
+
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Profil'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.white,
+      ),
+      body: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.person,
+              size: 100,
+              color: AppColors.primary,
+            ),
+            SizedBox(height: 24),
+            Text(
+              'Profil Sayfası',
+              style: AppTypography.headlineLarge,
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Kullanıcı profili',
+              style: AppTypography.bodyLarge,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

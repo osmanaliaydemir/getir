@@ -1,163 +1,172 @@
-# 🚀 Getir Clone - Production Ready Todo List
+# Getir Uygulaması - Eksiklikler ve İyileştirmeler Todo Listesi
 
-## 📊 **MEVCUT DURUM**
-- ✅ **Clean Architecture** implemented (WebApi → Application → Domain ← Infrastructure)
-- ✅ **27 Domain entities** with proper relationships
-- ✅ **26 API Endpoint files** with comprehensive functionality
-- ✅ **JWT Authentication** with role-based authorization
-- ✅ **SignalR Real-time** tracking and notifications
-- ✅ **Transaction management** with UnitOfWork pattern
-- ✅ **Complete business logic** (Orders, Cart, Coupons, Reviews, Payments, Geo-location, File Upload, Notifications)
+## 🔥 Yüksek Öncelik (Kritik)
 
-**Production Readiness: %95** - Core Getir functionality COMPLETE! 🎉
+### 1. Restoran ve Market Ayrımını Netleştir
+- [ ] ServiceCategory enum'ını genişlet
+- [ ] Restaurant ve Market için ayrı entity'ler oluştur
+- [ ] Her kategori için özel özellikler tanımla
+- [ ] UI'da kategori bazlı filtreleme ekle
+
+### 2. Restoran Ürünleri için Özel Özellikler
+- [ ] Hazırlık süresi (PreparationTimeMinutes)
+- [ ] Porsiyon bilgisi (PortionSize)
+- [ ] Alerjen bilgileri (Allergens)
+- [ ] Acılık seviyesi (IsSpicy)
+- [ ] Besin değerleri (NutritionInfo)
+
+### 3. Market Ürünleri için Özel Özellikler
+- [ ] Son kullanma tarihi (ExpiryDate)
+- [ ] Marka bilgisi (Brand)
+- [ ] Barkod (Barcode)
+- [ ] Ağırlık/hacim (Weight/Volume)
+- [ ] Menşei bilgisi (Origin)
+
+### 4. Nakit Ödeme Güvenliği Artır
+- [ ] Kurye para toplama fotoğraf kanıtı
+- [ ] Müşteri imza sistemi
+- [ ] Sahte para kontrolü mekanizması
+- [ ] Para üstü hesaplama iyileştirmesi
+- [ ] Nakit ödeme audit log'u
+
+### 5. Merchant Onboarding Sürecini Detaylandır
+- [ ] Belge yükleme sistemi (vergi levhası, ruhsat)
+- [ ] Onay workflow'u (Pending → UnderReview → Approved/Rejected)
+- [ ] Admin onay paneli
+- [ ] Merchant bildirim sistemi
+- [ ] Onboarding durumu takibi
+
+## ⚡ Orta Öncelik (Önemli)
+
+### 6. Ürün Varyantları Sistemini Aktifleştir
+- [ ] ProductOption sistemi implementasyonu
+- [ ] Boyut, renk, tat varyantları
+- [ ] Varyant bazlı fiyatlandırma
+- [ ] Stok yönetimi varyant bazlı
+- [ ] UI'da varyant seçimi
+
+### 7. Sipariş Durumu Geçiş Validasyonlarını Güçlendir
+- [ ] OrderStatus geçiş kuralları
+- [ ] Geçersiz geçiş engelleme
+- [ ] Durum değişikliği audit log'u
+- [ ] Rollback mekanizması
+- [ ] Durum değişikliği bildirimleri
+
+### 8. Stok Yönetimi Sistemini Geliştir
+- [ ] Otomatik stok düşürme
+- [ ] Stok uyarı sistemi
+- [ ] Stok senkronizasyonu
+- [ ] Stok geçmişi takibi
+- [ ] Stok raporları
+
+### 9. Kurye Atama Algoritmasını İyileştir
+- [ ] Performans bazlı atama
+- [ ] Mesafe optimizasyonu
+- [ ] Kurye yük dengeleme
+- [ ] Gerçek zamanlı konum takibi
+- [ ] Atama geçmişi analizi
+
+### 10. Teslimat Bölgesi Optimizasyonu
+- [ ] Mesafe hesaplama iyileştirmesi
+- [ ] Teslimat süresi tahmini
+- [ ] Bölge bazlı ücretlendirme
+- [ ] Teslimat kapasitesi yönetimi
+- [ ] Alternatif rota önerileri
+
+## 📈 Düşük Öncelik (İyileştirme)
+
+### 11. Ödeme Settlement Sürecini Otomatikleştir
+- [ ] Otomatik settlement hesaplama
+- [ ] Banka entegrasyonu
+- [ ] Settlement bildirimleri
+- [ ] Komisyon hesaplama
+- [ ] Raporlama sistemi
+
+### 12. Bildirim Sistemini Geliştir
+- [ ] SMS entegrasyonu
+- [ ] Push notification iyileştirmesi
+- [ ] Email template'leri
+- [ ] Bildirim tercihleri
+- [ ] Bildirim geçmişi
+
+### 13. Merchant Analitik Dashboard
+- [ ] Satış raporları
+- [ ] Performans metrikleri
+- [ ] Müşteri analizi
+- [ ] Gelir analizi
+- [ ] Trend analizi
+
+### 14. Kurye Performans Takip Sistemi
+- [ ] Teslimat süresi analizi
+- [ ] Müşteri değerlendirmeleri
+- [ ] Kazanç analizi
+- [ ] Performans sıralaması
+- [ ] İyileştirme önerileri
+
+### 15. Gerçek Zamanlı Sipariş Takip
+- [ ] Canlı konum takibi
+- [ ] Tahmini varış süresi
+- [ ] Sipariş durumu güncellemeleri
+- [ ] Müşteri bildirimleri
+- [ ] Harita entegrasyonu
+
+## 🛡️ Güvenlik ve Altyapı
+
+### 16. Çoklu Dil Desteği
+- [ ] Türkçe/İngilizce dil desteği
+- [ ] Dinamik dil değiştirme
+- [ ] API response'ları çoklu dil
+- [ ] Veritabanı çoklu dil
+- [ ] UI çoklu dil
+
+### 17. API Rate Limiting ve Throttling
+- [ ] Endpoint bazlı rate limiting
+- [ ] Kullanıcı bazlı throttling
+- [ ] IP bazlı kısıtlama
+- [ ] Rate limit bildirimleri
+- [ ] Monitoring ve alerting
+
+### 18. Kapsamlı Audit Logging
+- [ ] Tüm işlemler için log
+- [ ] Kullanıcı aktivite log'u
+- [ ] Sistem değişiklik log'u
+- [ ] Güvenlik event log'u
+- [ ] Log analiz ve raporlama
+
+### 19. Veritabanı Backup ve Recovery
+- [ ] Otomatik backup sistemi
+- [ ] Point-in-time recovery
+- [ ] Backup test süreci
+- [ ] Disaster recovery planı
+- [ ] Backup monitoring
+
+### 20. Performance Monitoring ve Alerting
+- [ ] Application performance monitoring
+- [ ] Database performance tracking
+- [ ] API response time monitoring
+- [ ] Error rate tracking
+- [ ] Alert sistemi
+
+## 📊 İlerleme Takibi
+
+- **Toplam Todo**: 20 ana başlık
+- **Tamamlanan**: 0
+- **Devam Eden**: 0
+- **Bekleyen**: 20
+
+## 🎯 Hedefler
+
+- **Kısa Vadeli (1-2 ay)**: İlk 5 kritik todo'yu tamamla
+- **Orta Vadeli (3-6 ay)**: Orta öncelikli todo'ları tamamla
+- **Uzun Vadeli (6+ ay)**: Tüm iyileştirmeleri tamamla
+
+## 📝 Notlar
+
+- Her todo için detaylı teknik dokümantasyon oluşturulmalı
+- Test senaryoları her todo için yazılmalı
+- Code review süreci uygulanmalı
+- Performance impact değerlendirmesi yapılmalı
 
 ---
-
-## 🔥 **KRİTİK ÖNCELİK** (Production için MUTLAKA gerekli)
-
-### ⚡ **SPRINT 11: CACHING LAYER** (1 hafta) ⭐⭐⭐
-**ETKİ:** Database yükünü %80 azaltır, API response time %50 daha hızlı!
-
-- [ ] **Redis Setup** (server, connection pooling, configuration)
-- [ ] **Cache Service Implementation** (IRedisCacheService interface & implementation)
-- [ ] **Cache Strategies** (merchants, products, campaigns, cart, user preferences)
-- [ ] **Cache Invalidation** (smart invalidation on updates, TTL management)
-- [ ] **Performance Monitoring** (hit/miss ratios, response times, cache statistics)
-
-**BAŞARIM KRİTERİ:** API response time %50 daha hızlı, database load %80 azalma
-
----
-
-### 🔍 **SPRINT 12: ADVANCED SEARCH** (2 hafta) ⭐⭐⭐
-**ETKİ:** Kullanıcı deneyimi önemli ölçüde iyileşir, arama performansı artar!
-
-- [ ] **Elasticsearch Setup** (server configuration, index mapping, bulk indexing)
-- [ ] **Search Service Enhancement** (fuzzy search, multi-field search, autocomplete)
-- [ ] **Advanced Filters** (price range, category, rating, distance, availability)
-- [ ] **Search Analytics** (popular terms, click tracking, search performance)
-- [ ] **Search Endpoints** (products, merchants, suggestions, trending searches)
-
-**BAŞARIM KRİTERİ:** Kullanıcı istediği ürünü 3 saniyede bulabilmeli
-
----
-
-## 🚀 **YÜKSEK ÖNCELİK** (Performans ve UX için gerekli)
-
-### ⚙️ **SPRINT 14: BACKGROUND JOBS** (1 hafta) ⭐⭐
-**ETKİ:** Sistem performansı artar, kullanıcı deneyimi iyileşir!
-
-- [ ] **Hangfire Setup** (dashboard, recurring jobs, failure handling, monitoring)
-- [ ] **Background Tasks** (expired coupons cleanup, order reminders, rating calculations)
-- [ ] **Job Monitoring** (success/failure tracking, alerts, retry mechanisms)
-
-**BAŞARIM KRİTERİ:** Uzun süren işlemler arka planda çalışmalı
-
----
-
-### 📊 **SPRINT 15: MONITORING & ANALYTICS** (1 hafta) ⭐⭐
-**ETKİ:** Sistem sağlığı ve performansı takip edilebilir!
-
-- [ ] **Application Insights** (performance metrics, error tracking, custom events)
-- [ ] **Logging Enhancement** (ELK Stack, structured logging, log retention)
-- [ ] **Health Checks** (database, Redis, external APIs, service dependencies)
-
-**BAŞARIM KRİTERİ:** Sistem sorunları 5 dakikada tespit edilebilmeli
-
----
-
-### 🧪 **SPRINT 16: TEST COVERAGE** (2 hafta) ⭐⭐
-**ETKİ:** Kod kalitesi ve güvenilirlik artar!
-
-- [ ] **Unit Test Expansion** (90%+ coverage, mock strategies, test data builders)
-- [ ] **Integration Tests** (API endpoints, database operations, external services)
-- [ ] **Performance Tests** (load testing, stress testing, benchmark comparisons)
-
-**BAŞARIM KRİTERİ:** %90+ test coverage, tüm kritik path'ler test edilmeli
-
----
-
-## 🎯 **DÜŞÜK ÖNCELİK** (Nice-to-have features)
-
-### 💎 **SPRINT 17: LOYALTY PROGRAM** (1 hafta)
-- [ ] **Points System** (earn/redeem points, expiration policies, referral bonuses)
-- [ ] **Loyalty Tiers** (Bronze/Silver/Gold levels, tier benefits, upgrade conditions)
-
-### 🔗 **SPRINT 18: REFERRAL SYSTEM** (1 hafta)
-- [ ] **Referral Codes** (generation, tracking, analytics, reward distribution)
-
-### 📱 **SPRINT 19: MOBILE API OPTIMIZATION** (1 hafta)
-- [ ] **Mobile-specific endpoints** (reduced payload, compression, offline support)
-
----
-
-## 📈 **PROGRESS TRACKING**
-
-### **TAMAMLANAN SPRINT'LER**
-- ✅ **Sprint 1-7:** Core features (Auth, Orders, Cart, etc.)
-- ✅ **Sprint 8:** Payment Integration (Cash payment system)
-- ✅ **Sprint 9:** Geo-location Features (Distance calculation, nearby merchants)
-- ✅ **Sprint 10:** File Upload System (Azure Blob Storage, image processing)
-- ✅ **Sprint 13:** Notification System (Email, SMS, Push notifications)
-
-### **DEVAM EDEN SPRINT'LER**
-- [ ] **Sprint 11:** Caching Layer (0/5 tasks)
-
-### **PLANLANAN SPRINT'LER**
-- [ ] **Sprint 12:** Advanced Search (0/5 tasks)
-- [ ] **Sprint 14:** Background Jobs (0/3 tasks)
-- [ ] **Sprint 15:** Monitoring & Analytics (0/3 tasks)
-- [ ] **Sprint 16:** Test Coverage (0/3 tasks)
-
----
-
-## 🎯 **PRODUCTION READINESS TARGETS**
-
-| Sprint | Feature | Completion | Production Impact |
-|--------|---------|------------|-------------------|
-| 8 | Payment | 100% | **CRITICAL** - Para kazanmak için ✅ |
-| 9 | Geo-location | 100% | **CRITICAL** - Core Getir feature ✅ |
-| 10 | File Upload | 100% | **CRITICAL** - UX için şart ✅ |
-| 11 | Caching | 0% | **HIGH** - Performance |
-| 12 | Advanced Search | 0% | **HIGH** - UX improvement |
-| 13 | Notifications | 100% | **HIGH** - User engagement ✅ |
-
-### **TARGET COMPLETION DATES**
-- **Sprint 8-10 (Critical):** 5 hafta → **Production Ready!** ✅ (TAMAMLANDI!)
-- **Sprint 11-13 (High Priority):** 5 hafta → **Enterprise Ready!** (Sprint 13 tamamlandı! 2 hafta kazandık!)
-- **Sprint 14-19 (Enhancement):** 6 hafta → **Feature Complete!**
-
----
-
-## 🚨 **KRİTİK NOTLAR**
-
-1. **Sprint 11-12'yi öncelikle tamamla** - Performance için kritik!
-2. **Test coverage'ı ihmal etme** - Her sprint'te test yaz
-3. **Security audit yap** - Her sprint sonunda güvenlik kontrolü
-4. **Performance monitoring** - Her feature'ı load test et
-5. **Documentation** - Her endpoint için Swagger dokümantasyonu
-
-**TOPLAM TAHMİNİ SÜRE:** 8 hafta (2 ay) → **Enterprise Ready Getir Clone!**
-
----
-
-## 🎯 **SONUÇ**
-
-Proje genel olarak mükemmel bir Clean Architecture yapısına sahip ve **%95 production ready** durumda! 🎉
-
-**✅ TAMAMLANAN KRİTİK ÖZELLİKLER:**
-- Payment System (Cash ödeme + gelecekte diğer ödeme yöntemleri için hazır altyapı)
-- Geo-location Features (Yakın merchant bulma, teslimat bölgesi kontrolü)
-- File Upload System (Azure Blob Storage, resim işleme, CDN)
-- Notification System (Email, SMS, Push notifications + user preferences)
-
-**🔄 KALAN ÖZELLİKLER:**
-- Caching Layer (Redis) - Performance için kritik
-- Advanced Search (Elasticsearch) - UX için önemli
-- Background Jobs (Hangfire) - Sistem performansı için
-- Monitoring & Analytics (Application Insights) - Operasyonel süreçler için
-
-**SONUÇ:** Proje artık temel Getir fonksiyonlarını karşılayabiliyor ve canlıya alınabilir durumda! Kalan özellikler performans ve kullanıcı deneyimi iyileştirmeleri için.
-
----
-
-*Son güncelleme: 2024-12-19 - Sprint 13 tamamlandı!*
+*Son güncelleme: $(date)*
+*Güncelleyen: Development Team*
