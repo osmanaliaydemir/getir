@@ -20,6 +20,7 @@ using Getir.Application.Services.DeliveryZones;
 using Getir.Application.Services.Merchants;
 using Getir.Application.Services.Notifications;
 using Getir.Application.Services.Orders;
+using Getir.Application.Services.Payments;
 using Getir.Application.Services.ProductCategories;
 using Getir.Application.Services.ProductOptions;
 using Getir.Application.Services.Products;
@@ -137,6 +138,10 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<Getir.Application.Services.Admin.IAdminService, Getir.Application.Services.Admin.AdminService>();
 builder.Services.AddScoped<Getir.Application.Services.Payments.IPaymentService, Getir.Application.Services.Payments.PaymentService>();
 builder.Services.AddScoped<Getir.Application.Services.GeoLocation.IGeoLocationService, Getir.Application.Services.GeoLocation.GeoLocationService>();
+
+// Cash Payment Security Services
+builder.Services.AddScoped<ICashPaymentSecurityService, CashPaymentSecurityService>();
+builder.Services.AddScoped<ICashPaymentAuditService, CashPaymentAuditService>();
 
 // File Upload Services
 builder.Services.AddScoped<IFileStorageService, Getir.Infrastructure.Services.FileStorage.SimpleFileStorageService>();
@@ -278,6 +283,10 @@ app.MapGeoLocationEndpoints();
 app.MapFileUploadEndpoints();
 app.MapAdminEndpoints();
 app.MapDatabaseTestEndpoints();
+
+// Cash Payment Security Endpoints
+app.MapCashPaymentSecurityEndpoints();
+app.MapCashPaymentAuditEndpoints();
 
 // ============= SIGNALR HUBS =============
 app.MapHub<Getir.WebApi.Hubs.NotificationHub>("/hubs/notifications");
