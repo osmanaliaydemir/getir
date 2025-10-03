@@ -90,4 +90,22 @@ public interface IMerchantDocumentService
         Guid updatedBy,
         CancellationToken cancellationToken = default);
 
+    // Additional methods for controller
+    Task<Result<MerchantDocumentStatisticsResponse>> GetDocumentStatisticsAsync(
+        Guid? merchantId = null,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<BulkVerifyDocumentsResponse>> BulkVerifyDocumentsAsync(
+        BulkVerifyDocumentsRequest request,
+        Guid adminId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<PagedResult<MerchantDocumentResponse>>> GetPendingDocumentsAsync(
+        PaginationQuery query,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<Stream>> DownloadDocumentAsync(
+        Guid documentId,
+        CancellationToken cancellationToken = default);
+
 }

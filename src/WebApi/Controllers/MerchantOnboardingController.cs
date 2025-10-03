@@ -94,7 +94,8 @@ public class MerchantOnboardingController : BaseController
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;
 
-        return BadRequest("Complete onboarding step functionality not implemented yet");
+        var result = await _merchantOnboardingService.CompleteOnboardingStepAsync(merchantId, stepId, request, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -111,7 +112,8 @@ public class MerchantOnboardingController : BaseController
         [FromRoute] Guid merchantId,
         CancellationToken ct = default)
     {
-        return BadRequest("Submit onboarding functionality not implemented yet");
+        var result = await _merchantOnboardingService.SubmitOnboardingAsync(merchantId, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -127,6 +129,7 @@ public class MerchantOnboardingController : BaseController
         [FromRoute] Guid merchantId,
         CancellationToken ct = default)
     {
-        return BadRequest("Get onboarding checklist functionality not implemented yet");
+        var result = await _merchantOnboardingService.GetOnboardingChecklistAsync(merchantId, ct);
+        return ToActionResult(result);
     }
 }

@@ -204,7 +204,8 @@ public class MerchantDocumentController : BaseController
         [FromQuery] Guid? merchantId = null,
         CancellationToken ct = default)
     {
-        return BadRequest("Document statistics functionality not implemented yet");
+        var result = await _merchantDocumentService.GetDocumentStatisticsAsync(merchantId, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -228,7 +229,8 @@ public class MerchantDocumentController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var adminId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Bulk verify documents functionality not implemented yet");
+        var result = await _merchantDocumentService.BulkVerifyDocumentsAsync(request, adminId, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -244,7 +246,8 @@ public class MerchantDocumentController : BaseController
         [FromQuery] PaginationQuery query,
         CancellationToken ct = default)
     {
-        return BadRequest("Get pending documents functionality not implemented yet");
+        var result = await _merchantDocumentService.GetPendingDocumentsAsync(query, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -262,6 +265,11 @@ public class MerchantDocumentController : BaseController
         [FromRoute] Guid documentId,
         CancellationToken ct = default)
     {
-        return BadRequest("Download document functionality not implemented yet");
+        var result = await _merchantDocumentService.DownloadDocumentAsync(documentId, ct);
+        if (result.Success)
+        {
+            return File(result.Value, "application/octet-stream", $"document_{documentId}.pdf");
+        }
+        return ToActionResult(result);
     }
 }

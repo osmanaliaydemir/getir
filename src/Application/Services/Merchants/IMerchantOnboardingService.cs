@@ -42,4 +42,19 @@ public interface IMerchantOnboardingService
     Task<Result<bool>> CanMerchantStartTradingAsync(
         Guid merchantId,
         CancellationToken cancellationToken = default);
+
+    // Additional methods for controller
+    Task<Result<OnboardingStepResponse>> CompleteOnboardingStepAsync(
+        Guid merchantId,
+        Guid stepId,
+        CompleteOnboardingStepRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> SubmitOnboardingAsync(
+        Guid merchantId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<OnboardingChecklistResponse>> GetOnboardingChecklistAsync(
+        Guid merchantId,
+        CancellationToken cancellationToken = default);
 }

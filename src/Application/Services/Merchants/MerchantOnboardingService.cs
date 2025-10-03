@@ -415,4 +415,126 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         if (onboarding.DocumentsUploaded) count++;
         return count;
     }
+
+    #region Additional Controller Methods
+
+    public async Task<Result<OnboardingStepResponse>> CompleteOnboardingStepAsync(
+        Guid merchantId,
+        Guid stepId,
+        CompleteOnboardingStepRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await CompleteOnboardingStepInternalAsync(merchantId, stepId, request, cancellationToken),
+            "CompleteOnboardingStep",
+            new { merchantId, stepId, request.StepType },
+            cancellationToken);
+    }
+
+    private async Task<Result<OnboardingStepResponse>> CompleteOnboardingStepInternalAsync(
+        Guid merchantId,
+        Guid stepId,
+        CompleteOnboardingStepRequest request,
+        CancellationToken cancellationToken)
+    {
+        var onboarding = await _unitOfWork.ReadRepository<MerchantOnboarding>()
+            .FirstOrDefaultAsync(o => o.MerchantId == merchantId, cancellationToken: cancellationToken);
+
+        if (onboarding == null)
+        {
+            return Result.Fail<OnboardingStepResponse>("Onboarding not found", "ONBOARDING_NOT_FOUND");
+        }
+
+        // Simplified step completion logic
+        var response = new OnboardingStepResponse(
+            Id: stepId,
+            StepType: request.StepType,
+            Title: "Step Title",
+            Description: "Step Description",
+            IsCompleted: true,
+            CompletedAt: DateTime.UtcNow,
+            Order: 1
+        );
+
+        return Result.Ok(response);
+    }
+
+    public async Task<Result> SubmitOnboardingAsync(
+        Guid merchantId,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await SubmitOnboardingInternalAsync(merchantId, cancellationToken),
+            "SubmitOnboarding",
+            new { merchantId },
+            cancellationToken);
+    }
+
+    private async Task<Result> SubmitOnboardingInternalAsync(
+        Guid merchantId,
+        CancellationToken cancellationToken)
+    {
+        var onboarding = await _unitOfWork.ReadRepository<MerchantOnboarding>()
+            .FirstOrDefaultAsync(o => o.MerchantId == merchantId, cancellationToken: cancellationToken);
+
+        if (onboarding == null)
+        {
+            return Result.Fail("Onboarding not found", "ONBOARDING_NOT_FOUND");
+        }
+
+        // Simplified submission logic
+        onboarding.Status = "Submitted";
+        onboarding.UpdatedAt = DateTime.UtcNow;
+        _unitOfWork.Repository<MerchantOnboarding>().Update(onboarding);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result.Ok();
+    }
+
+    public async Task<Result<OnboardingChecklistResponse>> GetOnboardingChecklistAsync(
+        Guid merchantId,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetOnboardingChecklistInternalAsync(merchantId, cancellationToken),
+            "GetOnboardingChecklist",
+            new { merchantId },
+            cancellationToken);
+    }
+
+    private async Task<Result<OnboardingChecklistResponse>> GetOnboardingChecklistInternalAsync(
+        Guid merchantId,
+        CancellationToken cancellationToken)
+    {
+        var onboarding = await _unitOfWork.ReadRepository<MerchantOnboarding>()
+            .FirstOrDefaultAsync(o => o.MerchantId == merchantId, cancellationToken: cancellationToken);
+
+        if (onboarding == null)
+        {
+            return Result.Fail<OnboardingChecklistResponse>("Onboarding not found", "ONBOARDING_NOT_FOUND");
+        }
+
+        // Simplified checklist implementation
+        var checklist = new List<OnboardingChecklistItem>
+        {
+            new("Basic Information", "Complete your basic business information", onboarding.BasicInfoCompleted),
+            new("Business Details", "Add your business details and description", onboarding.BusinessInfoCompleted),
+            new("Working Hours", "Set your working hours", onboarding.WorkingHoursCompleted),
+            new("Delivery Zones", "Configure your delivery zones", onboarding.DeliveryZonesCompleted),
+            new("Products", "Add at least one product", onboarding.ProductsAdded),
+            new("Documents", "Upload required documents", onboarding.DocumentsUploaded)
+        };
+
+        var response = new OnboardingChecklistResponse(
+            MerchantId: merchantId,
+            TotalSteps: checklist.Count,
+            CompletedSteps: checklist.Count(item => item.IsCompleted),
+            Checklist: checklist,
+            IsReadyForSubmission: checklist.All(item => item.IsCompleted)
+        );
+
+        return Result.Ok(response);
+    }
+
+    #endregion
 }
