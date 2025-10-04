@@ -66,10 +66,16 @@ public class ReviewModerationRequestValidator : AbstractValidator<ReviewModerati
 {
     public ReviewModerationRequestValidator()
     {
-        RuleFor(x => x.ModerationNotes)
+        RuleFor(x => x.Action)
+            .NotEmpty()
+            .WithMessage("Action is required")
+            .Must(action => action.ToLower() == "approve" || action.ToLower() == "reject" || action.ToLower() == "flag")
+            .WithMessage("Action must be 'approve', 'reject', or 'flag'");
+
+        RuleFor(x => x.Notes)
             .MaximumLength(ApplicationConstants.MaxCommentLength)
             .WithMessage($"Moderation notes cannot exceed {ApplicationConstants.MaxCommentLength} characters")
-            .When(x => !string.IsNullOrEmpty(x.ModerationNotes));
+            .When(x => !string.IsNullOrEmpty(x.Notes));
     }
 }
 
@@ -102,10 +108,10 @@ public class ReviewSearchQueryValidator : AbstractValidator<ReviewSearchQuery>
             .WithMessage("Maximum rating must be greater than or equal to minimum rating")
             .When(x => x.MinRating.HasValue && x.MaxRating.HasValue);
 
-        RuleFor(x => x.ToDate)
-            .GreaterThanOrEqualTo(x => x.FromDate)
+        RuleFor(x => x.DateTo)
+            .GreaterThanOrEqualTo(x => x.DateFrom)
             .WithMessage("To date must be greater than or equal to from date")
-            .When(x => x.FromDate.HasValue && x.ToDate.HasValue);
+            .When(x => x.DateFrom.HasValue && x.DateTo.HasValue);
 
         RuleFor(x => x.Page)
             .GreaterThan(0)
@@ -115,10 +121,10 @@ public class ReviewSearchQueryValidator : AbstractValidator<ReviewSearchQuery>
             .InclusiveBetween(1, ApplicationConstants.MaxPageSize)
             .WithMessage($"Page size must be between 1 and {ApplicationConstants.MaxPageSize}");
 
-        RuleFor(x => x.RevieweeType)
+        RuleFor(x => x.EntityType)
             .Must(type => type == null || type.ToLower() == "merchant" || type.ToLower() == "courier")
-            .WithMessage("Reviewee type must be 'Merchant' or 'Courier'")
-            .When(x => !string.IsNullOrEmpty(x.RevieweeType));
+            .WithMessage("Entity type must be 'Merchant' or 'Courier'")
+            .When(x => !string.IsNullOrEmpty(x.EntityType));
     }
 }
 

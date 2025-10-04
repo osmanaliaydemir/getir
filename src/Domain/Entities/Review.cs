@@ -36,6 +36,7 @@ public class Review
     public bool IsApproved { get; set; } = true; // Auto-approve for now
     public bool IsModerated { get; set; } = false;
     public string? ModerationNotes { get; set; }
+    public string? ModeratorNotes { get; set; }
     public Guid? ModeratedBy { get; set; }
     public DateTime? ModeratedAt { get; set; }
     

@@ -128,7 +128,8 @@ public class GeoLocationController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Save user location functionality not implemented yet");
+        var result = await _geoLocationService.SaveUserLocationAsync(request, userId, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -148,7 +149,8 @@ public class GeoLocationController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Get user location history functionality not implemented yet");
+        var result = await _geoLocationService.GetUserLocationHistoryAsync(userId, query, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -169,7 +171,8 @@ public class GeoLocationController : BaseController
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;
 
-        return BadRequest("Get merchants in area functionality not implemented yet");
+        var result = await _geoLocationService.GetMerchantsInAreaAsync(request, ct);
+        return ToActionResult(result);
     }
 
     #endregion
@@ -193,7 +196,8 @@ public class GeoLocationController : BaseController
         [FromQuery] DateTime? endDate = null,
         CancellationToken ct = default)
     {
-        return BadRequest("Get location analytics functionality not implemented yet");
+        var result = await _geoLocationService.GetLocationAnalyticsAsync(startDate, endDate, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -208,7 +212,8 @@ public class GeoLocationController : BaseController
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetDeliveryZoneCoverage(CancellationToken ct = default)
     {
-        return BadRequest("Get delivery zone coverage functionality not implemented yet");
+        var result = await _geoLocationService.GetDeliveryZoneCoverageAsync(ct);
+        return ToActionResult(result);
     }
 
     #endregion

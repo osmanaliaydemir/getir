@@ -62,4 +62,27 @@ public interface IGeoLocationService
         double? longitude = null,
         CancellationToken cancellationToken = default);
 
+    // Additional methods for GeoLocationController
+    Task<Result> SaveUserLocationAsync(
+        SaveUserLocationRequest request,
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<PagedResult<UserLocationResponse>>> GetUserLocationHistoryAsync(
+        Guid userId,
+        PaginationQuery query,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<IEnumerable<MerchantInAreaResponse>>> GetMerchantsInAreaAsync(
+        GetMerchantsInAreaRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<LocationAnalyticsResponse>> GetLocationAnalyticsAsync(
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<DeliveryZoneCoverageResponse>> GetDeliveryZoneCoverageAsync(
+        CancellationToken cancellationToken = default);
+
 }

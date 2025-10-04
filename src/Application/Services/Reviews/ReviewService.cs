@@ -213,17 +213,17 @@ public class ReviewService : BaseService, IReviewService
             review.ReviewerId,
             review.Reviewer.FirstName + " " + review.Reviewer.LastName,
             review.RevieweeId,
-            review.Reviewee.FirstName + " " + review.Reviewee.LastName,
             review.RevieweeType,
             review.OrderId,
             review.Rating,
             review.Comment,
-            tags,
+            review.IsApproved,
             review.CreatedAt,
             review.UpdatedAt,
-            review.IsApproved,
+            tags,
+            false, // TODO: Check if current user has voted helpful
             helpfulCount,
-            false // TODO: Check if current user has voted helpful
+            0
         );
 
         return Result.Ok(response);
@@ -251,17 +251,17 @@ public class ReviewService : BaseService, IReviewService
             r.ReviewerId,
             r.Reviewer.FirstName + " " + r.Reviewer.LastName,
             r.RevieweeId,
-            r.Reviewee.FirstName + " " + r.Reviewee.LastName,
             r.RevieweeType,
             r.OrderId,
             r.Rating,
             r.Comment,
-            r.ReviewTags.Select(rt => rt.Tag).ToList(),
+            r.IsApproved,
             r.CreatedAt,
             r.UpdatedAt,
-            r.IsApproved,
+            r.ReviewTags.Select(rt => rt.Tag).ToList(),
+            false, // TODO: Check if current user has voted helpful
             r.ReviewHelpfuls.Count(rh => rh.IsHelpful),
-            false // TODO: Check if current user has voted helpful
+            0
         )).ToList();
 
         var pagedResult = PagedResult<ReviewResponse>.Create(
@@ -277,9 +277,8 @@ public class ReviewService : BaseService, IReviewService
     {
         var searchQuery = new ReviewSearchQuery
         {
-            RevieweeId = revieweeId,
-            RevieweeType = revieweeType,
-            IsApproved = true,
+            EntityId = revieweeId,
+            EntityType = revieweeType,
             Page = query.Page,
             PageSize = query.PageSize
         };
@@ -289,14 +288,6 @@ public class ReviewService : BaseService, IReviewService
 
     public async Task<Result<PagedResult<ReviewResponse>>> GetReviewsByReviewerAsync(Guid reviewerId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
-        var searchQuery = new ReviewSearchQuery
-        {
-            RevieweeId = reviewerId, // This should be ReviewerId, but we need to adjust the filter
-            IsApproved = true,
-            Page = query.Page,
-            PageSize = query.PageSize
-        };
-
         // Adjust filter for reviewer
         Expression<Func<Review, bool>> filter = r => r.ReviewerId == reviewerId && !r.IsDeleted && r.IsApproved;
 
@@ -318,17 +309,17 @@ public class ReviewService : BaseService, IReviewService
             r.ReviewerId,
             r.Reviewer.FirstName + " " + r.Reviewer.LastName,
             r.RevieweeId,
-            r.Reviewee.FirstName + " " + r.Reviewee.LastName,
             r.RevieweeType,
             r.OrderId,
             r.Rating,
             r.Comment,
-            r.ReviewTags.Select(rt => rt.Tag).ToList(),
+            r.IsApproved,
             r.CreatedAt,
             r.UpdatedAt,
-            r.IsApproved,
+            r.ReviewTags.Select(rt => rt.Tag).ToList(),
+            false,
             r.ReviewHelpfuls.Count(rh => rh.IsHelpful),
-            false
+            0
         )).ToList();
 
         var pagedResult = PagedResult<ReviewResponse>.Create(
@@ -342,14 +333,6 @@ public class ReviewService : BaseService, IReviewService
 
     public async Task<Result<PagedResult<ReviewResponse>>> GetReviewsByOrderAsync(Guid orderId, CancellationToken cancellationToken = default)
     {
-        var searchQuery = new ReviewSearchQuery
-        {
-            RevieweeId = orderId, // This should be OrderId, need to adjust
-            IsApproved = true,
-            Page = 1,
-            PageSize = 10
-        };
-
         // Adjust filter for order
         Expression<Func<Review, bool>> filter = r => r.OrderId == orderId && !r.IsDeleted && r.IsApproved;
 
@@ -371,17 +354,17 @@ public class ReviewService : BaseService, IReviewService
             r.ReviewerId,
             r.Reviewer.FirstName + " " + r.Reviewer.LastName,
             r.RevieweeId,
-            r.Reviewee.FirstName + " " + r.Reviewee.LastName,
             r.RevieweeType,
             r.OrderId,
             r.Rating,
             r.Comment,
-            r.ReviewTags.Select(rt => rt.Tag).ToList(),
+            r.IsApproved,
             r.CreatedAt,
             r.UpdatedAt,
-            r.IsApproved,
+            r.ReviewTags.Select(rt => rt.Tag).ToList(),
+            false,
             r.ReviewHelpfuls.Count(rh => rh.IsHelpful),
-            false
+            0
         )).ToList();
 
         var pagedResult = PagedResult<ReviewResponse>.Create(
@@ -585,56 +568,443 @@ public class ReviewService : BaseService, IReviewService
     private Expression<Func<Review, bool>> BuildReviewFilter(ReviewSearchQuery query)
     {
         return r => !r.IsDeleted &&
-                    (!query.RevieweeId.HasValue || r.RevieweeId == query.RevieweeId.Value) &&
-                    (string.IsNullOrEmpty(query.RevieweeType) || r.RevieweeType == query.RevieweeType) &&
+                    (!query.EntityId.HasValue || r.RevieweeId == query.EntityId.Value) &&
+                    (string.IsNullOrEmpty(query.EntityType) || r.RevieweeType == query.EntityType) &&
                     (!query.MinRating.HasValue || r.Rating >= query.MinRating.Value) &&
                     (!query.MaxRating.HasValue || r.Rating <= query.MaxRating.Value) &&
-                    (!query.IsApproved.HasValue || r.IsApproved == query.IsApproved.Value) &&
-                    (!query.FromDate.HasValue || r.CreatedAt >= query.FromDate.Value) &&
-                    (!query.ToDate.HasValue || r.CreatedAt <= query.ToDate.Value);
+                    (!query.DateFrom.HasValue || r.CreatedAt >= query.DateFrom.Value) &&
+                    (!query.DateTo.HasValue || r.CreatedAt <= query.DateTo.Value);
     }
 
     // Placeholder methods for remaining interface members
     public async Task<Result<PagedResult<PendingReviewResponse>>> GetPendingReviewsAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement pending reviews
-        return Result.Ok(PagedResult<PendingReviewResponse>.Create(new List<PendingReviewResponse>(), 0, 1, 10));
+        try
+        {
+            // Get pending reviews (not moderated yet)
+            var pendingReviews = await _unitOfWork.ReadRepository<Review>()
+                .GetPagedAsync(
+                    r => !r.IsModerated,
+                    r => r.CreatedAt,
+                    false, // descending order
+                    query.Page,
+                    query.PageSize,
+                    "Reviewer,Reviewee",
+                    cancellationToken);
+
+            var totalCount = await _unitOfWork.ReadRepository<Review>()
+                .CountAsync(r => !r.IsModerated, cancellationToken);
+
+            var responses = pendingReviews.Select(r => new PendingReviewResponse(
+                r.Id,
+                "", // Reviewer name will be loaded separately
+                "", // Reviewee name will be loaded separately
+                r.RevieweeType,
+                r.Rating,
+                r.Comment,
+                new List<string>(), // Tags will be loaded separately
+                r.CreatedAt,
+                r.IsApproved
+            )).ToList();
+
+            var pagedResult = PagedResult<PendingReviewResponse>.Create(
+                responses,
+                totalCount,
+                query.Page,
+                query.PageSize);
+
+            return Result.Ok(pagedResult);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting pending reviews");
+            return Result.Fail<PagedResult<PendingReviewResponse>>("Failed to get pending reviews", "GET_PENDING_REVIEWS_ERROR");
+        }
     }
 
     public async Task<Result<ReviewModerationResponse>> ModerateReviewAsync(Guid reviewId, ReviewModerationRequest request, Guid moderatorId, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement review moderation
-        return Result.Fail<ReviewModerationResponse>("Not implemented", "NOT_IMPLEMENTED");
+        try
+        {
+            // Get review
+            var review = await _unitOfWork.ReadRepository<Review>()
+                .FirstOrDefaultAsync(r => r.Id == reviewId, cancellationToken: cancellationToken);
+
+            if (review == null)
+            {
+                return Result.Fail<ReviewModerationResponse>("Review not found", "REVIEW_NOT_FOUND");
+            }
+
+            // Update review status
+            review.IsApproved = request.Action == "approve";
+            review.ModeratedAt = DateTime.UtcNow;
+            review.ModeratedBy = moderatorId;
+            review.ModeratorNotes = request.Notes;
+
+            _unitOfWork.Repository<Review>().Update(review);
+
+            // Create moderation log
+            var moderationLog = new ReviewModerationLog
+            {
+                Id = Guid.NewGuid(),
+                ReviewId = reviewId,
+                ModeratorId = moderatorId,
+                Action = request.Action,
+                Notes = request.Notes,
+                ModeratedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.Repository<ReviewModerationLog>().AddAsync(moderationLog, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Send notification to reviewer
+            if (_signalRService != null)
+            {
+                var notification = new RealtimeNotificationEvent(
+                    Guid.NewGuid(),
+                    "Review Moderated",
+                    $"Your review has been {request.Action}d",
+                    "review_moderation",
+                    DateTime.UtcNow,
+                    false,
+                    new Dictionary<string, object> { { "ReviewId", reviewId }, { "Action", request.Action } }
+                );
+
+                await _signalRService.SendRealtimeNotificationAsync(notification);
+            }
+
+            var response = new ReviewModerationResponse(
+                reviewId,
+                request.Action,
+                request.Notes,
+                moderatorId,
+                DateTime.UtcNow
+            );
+
+            return Result.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error moderating review {ReviewId}", reviewId);
+            return Result.Fail<ReviewModerationResponse>("Failed to moderate review", "MODERATION_ERROR");
+        }
     }
 
     public async Task<Result> BulkModerateReviewsAsync(List<Guid> reviewIds, ReviewModerationRequest request, Guid moderatorId, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement bulk moderation
-        return Result.Fail("Not implemented", "NOT_IMPLEMENTED");
+        try
+        {
+            if (reviewIds == null || !reviewIds.Any())
+            {
+                return Result.Fail("No review IDs provided", "NO_REVIEW_IDS");
+            }
+
+            var successCount = 0;
+            var failureCount = 0;
+            var errors = new List<string>();
+
+            foreach (var reviewId in reviewIds)
+            {
+                try
+                {
+                    var result = await ModerateReviewAsync(reviewId, request, moderatorId, cancellationToken);
+                    if (result.Success)
+                    {
+                        successCount++;
+                    }
+                    else
+                    {
+                        failureCount++;
+                        errors.Add($"Review {reviewId}: {result.Error}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    failureCount++;
+                    errors.Add($"Review {reviewId}: {ex.Message}");
+                    _logger.LogError(ex, "Error in bulk moderation for review {ReviewId}", reviewId);
+                }
+            }
+
+            _logger.LogInformation("Bulk moderation completed. Success: {SuccessCount}, Failures: {FailureCount}", 
+                successCount, failureCount);
+
+            if (failureCount > 0)
+            {
+                return Result.Fail($"Bulk moderation completed with {failureCount} failures. Errors: {string.Join("; ", errors)}", 
+                    "BULK_MODERATION_PARTIAL_FAILURE");
+            }
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in bulk moderation");
+            return Result.Fail("Failed to perform bulk moderation", "BULK_MODERATION_ERROR");
+        }
     }
 
     public async Task<Result<ReviewHelpfulResponse>> VoteHelpfulAsync(Guid reviewId, ReviewHelpfulRequest request, Guid userId, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement helpful votes
-        return Result.Fail<ReviewHelpfulResponse>("Not implemented", "NOT_IMPLEMENTED");
+        try
+        {
+            // Check if review exists
+            var review = await _unitOfWork.ReadRepository<Review>()
+                .FirstOrDefaultAsync(r => r.Id == reviewId, cancellationToken: cancellationToken);
+
+            if (review == null)
+            {
+                return Result.Fail<ReviewHelpfulResponse>("Review not found", "REVIEW_NOT_FOUND");
+            }
+
+            // Check if user already voted
+            var existingVote = await _unitOfWork.ReadRepository<ReviewHelpful>()
+                .FirstOrDefaultAsync(rh => rh.ReviewId == reviewId && rh.UserId == userId, cancellationToken: cancellationToken);
+
+            if (existingVote != null)
+            {
+                return Result.Fail<ReviewHelpfulResponse>("User has already voted on this review", "ALREADY_VOTED");
+            }
+
+            // Create helpful vote
+            var helpfulVote = new ReviewHelpful
+            {
+                Id = Guid.NewGuid(),
+                ReviewId = reviewId,
+                UserId = userId,
+                IsHelpful = request.IsHelpful,
+                VotedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.Repository<ReviewHelpful>().AddAsync(helpfulVote, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Update review helpful count
+            var helpfulCount = await _unitOfWork.ReadRepository<ReviewHelpful>()
+                .CountAsync(rh => rh.ReviewId == reviewId && rh.IsHelpful, cancellationToken);
+
+            var notHelpfulCount = await _unitOfWork.ReadRepository<ReviewHelpful>()
+                .CountAsync(rh => rh.ReviewId == reviewId && !rh.IsHelpful, cancellationToken);
+
+            var response = new ReviewHelpfulResponse(
+                reviewId,
+                userId,
+                request.IsHelpful,
+                helpfulCount,
+                notHelpfulCount,
+                DateTime.UtcNow
+            );
+
+            return Result.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error voting helpful for review {ReviewId}", reviewId);
+            return Result.Fail<ReviewHelpfulResponse>("Failed to vote helpful", "VOTE_HELPFUL_ERROR");
+        }
     }
 
     public async Task<Result> RemoveHelpfulVoteAsync(Guid reviewId, Guid userId, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement remove helpful vote
-        return Result.Fail("Not implemented", "NOT_IMPLEMENTED");
+        try
+        {
+            // Find existing vote
+            var existingVote = await _unitOfWork.ReadRepository<ReviewHelpful>()
+                .FirstOrDefaultAsync(rh => rh.ReviewId == reviewId && rh.UserId == userId, cancellationToken: cancellationToken);
+
+            if (existingVote == null)
+            {
+                return Result.Fail("Vote not found", "VOTE_NOT_FOUND");
+            }
+
+            // Remove the vote
+            _unitOfWork.Repository<ReviewHelpful>().Delete(existingVote);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Removed helpful vote for review {ReviewId} by user {UserId}", reviewId, userId);
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error removing helpful vote for review {ReviewId}", reviewId);
+            return Result.Fail("Failed to remove helpful vote", "REMOVE_VOTE_ERROR");
+        }
     }
 
     public async Task<Result<ReviewAnalyticsResponse>> GetReviewAnalyticsAsync(Guid entityId, string entityType, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement review analytics
-        return Result.Fail<ReviewAnalyticsResponse>("Not implemented", "NOT_IMPLEMENTED");
+        try
+        {
+            // Get all reviews for the entity
+            var reviews = await _unitOfWork.ReadRepository<Review>()
+                .ListAsync(r => r.RevieweeId == entityId && r.RevieweeType == entityType && r.IsApproved, 
+                    cancellationToken: cancellationToken);
+
+            if (!reviews.Any())
+            {
+                return Result.Ok(new ReviewAnalyticsResponse(
+                    entityId,
+                    entityType,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    new Dictionary<int, int>(),
+                    new List<string>(),
+                    DateTime.UtcNow
+                ));
+            }
+
+            // Calculate analytics
+            var totalReviews = reviews.Count;
+            var averageRating = reviews.Average(r => r.Rating);
+            var ratingDistribution = reviews.GroupBy(r => r.Rating)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var helpfulVotes = await _unitOfWork.ReadRepository<ReviewHelpful>()
+                .CountAsync(rh => reviews.Select(r => r.Id).Contains(rh.ReviewId) && rh.IsHelpful, 
+                    cancellationToken: cancellationToken);
+
+            var totalVotes = await _unitOfWork.ReadRepository<ReviewHelpful>()
+                .CountAsync(rh => reviews.Select(r => r.Id).Contains(rh.ReviewId), 
+                    cancellationToken: cancellationToken);
+
+            // Get most common tags
+            var reviewIds = reviews.Select(r => r.Id).ToList();
+            var tags = await _unitOfWork.ReadRepository<ReviewTag>()
+                .ListAsync(rt => reviewIds.Contains(rt.ReviewId), cancellationToken: cancellationToken);
+
+            var topTags = tags.GroupBy(t => t.Tag)
+                .OrderByDescending(g => g.Count())
+                .Take(10)
+                .Select(g => g.Key)
+                .ToList();
+
+            var response = new ReviewAnalyticsResponse(
+                entityId,
+                entityType,
+                totalReviews,
+                (decimal)Math.Round(averageRating, 2),
+                helpfulVotes,
+                totalVotes,
+                ratingDistribution.GetValueOrDefault(5, 0),
+                ratingDistribution.GetValueOrDefault(1, 0),
+                ratingDistribution,
+                topTags,
+                DateTime.UtcNow
+            );
+
+            return Result.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting review analytics for entity {EntityId}", entityId);
+            return Result.Fail<ReviewAnalyticsResponse>("Failed to get review analytics", "ANALYTICS_ERROR");
+        }
     }
 
     public async Task<Result<ReviewSearchResponse>> SearchReviewsAsync(ReviewSearchQuery query, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement advanced search
-        return Result.Fail<ReviewSearchResponse>("Not implemented", "NOT_IMPLEMENTED");
+        try
+        {
+            // Get all approved reviews first
+            var allReviews = await _unitOfWork.ReadRepository<Review>()
+                .ListAsync(r => r.IsApproved, cancellationToken: cancellationToken);
+
+            // Apply filters
+            var filteredReviews = allReviews.AsQueryable();
+
+            if (query.EntityId.HasValue)
+            {
+                filteredReviews = filteredReviews.Where(r => r.RevieweeId == query.EntityId.Value);
+            }
+
+            if (!string.IsNullOrEmpty(query.EntityType))
+            {
+                filteredReviews = filteredReviews.Where(r => r.RevieweeType == query.EntityType);
+            }
+
+            if (query.MinRating.HasValue)
+            {
+                filteredReviews = filteredReviews.Where(r => r.Rating >= query.MinRating.Value);
+            }
+
+            if (query.MaxRating.HasValue)
+            {
+                filteredReviews = filteredReviews.Where(r => r.Rating <= query.MaxRating.Value);
+            }
+
+            if (!string.IsNullOrEmpty(query.SearchTerm))
+            {
+                filteredReviews = filteredReviews.Where(r => r.Comment.Contains(query.SearchTerm));
+            }
+
+            if (query.DateFrom.HasValue)
+            {
+                filteredReviews = filteredReviews.Where(r => r.CreatedAt >= query.DateFrom.Value);
+            }
+
+            if (query.DateTo.HasValue)
+            {
+                filteredReviews = filteredReviews.Where(r => r.CreatedAt <= query.DateTo.Value);
+            }
+
+            // Apply sorting
+            filteredReviews = query.SortBy?.ToLower() switch
+            {
+                "rating" => query.SortDescending ? filteredReviews.OrderByDescending(r => r.Rating) : filteredReviews.OrderBy(r => r.Rating),
+                "date" => query.SortDescending ? filteredReviews.OrderByDescending(r => r.CreatedAt) : filteredReviews.OrderBy(r => r.CreatedAt),
+                _ => filteredReviews.OrderByDescending(r => r.CreatedAt)
+            };
+
+            var reviewsList = filteredReviews.ToList();
+            var totalCount = reviewsList.Count;
+
+            // Apply pagination
+            var pagedReviews = reviewsList
+                .Skip((query.Page - 1) * query.PageSize)
+                .Take(query.PageSize)
+                .ToList();
+
+            // Map to response
+            var reviewResponses = pagedReviews.Select(r => new ReviewResponse(
+                r.Id,
+                r.ReviewerId,
+                "", // Reviewer name will be loaded separately
+                r.RevieweeId,
+                r.RevieweeType,
+                r.OrderId,
+                r.Rating,
+                r.Comment,
+                r.IsApproved,
+                r.CreatedAt,
+                r.UpdatedAt,
+                new List<string>(), // Tags will be loaded separately
+                false, // HasVoted will be calculated separately
+                0, // HelpfulCount will be calculated separately
+                0 // TotalOrders will be calculated separately
+            )).ToList();
+
+            var response = new ReviewSearchResponse(
+                reviewResponses,
+                totalCount,
+                query.Page,
+                query.PageSize,
+                (int)Math.Ceiling((double)totalCount / query.PageSize),
+                query.SearchTerm,
+                null // Filters will be implemented later
+            );
+
+            return Result.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching reviews");
+            return Result.Fail<ReviewSearchResponse>("Failed to search reviews", "SEARCH_ERROR");
+        }
     }
 
     public async Task<Result<bool>> CanUserReviewAsync(Guid userId, Guid revieweeId, string revieweeType, Guid orderId, CancellationToken cancellationToken = default)
@@ -662,7 +1032,7 @@ public class ReviewService : BaseService, IReviewService
         return Result.Ok(review != null);
     }
 
-    public async Task<Result<List<string>>> GetAvailableTagsAsync(string revieweeType, CancellationToken cancellationToken = default)
+    public Task<Result<List<string>>> GetAvailableTagsAsync(string revieweeType, CancellationToken cancellationToken = default)
     {
         // Return predefined tags based on reviewee type
         var tags = revieweeType.ToLower() switch
@@ -672,13 +1042,46 @@ public class ReviewService : BaseService, IReviewService
             _ => new List<string>()
         };
 
-        return Result.Ok(tags);
+        return Task.FromResult(Result.Ok(tags));
     }
 
     public async Task<Result<List<TagFrequencyResponse>>> GetTagFrequenciesAsync(Guid entityId, string entityType, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement tag frequency analysis
+        try
+        {
+            // Get all reviews for the entity
+            var reviews = await _unitOfWork.ReadRepository<Review>()
+                .ListAsync(r => r.RevieweeId == entityId && r.RevieweeType == entityType && r.IsApproved, 
+                    cancellationToken: cancellationToken);
+
+            if (!reviews.Any())
+            {
         return Result.Ok(new List<TagFrequencyResponse>());
+            }
+
+            // Get all tags for these reviews
+            var reviewIds = reviews.Select(r => r.Id).ToList();
+            var tags = await _unitOfWork.ReadRepository<ReviewTag>()
+                .ListAsync(rt => reviewIds.Contains(rt.ReviewId), cancellationToken: cancellationToken);
+
+            // Calculate tag frequencies
+            var tagGroups = tags.GroupBy(t => t.Tag)
+                .Select(g => new TagFrequencyResponse(
+                    g.Key,
+                    g.Count(),
+                    g.All(t => t.IsPositive),
+                    (decimal)Math.Round((double)g.Count() / tags.Count * 100, 2)
+                ))
+                .OrderByDescending(t => t.Count)
+                .ToList();
+
+            return Result.Ok(tagGroups);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting tag frequencies for entity {EntityId}", entityId);
+            return Result.Fail<List<TagFrequencyResponse>>("Failed to get tag frequencies", "TAG_FREQUENCY_ERROR");
+        }
     }
 
     #region Additional Review Methods
@@ -689,22 +1092,52 @@ public class ReviewService : BaseService, IReviewService
         Guid reporterId,
         CancellationToken cancellationToken = default)
     {
-        return await ExecuteWithPerformanceTracking(
-            async () => await ReportReviewInternalAsync(reviewId, request, reporterId, cancellationToken),
-            "ReportReview",
-            new { reviewId, reporterId, request.Reason },
-            cancellationToken);
-    }
+        try
+        {
+            // Check if review exists
+            var review = await _unitOfWork.ReadRepository<Review>()
+                .FirstOrDefaultAsync(r => r.Id == reviewId, cancellationToken: cancellationToken);
 
-    private async Task<Result> ReportReviewInternalAsync(
-        Guid reviewId,
-        ReportReviewRequest request,
-        Guid reporterId,
-        CancellationToken cancellationToken)
-    {
-        // Simplified report implementation
-        // In a real implementation, you would create a ReviewReport entity
+            if (review == null)
+            {
+                return Result.Fail("Review not found", "REVIEW_NOT_FOUND");
+            }
+
+            // Check if user already reported this review
+            var existingReport = await _unitOfWork.ReadRepository<ReviewReport>()
+                .FirstOrDefaultAsync(rr => rr.ReviewId == reviewId && rr.ReporterId == reporterId, 
+                    cancellationToken: cancellationToken);
+
+            if (existingReport != null)
+            {
+                return Result.Fail("You have already reported this review", "ALREADY_REPORTED");
+            }
+
+            // Create review report
+            var report = new ReviewReport
+            {
+                Id = Guid.NewGuid(),
+                ReviewId = reviewId,
+                ReporterId = reporterId,
+                Reason = request.Reason,
+                Details = request.Details,
+                ReportedAt = DateTime.UtcNow,
+                Status = "Pending"
+            };
+
+            await _unitOfWork.Repository<ReviewReport>().AddAsync(report, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Review {ReviewId} reported by user {ReporterId} for reason: {Reason}", 
+                reviewId, reporterId, request.Reason);
+
         return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error reporting review {ReviewId}", reviewId);
+            return Result.Fail("Failed to report review", "REPORT_REVIEW_ERROR");
+        }
     }
 
     public async Task<Result> LikeReviewAsync(
@@ -724,9 +1157,46 @@ public class ReviewService : BaseService, IReviewService
         Guid userId,
         CancellationToken cancellationToken)
     {
-        // Simplified like implementation
-        // In a real implementation, you would create a ReviewLike entity
+        try
+        {
+            // Check if review exists
+            var review = await _unitOfWork.ReadRepository<Review>()
+                .FirstOrDefaultAsync(r => r.Id == reviewId, cancellationToken: cancellationToken);
+
+            if (review == null)
+            {
+                return Result.Fail("Review not found", "REVIEW_NOT_FOUND");
+            }
+
+            // Check if user already liked this review
+            var existingLike = await _unitOfWork.ReadRepository<ReviewLike>()
+                .FirstOrDefaultAsync(rl => rl.ReviewId == reviewId && rl.UserId == userId, 
+                    cancellationToken: cancellationToken);
+
+            if (existingLike != null)
+            {
+                return Result.Fail("You have already liked this review", "ALREADY_LIKED");
+            }
+
+            // Create review like
+            var like = new ReviewLike
+            {
+                Id = Guid.NewGuid(),
+                ReviewId = reviewId,
+                UserId = userId,
+                LikedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.Repository<ReviewLike>().AddAsync(like, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error liking review {ReviewId}", reviewId);
+            return Result.Fail("Failed to like review", "LIKE_REVIEW_ERROR");
+        }
     }
 
     public async Task<Result> UnlikeReviewAsync(
@@ -746,9 +1216,29 @@ public class ReviewService : BaseService, IReviewService
         Guid userId,
         CancellationToken cancellationToken)
     {
-        // Simplified unlike implementation
-        // In a real implementation, you would remove the ReviewLike entity
+        try
+        {
+            // Find existing like
+            var existingLike = await _unitOfWork.ReadRepository<ReviewLike>()
+                .FirstOrDefaultAsync(rl => rl.ReviewId == reviewId && rl.UserId == userId, 
+                    cancellationToken: cancellationToken);
+
+            if (existingLike == null)
+            {
+                return Result.Fail("You have not liked this review", "NOT_LIKED");
+            }
+
+            // Remove the like
+            _unitOfWork.Repository<ReviewLike>().Delete(existingLike);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error unliking review {ReviewId}", reviewId);
+            return Result.Fail("Failed to unlike review", "UNLIKE_REVIEW_ERROR");
+        }
     }
 
     #endregion

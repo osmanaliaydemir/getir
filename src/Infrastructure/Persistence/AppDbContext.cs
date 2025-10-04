@@ -34,12 +34,24 @@ public class AppDbContext : DbContext
     public DbSet<Review> Reviews { get; set; }
     public DbSet<ReviewTag> ReviewTags { get; set; }
     public DbSet<ReviewHelpful> ReviewHelpfuls { get; set; }
+    public DbSet<ReviewModerationLog> ReviewModerationLogs { get; set; }
+    public DbSet<ReviewReport> ReviewReports { get; set; }
+    public DbSet<ReviewLike> ReviewLikes { get; set; }
+    public DbSet<ReviewBookmark> ReviewBookmarks { get; set; }
     public DbSet<Rating> Ratings { get; set; }
     public DbSet<RatingHistory> RatingHistories { get; set; }
     public DbSet<DeliveryZonePoint> DeliveryZonePoints { get; set; }
     public DbSet<MerchantOnboarding> MerchantOnboardings { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<SystemNotification> SystemNotifications { get; set; }
+    
+    // Payment entities
+    public DbSet<Payment> Payments { get; set; }
+    public DbSet<CourierCashCollection> CourierCashCollections { get; set; }
+    public DbSet<CashSettlement> CashSettlements { get; set; }
+    public DbSet<CashPaymentSecurity> CashPaymentSecurities { get; set; }
+    public DbSet<CashPaymentEvidence> CashPaymentEvidences { get; set; }
+    public DbSet<CashPaymentAuditLog> CashPaymentAuditLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -326,6 +338,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.RevieweeType).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Comment).IsRequired().HasMaxLength(500);
             entity.Property(e => e.ModerationNotes).HasMaxLength(500);
+            entity.Property(e => e.ModeratorNotes).HasMaxLength(500);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
             
             entity.HasIndex(e => new { e.RevieweeId, e.RevieweeType });
@@ -373,11 +386,106 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(e => e.VotedAt).HasDefaultValueSql("GETUTCDATE()");
             
             entity.HasIndex(e => new { e.ReviewId, e.UserId }).IsUnique();
             
             entity.HasOne(e => e.Review)
                 .WithMany(r => r.ReviewHelpfuls)
+                .HasForeignKey(e => e.ReviewId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ReviewModerationLog configuration
+        modelBuilder.Entity<ReviewModerationLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Action).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            entity.Property(e => e.ModeratedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.ReviewId);
+            entity.HasIndex(e => e.ModeratorId);
+            entity.HasIndex(e => e.ModeratedAt);
+            
+            entity.HasOne(e => e.Review)
+                .WithMany()
+                .HasForeignKey(e => e.ReviewId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.Moderator)
+                .WithMany()
+                .HasForeignKey(e => e.ModeratorId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ReviewReport configuration
+        modelBuilder.Entity<ReviewReport>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Reason).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Details).HasMaxLength(500);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Pending");
+            entity.Property(e => e.ReviewNotes).HasMaxLength(500);
+            entity.Property(e => e.ReportedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.ReviewId);
+            entity.HasIndex(e => e.ReporterId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.ReportedAt);
+            
+            entity.HasOne(e => e.Review)
+                .WithMany()
+                .HasForeignKey(e => e.ReviewId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.Reporter)
+                .WithMany()
+                .HasForeignKey(e => e.ReporterId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.Reviewer)
+                .WithMany()
+                .HasForeignKey(e => e.ReviewedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ReviewLike configuration
+        modelBuilder.Entity<ReviewLike>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.LikedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => new { e.ReviewId, e.UserId }).IsUnique();
+            entity.HasIndex(e => e.LikedAt);
+            
+            entity.HasOne(e => e.Review)
+                .WithMany()
+                .HasForeignKey(e => e.ReviewId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ReviewBookmark configuration
+        modelBuilder.Entity<ReviewBookmark>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.BookmarkedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => new { e.ReviewId, e.UserId }).IsUnique();
+            entity.HasIndex(e => e.BookmarkedAt);
+            
+            entity.HasOne(e => e.Review)
+                .WithMany()
                 .HasForeignKey(e => e.ReviewId)
                 .OnDelete(DeleteBehavior.Cascade);
                 
@@ -464,6 +572,177 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.CreatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Payment configuration
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.PaymentMethod).IsRequired().HasConversion<int>();
+            entity.Property(e => e.Status).IsRequired().HasConversion<int>();
+            entity.Property(e => e.Amount).HasPrecision(18, 2);
+            entity.Property(e => e.ChangeAmount).HasPrecision(18, 2);
+            entity.Property(e => e.RefundAmount).HasPrecision(18, 2);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            entity.Property(e => e.FailureReason).HasMaxLength(500);
+            entity.Property(e => e.ExternalTransactionId).HasMaxLength(100);
+            entity.Property(e => e.ExternalResponse).HasMaxLength(2000);
+            entity.Property(e => e.RefundReason).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => e.CollectedByCourierId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.CreatedAt);
+            
+            entity.HasOne(e => e.Order)
+                .WithMany()
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.CollectedByCourier)
+                .WithMany()
+                .HasForeignKey(e => e.CollectedByCourierId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // CourierCashCollection configuration
+        modelBuilder.Entity<CourierCashCollection>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.CollectedAmount).HasPrecision(18, 2);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50).HasDefaultValue("Collected");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.PaymentId);
+            entity.HasIndex(e => e.CourierId);
+            entity.HasIndex(e => e.CollectedAt);
+            
+            entity.HasOne(e => e.Payment)
+                .WithMany(p => p.CourierCashCollections)
+                .HasForeignKey(e => e.PaymentId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.Courier)
+                .WithMany()
+                .HasForeignKey(e => e.CourierId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // CashSettlement configuration
+        modelBuilder.Entity<CashSettlement>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
+            entity.Property(e => e.Commission).HasPrecision(18, 2);
+            entity.Property(e => e.NetAmount).HasPrecision(18, 2);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50).HasDefaultValue("Pending");
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            entity.Property(e => e.BankTransferReference).HasMaxLength(100);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.MerchantId);
+            entity.HasIndex(e => e.SettlementDate);
+            entity.HasIndex(e => e.Status);
+            
+            entity.HasOne(e => e.Merchant)
+                .WithMany()
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.ProcessedByAdmin)
+                .WithMany()
+                .HasForeignKey(e => e.ProcessedByAdminId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // CashPaymentSecurity configuration
+        modelBuilder.Entity<CashPaymentSecurity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.CalculatedChange).HasPrecision(18, 2);
+            entity.Property(e => e.GivenChange).HasPrecision(18, 2);
+            entity.Property(e => e.ChangeDifference).HasPrecision(18, 2);
+            entity.Property(e => e.FakeMoneyNotes).HasMaxLength(500);
+            entity.Property(e => e.IdentityVerificationType).HasMaxLength(50);
+            entity.Property(e => e.IdentityNumberHash).HasMaxLength(256);
+            entity.Property(e => e.RiskFactors).HasMaxLength(1000);
+            entity.Property(e => e.SecurityNotes).HasMaxLength(1000);
+            entity.Property(e => e.RiskLevel).IsRequired().HasConversion<int>().HasDefaultValue(Domain.Enums.SecurityRiskLevel.Low);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.PaymentId).IsUnique();
+            
+            entity.HasOne(e => e.Payment)
+                .WithOne()
+                .HasForeignKey<CashPaymentSecurity>(e => e.PaymentId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.ApprovedByAdmin)
+                .WithMany()
+                .HasForeignKey(e => e.ApprovedByAdminId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // CashPaymentEvidence configuration
+        modelBuilder.Entity<CashPaymentEvidence>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.EvidenceType).IsRequired().HasConversion<int>();
+            entity.Property(e => e.FileUrl).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.MimeType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.FileHash).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.DeviceInfo).HasMaxLength(500);
+            entity.Property(e => e.Status).IsRequired().HasConversion<int>().HasDefaultValue(Domain.Enums.EvidenceStatus.Pending);
+            entity.Property(e => e.VerificationNotes).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.PaymentId);
+            entity.HasIndex(e => e.CourierId);
+            entity.HasIndex(e => e.EvidenceType);
+            entity.HasIndex(e => e.Status);
+            
+            entity.HasOne(e => e.Payment)
+                .WithMany()
+                .HasForeignKey(e => e.PaymentId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.Courier)
+                .WithMany()
+                .HasForeignKey(e => e.CourierId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.VerifiedByAdmin)
+                .WithMany()
+                .HasForeignKey(e => e.VerifiedByAdminId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // CashPaymentAuditLog configuration
+        modelBuilder.Entity<CashPaymentAuditLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.EventType).IsRequired().HasConversion<int>();
+            entity.Property(e => e.SeverityLevel).IsRequired().HasConversion<int>();
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Details).HasMaxLength(2000);
+            entity.Property(e => e.RiskLevel).HasConversion<int>();
+            entity.Property(e => e.IpAddress).HasMaxLength(45);
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.Property(e => e.DeviceInfo).HasMaxLength(500);
+            entity.Property(e => e.SessionId).HasMaxLength(100);
+            entity.Property(e => e.RequestId).HasMaxLength(50);
+            entity.Property(e => e.CorrelationId).HasMaxLength(50);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.PaymentId);
+            entity.HasIndex(e => e.CourierId);
+            entity.HasIndex(e => e.EventType);
+            entity.HasIndex(e => e.SeverityLevel);
+            entity.HasIndex(e => e.CreatedAt);
         });
     }
 }

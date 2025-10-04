@@ -567,15 +567,14 @@ public class MerchantDocumentService : IMerchantDocumentService
         try
         {
             // Simplified statistics implementation
-            var response = new MerchantDocumentStatisticsResponse(
-                TotalDocuments: 0,
-                PendingDocuments: 0,
-                ApprovedDocuments: 0,
-                RejectedDocuments: 0,
-                ExpiredDocuments: 0,
-                DocumentsExpiringSoon: 0,
-                LastUpdated: DateTime.UtcNow
-            );
+            var response = new MerchantDocumentStatisticsResponse
+            {
+                TotalDocuments = 0,
+                PendingDocuments = 0,
+                ApprovedDocuments = 0,
+                RejectedDocuments = 0,
+                ExpiredDocuments = 0
+            };
 
             return Result.Ok(response);
         }
@@ -594,12 +593,13 @@ public class MerchantDocumentService : IMerchantDocumentService
         try
         {
             // Simplified bulk verification implementation
-            var response = new BulkVerifyDocumentsResponse(
-                TotalProcessed: request.DocumentIds.Count,
-                SuccessCount: 0,
-                FailureCount: 0,
-                Errors: new List<string>()
-            );
+            var response = new BulkVerifyDocumentsResponse
+            {
+                TotalDocuments = request.DocumentIds.Count,
+                SuccessfulVerifications = 0,
+                FailedVerifications = 0,
+                Errors = new List<string>()
+            };
 
             return Result.Ok(response);
         }

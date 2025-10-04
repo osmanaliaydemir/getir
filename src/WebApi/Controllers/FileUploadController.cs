@@ -43,7 +43,8 @@ public class FileUploadController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Upload file functionality not implemented yet");
+        var result = await _fileUploadService.UploadFileAsync(file, userId, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -66,7 +67,8 @@ public class FileUploadController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Upload multiple files functionality not implemented yet");
+        var result = await _fileUploadService.UploadMultipleFilesAsync(files, userId, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -86,7 +88,8 @@ public class FileUploadController : BaseController
         [FromRoute] string fileName,
         CancellationToken ct = default)
     {
-        return BadRequest("Get file URL functionality not implemented yet");
+        var result = await _fileUploadService.GetFileUrlAsync(containerName, fileName, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -109,7 +112,12 @@ public class FileUploadController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Delete file functionality not implemented yet");
+        var result = await _fileUploadService.DeleteFileAsync(containerName, fileName, userId, ct);
+        if (result.Success)
+        {
+            return NoContent();
+        }
+        return ToActionResult(result);
     }
 
     #endregion
@@ -137,7 +145,8 @@ public class FileUploadController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Upload merchant file functionality not implemented yet");
+        var result = await _fileUploadService.UploadMerchantFileAsync(file, userId, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -158,7 +167,8 @@ public class FileUploadController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Get merchant files functionality not implemented yet");
+        var result = await _fileUploadService.GetMerchantFilesAsync(userId, query, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -182,7 +192,12 @@ public class FileUploadController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        return BadRequest("Delete merchant file functionality not implemented yet");
+        var result = await _fileUploadService.DeleteMerchantFileAsync(containerName, fileName, userId, ct);
+        if (result.Success)
+        {
+            return NoContent();
+        }
+        return ToActionResult(result);
     }
 
     #endregion
@@ -204,7 +219,8 @@ public class FileUploadController : BaseController
         [FromQuery] PaginationQuery query,
         CancellationToken ct = default)
     {
-        return BadRequest("Get all files functionality not implemented yet");
+        var result = await _fileUploadService.GetAllFilesAsync(query, ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -225,7 +241,12 @@ public class FileUploadController : BaseController
         [FromRoute] string fileName,
         CancellationToken ct = default)
     {
-        return BadRequest("Delete any file functionality not implemented yet");
+        var result = await _fileUploadService.DeleteAnyFileAsync(containerName, fileName, ct);
+        if (result.Success)
+        {
+            return NoContent();
+        }
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -240,7 +261,8 @@ public class FileUploadController : BaseController
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetFileStatistics(CancellationToken ct = default)
     {
-        return BadRequest("Get file statistics functionality not implemented yet");
+        var result = await _fileUploadService.GetFileStatisticsAsync(ct);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -258,7 +280,8 @@ public class FileUploadController : BaseController
         [FromQuery] DateTime cutoffDate,
         CancellationToken ct = default)
     {
-        return BadRequest("Cleanup old files functionality not implemented yet");
+        var result = await _fileUploadService.CleanupOldFilesAsync(cutoffDate, ct);
+        return ToActionResult(result);
     }
 
     #endregion

@@ -182,20 +182,17 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             var response = new CashPaymentSecurityResponse(
                 security.Id,
                 security.PaymentId,
-                security.ChangeCalculationVerified,
-                security.CalculatedChange,
+                security.Payment.CollectedByCourierId ?? Guid.Empty, // CourierId
                 security.GivenChange,
-                security.ChangeDifference,
+                security.CalculatedChange,
+                security.ChangeCalculationVerified,
+                security.IdentityVerificationType ?? "", // IdentityType
+                security.CustomerIdentityVerified, // IdentityVerified
                 security.FakeMoneyCheckPerformed,
                 security.FakeMoneyDetected,
-                security.FakeMoneyNotes,
-                security.CustomerIdentityVerified,
-                security.IdentityVerificationType,
-                security.IdentityNumberHash,
+                security.SecurityNotes ?? "", // SecurityNotes
                 security.RiskLevel,
-                security.RiskFactors,
-                security.SecurityNotes,
-                security.RequiresManualApproval,
+                security.RequiresManualApproval ? "Pending" : "Approved", // Status
                 security.ApprovedByAdminId,
                 security.ApprovedAt,
                 security.CreatedAt,
@@ -447,49 +444,620 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
         }
     }
 
+    private string ComputeFileHash(byte[] fileData)
+    {
+        using var sha256 = SHA256.Create();
+        var hashBytes = sha256.ComputeHash(fileData);
+        return Convert.ToBase64String(hashBytes);
+    }
+
+    private string ComputeHash(string input)
+    {
+        using var sha256 = SHA256.Create();
+        var inputBytes = System.Text.Encoding.UTF8.GetBytes(input);
+        var hashBytes = sha256.ComputeHash(inputBytes);
+        return Convert.ToBase64String(hashBytes);
+    }
+
+    private async Task<bool> PerformIdentityVerification(string identityType, string identityNumber, CancellationToken cancellationToken)
+    {
+        // Basit kimlik doğrulama - gerçek implementasyonda external API kullanılabilir
+        await Task.Delay(100, cancellationToken); // Simulate API call
+        
+        // Basit validasyon kuralları
+        return identityType.ToLower() switch
+        {
+            "tc" => identityNumber.Length == 11 && identityNumber.All(char.IsDigit),
+            "passport" => identityNumber.Length >= 6,
+            "driving_license" => identityNumber.Length >= 8,
+            _ => false
+        };
+    }
+
     // Diğer metodlar için placeholder'lar (implementasyon devam edecek)
-    public Task<Result<CashPaymentEvidenceResponse>> UpdateEvidenceAsync(Guid evidenceId, UpdateCashPaymentEvidenceRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<CashPaymentEvidenceResponse>> UpdateEvidenceAsync(Guid evidenceId, UpdateCashPaymentEvidenceRequest request, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        try
+        {
+            // Evidence var mı kontrol et
+            var evidence = await _unitOfWork.ReadRepository<CashPaymentEvidence>()
+                .FirstOrDefaultAsync(e => e.Id == evidenceId, cancellationToken: cancellationToken);
+
+            if (evidence == null)
+            {
+                return Result.Fail<CashPaymentEvidenceResponse>("Evidence not found", "EVIDENCE_NOT_FOUND");
+            }
+
+            // Güncelleme izinleri kontrol et
+            if (evidence.Status == EvidenceStatus.Verified || evidence.Status == EvidenceStatus.Rejected)
+            {
+                return Result.Fail<CashPaymentEvidenceResponse>("Cannot update verified or rejected evidence", "EVIDENCE_LOCKED");
+            }
+
+            // Dosya güncelleme
+            if (request.FileData != null)
+            {
+                var fileHash = ComputeFileHash(request.FileData);
+                
+                // Dosyayı storage'a yükle
+                var uploadRequest = new FileUploadRequest(
+                    request.FileName ?? "evidence_update.jpg",
+                    request.FileData,
+                    request.MimeType ?? "image/jpeg",
+                    "cash-payment-evidence",
+                    FileCategory.Document,
+                    request.Description,
+                    evidence.PaymentId,
+                    "Payment"
+                );
+
+                var uploadResult = await _fileStorageService.UploadFileAsync(uploadRequest, cancellationToken);
+                if (!uploadResult.Success)
+                {
+                    return Result.Fail<CashPaymentEvidenceResponse>("Failed to upload file", "FILE_UPLOAD_FAILED");
+                }
+
+                evidence.FileUrl = uploadResult.Value.BlobUrl;
+                evidence.FileSize = request.FileData.Length;
+                evidence.MimeType = request.MimeType ?? "image/jpeg";
+                evidence.FileHash = fileHash;
+            }
+
+            // Diğer alanları güncelle
+            if (!string.IsNullOrEmpty(request.Description))
+                evidence.Description = request.Description;
+
+            if (request.Latitude.HasValue)
+                evidence.Latitude = request.Latitude.Value;
+
+            if (request.Longitude.HasValue)
+                evidence.Longitude = request.Longitude.Value;
+
+            if (!string.IsNullOrEmpty(request.DeviceInfo))
+                evidence.DeviceInfo = request.DeviceInfo;
+
+            evidence.UpdatedAt = DateTime.UtcNow;
+
+            _unitOfWork.Repository<CashPaymentEvidence>().Update(evidence);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Audit log
+            await CreateAuditLogAsync(
+                evidence.PaymentId,
+                evidence.CourierId,
+                AuditEventType.EvidenceUpdated,
+                AuditSeverityLevel.Information,
+                "Evidence Updated",
+                $"Evidence {evidenceId} was updated",
+                cancellationToken: cancellationToken
+            );
+
+            var response = new CashPaymentEvidenceResponse(
+                evidence.Id,
+                evidence.PaymentId,
+                evidence.CourierId,
+                evidence.EvidenceType,
+                evidence.FileUrl,
+                evidence.FileSize,
+                evidence.MimeType,
+                evidence.FileHash,
+                evidence.Description,
+                evidence.Latitude,
+                evidence.Longitude,
+                evidence.DeviceInfo,
+                evidence.Status,
+                evidence.VerificationNotes,
+                evidence.VerifiedByAdminId,
+                evidence.VerifiedAt,
+                evidence.CreatedAt,
+                evidence.UpdatedAt
+            );
+
+            return Result.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogException(ex, "UpdateEvidence", new { EvidenceId = evidenceId });
+            return Result.Fail<CashPaymentEvidenceResponse>("Failed to update evidence", "UPDATE_EVIDENCE_FAILED");
+        }
     }
 
-    public Task<Result<PagedResult<CashPaymentEvidenceResponse>>> GetPaymentEvidenceAsync(Guid paymentId, PaginationQuery query, CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<CashPaymentEvidenceResponse>>> GetPaymentEvidenceAsync(Guid paymentId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        try
+        {
+            // Payment var mı kontrol et
+            var payment = await _unitOfWork.ReadRepository<Payment>()
+                .FirstOrDefaultAsync(p => p.Id == paymentId, cancellationToken: cancellationToken);
+
+            if (payment == null)
+            {
+                return Result.Fail<PagedResult<CashPaymentEvidenceResponse>>("Payment not found", "PAYMENT_NOT_FOUND");
+            }
+
+            // Evidence'ları getir
+            var evidenceList = await _unitOfWork.ReadRepository<CashPaymentEvidence>()
+                .GetPagedAsync(
+                    e => e.PaymentId == paymentId,
+                    e => e.CreatedAt,
+                    false, // descending order
+                    query.Page,
+                    query.PageSize,
+                    cancellationToken: cancellationToken
+                );
+
+            var totalCount = await _unitOfWork.ReadRepository<CashPaymentEvidence>()
+                .CountAsync(e => e.PaymentId == paymentId, cancellationToken);
+
+            var responses = evidenceList.Select(e => new CashPaymentEvidenceResponse(
+                e.Id,
+                e.PaymentId,
+                e.CourierId,
+                e.EvidenceType,
+                e.FileUrl,
+                e.FileSize,
+                e.MimeType,
+                e.FileHash,
+                e.Description,
+                e.Latitude,
+                e.Longitude,
+                e.DeviceInfo,
+                e.Status,
+                e.VerificationNotes,
+                e.VerifiedByAdminId,
+                e.VerifiedAt,
+                e.CreatedAt,
+                e.UpdatedAt
+            )).ToList();
+
+            var pagedResult = PagedResult<CashPaymentEvidenceResponse>.Create(
+                responses,
+                totalCount,
+                query.Page,
+                query.PageSize);
+
+            return Result.Ok(pagedResult);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogException(ex, "GetPaymentEvidence", new { PaymentId = paymentId });
+            return Result.Fail<PagedResult<CashPaymentEvidenceResponse>>("Failed to get payment evidence", "GET_EVIDENCE_FAILED");
+        }
     }
 
-    public Task<Result<CashPaymentSecurityResponse>> UpdateSecurityRecordAsync(Guid securityId, UpdateCashPaymentSecurityRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<CashPaymentSecurityResponse>> UpdateSecurityRecordAsync(Guid securityId, UpdateCashPaymentSecurityRequest request, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        try
+        {
+            // Security record var mı kontrol et
+            var securityRecord = await _unitOfWork.ReadRepository<CashPaymentSecurity>()
+                .FirstOrDefaultAsync(s => s.Id == securityId, cancellationToken: cancellationToken);
+
+            if (securityRecord == null)
+            {
+                return Result.Fail<CashPaymentSecurityResponse>("Security record not found", "SECURITY_RECORD_NOT_FOUND");
+            }
+
+            // Güncelleme izinleri kontrol et - Status property'si yok, RequiresManualApproval kullan
+            if (securityRecord.RequiresManualApproval && securityRecord.ApprovedAt.HasValue)
+            {
+                return Result.Fail<CashPaymentSecurityResponse>("Cannot update approved security record", "SECURITY_RECORD_LOCKED");
+            }
+
+            // Güncelleme alanları
+            if (request.GivenChange.HasValue)
+                securityRecord.GivenChange = request.GivenChange.Value;
+
+            if (request.CalculatedChange.HasValue)
+                securityRecord.CalculatedChange = request.CalculatedChange.Value;
+
+            if (request.ChangeCalculationVerified.HasValue)
+                securityRecord.ChangeCalculationVerified = request.ChangeCalculationVerified.Value;
+
+            if (!string.IsNullOrEmpty(request.IdentityType))
+                securityRecord.IdentityVerificationType = request.IdentityType;
+
+            if (!string.IsNullOrEmpty(request.IdentityNumberHash))
+                securityRecord.IdentityNumberHash = request.IdentityNumberHash;
+
+            if (request.IdentityVerified.HasValue)
+                securityRecord.CustomerIdentityVerified = request.IdentityVerified.Value;
+
+            if (request.FakeMoneyCheckPerformed.HasValue)
+                securityRecord.FakeMoneyCheckPerformed = request.FakeMoneyCheckPerformed.Value;
+
+            if (request.FakeMoneyDetected.HasValue)
+                securityRecord.FakeMoneyDetected = request.FakeMoneyDetected.Value;
+
+            if (!string.IsNullOrEmpty(request.SecurityNotes))
+                securityRecord.SecurityNotes = request.SecurityNotes;
+
+            if (request.RiskLevel.HasValue)
+                securityRecord.RiskLevel = request.RiskLevel.Value;
+
+            securityRecord.UpdatedAt = DateTime.UtcNow;
+
+            _unitOfWork.Repository<CashPaymentSecurity>().Update(securityRecord);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Audit log
+            await CreateAuditLogAsync(
+                securityRecord.PaymentId,
+                securityRecord.Payment.CollectedByCourierId,
+                AuditEventType.SecurityRecordUpdated,
+                AuditSeverityLevel.Information,
+                "Security Record Updated",
+                $"Security record {securityId} was updated",
+                securityRecord.RiskLevel,
+                cancellationToken: cancellationToken
+            );
+
+            var response = new CashPaymentSecurityResponse(
+                securityRecord.Id,
+                securityRecord.PaymentId,
+                securityRecord.Payment.CollectedByCourierId ?? Guid.Empty, // CourierId
+                securityRecord.GivenChange,
+                securityRecord.CalculatedChange,
+                securityRecord.ChangeCalculationVerified,
+                securityRecord.IdentityVerificationType ?? "", // IdentityType
+                securityRecord.CustomerIdentityVerified, // IdentityVerified
+                securityRecord.FakeMoneyCheckPerformed,
+                securityRecord.FakeMoneyDetected,
+                securityRecord.SecurityNotes ?? "", // SecurityNotes
+                securityRecord.RiskLevel,
+                securityRecord.RequiresManualApproval ? "Pending" : "Approved", // Status
+                securityRecord.ApprovedByAdminId,
+                securityRecord.ApprovedAt,
+                securityRecord.CreatedAt,
+                securityRecord.UpdatedAt
+            );
+
+            return Result.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogException(ex, "UpdateSecurityRecord", new { SecurityId = securityId });
+            return Result.Fail<CashPaymentSecurityResponse>("Failed to update security record", "UPDATE_SECURITY_RECORD_FAILED");
+        }
     }
 
-    public Task<Result<CashPaymentSecurityResponse>> GetPaymentSecurityAsync(Guid paymentId, CancellationToken cancellationToken = default)
+    public async Task<Result<CashPaymentSecurityResponse>> GetPaymentSecurityAsync(Guid paymentId, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        try
+        {
+            // Payment var mı kontrol et
+            var payment = await _unitOfWork.ReadRepository<Payment>()
+                .FirstOrDefaultAsync(p => p.Id == paymentId, cancellationToken: cancellationToken);
+
+            if (payment == null)
+            {
+                return Result.Fail<CashPaymentSecurityResponse>("Payment not found", "PAYMENT_NOT_FOUND");
+            }
+
+            // Security record getir
+            var securityRecord = await _unitOfWork.ReadRepository<CashPaymentSecurity>()
+                .FirstOrDefaultAsync(s => s.PaymentId == paymentId, cancellationToken: cancellationToken);
+
+            if (securityRecord == null)
+            {
+                return Result.Fail<CashPaymentSecurityResponse>("Security record not found", "SECURITY_RECORD_NOT_FOUND");
+            }
+
+            var response = new CashPaymentSecurityResponse(
+                securityRecord.Id,
+                securityRecord.PaymentId,
+                securityRecord.Payment.CollectedByCourierId ?? Guid.Empty, // CourierId
+                securityRecord.GivenChange,
+                securityRecord.CalculatedChange,
+                securityRecord.ChangeCalculationVerified,
+                securityRecord.IdentityVerificationType ?? "",
+                securityRecord.CustomerIdentityVerified,
+                securityRecord.FakeMoneyCheckPerformed,
+                securityRecord.FakeMoneyDetected,
+                securityRecord.SecurityNotes ?? "",
+                securityRecord.RiskLevel,
+                securityRecord.RequiresManualApproval ? "Pending" : "Approved", // Status
+                securityRecord.ApprovedByAdminId,
+                securityRecord.ApprovedAt,
+                securityRecord.CreatedAt,
+                securityRecord.UpdatedAt
+            );
+
+            return Result.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogException(ex, "GetPaymentSecurity", new { PaymentId = paymentId });
+            return Result.Fail<CashPaymentSecurityResponse>("Failed to get payment security", "GET_PAYMENT_SECURITY_FAILED");
+        }
     }
 
-    public Task<Result<bool>> PerformFakeMoneyCheckAsync(Guid paymentId, string notes, CancellationToken cancellationToken = default)
+    public async Task<Result<bool>> PerformFakeMoneyCheckAsync(Guid paymentId, string notes, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        try
+        {
+            // Payment var mı kontrol et
+            var payment = await _unitOfWork.ReadRepository<Payment>()
+                .FirstOrDefaultAsync(p => p.Id == paymentId, cancellationToken: cancellationToken);
+
+            if (payment == null)
+            {
+                return Result.Fail<bool>("Payment not found", "PAYMENT_NOT_FOUND");
+            }
+
+            // Security record getir
+            var securityRecord = await _unitOfWork.ReadRepository<CashPaymentSecurity>()
+                .FirstOrDefaultAsync(s => s.PaymentId == paymentId, cancellationToken: cancellationToken);
+
+            if (securityRecord == null)
+            {
+                return Result.Fail<bool>("Security record not found", "SECURITY_RECORD_NOT_FOUND");
+            }
+
+            // Sahte para kontrolü yapıldı olarak işaretle
+            securityRecord.FakeMoneyCheckPerformed = true;
+            securityRecord.SecurityNotes = string.IsNullOrEmpty(securityRecord.SecurityNotes) 
+                ? notes 
+                : $"{securityRecord.SecurityNotes}\nFake Money Check: {notes}";
+            securityRecord.UpdatedAt = DateTime.UtcNow;
+
+            _unitOfWork.Repository<CashPaymentSecurity>().Update(securityRecord);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Audit log
+            await CreateAuditLogAsync(
+                paymentId,
+                securityRecord.Payment.CollectedByCourierId,
+                AuditEventType.FakeMoneyCheckPerformed,
+                AuditSeverityLevel.Information,
+                "Fake Money Check Performed",
+                $"Fake money check performed for payment {paymentId}. Notes: {notes}",
+                securityRecord.RiskLevel,
+                cancellationToken: cancellationToken
+            );
+
+            return Result.Ok(true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogException(ex, "PerformFakeMoneyCheck", new { PaymentId = paymentId });
+            return Result.Fail<bool>("Failed to perform fake money check", "FAKE_MONEY_CHECK_FAILED");
+        }
     }
 
-    public Task<Result<bool>> VerifyCustomerIdentityAsync(Guid paymentId, string identityType, string identityNumber, CancellationToken cancellationToken = default)
+    public async Task<Result<bool>> VerifyCustomerIdentityAsync(Guid paymentId, string identityType, string identityNumber, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        try
+        {
+            // Payment var mı kontrol et
+            var payment = await _unitOfWork.ReadRepository<Payment>()
+                .FirstOrDefaultAsync(p => p.Id == paymentId, cancellationToken: cancellationToken);
+
+            if (payment == null)
+            {
+                return Result.Fail<bool>("Payment not found", "PAYMENT_NOT_FOUND");
+            }
+
+            // Security record getir
+            var securityRecord = await _unitOfWork.ReadRepository<CashPaymentSecurity>()
+                .FirstOrDefaultAsync(s => s.PaymentId == paymentId, cancellationToken: cancellationToken);
+
+            if (securityRecord == null)
+            {
+                return Result.Fail<bool>("Security record not found", "SECURITY_RECORD_NOT_FOUND");
+            }
+
+            // Kimlik numarasını hash'le
+            var identityHash = ComputeHash(identityNumber);
+
+            // Kimlik doğrulama işlemi
+            var isVerified = await PerformIdentityVerification(identityType, identityNumber, cancellationToken);
+
+            // Security record'u güncelle
+            securityRecord.IdentityVerificationType = identityType;
+            securityRecord.IdentityNumberHash = identityHash;
+            securityRecord.CustomerIdentityVerified = isVerified;
+            securityRecord.SecurityNotes = string.IsNullOrEmpty(securityRecord.SecurityNotes) 
+                ? $"Identity verification: {identityType} - {(isVerified ? "Verified" : "Failed")}" 
+                : $"{securityRecord.SecurityNotes}\nIdentity verification: {identityType} - {(isVerified ? "Verified" : "Failed")}";
+            securityRecord.UpdatedAt = DateTime.UtcNow;
+
+            _unitOfWork.Repository<CashPaymentSecurity>().Update(securityRecord);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Audit log
+            await CreateAuditLogAsync(
+                paymentId,
+                securityRecord.Payment.CollectedByCourierId,
+                AuditEventType.IdentityVerificationPerformed,
+                isVerified ? AuditSeverityLevel.Information : AuditSeverityLevel.Warning,
+                "Identity Verification Performed",
+                $"Identity verification performed for payment {paymentId}. Type: {identityType}, Result: {(isVerified ? "Verified" : "Failed")}",
+                securityRecord.RiskLevel,
+                cancellationToken: cancellationToken
+            );
+
+            return Result.Ok(isVerified);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogException(ex, "VerifyCustomerIdentity", new { PaymentId = paymentId, IdentityType = identityType });
+            return Result.Fail<bool>("Failed to verify customer identity", "IDENTITY_VERIFICATION_FAILED");
+        }
     }
 
-    public Task<Result<PagedResult<CashPaymentSecurityResponse>>> GetPaymentsRequiringApprovalAsync(PaginationQuery query, CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<CashPaymentSecurityResponse>>> GetPaymentsRequiringApprovalAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        try
+        {
+            // Onay bekleyen security record'ları getir
+            var securityRecords = await _unitOfWork.ReadRepository<CashPaymentSecurity>()
+                .GetPagedAsync(
+                    s => s.RequiresManualApproval && !s.ApprovedAt.HasValue,
+                    s => s.CreatedAt,
+                    false, // descending order
+                    query.Page,
+                    query.PageSize,
+                    cancellationToken: cancellationToken
+                );
+
+            var totalCount = await _unitOfWork.ReadRepository<CashPaymentSecurity>()
+                .CountAsync(s => s.RequiresManualApproval && !s.ApprovedAt.HasValue, cancellationToken);
+
+            var responses = securityRecords.Select(s => new CashPaymentSecurityResponse(
+                s.Id,
+                s.PaymentId,
+                s.Payment.CollectedByCourierId ?? Guid.Empty, // CourierId
+                s.GivenChange,
+                s.CalculatedChange,
+                s.ChangeCalculationVerified,
+                s.IdentityVerificationType ?? "", // IdentityType
+                s.CustomerIdentityVerified, // IdentityVerified
+                s.FakeMoneyCheckPerformed,
+                s.FakeMoneyDetected,
+                s.SecurityNotes ?? "", // SecurityNotes
+                s.RiskLevel,
+                s.RequiresManualApproval ? "Pending" : "Approved", // Status
+                s.ApprovedByAdminId,
+                s.ApprovedAt,
+                s.CreatedAt,
+                s.UpdatedAt
+            )).ToList();
+
+            var pagedResult = PagedResult<CashPaymentSecurityResponse>.Create(
+                responses,
+                totalCount,
+                query.Page,
+                query.PageSize);
+
+            return Result.Ok(pagedResult);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogException(ex, "GetPaymentsRequiringApproval");
+            return Result.Fail<PagedResult<CashPaymentSecurityResponse>>("Failed to get payments requiring approval", "GET_PAYMENTS_REQUIRING_APPROVAL_FAILED");
+        }
     }
 
-    public Task<Result> ApproveSecurityRecordAsync(Guid securityId, Guid adminId, string notes, CancellationToken cancellationToken = default)
+    public async Task<Result> ApproveSecurityRecordAsync(Guid securityId, Guid adminId, string notes, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        try
+        {
+            // Security record var mı kontrol et
+            var securityRecord = await _unitOfWork.ReadRepository<CashPaymentSecurity>()
+                .FirstOrDefaultAsync(s => s.Id == securityId, cancellationToken: cancellationToken);
+
+            if (securityRecord == null)
+            {
+                return Result.Fail("Security record not found", "SECURITY_RECORD_NOT_FOUND");
+            }
+
+            // Zaten onaylanmış mı kontrol et
+            if (securityRecord.ApprovedAt.HasValue)
+            {
+                return Result.Fail("Security record is already approved", "ALREADY_APPROVED");
+            }
+
+            // Security record'u onayla
+            securityRecord.ApprovedByAdminId = adminId;
+            securityRecord.ApprovedAt = DateTime.UtcNow;
+            securityRecord.SecurityNotes = string.IsNullOrEmpty(securityRecord.SecurityNotes) 
+                ? $"Approved by admin {adminId}: {notes}" 
+                : $"{securityRecord.SecurityNotes}\nApproved by admin {adminId}: {notes}";
+            securityRecord.UpdatedAt = DateTime.UtcNow;
+
+            _unitOfWork.Repository<CashPaymentSecurity>().Update(securityRecord);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Audit log
+            await CreateAuditLogAsync(
+                securityRecord.PaymentId,
+                securityRecord.Payment.CollectedByCourierId,
+                AuditEventType.SecurityRecordApproved,
+                AuditSeverityLevel.Information,
+                "Security Record Approved",
+                $"Security record {securityId} was approved by admin {adminId}. Notes: {notes}",
+                securityRecord.RiskLevel,
+                cancellationToken: cancellationToken
+            );
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogException(ex, "ApproveSecurityRecord", new { SecurityId = securityId, AdminId = adminId });
+            return Result.Fail("Failed to approve security record", "APPROVE_SECURITY_RECORD_FAILED");
+        }
     }
 
-    public Task<Result> RejectSecurityRecordAsync(Guid securityId, Guid adminId, string reason, CancellationToken cancellationToken = default)
+    public async Task<Result> RejectSecurityRecordAsync(Guid securityId, Guid adminId, string reason, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        try
+        {
+            // Security record var mı kontrol et
+            var securityRecord = await _unitOfWork.ReadRepository<CashPaymentSecurity>()
+                .FirstOrDefaultAsync(s => s.Id == securityId, cancellationToken: cancellationToken);
+
+            if (securityRecord == null)
+            {
+                return Result.Fail("Security record not found", "SECURITY_RECORD_NOT_FOUND");
+            }
+
+            // Zaten reddedilmiş mi kontrol et - reddedilme durumu için özel bir field yok, sadece onaylanmamış olması yeterli
+            if (securityRecord.ApprovedAt.HasValue)
+            {
+                return Result.Fail("Security record is already processed", "ALREADY_PROCESSED");
+            }
+
+            // Security record'u reddet - reddedilme durumu için özel bir field yok, sadece not ekleyebiliriz
+            securityRecord.ApprovedByAdminId = adminId;
+            securityRecord.ApprovedAt = DateTime.UtcNow;
+            securityRecord.SecurityNotes = string.IsNullOrEmpty(securityRecord.SecurityNotes) 
+                ? $"Rejected by admin {adminId}: {reason}" 
+                : $"{securityRecord.SecurityNotes}\nRejected by admin {adminId}: {reason}";
+            securityRecord.UpdatedAt = DateTime.UtcNow;
+
+            _unitOfWork.Repository<CashPaymentSecurity>().Update(securityRecord);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Audit log
+            await CreateAuditLogAsync(
+                securityRecord.PaymentId,
+                securityRecord.Payment.CollectedByCourierId,
+                AuditEventType.SecurityRecordRejected,
+                AuditSeverityLevel.Warning,
+                "Security Record Rejected",
+                $"Security record {securityId} was rejected by admin {adminId}. Reason: {reason}",
+                securityRecord.RiskLevel,
+                cancellationToken: cancellationToken
+            );
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogException(ex, "RejectSecurityRecord", new { SecurityId = securityId, AdminId = adminId });
+            return Result.Fail("Failed to reject security record", "REJECT_SECURITY_RECORD_FAILED");
+        }
     }
 }

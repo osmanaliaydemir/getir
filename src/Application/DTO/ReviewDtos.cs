@@ -21,17 +21,17 @@ public record ReviewResponse(
     Guid ReviewerId,
     string ReviewerName,
     Guid RevieweeId,
-    string RevieweeName,
     string RevieweeType,
     Guid OrderId,
     int Rating,
     string Comment,
-    List<string> Tags,
+    bool IsApproved,
     DateTime CreatedAt,
     DateTime? UpdatedAt,
-    bool IsApproved,
+    List<string> Tags,
+    bool HasVoted,
     int HelpfulCount,
-    bool UserHasVotedHelpful);
+    int TotalOrders);
 
 public record ReviewStatsResponse(
     decimal AverageRating,
@@ -76,14 +76,14 @@ public record QualityMetricsResponse(
 
 // Review moderation DTOs
 public record ReviewModerationRequest(
-    bool IsApproved,
-    string? ModerationNotes = null);
+    string Action, // "approve", "reject", "flag"
+    string? Notes = null);
 
 public record ReviewModerationResponse(
     Guid ReviewId,
-    bool IsApproved,
-    string? ModerationNotes,
-    string ModeratorName,
+    string Action,
+    string? Notes,
+    Guid ModeratorId,
     DateTime ModeratedAt);
 
 public record PendingReviewResponse(
@@ -103,27 +103,36 @@ public record ReviewHelpfulRequest(
 
 public record ReviewHelpfulResponse(
     Guid ReviewId,
+    Guid UserId,
+    bool IsHelpful,
     int HelpfulCount,
     int NotHelpfulCount,
-    bool UserVote);
+    DateTime VotedAt);
 
 // Review search and filtering
 public record ReviewSearchQuery(
-    Guid? RevieweeId = null,
-    string? RevieweeType = null,
+    Guid? EntityId = null,
+    string? EntityType = null,
     int? MinRating = null,
     int? MaxRating = null,
-    DateTime? FromDate = null,
-    DateTime? ToDate = null,
-    bool? IsApproved = null,
-    string? Tag = null,
+    DateTime? DateFrom = null,
+    DateTime? DateTo = null,
+    string? SearchTerm = null,
+    bool HasTags = false,
+    List<string>? Tags = null,
+    string? SortBy = null,
+    bool SortDescending = true,
     int Page = 1,
     int PageSize = 20);
 
 public record ReviewSearchResponse(
-    PagedResult<ReviewResponse> Reviews,
-    ReviewStatsResponse Stats,
-    List<string> AvailableTags);
+    List<ReviewResponse> Reviews,
+    int TotalCount,
+    int Page,
+    int PageSize,
+    int TotalPages,
+    string? SearchTerm,
+    Dictionary<string, object>? Filters);
 
 // Rating calculation DTOs
 public record RatingCalculationRequest(
@@ -144,10 +153,15 @@ public record RatingCalculationResponse(
 public record ReviewAnalyticsResponse(
     Guid EntityId,
     string EntityType,
-    List<RatingHistoryResponse> RatingHistory,
-    List<ReviewTrendResponse> ReviewTrends,
-    List<TagFrequencyResponse> TagFrequencies,
-    ComparisonResponse Comparison);
+    int TotalReviews,
+    decimal AverageRating,
+    int HelpfulVotes,
+    int TotalVotes,
+    int FiveStarCount,
+    int OneStarCount,
+    Dictionary<int, int> RatingDistribution,
+    List<string> TopTags,
+    DateTime GeneratedAt);
 
 public record RatingHistoryResponse(
     DateTime Date,

@@ -1,5 +1,6 @@
 using Getir.Application.Common;
 using Getir.Application.DTO;
+using Microsoft.AspNetCore.Http;
 
 namespace Getir.Application.Services.FileUpload;
 
@@ -72,6 +73,60 @@ public interface IFileUploadIntegrationService
     /// </summary>
     Task<Result<string?>> GetProductImageAsync(
         Guid productId, 
+        CancellationToken cancellationToken = default);
+
+    // Additional methods for FileUploadController
+    Task<Result<FileUploadResponse>> UploadFileAsync(
+        IFormFile file,
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<IEnumerable<FileUploadResponse>>> UploadMultipleFilesAsync(
+        IFormFile[] files,
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<string>> GetFileUrlAsync(
+        string containerName,
+        string fileName,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> DeleteFileAsync(
+        string containerName,
+        string fileName,
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<FileUploadResponse>> UploadMerchantFileAsync(
+        IFormFile file,
+        Guid merchantId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<PagedResult<FileUploadResponse>>> GetMerchantFilesAsync(
+        Guid merchantId,
+        PaginationQuery query,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> DeleteMerchantFileAsync(
+        string containerName,
+        string fileName,
+        Guid merchantId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<PagedResult<FileUploadResponse>>> GetAllFilesAsync(
+        PaginationQuery query,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> DeleteAnyFileAsync(
+        string containerName,
+        string fileName,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<FileStatisticsResponse>> GetFileStatisticsAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<Result<int>> CleanupOldFilesAsync(
+        DateTime cutoffDate,
         CancellationToken cancellationToken = default);
 
 }

@@ -103,5 +103,35 @@ public enum AuditEventType
     /// <summary>
     /// Veri değişikliği
     /// </summary>
-    DataModification = 20
+    DataModification = 20,
+    
+    /// <summary>
+    /// Kanıt güncellendi
+    /// </summary>
+    EvidenceUpdated = 21,
+    
+    /// <summary>
+    /// Güvenlik kaydı güncellendi
+    /// </summary>
+    SecurityRecordUpdated = 22,
+    
+    /// <summary>
+    /// Güvenlik kaydı onaylandı
+    /// </summary>
+    SecurityRecordApproved = 23,
+    
+    /// <summary>
+    /// Güvenlik kaydı reddedildi
+    /// </summary>
+    SecurityRecordRejected = 24,
+    
+    /// <summary>
+    /// Sahte para kontrolü yapıldı
+    /// </summary>
+    FakeMoneyCheckPerformed = 25,
+    
+    /// <summary>
+    /// Kimlik doğrulama yapıldı
+    /// </summary>
+    IdentityVerificationPerformed = 26
 }

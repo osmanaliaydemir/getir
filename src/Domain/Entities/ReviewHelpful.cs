@@ -9,6 +9,7 @@ public class ReviewHelpful
     public Guid UserId { get; set; }
     public bool IsHelpful { get; set; } = true;
     public DateTime CreatedAt { get; set; }
+    public DateTime VotedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation properties
     public virtual Review Review { get; set; } = default!;

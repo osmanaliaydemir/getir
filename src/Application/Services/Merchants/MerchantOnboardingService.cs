@@ -427,7 +427,7 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         return await ExecuteWithPerformanceTracking(
             async () => await CompleteOnboardingStepInternalAsync(merchantId, stepId, request, cancellationToken),
             "CompleteOnboardingStep",
-            new { merchantId, stepId, request.StepType },
+            new { merchantId, stepId, request.StepName },
             cancellationToken);
     }
 
@@ -447,13 +447,11 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
 
         // Simplified step completion logic
         var response = new OnboardingStepResponse(
-            Id: stepId,
-            StepType: request.StepType,
-            Title: "Step Title",
+            StepName: "StepName",
+            DisplayName: "Step Title",
             Description: "Step Description",
             IsCompleted: true,
-            CompletedAt: DateTime.UtcNow,
-            Order: 1
+            IsRequired: true
         );
 
         return Result.Ok(response);
@@ -483,7 +481,6 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         }
 
         // Simplified submission logic
-        onboarding.Status = "Submitted";
         onboarding.UpdatedAt = DateTime.UtcNow;
         _unitOfWork.Repository<MerchantOnboarding>().Update(onboarding);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -517,20 +514,20 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         // Simplified checklist implementation
         var checklist = new List<OnboardingChecklistItem>
         {
-            new("Basic Information", "Complete your basic business information", onboarding.BasicInfoCompleted),
-            new("Business Details", "Add your business details and description", onboarding.BusinessInfoCompleted),
-            new("Working Hours", "Set your working hours", onboarding.WorkingHoursCompleted),
-            new("Delivery Zones", "Configure your delivery zones", onboarding.DeliveryZonesCompleted),
-            new("Products", "Add at least one product", onboarding.ProductsAdded),
-            new("Documents", "Upload required documents", onboarding.DocumentsUploaded)
+            new("Basic Information", "Complete your basic business information", onboarding.BasicInfoCompleted, true),
+            new("Business Details", "Add your business details and description", onboarding.BusinessInfoCompleted, true),
+            new("Working Hours", "Set your working hours", onboarding.WorkingHoursCompleted, true),
+            new("Delivery Zones", "Configure your delivery zones", onboarding.DeliveryZonesCompleted, true),
+            new("Products", "Add at least one product", onboarding.ProductsAdded, true),
+            new("Documents", "Upload required documents", onboarding.DocumentsUploaded, true)
         };
 
         var response = new OnboardingChecklistResponse(
             MerchantId: merchantId,
-            TotalSteps: checklist.Count,
-            CompletedSteps: checklist.Count(item => item.IsCompleted),
-            Checklist: checklist,
-            IsReadyForSubmission: checklist.All(item => item.IsCompleted)
+            Items: checklist,
+            CompletedCount: checklist.Count(item => item.IsCompleted),
+            TotalCount: checklist.Count,
+            CompletionPercentage: checklist.Count > 0 ? (decimal)checklist.Count(item => item.IsCompleted) / checklist.Count * 100 : 0
         );
 
         return Result.Ok(response);

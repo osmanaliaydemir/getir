@@ -21,8 +21,15 @@ public record CreateCashPaymentEvidenceRequest(
 /// Nakit ödeme kanıtı güncelleme isteği
 /// </summary>
 public record UpdateCashPaymentEvidenceRequest(
-    EvidenceStatus Status,
-    string? VerificationNotes);
+    byte[]? FileData = null,
+    string? FileName = null,
+    string? MimeType = null,
+    string? Description = null,
+    double? Latitude = null,
+    double? Longitude = null,
+    string? DeviceInfo = null,
+    EvidenceStatus? Status = null,
+    string? VerificationNotes = null);
 
 /// <summary>
 /// Nakit ödeme kanıtı yanıtı
@@ -66,10 +73,16 @@ public record CreateCashPaymentSecurityRequest(
 /// Nakit ödeme güvenlik güncelleme isteği
 /// </summary>
 public record UpdateCashPaymentSecurityRequest(
-    SecurityRiskLevel RiskLevel,
-    string? RiskFactors,
-    string? SecurityNotes,
-    bool RequiresManualApproval);
+    decimal? GivenChange = null,
+    decimal? CalculatedChange = null,
+    bool? ChangeCalculationVerified = null,
+    string? IdentityType = null,
+    string? IdentityNumberHash = null,
+    bool? IdentityVerified = null,
+    bool? FakeMoneyCheckPerformed = null,
+    bool? FakeMoneyDetected = null,
+    string? SecurityNotes = null,
+    SecurityRiskLevel? RiskLevel = null);
 
 /// <summary>
 /// Nakit ödeme güvenlik yanıtı
@@ -77,20 +90,17 @@ public record UpdateCashPaymentSecurityRequest(
 public record CashPaymentSecurityResponse(
     Guid Id,
     Guid PaymentId,
-    bool ChangeCalculationVerified,
-    decimal CalculatedChange,
+    Guid CourierId,
     decimal GivenChange,
-    decimal ChangeDifference,
+    decimal CalculatedChange,
+    bool ChangeCalculationVerified,
+    string IdentityType,
+    bool IdentityVerified,
     bool FakeMoneyCheckPerformed,
     bool FakeMoneyDetected,
-    string? FakeMoneyNotes,
-    bool CustomerIdentityVerified,
-    string? IdentityVerificationType,
-    string? IdentityNumberHash,
-    SecurityRiskLevel RiskLevel,
-    string? RiskFactors,
     string? SecurityNotes,
-    bool RequiresManualApproval,
+    SecurityRiskLevel RiskLevel,
+    string Status,
     Guid? ApprovedByAdminId,
     DateTime? ApprovedAt,
     DateTime CreatedAt,
