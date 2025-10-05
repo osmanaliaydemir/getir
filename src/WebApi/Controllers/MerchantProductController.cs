@@ -65,7 +65,7 @@ public class MerchantProductController : BaseController
         var result = await _productService.CreateMyProductAsync(request, userId, ct);
         if (result.Success)
         {
-            return Created($"/api/v1/merchants/products/{result.Value.Id}", result.Value);
+            return Created($"/api/v1/merchants/products/{result.Value!.Id}", result.Value);
         }
         return ToActionResult(result);
     }

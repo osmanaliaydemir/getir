@@ -198,7 +198,7 @@ public class EmailService : IEmailService
         }
     }
 
-    public async Task<Result<bool>> ValidateEmailAsync(
+    public Task<Result<bool>> ValidateEmailAsync(
         string emailAddress, 
         CancellationToken cancellationToken = default)
     {
@@ -206,19 +206,19 @@ public class EmailService : IEmailService
         {
             if (string.IsNullOrWhiteSpace(emailAddress))
             {
-                return Result.Fail<bool>("Email address is required", "EMAIL_ADDRESS_REQUIRED");
+                return Task.FromResult(Result.Fail<bool>("Email address is required", "EMAIL_ADDRESS_REQUIRED"));
             }
 
             // Basic email validation
             var emailPattern = @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
             var isValid = System.Text.RegularExpressions.Regex.IsMatch(emailAddress, emailPattern);
 
-            return Result.Ok(isValid);
+            return Task.FromResult(Result.Ok(isValid));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error validating email address");
-            return Result.Fail<bool>("Failed to validate email address", "EMAIL_VALIDATION_ERROR");
+            return Task.FromResult(Result.Fail<bool>("Failed to validate email address", "EMAIL_VALIDATION_ERROR"));
         }
     }
 

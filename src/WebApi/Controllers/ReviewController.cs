@@ -45,7 +45,7 @@ public class ReviewController : BaseController
         var result = await _reviewService.CreateReviewAsync(request, userId, ct);
         if (result.Success)
         {
-            return Created($"/api/v1/reviews/{result.Value.Id}", result.Value);
+            return Created($"/api/v1/reviews/{result.Value!.Id}", result.Value);
         }
         return ToActionResult(result);
     }

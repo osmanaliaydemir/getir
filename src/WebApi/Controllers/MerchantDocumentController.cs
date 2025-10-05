@@ -45,7 +45,7 @@ public class MerchantDocumentController : BaseController
         var result = await _merchantDocumentService.UploadDocumentAsync(request, file.OpenReadStream(), file.FileName, file.ContentType, GetCurrentUserId() ?? Guid.Empty, ct);
         if (result.Success)
         {
-            return Created($"/api/merchant-documents/{result.Value.Id}", result.Value);
+            return Created($"/api/merchant-documents/{result.Value!.Id}", result.Value);
         }
         return ToActionResult(result);
     }
@@ -65,7 +65,7 @@ public class MerchantDocumentController : BaseController
         [FromQuery] Guid? merchantId = null,
         [FromQuery] string? documentType = null,
         [FromQuery] string? status = null,
-        [FromQuery] PaginationQuery query = null,
+        [FromQuery] PaginationQuery? query = null,
         CancellationToken ct = default)
     {
         var filterQuery = new MerchantDocumentQuery
@@ -268,7 +268,7 @@ public class MerchantDocumentController : BaseController
         var result = await _merchantDocumentService.DownloadDocumentAsync(documentId, ct);
         if (result.Success)
         {
-            return File(result.Value, "application/octet-stream", $"document_{documentId}.pdf");
+            return File(result.Value!, "application/octet-stream", $"document_{documentId}.pdf");
         }
         return ToActionResult(result);
     }

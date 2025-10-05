@@ -45,7 +45,7 @@ public class CashPaymentSecurityController : BaseController
         var result = await _cashPaymentSecurityService.CreateEvidenceAsync(request, ct);
         if (result.Success)
         {
-            return Created($"/api/v1/cash-payment-security/evidence/{result.Value.Id}", result.Value);
+            return Created($"/api/v1/cash-payment-security/evidence/{result.Value!.Id}", result.Value);
         }
         return ToActionResult(result);
     }
@@ -117,7 +117,7 @@ public class CashPaymentSecurityController : BaseController
         var result = await _cashPaymentSecurityService.CreateSecurityRecordAsync(request, ct);
         if (result.Success)
         {
-            return Created($"/api/v1/cash-payment-security/security/{result.Value.Id}", result.Value);
+            return Created($"/api/v1/cash-payment-security/security/{result.Value!.Id}", result.Value);
         }
         return ToActionResult(result);
     }

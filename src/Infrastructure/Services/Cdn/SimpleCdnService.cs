@@ -20,7 +20,7 @@ public class SimpleCdnService : ICdnService
         _cdnBaseUrl = "https://cdn.getir.local"; // Development CDN URL
     }
 
-    public async Task<Result<string>> GetCdnUrlAsync(
+    public Task<Result<string>> GetCdnUrlAsync(
         string originalUrl, 
         string containerName,
         CancellationToken cancellationToken = default)
@@ -29,7 +29,7 @@ public class SimpleCdnService : ICdnService
         {
             if (string.IsNullOrEmpty(originalUrl))
             {
-                return Result.Fail<string>("Original URL is required", "INVALID_URL");
+                return Task.FromResult(Result.Fail<string>("Original URL is required", "INVALID_URL"));
             }
 
             // Convert local file URL to CDN URL
@@ -41,16 +41,16 @@ public class SimpleCdnService : ICdnService
                 containerName 
             });
 
-            return Result.Ok(cdnUrl);
+            return Task.FromResult(Result.Ok(cdnUrl));
         }
         catch (Exception ex)
         {
             _loggingService.LogError("Error generating CDN URL", ex, new { originalUrl, containerName });
-            return Result.Fail<string>("Failed to generate CDN URL", "CDN_URL_ERROR");
+            return Task.FromResult(Result.Fail<string>("Failed to generate CDN URL", "CDN_URL_ERROR"));
         }
     }
 
-    public async Task<Result> InvalidateCacheAsync(
+    public Task<Result> InvalidateCacheAsync(
         string fileUrl, 
         CancellationToken cancellationToken = default)
     {
@@ -61,16 +61,16 @@ public class SimpleCdnService : ICdnService
             
             _loggingService.LogBusinessEvent("CdnCacheInvalidated", new { fileUrl });
             
-            return Result.Ok();
+            return Task.FromResult(Result.Ok());
         }
         catch (Exception ex)
         {
             _loggingService.LogError("Error invalidating CDN cache", ex, new { fileUrl });
-            return Result.Fail("Failed to invalidate CDN cache", "CDN_CACHE_INVALIDATION_ERROR");
+            return Task.FromResult(Result.Fail("Failed to invalidate CDN cache", "CDN_CACHE_INVALIDATION_ERROR"));
         }
     }
 
-    public async Task<Result<string>> GetOptimizedImageUrlAsync(
+    public Task<Result<string>> GetOptimizedImageUrlAsync(
         string originalUrl,
         int? width = null,
         int? height = null,
@@ -82,7 +82,7 @@ public class SimpleCdnService : ICdnService
         {
             if (string.IsNullOrEmpty(originalUrl))
             {
-                return Result.Fail<string>("Original URL is required", "INVALID_URL");
+                return Task.FromResult(Result.Fail<string>("Original URL is required", "INVALID_URL"));
             }
 
             var cdnUrl = ConvertToCdnUrl(originalUrl, "");
@@ -113,7 +113,7 @@ public class SimpleCdnService : ICdnService
                 transformations 
             });
 
-            return Result.Ok(cdnUrl);
+            return Task.FromResult(Result.Ok(cdnUrl));
         }
         catch (Exception ex)
         {
@@ -124,11 +124,11 @@ public class SimpleCdnService : ICdnService
                 quality, 
                 format 
             });
-            return Result.Fail<string>("Failed to generate optimized image URL", "OPTIMIZED_IMAGE_URL_ERROR");
+            return Task.FromResult(Result.Fail<string>("Failed to generate optimized image URL", "OPTIMIZED_IMAGE_URL_ERROR"));
         }
     }
 
-    public async Task<Result<CdnUploadResponse>> UploadToCdnAsync(
+    public Task<Result<CdnUploadResponse>> UploadToCdnAsync(
         CdnUploadRequest request, 
         CancellationToken cancellationToken = default)
     {
@@ -154,7 +154,7 @@ public class SimpleCdnService : ICdnService
                 request.FileContent.Length 
             });
 
-            return Result.Ok(response);
+            return Task.FromResult(Result.Ok(response));
         }
         catch (Exception ex)
         {
@@ -162,11 +162,11 @@ public class SimpleCdnService : ICdnService
                 request.FileName, 
                 request.ContainerName 
             });
-            return Result.Fail<CdnUploadResponse>("Failed to upload to CDN", "CDN_UPLOAD_ERROR");
+            return Task.FromResult(Result.Fail<CdnUploadResponse>("Failed to upload to CDN", "CDN_UPLOAD_ERROR"));
         }
     }
 
-    public async Task<Result> DeleteFromCdnAsync(
+    public Task<Result> DeleteFromCdnAsync(
         string cdnUrl, 
         CancellationToken cancellationToken = default)
     {
@@ -177,16 +177,16 @@ public class SimpleCdnService : ICdnService
             
             _loggingService.LogBusinessEvent("FileDeletedFromCdn", new { cdnUrl });
             
-            return Result.Ok();
+            return Task.FromResult(Result.Ok());
         }
         catch (Exception ex)
         {
             _loggingService.LogError("Error deleting from CDN", ex, new { cdnUrl });
-            return Result.Fail("Failed to delete from CDN", "CDN_DELETE_ERROR");
+            return Task.FromResult(Result.Fail("Failed to delete from CDN", "CDN_DELETE_ERROR"));
         }
     }
 
-    public async Task<Result<CdnStats>> GetCdnStatsAsync(
+    public Task<Result<CdnStats>> GetCdnStatsAsync(
         CancellationToken cancellationToken = default)
     {
         try
@@ -198,12 +198,12 @@ public class SimpleCdnService : ICdnService
                 CacheHitRate: 95, // Simulated cache hit rate
                 LastActivityDate: DateTime.UtcNow);
 
-            return Result.Ok(stats);
+            return Task.FromResult(Result.Ok(stats));
         }
         catch (Exception ex)
         {
             _loggingService.LogError("Error getting CDN stats", ex);
-            return Result.Fail<CdnStats>("Failed to get CDN stats", "CDN_STATS_ERROR");
+            return Task.FromResult(Result.Fail<CdnStats>("Failed to get CDN stats", "CDN_STATS_ERROR"));
         }
     }
 

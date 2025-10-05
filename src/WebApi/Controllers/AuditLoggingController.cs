@@ -47,7 +47,7 @@ public class AuditLoggingController : BaseController
             return BadRequest(new { Error = result.Error ?? "Failed to create user activity log", ErrorCode = result.ErrorCode });
         }
 
-        return CreatedAtAction(nameof(GetUserActivityLog), new { id = result.Value.Id }, result.Value);
+        return CreatedAtAction(nameof(GetUserActivityLog), new { id = result.Value!.Id }, result.Value);
     }
 
     /// <summary>
@@ -190,7 +190,7 @@ public class AuditLoggingController : BaseController
             return BadRequest(new { Error = result.Error ?? "Failed to create system change log", ErrorCode = result.ErrorCode });
         }
 
-        return CreatedAtAction(nameof(GetSystemChangeLog), new { id = result.Value.Id }, result.Value);
+        return CreatedAtAction(nameof(GetSystemChangeLog), new { id = result.Value!.Id }, result.Value);
     }
 
     /// <summary>
@@ -333,7 +333,7 @@ public class AuditLoggingController : BaseController
             return BadRequest(new { Error = result.Error ?? "Failed to create security event log", ErrorCode = result.ErrorCode });
         }
 
-        return CreatedAtAction(nameof(GetSecurityEventLog), new { id = result.Value.Id }, result.Value);
+        return CreatedAtAction(nameof(GetSecurityEventLog), new { id = result.Value!.Id }, result.Value);
     }
 
     /// <summary>
@@ -522,7 +522,7 @@ public class AuditLoggingController : BaseController
             return BadRequest(new { Error = result.Error ?? "Failed to create log analysis report", ErrorCode = result.ErrorCode });
         }
 
-        return CreatedAtAction(nameof(GetLogAnalysisReport), new { id = result.Value.Id }, result.Value);
+        return CreatedAtAction(nameof(GetLogAnalysisReport), new { id = result.Value!.Id }, result.Value);
     }
 
     /// <summary>
@@ -681,7 +681,7 @@ public class AuditLoggingController : BaseController
             return BadRequest(new { Error = result.Error ?? "Failed to export report", ErrorCode = result.ErrorCode });
         }
 
-        return File(result.Value, "application/octet-stream", $"report_{id}.{format.ToLower()}");
+        return File(result.Value!, "application/octet-stream", $"report_{id}.{format.ToLower()}");
     }
 
     #endregion

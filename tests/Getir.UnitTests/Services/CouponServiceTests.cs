@@ -43,7 +43,7 @@ public class CouponServiceTests
             It.IsAny<System.Linq.Expressions.Expression<Func<CouponUsage, bool>>>(),
             It.IsAny<string>(),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync((CouponUsage)null); // User hasn't used this coupon
+            .ReturnsAsync((CouponUsage?)null); // User hasn't used this coupon
 
         _unitOfWorkMock.Setup(u => u.ReadRepository<CouponUsage>()).Returns(couponUsageRepoMock.Object);
     }

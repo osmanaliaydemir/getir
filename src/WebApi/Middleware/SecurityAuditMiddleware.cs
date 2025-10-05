@@ -108,10 +108,10 @@ public class SecurityAuditMiddleware
     {
         if (path.StartsWithSegments("/api/v1/auth"))
         {
-            if (path.Value.Contains("login")) return "LOGIN";
-            if (path.Value.Contains("register")) return "REGISTER";
-            if (path.Value.Contains("logout")) return "LOGOUT";
-            if (path.Value.Contains("refresh")) return "REFRESH_TOKEN";
+            if (path.Value!.Contains("login")) return "LOGIN";
+            if (path.Value!.Contains("register")) return "REGISTER";
+            if (path.Value!.Contains("logout")) return "LOGOUT";
+            if (path.Value!.Contains("refresh")) return "REFRESH_TOKEN";
         }
         
         if (path.StartsWithSegments("/api/v1/admin"))
@@ -134,7 +134,7 @@ public class SecurityAuditMiddleware
 
     private string? GetEntityIdFromPath(PathString path)
     {
-        var segments = path.Value.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var segments = path.Value!.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (segments.Length >= 4 && Guid.TryParse(segments[3], out _))
         {
             return segments[3];

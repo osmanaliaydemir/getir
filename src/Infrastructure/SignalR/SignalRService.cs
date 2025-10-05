@@ -115,30 +115,30 @@ public class SignalRService : ISignalRService
     }
 
     // Connection Management
-    public async Task<ConnectionStats> GetConnectionStatsAsync()
+    public Task<ConnectionStats> GetConnectionStatsAsync()
     {
         // This would require a connection tracking service
         // For now, return basic stats
-        return new ConnectionStats(
+        return Task.FromResult(new ConnectionStats(
             TotalConnections: 0,
             UserConnections: 0,
             CourierConnections: 0,
             AdminConnections: 0,
-            GroupSubscriptions: new Dictionary<string, int>());
+            GroupSubscriptions: new Dictionary<string, int>()));
     }
 
-    public async Task<List<ConnectionInfo>> GetActiveConnectionsAsync()
+    public Task<List<ConnectionInfo>> GetActiveConnectionsAsync()
     {
         // This would require a connection tracking service
         // For now, return empty list
-        return new List<ConnectionInfo>();
+        return Task.FromResult(new List<ConnectionInfo>());
     }
 
-    public async Task<bool> IsUserConnectedAsync(Guid userId)
+    public Task<bool> IsUserConnectedAsync(Guid userId)
     {
         // This would require a connection tracking service
         // For now, return false
-        return false;
+        return Task.FromResult(false);
     }
 
     public async Task DisconnectUserAsync(Guid userId, string reason = "Manual disconnect")

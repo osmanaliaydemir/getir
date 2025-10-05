@@ -265,23 +265,23 @@ public class AzureBlobStorageService : IFileStorageService
         }
     }
 
-    public async Task<Result<FileUploadResponse>> GenerateThumbnailAsync(
+    public Task<Result<FileUploadResponse>> GenerateThumbnailAsync(
         FileUploadRequest request,
         int thumbnailWidth = 300,
         int thumbnailHeight = 300,
         CancellationToken cancellationToken = default)
     {
         // TODO: Implement when ImageSharp is available
-        return Result.Fail<FileUploadResponse>("Thumbnail generation not implemented yet", "NOT_IMPLEMENTED");
+        return Task.FromResult(Result.Fail<FileUploadResponse>("Thumbnail generation not implemented yet", "NOT_IMPLEMENTED"));
     }
 
-    public async Task<Result<FileUploadResponse>> CompressImageAsync(
+    public Task<Result<FileUploadResponse>> CompressImageAsync(
         FileUploadRequest request,
         int qualityPercentage = 80,
         CancellationToken cancellationToken = default)
     {
         // TODO: Implement when ImageSharp is available
-        return Result.Fail<FileUploadResponse>("Image compression not implemented yet", "NOT_IMPLEMENTED");
+        return Task.FromResult(Result.Fail<FileUploadResponse>("Image compression not implemented yet", "NOT_IMPLEMENTED"));
     }
 
     public Task<Result> ValidateFileAsync(

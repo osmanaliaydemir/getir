@@ -24,7 +24,7 @@ public class EmailTemplateService : IEmailTemplateService
         _templates = InitializeTemplates();
     }
 
-    public async Task<Result<EmailTemplate>> GetTemplateAsync(
+    public Task<Result<EmailTemplate>> GetTemplateAsync(
         string templateName, 
         CancellationToken cancellationToken = default)
     {
@@ -32,16 +32,16 @@ public class EmailTemplateService : IEmailTemplateService
         {
             if (_templates.TryGetValue(templateName, out var template))
             {
-                return Result.Ok(template);
+                return Task.FromResult(Result.Ok(template));
             }
 
-            return Result.Fail<EmailTemplate>($"Template '{templateName}' not found", "TEMPLATE_NOT_FOUND");
+            return Task.FromResult(Result.Fail<EmailTemplate>($"Template '{templateName}' not found", "TEMPLATE_NOT_FOUND"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting email template {TemplateName}", templateName);
             _loggingService.LogError("Get email template failed", ex, new { templateName });
-            return Result.Fail<EmailTemplate>("Failed to get email template", "GET_TEMPLATE_ERROR");
+            return Task.FromResult(Result.Fail<EmailTemplate>("Failed to get email template", "GET_TEMPLATE_ERROR"));
         }
     }
 
@@ -58,7 +58,7 @@ public class EmailTemplateService : IEmailTemplateService
                 return Result.Fail<string>(templateResult.Error ?? "Template not found", templateResult.ErrorCode ?? "TEMPLATE_NOT_FOUND");
             }
 
-            var template = templateResult.Value;
+            var template = templateResult.Value!;
             var renderedContent = RenderTemplateContent(template.HtmlContent, templateData);
 
             _loggingService.LogBusinessEvent("EmailTemplateRendered", new
@@ -89,7 +89,7 @@ public class EmailTemplateService : IEmailTemplateService
                 return Result.Fail<EmailRequest>(templateResult.Error ?? "Template not found", templateResult.ErrorCode ?? "TEMPLATE_NOT_FOUND");
             }
 
-            var template = templateResult.Value;
+            var template = templateResult.Value!;
             var renderedSubject = RenderTemplateContent(template.Subject, request.TemplateData);
             var renderedContent = RenderTemplateContent(template.HtmlContent, request.TemplateData);
 
@@ -118,19 +118,19 @@ public class EmailTemplateService : IEmailTemplateService
         }
     }
 
-    public async Task<Result<IEnumerable<EmailTemplate>>> GetAllTemplatesAsync(
+    public Task<Result<IEnumerable<EmailTemplate>>> GetAllTemplatesAsync(
         CancellationToken cancellationToken = default)
     {
         try
         {
             var templates = _templates.Values.Where(t => t.IsActive).ToList();
-            return Result.Ok<IEnumerable<EmailTemplate>>(templates);
+            return Task.FromResult(Result.Ok<IEnumerable<EmailTemplate>>(templates));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting all email templates");
             _loggingService.LogError("Get all email templates failed", ex);
-            return Result.Fail<IEnumerable<EmailTemplate>>("Failed to get all email templates", "GET_ALL_TEMPLATES_ERROR");
+            return Task.FromResult(Result.Fail<IEnumerable<EmailTemplate>>("Failed to get all email templates", "GET_ALL_TEMPLATES_ERROR"));
         }
     }
 

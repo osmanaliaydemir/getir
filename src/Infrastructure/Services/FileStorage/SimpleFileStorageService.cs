@@ -116,7 +116,7 @@ public class SimpleFileStorageService : IFileStorageService
         return Result.Ok(results.AsEnumerable());
     }
 
-    public async Task<Result> DeleteFileAsync(
+    public Task<Result> DeleteFileAsync(
         string fileName, 
         string containerName,
         CancellationToken cancellationToken = default)
@@ -135,12 +135,12 @@ public class SimpleFileStorageService : IFileStorageService
                 containerName
             });
 
-            return Result.Ok();
+            return Task.FromResult(Result.Ok());
         }
         catch (Exception ex)
         {
             _loggingService.LogError("Error deleting file", ex, new { fileName, containerName });
-            return Result.Fail("Failed to delete file", "FILE_DELETE_ERROR");
+            return Task.FromResult(Result.Fail("Failed to delete file", "FILE_DELETE_ERROR"));
         }
     }
 
@@ -166,7 +166,7 @@ public class SimpleFileStorageService : IFileStorageService
         return Result.Ok();
     }
 
-    public async Task<Result<string>> GetFileUrlAsync(
+    public Task<Result<string>> GetFileUrlAsync(
         string fileName, 
         string containerName,
         CancellationToken cancellationToken = default)
@@ -177,20 +177,20 @@ public class SimpleFileStorageService : IFileStorageService
             
             if (!File.Exists(filePath))
             {
-                return Result.Fail<string>("File not found", "FILE_NOT_FOUND");
+                return Task.FromResult(Result.Fail<string>("File not found", "FILE_NOT_FOUND"));
             }
 
             var fileUrl = $"/uploads/{containerName}/{fileName}";
-            return Result.Ok(fileUrl);
+            return Task.FromResult(Result.Ok(fileUrl));
         }
         catch (Exception ex)
         {
             _loggingService.LogError("Error getting file URL", ex, new { fileName, containerName });
-            return Result.Fail<string>("Failed to get file URL", "FILE_URL_ERROR");
+            return Task.FromResult(Result.Fail<string>("Failed to get file URL", "FILE_URL_ERROR"));
         }
     }
 
-    public async Task<Result<bool>> FileExistsAsync(
+    public Task<Result<bool>> FileExistsAsync(
         string fileName, 
         string containerName,
         CancellationToken cancellationToken = default)
@@ -199,16 +199,16 @@ public class SimpleFileStorageService : IFileStorageService
         {
             var filePath = Path.Combine(_uploadPath, containerName, fileName);
             var exists = File.Exists(filePath);
-            return Result.Ok(exists);
+            return Task.FromResult(Result.Ok(exists));
         }
         catch (Exception ex)
         {
             _loggingService.LogError("Error checking file existence", ex, new { fileName, containerName });
-            return Result.Fail<bool>("Failed to check file existence", "FILE_EXISTS_ERROR");
+            return Task.FromResult(Result.Fail<bool>("Failed to check file existence", "FILE_EXISTS_ERROR"));
         }
     }
 
-    public async Task<Result<FileMetadata>> GetFileMetadataAsync(
+    public Task<Result<FileMetadata>> GetFileMetadataAsync(
         string fileName, 
         string containerName,
         CancellationToken cancellationToken = default)
@@ -219,7 +219,7 @@ public class SimpleFileStorageService : IFileStorageService
             
             if (!File.Exists(filePath))
             {
-                return Result.Fail<FileMetadata>("File not found", "FILE_NOT_FOUND");
+                return Task.FromResult(Result.Fail<FileMetadata>("File not found", "FILE_NOT_FOUND"));
             }
 
             var fileInfo = new FileInfo(filePath);
@@ -232,32 +232,32 @@ public class SimpleFileStorageService : IFileStorageService
                 fileInfo.LastWriteTimeUtc.Ticks.ToString(),
                 new Dictionary<string, string>());
 
-            return Result.Ok(metadata);
+            return Task.FromResult(Result.Ok(metadata));
         }
         catch (Exception ex)
         {
             _loggingService.LogError("Error getting file metadata", ex, new { fileName, containerName });
-            return Result.Fail<FileMetadata>("Failed to get file metadata", "FILE_METADATA_ERROR");
+            return Task.FromResult(Result.Fail<FileMetadata>("Failed to get file metadata", "FILE_METADATA_ERROR"));
         }
     }
 
-    public async Task<Result<FileUploadResponse>> GenerateThumbnailAsync(
+    public Task<Result<FileUploadResponse>> GenerateThumbnailAsync(
         FileUploadRequest request,
         int thumbnailWidth = 300,
         int thumbnailHeight = 300,
         CancellationToken cancellationToken = default)
     {
         // TODO: Implement thumbnail generation
-        return Result.Fail<FileUploadResponse>("Thumbnail generation not implemented", "NOT_IMPLEMENTED");
+        return Task.FromResult(Result.Fail<FileUploadResponse>("Thumbnail generation not implemented", "NOT_IMPLEMENTED"));
     }
 
-    public async Task<Result<FileUploadResponse>> CompressImageAsync(
+    public Task<Result<FileUploadResponse>> CompressImageAsync(
         FileUploadRequest request,
         int qualityPercentage = 80,
         CancellationToken cancellationToken = default)
     {
         // TODO: Implement image compression
-        return Result.Fail<FileUploadResponse>("Image compression not implemented", "NOT_IMPLEMENTED");
+        return Task.FromResult(Result.Fail<FileUploadResponse>("Image compression not implemented", "NOT_IMPLEMENTED"));
     }
 
     public Task<Result> ValidateFileAsync(

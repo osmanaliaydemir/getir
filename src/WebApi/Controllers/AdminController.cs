@@ -212,7 +212,7 @@ public class AdminController : BaseController
         var result = await _adminService.CreateUserAsync(request, adminId, ct);
         if (result.Success)
         {
-            return Created($"/api/admin/users/{result.Value.Id}", result.Value);
+            return Created($"/api/admin/users/{result.Value!.Id}", result.Value);
         }
         return ToActionResult(result);
     }

@@ -142,7 +142,7 @@ public class SmsService : ISmsService
             }
 
             // Replace template variables
-            var message = ReplaceTemplateVariables(template.Value.Content, request.TemplateData);
+            var message = ReplaceTemplateVariables(template.Value!.Content, request.TemplateData);
 
             // Create SMS request
             var smsRequest = new SmsRequest(
@@ -162,7 +162,7 @@ public class SmsService : ISmsService
         }
     }
 
-    public async Task<Result<bool>> ValidatePhoneNumberAsync(
+    public Task<Result<bool>> ValidatePhoneNumberAsync(
         string phoneNumber, 
         CancellationToken cancellationToken = default)
     {
@@ -170,7 +170,7 @@ public class SmsService : ISmsService
         {
             if (string.IsNullOrWhiteSpace(phoneNumber))
             {
-                return Result.Fail<bool>("Phone number is required", "PHONE_NUMBER_REQUIRED");
+                return Task.FromResult(Result.Fail<bool>("Phone number is required", "PHONE_NUMBER_REQUIRED"));
             }
 
             // Turkish phone number validation
@@ -183,15 +183,15 @@ public class SmsService : ISmsService
                 var internationalPattern = @"^\+[1-9]\d{1,14}$";
                 var isInternational = Regex.IsMatch(phoneNumber.Replace(" ", "").Replace("-", ""), internationalPattern);
                 
-                return Result.Ok(isInternational);
+                return Task.FromResult(Result.Ok(isInternational));
             }
 
-            return Result.Ok(true);
+            return Task.FromResult(Result.Ok(true));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error validating phone number");
-            return Result.Fail<bool>("Failed to validate phone number", "PHONE_VALIDATION_ERROR");
+            return Task.FromResult(Result.Fail<bool>("Failed to validate phone number", "PHONE_VALIDATION_ERROR"));
         }
     }
 
@@ -395,7 +395,7 @@ public class SmsService : ISmsService
         return result;
     }
 
-    private async Task<Result<SmsTemplate>> GetSmsTemplateAsync(string templateName, CancellationToken cancellationToken)
+    private Task<Result<SmsTemplate>> GetSmsTemplateAsync(string templateName, CancellationToken cancellationToken)
     {
         // In a real implementation, this would fetch from database or configuration
         var templates = new Dictionary<string, SmsTemplate>
@@ -409,10 +409,10 @@ public class SmsService : ISmsService
 
         if (templates.TryGetValue(templateName, out var template))
         {
-            return Result.Ok(template);
+            return Task.FromResult(Result.Ok(template));
         }
 
-        return Result.Fail<SmsTemplate>($"Template '{templateName}' not found", "TEMPLATE_NOT_FOUND");
+        return Task.FromResult(Result.Fail<SmsTemplate>($"Template '{templateName}' not found", "TEMPLATE_NOT_FOUND"));
     }
 
     #endregion

@@ -155,11 +155,11 @@ public class PaymentEndpointsTests : IClassFixture<CustomWebApplicationFactory<P
         return order.Id;
     }
 
-    private async Task<string> GetAuthTokenAsync(Guid userId, UserRole role)
+    private Task<string> GetAuthTokenAsync(Guid userId, UserRole role)
     {
         // Bu basit bir test için mock token döndürüyor
         // Gerçek implementation'da JWT token oluşturulmalı
-        return $"Bearer test_token_{userId}_{role}";
+        return Task.FromResult($"Bearer test_token_{userId}_{role}");
     }
 
     #endregion

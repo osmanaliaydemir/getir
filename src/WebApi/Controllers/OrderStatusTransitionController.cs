@@ -184,8 +184,8 @@ public class OrderStatusTransitionController : BaseController
             validationResult.Success,
             validationResult.Error,
             validationResult.ErrorCode,
-            requiredDataResult.Success ? requiredDataResult.Value : new List<string>(),
-            availableTransitionsResult.Success ? availableTransitionsResult.Value : new List<OrderStatusTransitionResponse>());
+            requiredDataResult.Success ? requiredDataResult.Value! : new List<string>(),
+            availableTransitionsResult.Success ? availableTransitionsResult.Value! : new List<OrderStatusTransitionResponse>());
 
         return Ok(response);
     }
