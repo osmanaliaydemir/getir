@@ -119,12 +119,12 @@
 - [x] Veritabanı çoklu dil
 - [x] UI çoklu dil
 
-### 17. API Rate Limiting ve Throttling
-- [ ] Endpoint bazlı rate limiting
-- [ ] Kullanıcı bazlı throttling
-- [ ] IP bazlı kısıtlama
-- [ ] Rate limit bildirimleri
-- [ ] Monitoring ve alerting
+### 17. API Rate Limiting ve Throttling ✅
+- [x] Endpoint bazlı rate limiting
+- [x] Kullanıcı bazlı throttling
+- [x] IP bazlı kısıtlama
+- [x] Rate limit bildirimleri
+- [x] Monitoring ve alerting
 
 ### 18. Kapsamlı Audit Logging ✅
 - [x] Tüm işlemler için log

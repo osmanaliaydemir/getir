@@ -60,6 +60,12 @@ public class AppDbContext : DbContext
     public DbSet<Translation> Translations { get; set; }
     public DbSet<UserLanguagePreference> UserLanguagePreferences { get; set; }
     
+    // Rate Limiting entities
+    public DbSet<RateLimitRule> RateLimitRules { get; set; }
+    public DbSet<RateLimitLog> RateLimitLogs { get; set; }
+    public DbSet<RateLimitViolation> RateLimitViolations { get; set; }
+    public DbSet<RateLimitConfiguration> RateLimitConfigurations { get; set; }
+    
     // Payment entities
     public DbSet<Payment> Payments { get; set; }
     public DbSet<CourierCashCollection> CourierCashCollections { get; set; }
@@ -1136,6 +1142,148 @@ public class AppDbContext : DbContext
                 .WithMany(l => l.UserLanguagePreferences)
                 .HasForeignKey(e => e.LanguageId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // RateLimitRule Configuration
+        modelBuilder.Entity<RateLimitRule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Endpoint).HasMaxLength(500);
+            entity.Property(e => e.HttpMethod).HasMaxLength(10);
+            entity.Property(e => e.UserRole).HasMaxLength(100);
+            entity.Property(e => e.UserTier).HasMaxLength(100);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => e.Endpoint);
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.Priority);
+            entity.HasIndex(e => e.UserRole);
+            entity.HasIndex(e => e.UserTier);
+
+            entity.HasOne(e => e.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.UpdatedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.UpdatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // RateLimitLog Configuration
+        modelBuilder.Entity<RateLimitLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Endpoint).HasMaxLength(500);
+            entity.Property(e => e.HttpMethod).HasMaxLength(10);
+            entity.Property(e => e.UserId).HasMaxLength(50);
+            entity.Property(e => e.UserName).HasMaxLength(100);
+            entity.Property(e => e.UserRole).HasMaxLength(100);
+            entity.Property(e => e.IpAddress).HasMaxLength(45);
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.Property(e => e.Reason).HasMaxLength(500);
+            entity.Property(e => e.RequestId).HasMaxLength(50);
+            entity.Property(e => e.SessionId).HasMaxLength(100);
+            entity.Property(e => e.Country).HasMaxLength(100);
+            entity.Property(e => e.City).HasMaxLength(100);
+            entity.Property(e => e.DeviceType).HasMaxLength(100);
+            entity.Property(e => e.Browser).HasMaxLength(100);
+            entity.Property(e => e.OperatingSystem).HasMaxLength(100);
+            entity.Property(e => e.RequestTime).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => e.RateLimitRuleId);
+            entity.HasIndex(e => e.Endpoint);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.IpAddress);
+            entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => e.Action);
+            entity.HasIndex(e => e.IsLimitExceeded);
+            entity.HasIndex(e => e.RequestTime);
+
+            entity.HasOne(e => e.RateLimitRule)
+                .WithMany(r => r.RateLimitLogs)
+                .HasForeignKey(e => e.RateLimitRuleId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // RateLimitViolation Configuration
+        modelBuilder.Entity<RateLimitViolation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Endpoint).HasMaxLength(500);
+            entity.Property(e => e.HttpMethod).HasMaxLength(10);
+            entity.Property(e => e.UserId).HasMaxLength(50);
+            entity.Property(e => e.UserName).HasMaxLength(100);
+            entity.Property(e => e.UserRole).HasMaxLength(100);
+            entity.Property(e => e.IpAddress).HasMaxLength(45);
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.Property(e => e.ViolationReason).HasMaxLength(500);
+            entity.Property(e => e.RequestId).HasMaxLength(50);
+            entity.Property(e => e.SessionId).HasMaxLength(100);
+            entity.Property(e => e.Country).HasMaxLength(100);
+            entity.Property(e => e.City).HasMaxLength(100);
+            entity.Property(e => e.DeviceType).HasMaxLength(100);
+            entity.Property(e => e.Browser).HasMaxLength(100);
+            entity.Property(e => e.OperatingSystem).HasMaxLength(100);
+            entity.Property(e => e.ResolvedBy).HasMaxLength(100);
+            entity.Property(e => e.ResolutionNotes).HasMaxLength(1000);
+            entity.Property(e => e.InvestigationNotes).HasMaxLength(1000);
+            entity.Property(e => e.ViolationTime).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => e.RateLimitRuleId);
+            entity.HasIndex(e => e.Endpoint);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.IpAddress);
+            entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => e.Action);
+            entity.HasIndex(e => e.IsResolved);
+            entity.HasIndex(e => e.RequiresInvestigation);
+            entity.HasIndex(e => e.Severity);
+            entity.HasIndex(e => e.ViolationTime);
+
+            entity.HasOne(e => e.RateLimitRule)
+                .WithMany()
+                .HasForeignKey(e => e.RateLimitRuleId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // RateLimitConfiguration Configuration
+        modelBuilder.Entity<RateLimitConfiguration>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.EndpointPattern).HasMaxLength(500);
+            entity.Property(e => e.HttpMethod).HasMaxLength(10);
+            entity.Property(e => e.UserRole).HasMaxLength(100);
+            entity.Property(e => e.UserTier).HasMaxLength(100);
+            entity.Property(e => e.IpWhitelist).HasMaxLength(2000);
+            entity.Property(e => e.IpBlacklist).HasMaxLength(2000);
+            entity.Property(e => e.UserWhitelist).HasMaxLength(2000);
+            entity.Property(e => e.UserBlacklist).HasMaxLength(2000);
+            entity.Property(e => e.AlertRecipients).HasMaxLength(1000);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => e.EndpointPattern);
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.Priority);
+            entity.HasIndex(e => e.UserRole);
+            entity.HasIndex(e => e.UserTier);
+
+            entity.HasOne(e => e.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.UpdatedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.UpdatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

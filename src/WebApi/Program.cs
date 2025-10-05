@@ -31,6 +31,7 @@ using Getir.Application.Services.WorkingHours;
 using Getir.Application.Services.DeliveryOptimization;
 using Getir.Application.Services.AuditLogging;
 using Getir.Application.Services.Internationalization;
+using Getir.Application.Services.RateLimiting;
 
 // Infrastructure namespaces
 using Getir.Infrastructure.Persistence;
@@ -153,6 +154,11 @@ builder.Services.AddScoped<ILanguageService, LanguageService>();
 builder.Services.AddScoped<ITranslationService, TranslationService>();
 builder.Services.AddScoped<IUserLanguageService, UserLanguageService>();
 
+// Rate Limiting Services
+builder.Services.AddScoped<IRateLimitService, RateLimitService>();
+builder.Services.AddScoped<IRateLimitConfigurationService, RateLimitConfigurationService>();
+builder.Services.AddScoped<IRateLimitMonitoringService, RateLimitMonitoringService>();
+
 builder.Services.AddScoped<Getir.Application.Services.Admin.IAdminService, Getir.Application.Services.Admin.AdminService>();
 builder.Services.AddScoped<Getir.Application.Services.Payments.IPaymentService, Getir.Application.Services.Payments.PaymentService>();
 builder.Services.AddScoped<Getir.Application.Services.GeoLocation.IGeoLocationService, Getir.Application.Services.GeoLocation.GeoLocationService>();
@@ -221,6 +227,7 @@ app.UseSerilogRequestLogging();
 // ============= MIDDLEWARE =============
 app.UseMiddleware<ValidationMiddleware>();
 app.UseMiddleware<SecurityAuditMiddleware>();
+app.UseMiddleware<RateLimitMiddleware>();
 
 // Rate limiting
 app.UseIpRateLimiting();
