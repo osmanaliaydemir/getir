@@ -34,8 +34,8 @@ CREATE TABLE InventoryCountItems (
     CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
     
     CONSTRAINT FK_InventoryCountItems_CountSession FOREIGN KEY (CountSessionId) REFERENCES InventoryCountSessions(Id) ON DELETE CASCADE,
-    CONSTRAINT FK_InventoryCountItems_Products FOREIGN KEY (ProductId) REFERENCES Products(Id) ON DELETE CASCADE,
-    CONSTRAINT FK_InventoryCountItems_ProductVariants FOREIGN KEY (ProductVariantId) REFERENCES MarketProductVariants(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_InventoryCountItems_Products FOREIGN KEY (ProductId) REFERENCES Products(Id) ON DELETE NO ACTION,
+    CONSTRAINT FK_InventoryCountItems_ProductVariants FOREIGN KEY (ProductVariantId) REFERENCES MarketProductVariants(Id) ON DELETE NO ACTION,
     CONSTRAINT CK_InventoryCountItems_ValidQuantities CHECK (ExpectedQuantity >= 0 AND CountedQuantity >= 0)
 );
 GO
@@ -58,8 +58,8 @@ CREATE TABLE InventoryDiscrepancies (
     UpdatedAt DATETIME2 NULL,
     
     CONSTRAINT FK_InventoryDiscrepancies_CountSession FOREIGN KEY (CountSessionId) REFERENCES InventoryCountSessions(Id) ON DELETE CASCADE,
-    CONSTRAINT FK_InventoryDiscrepancies_Products FOREIGN KEY (ProductId) REFERENCES Products(Id) ON DELETE CASCADE,
-    CONSTRAINT FK_InventoryDiscrepancies_ProductVariants FOREIGN KEY (ProductVariantId) REFERENCES MarketProductVariants(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_InventoryDiscrepancies_Products FOREIGN KEY (ProductId) REFERENCES Products(Id) ON DELETE NO ACTION,
+    CONSTRAINT FK_InventoryDiscrepancies_ProductVariants FOREIGN KEY (ProductVariantId) REFERENCES MarketProductVariants(Id) ON DELETE NO ACTION,
     CONSTRAINT FK_InventoryDiscrepancies_ResolvedBy FOREIGN KEY (ResolvedBy) REFERENCES Users(Id),
     CONSTRAINT CK_InventoryDiscrepancies_ValidStatus CHECK (Status >= 0 AND Status <= 4),
     CONSTRAINT CK_InventoryDiscrepancies_ValidQuantities CHECK (ExpectedQuantity >= 0 AND ActualQuantity >= 0)
@@ -102,7 +102,7 @@ CREATE TABLE StockSyncDetails (
     CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
     
     CONSTRAINT FK_StockSyncDetails_SyncSession FOREIGN KEY (SyncSessionId) REFERENCES StockSyncSessions(Id) ON DELETE CASCADE,
-    CONSTRAINT FK_StockSyncDetails_Products FOREIGN KEY (ProductId) REFERENCES Products(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_StockSyncDetails_Products FOREIGN KEY (ProductId) REFERENCES Products(Id) ON DELETE NO ACTION,
     CONSTRAINT CK_StockSyncDetails_ValidSyncStatus CHECK (SyncStatus >= 0 AND SyncStatus <= 3),
     CONSTRAINT CK_StockSyncDetails_ValidQuantities CHECK (PreviousQuantity >= 0 AND NewQuantity >= 0)
 );
@@ -360,7 +360,7 @@ SELECT TOP 1
     Id, -- MerchantId
     0, -- Full count
     1, -- Completed
-    (SELECT TOP 1 Id FROM Users WHERE Role = 'MerchantOwner' ORDER BY CreatedAt DESC) -- CreatedBy
+    (SELECT TOP 1 Id FROM Users ORDER BY CreatedAt DESC) -- CreatedBy
 FROM Merchants
 WHERE NOT EXISTS (SELECT 1 FROM InventoryCountSessions);
 GO
