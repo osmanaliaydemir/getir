@@ -2,8 +2,8 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
+using Getir.Domain.Enums;
 using Microsoft.Extensions.Logging;
-using NotificationType = Getir.Application.DTO.NotificationType;
 using NotificationChannel = Getir.Application.DTO.NotificationChannel;
 
 namespace Getir.Application.Services.Notifications;

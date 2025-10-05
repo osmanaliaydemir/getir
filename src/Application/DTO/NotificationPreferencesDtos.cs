@@ -1,3 +1,5 @@
+using Getir.Domain.Enums;
+
 namespace Getir.Application.DTO;
 
 /// <summary>
@@ -108,15 +110,3 @@ public enum NotificationChannel
     Push = 2
 }
 
-/// <summary>
-/// Notification types
-/// </summary>
-public enum NotificationType
-{
-    OrderUpdate = 0,
-    Promotion = 1,
-    Newsletter = 2,
-    SecurityAlert = 3,
-    MerchantUpdate = 4,
-    SystemAnnouncement = 5
-}

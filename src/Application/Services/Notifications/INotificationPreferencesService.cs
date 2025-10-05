@@ -1,5 +1,6 @@
 using Getir.Application.Common;
 using Getir.Application.DTO;
+using Getir.Domain.Enums;
 
 namespace Getir.Application.Services.Notifications;
 

@@ -2,9 +2,9 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
+using Getir.Domain.Enums;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using NotificationType = Getir.Application.DTO.NotificationType;
 using NotificationChannel = Getir.Application.DTO.NotificationChannel;
 using NotificationStatus = Getir.Application.DTO.NotificationStatus;
 
@@ -36,9 +36,9 @@ public class NotificationHistoryService : BaseService, INotificationHistoryServi
                 UserId = request.UserId,
                 Title = request.Title,
                 Message = request.Message,
-                Type = (Domain.Entities.NotificationType)request.Type,
-                Channel = (Domain.Entities.NotificationChannel)request.Channel,
-                Status = (Domain.Entities.NotificationStatus)request.Status,
+                Type = request.Type,
+                Channel = request.Channel,
+                Status = request.Status,
                 RelatedEntityId = request.RelatedEntityId,
                 RelatedEntityType = request.RelatedEntityType,
                 ExternalMessageId = request.ExternalMessageId,
@@ -145,7 +145,7 @@ public class NotificationHistoryService : BaseService, INotificationHistoryServi
             var histories = await _unitOfWork.ReadRepository<NotificationHistory>()
                 .GetPagedAsync(
                     filter: h => h.UserId == userId &&
-                                (query.Type == null || h.Type == (Domain.Entities.NotificationType)query.Type) &&
+                                (query.Type == null || h.Type == query.Type) &&
                                 (query.Channel == null || h.Channel == (Domain.Entities.NotificationChannel)query.Channel) &&
                                 (query.Status == null || h.Status == (Domain.Entities.NotificationStatus)query.Status) &&
                                 (query.FromDate == null || h.CreatedAt >= query.FromDate) &&
@@ -159,7 +159,7 @@ public class NotificationHistoryService : BaseService, INotificationHistoryServi
             var total = await _unitOfWork.ReadRepository<NotificationHistory>()
                 .CountAsync(
                     filter: h => h.UserId == userId &&
-                                (query.Type == null || h.Type == (Domain.Entities.NotificationType)query.Type) &&
+                                (query.Type == null || h.Type == query.Type) &&
                                 (query.Channel == null || h.Channel == (Domain.Entities.NotificationChannel)query.Channel) &&
                                 (query.Status == null || h.Status == (Domain.Entities.NotificationStatus)query.Status) &&
                                 (query.FromDate == null || h.CreatedAt >= query.FromDate) &&

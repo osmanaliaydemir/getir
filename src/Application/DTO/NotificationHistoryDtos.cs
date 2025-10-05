@@ -1,4 +1,3 @@
-using Getir.Domain.Entities;
 using Getir.Domain.Enums;
 
 namespace Getir.Application.DTO;

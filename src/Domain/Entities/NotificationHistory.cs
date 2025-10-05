@@ -33,21 +33,6 @@ public class NotificationHistory
     public virtual User User { get; set; } = default!;
 }
 
-/// <summary>
-/// Notification type enum
-/// </summary>
-public enum NotificationType
-{
-    OrderUpdate = 0,
-    Promotion = 1,
-    SecurityAlert = 2,
-    MerchantUpdate = 3,
-    SystemAnnouncement = 4,
-    Welcome = 5,
-    PasswordReset = 6,
-    EmailVerification = 7,
-    Newsletter = 8
-}
 
 /// <summary>
 /// Notification channel enum

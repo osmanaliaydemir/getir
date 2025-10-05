@@ -24,12 +24,21 @@ public enum LocationUpdateType
 
 public enum NotificationType
 {
-    StatusUpdate = 1,
-    LocationUpdate = 2,
-    ETAUpdate = 3,
-    DeliveryAlert = 4,
-    DelayAlert = 5,
-    CompletionAlert = 6
+    OrderUpdate = 0,
+    Promotion = 1,
+    Newsletter = 2,
+    SecurityAlert = 3,
+    MerchantUpdate = 4,
+    SystemAnnouncement = 5,
+    Welcome = 6,
+    PasswordReset = 7,
+    EmailVerification = 8,
+    StatusUpdate = 9,
+    LocationUpdate = 10,
+    ETAUpdate = 11,
+    DeliveryAlert = 12,
+    DelayAlert = 13,
+    CompletionAlert = 14
 }
 
 public static class TrackingStatusExtensions
