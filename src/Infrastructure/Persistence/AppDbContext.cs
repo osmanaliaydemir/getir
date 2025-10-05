@@ -49,6 +49,13 @@ public class AppDbContext : DbContext
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<SystemNotification> SystemNotifications { get; set; }
     
+    // Realtime Tracking entities
+    public DbSet<OrderTracking> OrderTrackings { get; set; }
+    public DbSet<LocationHistory> LocationHistories { get; set; }
+    public DbSet<TrackingNotification> TrackingNotifications { get; set; }
+    public DbSet<ETAEstimation> ETAEstimations { get; set; }
+    public DbSet<TrackingSettings> TrackingSettings { get; set; }
+    
     // Audit Logging entities
     public DbSet<UserActivityLog> UserActivityLogs { get; set; }
     public DbSet<SystemChangeLog> SystemChangeLogs { get; set; }
@@ -1284,6 +1291,146 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.UpdatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // OrderTracking Configuration
+        modelBuilder.Entity<OrderTracking>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.StatusMessage).HasMaxLength(500);
+            entity.Property(e => e.Address).HasMaxLength(500);
+            entity.Property(e => e.City).HasMaxLength(100);
+            entity.Property(e => e.District).HasMaxLength(100);
+            entity.Property(e => e.LastUpdatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => e.CourierId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.LastUpdatedAt);
+
+            entity.HasOne(e => e.Order)
+                .WithMany()
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Courier)
+                .WithMany()
+                .HasForeignKey(e => e.CourierId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.UpdatedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.UpdatedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // LocationHistory Configuration
+        modelBuilder.Entity<LocationHistory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Address).HasMaxLength(500);
+            entity.Property(e => e.City).HasMaxLength(100);
+            entity.Property(e => e.District).HasMaxLength(100);
+            entity.Property(e => e.DeviceInfo).HasMaxLength(200);
+            entity.Property(e => e.AppVersion).HasMaxLength(50);
+            entity.Property(e => e.RecordedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => e.OrderTrackingId);
+            entity.HasIndex(e => e.RecordedAt);
+            entity.HasIndex(e => e.UpdateType);
+
+            entity.HasOne(e => e.OrderTracking)
+                .WithMany(t => t.LocationHistory)
+                .HasForeignKey(e => e.OrderTrackingId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // TrackingNotification Configuration
+        modelBuilder.Entity<TrackingNotification>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Message).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Data).HasMaxLength(2000);
+            entity.Property(e => e.DeliveryMethod).HasMaxLength(50);
+            entity.Property(e => e.DeliveryStatus).HasMaxLength(50);
+            entity.Property(e => e.ErrorMessage).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => e.OrderTrackingId);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => e.IsSent);
+            entity.HasIndex(e => e.IsRead);
+            entity.HasIndex(e => e.CreatedAt);
+
+            entity.HasOne(e => e.OrderTracking)
+                .WithMany(t => t.Notifications)
+                .HasForeignKey(e => e.OrderTrackingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ETAEstimation Configuration
+        modelBuilder.Entity<ETAEstimation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.CalculationMethod).HasMaxLength(100);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => e.OrderTrackingId);
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.CreatedAt);
+
+            entity.HasOne(e => e.OrderTracking)
+                .WithMany()
+                .HasForeignKey(e => e.OrderTrackingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // TrackingSettings Configuration
+        modelBuilder.Entity<TrackingSettings>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.PreferredLanguage).HasMaxLength(10);
+            entity.Property(e => e.TimeZone).HasMaxLength(100);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.MerchantId);
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Merchant)
+                .WithMany()
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.UpdatedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.UpdatedBy)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

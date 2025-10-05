@@ -32,6 +32,7 @@ using Getir.Application.Services.DeliveryOptimization;
 using Getir.Application.Services.AuditLogging;
 using Getir.Application.Services.Internationalization;
 using Getir.Application.Services.RateLimiting;
+using Getir.Application.Services.RealtimeTracking;
 
 // Infrastructure namespaces
 using Getir.Infrastructure.Persistence;
@@ -158,6 +159,13 @@ builder.Services.AddScoped<IUserLanguageService, UserLanguageService>();
 builder.Services.AddScoped<IRateLimitService, RateLimitService>();
 builder.Services.AddScoped<IRateLimitConfigurationService, RateLimitConfigurationService>();
 builder.Services.AddScoped<IRateLimitMonitoringService, RateLimitMonitoringService>();
+
+// Realtime Tracking Services
+builder.Services.AddScoped<IOrderTrackingService, OrderTrackingService>();
+builder.Services.AddScoped<IETAEstimationService, ETAEstimationService>();
+builder.Services.AddScoped<ITrackingNotificationService, TrackingNotificationService>();
+builder.Services.AddScoped<ITrackingSettingsService, TrackingSettingsService>();
+builder.Services.AddScoped<IRealtimeTrackingService, RealtimeTrackingService>();
 
 builder.Services.AddScoped<Getir.Application.Services.Admin.IAdminService, Getir.Application.Services.Admin.AdminService>();
 builder.Services.AddScoped<Getir.Application.Services.Payments.IPaymentService, Getir.Application.Services.Payments.PaymentService>();
@@ -292,6 +300,7 @@ app.MapControllers();
 app.MapHub<Getir.WebApi.Hubs.NotificationHub>("/hubs/notifications");
 app.MapHub<Getir.WebApi.Hubs.OrderHub>("/hubs/orders");
 app.MapHub<Getir.WebApi.Hubs.CourierHub>("/hubs/courier");
+app.MapHub<Getir.WebApi.Hubs.RealtimeTrackingHub>("/hubs/realtime-tracking");
 
 app.UseHealthChecksConfiguration();
 app.UseMetricsConfiguration();
