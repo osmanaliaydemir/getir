@@ -5,6 +5,16 @@
 -- Created: 2025-01-03
 -- =============================================
 
+-- Set required options
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
+SET ANSI_NULL_DFLT_ON ON;
+
 -- DELIVERY CAPACITY MANAGEMENT
 CREATE TABLE DeliveryCapacities (
     Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
@@ -38,7 +48,7 @@ CREATE TABLE DeliveryCapacities (
     LastResetDate DATETIME2 NULL,
     
     CONSTRAINT FK_DeliveryCapacities_Merchants FOREIGN KEY (MerchantId) REFERENCES Merchants(Id) ON DELETE CASCADE,
-    CONSTRAINT FK_DeliveryCapacities_DeliveryZones FOREIGN KEY (DeliveryZoneId) REFERENCES DeliveryZones(Id) ON DELETE SET NULL,
+    CONSTRAINT FK_DeliveryCapacities_DeliveryZones FOREIGN KEY (DeliveryZoneId) REFERENCES DeliveryZones(Id) ON DELETE NO ACTION,
     CONSTRAINT CK_DeliveryCapacities_MaxConcurrentDeliveries CHECK (MaxConcurrentDeliveries > 0),
     CONSTRAINT CK_DeliveryCapacities_MaxDailyDeliveries CHECK (MaxDailyDeliveries > 0),
     CONSTRAINT CK_DeliveryCapacities_MaxWeeklyDeliveries CHECK (MaxWeeklyDeliveries > 0),
@@ -88,7 +98,7 @@ CREATE TABLE DeliveryRoutes (
     UpdatedAt DATETIME2 NULL,
     
     CONSTRAINT FK_DeliveryRoutes_Orders FOREIGN KEY (OrderId) REFERENCES Orders(Id) ON DELETE CASCADE,
-    CONSTRAINT FK_DeliveryRoutes_Couriers FOREIGN KEY (CourierId) REFERENCES Couriers(Id) ON DELETE SET NULL,
+    CONSTRAINT FK_DeliveryRoutes_Couriers FOREIGN KEY (CourierId) REFERENCES Couriers(Id) ON DELETE NO ACTION,
     CONSTRAINT CK_DeliveryRoutes_TotalDistanceKm CHECK (TotalDistanceKm >= 0),
     CONSTRAINT CK_DeliveryRoutes_EstimatedDurationMinutes CHECK (EstimatedDurationMinutes > 0),
     CONSTRAINT CK_DeliveryRoutes_EstimatedTrafficDelayMinutes CHECK (EstimatedTrafficDelayMinutes >= 0),
