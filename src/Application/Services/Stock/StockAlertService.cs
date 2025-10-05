@@ -33,6 +33,15 @@ public class StockAlertService : BaseService, IStockAlertService
     {
         try
         {
+            // Merchant existence check
+            var merchant = await _unitOfWork.ReadRepository<Merchant>()
+                .FirstOrDefaultAsync(m => m.Id == merchantId, cancellationToken: cancellationToken);
+            
+            if (merchant == null)
+            {
+                return Result.Fail("Merchant not found", "MERCHANT_NOT_FOUND");
+            }
+
             var settings = await _unitOfWork.ReadRepository<StockSettings>()
                 .FirstOrDefaultAsync(s => s.MerchantId == merchantId && s.IsActive, cancellationToken: cancellationToken);
 
@@ -100,6 +109,15 @@ public class StockAlertService : BaseService, IStockAlertService
     {
         try
         {
+            // Merchant existence check
+            var merchant = await _unitOfWork.ReadRepository<Merchant>()
+                .FirstOrDefaultAsync(m => m.Id == merchantId, cancellationToken: cancellationToken);
+            
+            if (merchant == null)
+            {
+                return Result.Fail("Merchant not found", "MERCHANT_NOT_FOUND");
+            }
+
             var settings = await _unitOfWork.ReadRepository<StockSettings>()
                 .FirstOrDefaultAsync(s => s.MerchantId == merchantId && s.IsActive, cancellationToken: cancellationToken);
 
@@ -166,6 +184,15 @@ public class StockAlertService : BaseService, IStockAlertService
     {
         try
         {
+            // Merchant existence check
+            var merchant = await _unitOfWork.ReadRepository<Merchant>()
+                .FirstOrDefaultAsync(m => m.Id == merchantId, cancellationToken: cancellationToken);
+            
+            if (merchant == null)
+            {
+                return Result.Fail("Merchant not found", "MERCHANT_NOT_FOUND");
+            }
+
             var settings = await _unitOfWork.ReadRepository<StockSettings>()
                 .FirstOrDefaultAsync(s => s.MerchantId == merchantId && s.IsActive, cancellationToken: cancellationToken);
 
@@ -234,6 +261,15 @@ public class StockAlertService : BaseService, IStockAlertService
     {
         try
         {
+            // User existence check
+            var user = await _unitOfWork.ReadRepository<User>()
+                .FirstOrDefaultAsync(u => u.Id == resolvedBy, cancellationToken: cancellationToken);
+            
+            if (user == null)
+            {
+                return Result.Fail("User not found", "USER_NOT_FOUND");
+            }
+
             var alert = await _unitOfWork.ReadRepository<StockAlert>()
                 .FirstOrDefaultAsync(a => a.Id == alertId, cancellationToken: cancellationToken);
 
@@ -268,6 +304,15 @@ public class StockAlertService : BaseService, IStockAlertService
     {
         try
         {
+            // Merchant existence check
+            var merchant = await _unitOfWork.ReadRepository<Merchant>()
+                .FirstOrDefaultAsync(m => m.Id == merchantId, cancellationToken: cancellationToken);
+            
+            if (merchant == null)
+            {
+                return Result.Fail<StockAlertStatisticsResponse>("Merchant not found", "MERCHANT_NOT_FOUND");
+            }
+
             var alerts = await _unitOfWork.ReadRepository<StockAlert>()
                 .ListAsync(a => a.MerchantId == merchantId &&
                                (!fromDate.HasValue || a.CreatedAt >= fromDate.Value) &&
@@ -281,7 +326,7 @@ public class StockAlertService : BaseService, IStockAlertService
                 alerts.Count(a => a.AlertType == Domain.Enums.StockAlertType.Overstock),
                 alerts.Count(a => a.IsResolved),
                 alerts.Count(a => !a.IsResolved),
-                alerts.GroupBy(a => (Domain.Enums.StockAlertType)a.AlertType)
+                alerts.GroupBy<StockAlert, DTO.StockAlertType>(a => (DTO.StockAlertType)a.AlertType)
                     .ToDictionary(g => g.Key, g => g.Count()),
                 fromDate ?? alerts.Min(a => a.CreatedAt),
                 toDate ?? alerts.Max(a => a.CreatedAt));
@@ -346,6 +391,15 @@ public class StockAlertService : BaseService, IStockAlertService
     {
         try
         {
+            // User existence check
+            var user = await _unitOfWork.ReadRepository<User>()
+                .FirstOrDefaultAsync(u => u.Id == merchantOwnerId, cancellationToken: cancellationToken);
+            
+            if (user == null)
+            {
+                return Result.Fail("User not found", "USER_NOT_FOUND");
+            }
+
             var merchant = await _unitOfWork.ReadRepository<Merchant>()
                 .FirstOrDefaultAsync(m => m.OwnerId == merchantOwnerId, cancellationToken: cancellationToken);
 
