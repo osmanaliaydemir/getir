@@ -1,15 +1,13 @@
+using Microsoft.AspNetCore.Mvc;
 using Getir.Application.DTO;
 using Getir.Application.Services.Internationalization;
 using Getir.Domain.Enums;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Getir.WebApi.Controllers;
 
 [ApiController]
-[Route("api/v1/[controller]")]
-[Authorize]
-public class InternationalizationController : BaseController
+[Route("api/[controller]")]
+public class InternationalizationController : ControllerBase
 {
     private readonly ILanguageService _languageService;
     private readonly ITranslationService _translationService;
@@ -25,356 +23,249 @@ public class InternationalizationController : BaseController
         _userLanguageService = userLanguageService;
     }
 
-    #region Language Management
+    #region Languages
 
-    /// <summary>
-    /// Get all available languages
-    /// </summary>
     [HttpGet("languages")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> GetAllLanguages()
+    public async Task<ActionResult<List<LanguageDto>>> GetAllLanguages()
     {
-        var result = await _languageService.GetAllLanguagesAsync();
-        return HandleResult(result);
+        var languages = await _languageService.GetAllLanguagesAsync();
+        return Ok(languages);
     }
 
-    /// <summary>
-    /// Get language by ID
-    /// </summary>
     [HttpGet("languages/{id:guid}")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> GetLanguageById(Guid id)
+    public async Task<ActionResult<LanguageDto>> GetLanguageById(Guid id)
     {
-        var result = await _languageService.GetLanguageByIdAsync(id);
-        return HandleResult(result);
+        var language = await _languageService.GetLanguageByIdAsync(id);
+        if (language == null)
+            return NotFound(new { Error = "Language not found", ErrorCode = "LANGUAGE_NOT_FOUND" });
+
+        return Ok(language);
     }
 
-    /// <summary>
-    /// Get language by code
-    /// </summary>
     [HttpGet("languages/code/{code}")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> GetLanguageByCode(LanguageCode code)
+    public async Task<ActionResult<LanguageDto>> GetLanguageByCode(LanguageCode code)
     {
-        var result = await _languageService.GetLanguageByCodeAsync(code);
-        return HandleResult(result);
+        var language = await _languageService.GetLanguageByCodeAsync(code);
+        if (language == null)
+            return NotFound(new { Error = "Language not found", ErrorCode = "LANGUAGE_NOT_FOUND" });
+
+        return Ok(language);
     }
 
-    /// <summary>
-    /// Get default language
-    /// </summary>
     [HttpGet("languages/default")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> GetDefaultLanguage()
+    public async Task<ActionResult<LanguageDto>> GetDefaultLanguage()
     {
-        var result = await _languageService.GetDefaultLanguageAsync();
-        return HandleResult(result);
+        var language = await _languageService.GetDefaultLanguageAsync();
+        if (language == null)
+            return NotFound(new { Error = "Default language not found", ErrorCode = "DEFAULT_LANGUAGE_NOT_FOUND" });
+
+        return Ok(language);
     }
 
-    /// <summary>
-    /// Create new language
-    /// </summary>
     [HttpPost("languages")]
-    [ProducesResponseType(201)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> CreateLanguage([FromBody] CreateLanguageRequest request)
+    public async Task<ActionResult<LanguageDto>> CreateLanguage([FromBody] CreateLanguageRequest request)
     {
-        var result = await _languageService.CreateLanguageAsync(request);
-        return HandleResult(result);
+        var language = await _languageService.CreateLanguageAsync(request);
+        return CreatedAtAction(nameof(GetLanguageById), new { id = language.Id }, language);
     }
 
-    /// <summary>
-    /// Update language
-    /// </summary>
     [HttpPut("languages/{id:guid}")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> UpdateLanguage(Guid id, [FromBody] UpdateLanguageRequest request)
+    public async Task<ActionResult<LanguageDto>> UpdateLanguage(Guid id, [FromBody] UpdateLanguageRequest request)
     {
-        var result = await _languageService.UpdateLanguageAsync(id, request);
-        return HandleResult(result);
+        var language = await _languageService.UpdateLanguageAsync(id, request);
+        return Ok(language);
     }
 
-    /// <summary>
-    /// Delete language
-    /// </summary>
     [HttpDelete("languages/{id:guid}")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> DeleteLanguage(Guid id)
+    public async Task<ActionResult> DeleteLanguage(Guid id)
     {
         var result = await _languageService.DeleteLanguageAsync(id);
-        return HandleResult(result);
+        if (!result)
+            return NotFound(new { Error = "Language not found", ErrorCode = "LANGUAGE_NOT_FOUND" });
+
+        return NoContent();
     }
 
-    /// <summary>
-    /// Set default language
-    /// </summary>
     [HttpPost("languages/{id:guid}/set-default")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> SetDefaultLanguage(Guid id)
+    public async Task<ActionResult> SetDefaultLanguage(Guid id)
     {
         var result = await _languageService.SetDefaultLanguageAsync(id);
-        return HandleResult(result);
+        if (!result)
+            return NotFound(new { Error = "Language not found", ErrorCode = "LANGUAGE_NOT_FOUND" });
+
+        return Ok(new { Message = "Default language updated successfully" });
     }
 
-    /// <summary>
-    /// Get language statistics
-    /// </summary>
     [HttpGet("languages/statistics")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> GetLanguageStatistics()
+    public async Task<ActionResult<List<LanguageStatisticsDto>>> GetLanguageStatistics()
     {
-        var result = await _languageService.GetLanguageStatisticsAsync();
-        return HandleResult(result);
+        var statistics = await _languageService.GetLanguageStatisticsAsync();
+        return Ok(statistics);
     }
 
     #endregion
 
-    #region Translation Management
+    #region Translations
 
-    /// <summary>
-    /// Get translation by key and language
-    /// </summary>
     [HttpGet("translations/{key}/{languageCode}")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> GetTranslation(string key, LanguageCode languageCode)
+    public async Task<ActionResult<TranslationDto>> GetTranslation(string key, LanguageCode languageCode)
     {
-        var result = await _translationService.GetTranslationAsync(key, languageCode);
-        return HandleResult(result);
+        var translation = await _translationService.GetTranslationAsync(key, languageCode);
+        if (translation == null)
+            return NotFound(new { Error = "Translation not found", ErrorCode = "TRANSLATION_NOT_FOUND" });
+
+        return Ok(translation);
     }
 
-    /// <summary>
-    /// Get multiple translations by keys
-    /// </summary>
     [HttpPost("translations/bulk")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> GetTranslationsByKeys([FromBody] GetTranslationsByKeysRequest request)
+    public async Task<ActionResult<GetTranslationsByKeysResponse>> GetTranslationsByKeys([FromBody] GetTranslationsByKeysRequest request)
     {
-        var result = await _translationService.GetTranslationsByKeysAsync(request);
-        return HandleResult(result);
+        var response = await _translationService.GetTranslationsByKeysAsync(request);
+        return Ok(response);
     }
 
-    /// <summary>
-    /// Search translations
-    /// </summary>
     [HttpPost("translations/search")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> SearchTranslations([FromBody] TranslationSearchRequest request)
+    public async Task<ActionResult<TranslationSearchResponse>> SearchTranslations([FromBody] TranslationSearchRequest request)
     {
-        var result = await _translationService.SearchTranslationsAsync(request);
-        return HandleResult(result);
+        var response = await _translationService.SearchTranslationsAsync(request);
+        return Ok(response);
     }
 
-    /// <summary>
-    /// Create new translation
-    /// </summary>
     [HttpPost("translations")]
-    [ProducesResponseType(201)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> CreateTranslation([FromBody] CreateTranslationRequest request)
+    public async Task<ActionResult<TranslationDto>> CreateTranslation([FromBody] CreateTranslationRequest request)
     {
-        var result = await _translationService.CreateTranslationAsync(request);
-        return HandleResult(result);
+        var translation = await _translationService.CreateTranslationAsync(request);
+        return CreatedAtAction(nameof(GetTranslation), new { key = translation.Key, languageCode = translation.LanguageCode }, translation);
     }
 
-    /// <summary>
-    /// Update translation
-    /// </summary>
     [HttpPut("translations/{id:guid}")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> UpdateTranslation(Guid id, [FromBody] UpdateTranslationRequest request)
+    public async Task<ActionResult<TranslationDto>> UpdateTranslation(Guid id, [FromBody] UpdateTranslationRequest request)
     {
-        var result = await _translationService.UpdateTranslationAsync(id, request);
-        return HandleResult(result);
+        var translation = await _translationService.UpdateTranslationAsync(id, request);
+        return Ok(translation);
     }
 
-    /// <summary>
-    /// Delete translation
-    /// </summary>
     [HttpDelete("translations/{id:guid}")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> DeleteTranslation(Guid id)
+    public async Task<ActionResult> DeleteTranslation(Guid id)
     {
         var result = await _translationService.DeleteTranslationAsync(id);
-        return HandleResult(result);
+        if (!result)
+            return NotFound(new { Error = "Translation not found", ErrorCode = "TRANSLATION_NOT_FOUND" });
+
+        return NoContent();
     }
 
-    /// <summary>
-    /// Bulk create translations
-    /// </summary>
     [HttpPost("translations/bulk-create")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> BulkCreateTranslations([FromBody] BulkTranslationRequest request)
+    public async Task<ActionResult> BulkCreateTranslations([FromBody] BulkTranslationRequest request)
     {
         var result = await _translationService.BulkCreateTranslationsAsync(request);
-        return HandleResult(result);
+        if (!result)
+            return BadRequest(new { Error = "Failed to create translations", ErrorCode = "BULK_CREATE_FAILED" });
+
+        return Ok(new { Message = "Translations created successfully" });
     }
 
-    /// <summary>
-    /// Bulk update translations
-    /// </summary>
     [HttpPost("translations/bulk-update")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> BulkUpdateTranslations([FromBody] BulkTranslationRequest request)
+    public async Task<ActionResult> BulkUpdateTranslations([FromBody] BulkTranslationRequest request)
     {
         var result = await _translationService.BulkUpdateTranslationsAsync(request);
-        return HandleResult(result);
+        if (!result)
+            return BadRequest(new { Error = "Failed to update translations", ErrorCode = "BULK_UPDATE_FAILED" });
+
+        return Ok(new { Message = "Translations updated successfully" });
     }
 
-    /// <summary>
-    /// Get translations by category
-    /// </summary>
     [HttpGet("translations/category/{category}/{languageCode}")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> GetTranslationsByCategory(string category, LanguageCode languageCode)
+    public async Task<ActionResult<List<TranslationDto>>> GetTranslationsByCategory(string category, LanguageCode languageCode)
     {
-        var result = await _translationService.GetTranslationsByCategoryAsync(category, languageCode);
-        return HandleResult(result);
+        var translations = await _translationService.GetTranslationsByCategoryAsync(category, languageCode);
+        return Ok(translations);
     }
 
-    /// <summary>
-    /// Get translations dictionary
-    /// </summary>
     [HttpGet("translations/dictionary/{languageCode}")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> GetTranslationsDictionary(LanguageCode languageCode, [FromQuery] string? category = null)
+    public async Task<ActionResult<Dictionary<string, string>>> GetTranslationsDictionary(LanguageCode languageCode, [FromQuery] string? category = null)
     {
-        var result = await _translationService.GetTranslationsDictionaryAsync(languageCode, category);
-        return HandleResult(result);
+        var dictionary = await _translationService.GetTranslationsDictionaryAsync(languageCode, category);
+        return Ok(dictionary);
     }
 
-    /// <summary>
-    /// Get missing translations
-    /// </summary>
     [HttpGet("translations/missing/{languageCode}")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> GetMissingTranslations(LanguageCode languageCode, [FromQuery] string? category = null)
+    public async Task<ActionResult<List<string>>> GetMissingTranslations(LanguageCode languageCode, [FromQuery] string? category = null)
     {
-        var result = await _translationService.GetMissingTranslationsAsync(languageCode, category);
-        return HandleResult(result);
+        var missingKeys = await _translationService.GetMissingTranslationsAsync(languageCode, category);
+        return Ok(missingKeys);
     }
 
-    /// <summary>
-    /// Import translations from JSON
-    /// </summary>
     [HttpPost("translations/import/{languageCode}")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> ImportTranslations(LanguageCode languageCode, [FromBody] ImportTranslationsRequest request)
+    public async Task<ActionResult> ImportTranslations(LanguageCode languageCode, [FromBody] ImportTranslationsRequest request)
     {
         var result = await _translationService.ImportTranslationsFromJsonAsync(request.JsonContent, languageCode, request.Category);
-        return HandleResult(result);
+        if (!result)
+            return BadRequest(new { Error = "Failed to import translations", ErrorCode = "IMPORT_FAILED" });
+
+        return Ok(new { Message = "Translations imported successfully" });
     }
 
-    /// <summary>
-    /// Export translations to JSON
-    /// </summary>
     [HttpGet("translations/export/{languageCode}")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> ExportTranslations(LanguageCode languageCode, [FromQuery] string? category = null)
+    public async Task<ActionResult> ExportTranslations(LanguageCode languageCode, [FromQuery] string? category = null)
     {
-        var result = await _translationService.ExportTranslationsToJsonAsync(languageCode, category);
-        return HandleResult(result);
+        var jsonContent = await _translationService.ExportTranslationsToJsonAsync(languageCode, category);
+        return Ok(new { JsonContent = jsonContent });
     }
 
     #endregion
 
     #region User Language Preferences
 
-    /// <summary>
-    /// Get user language preference
-    /// </summary>
-    [HttpGet("users/{userId:guid}/language")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> GetUserLanguagePreference(Guid userId)
+    [HttpGet("users/{userId:guid}/language-preference")]
+    public async Task<ActionResult<UserLanguagePreferenceDto>> GetUserLanguagePreference(Guid userId)
     {
-        var result = await _userLanguageService.GetUserLanguagePreferenceAsync(userId);
-        return HandleResult(result);
+        var preference = await _userLanguageService.GetUserLanguagePreferenceAsync(userId);
+        if (preference == null)
+            return NotFound(new { Error = "User language preference not found", ErrorCode = "USER_LANGUAGE_PREFERENCE_NOT_FOUND" });
+
+        return Ok(preference);
     }
 
-    /// <summary>
-    /// Set user language preference
-    /// </summary>
-    [HttpPost("users/{userId:guid}/language")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> SetUserLanguagePreference(Guid userId, [FromBody] SetUserLanguageRequest request)
+    [HttpPost("users/{userId:guid}/language-preference")]
+    public async Task<ActionResult<UserLanguagePreferenceDto>> SetUserLanguagePreference(Guid userId, [FromBody] SetUserLanguageRequest request)
     {
-        var result = await _userLanguageService.SetUserLanguagePreferenceAsync(userId, request);
-        return HandleResult(result);
+        var preference = await _userLanguageService.SetUserLanguagePreferenceAsync(userId, request);
+        return Ok(preference);
     }
 
-    /// <summary>
-    /// Get user language preferences
-    /// </summary>
-    [HttpGet("users/{userId:guid}/languages")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> GetUserLanguagePreferences(Guid userId)
+    [HttpGet("users/{userId:guid}/language-preferences")]
+    public async Task<ActionResult<List<UserLanguagePreferenceDto>>> GetUserLanguagePreferences(Guid userId)
     {
-        var result = await _userLanguageService.GetUserLanguagePreferencesAsync(userId);
-        return HandleResult(result);
+        var preferences = await _userLanguageService.GetUserLanguagePreferencesAsync(userId);
+        return Ok(preferences);
     }
 
-    /// <summary>
-    /// Remove user language preference
-    /// </summary>
-    [HttpDelete("users/{userId:guid}/languages/{languageCode}")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> RemoveUserLanguagePreference(Guid userId, LanguageCode languageCode)
+    [HttpDelete("users/{userId:guid}/language-preferences/{languageCode}")]
+    public async Task<ActionResult> RemoveUserLanguagePreference(Guid userId, LanguageCode languageCode)
     {
         var result = await _userLanguageService.RemoveUserLanguagePreferenceAsync(userId, languageCode);
-        return HandleResult(result);
+        if (!result)
+            return NotFound(new { Error = "User language preference not found", ErrorCode = "USER_LANGUAGE_PREFERENCE_NOT_FOUND" });
+
+        return NoContent();
     }
 
-    /// <summary>
-    /// Get user preferred language
-    /// </summary>
     [HttpGet("users/{userId:guid}/preferred-language")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> GetUserPreferredLanguage(Guid userId)
+    public async Task<ActionResult<LanguageCode>> GetUserPreferredLanguage(Guid userId)
     {
-        var result = await _userLanguageService.GetUserPreferredLanguageAsync(userId);
-        return HandleResult(result);
+        var languageCode = await _userLanguageService.GetUserPreferredLanguageAsync(userId);
+        return Ok(languageCode);
     }
 
-    /// <summary>
-    /// Set user preferred language
-    /// </summary>
-    [HttpPost("users/{userId:guid}/preferred-language/{languageCode}")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> SetUserPreferredLanguage(Guid userId, LanguageCode languageCode)
+    [HttpPost("users/{userId:guid}/preferred-language")]
+    public async Task<ActionResult> SetUserPreferredLanguage(Guid userId, [FromBody] SetPreferredLanguageRequest request)
     {
-        var result = await _userLanguageService.SetUserPreferredLanguageAsync(userId, languageCode);
-        return HandleResult(result);
+        var result = await _userLanguageService.SetUserPreferredLanguageAsync(userId, request.LanguageCode);
+        if (!result)
+            return BadRequest(new { Error = "Failed to set preferred language", ErrorCode = "SET_PREFERRED_LANGUAGE_FAILED" });
+
+        return Ok(new { Message = "Preferred language updated successfully" });
     }
 
     #endregion
@@ -384,4 +275,9 @@ public class ImportTranslationsRequest
 {
     public string JsonContent { get; set; } = default!;
     public string? Category { get; set; }
+}
+
+public class SetPreferredLanguageRequest
+{
+    public LanguageCode LanguageCode { get; set; }
 }

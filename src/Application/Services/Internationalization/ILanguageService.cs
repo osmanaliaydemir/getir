@@ -1,4 +1,3 @@
-using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Enums;
 
@@ -6,13 +5,13 @@ namespace Getir.Application.Services.Internationalization;
 
 public interface ILanguageService
 {
-    Task<Result<List<LanguageDto>>> GetAllLanguagesAsync();
-    Task<Result<LanguageDto>> GetLanguageByIdAsync(Guid id);
-    Task<Result<LanguageDto>> GetLanguageByCodeAsync(LanguageCode code);
-    Task<Result<LanguageDto>> GetDefaultLanguageAsync();
-    Task<Result<LanguageDto>> CreateLanguageAsync(CreateLanguageRequest request);
-    Task<Result<LanguageDto>> UpdateLanguageAsync(Guid id, UpdateLanguageRequest request);
-    Task<Result<bool>> DeleteLanguageAsync(Guid id);
-    Task<Result<bool>> SetDefaultLanguageAsync(Guid id);
-    Task<Result<List<LanguageStatisticsDto>>> GetLanguageStatisticsAsync();
+    Task<List<LanguageDto>> GetAllLanguagesAsync();
+    Task<LanguageDto?> GetLanguageByIdAsync(Guid id);
+    Task<LanguageDto?> GetLanguageByCodeAsync(LanguageCode code);
+    Task<LanguageDto?> GetDefaultLanguageAsync();
+    Task<LanguageDto> CreateLanguageAsync(CreateLanguageRequest request);
+    Task<LanguageDto> UpdateLanguageAsync(Guid id, UpdateLanguageRequest request);
+    Task<bool> DeleteLanguageAsync(Guid id);
+    Task<bool> SetDefaultLanguageAsync(Guid id);
+    Task<List<LanguageStatisticsDto>> GetLanguageStatisticsAsync();
 }
