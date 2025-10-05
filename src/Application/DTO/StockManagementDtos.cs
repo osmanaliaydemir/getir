@@ -216,3 +216,156 @@ public enum StockStatus
     Overstock = 3,
     Discontinued = 4
 }
+
+// Inventory Management DTOs
+public record InventoryCountRequest(
+    InventoryCountType CountType,
+    string? Notes,
+    List<InventoryCountItemRequest> Items);
+
+public record InventoryCountItemRequest(
+    Guid ProductId,
+    Guid? ProductVariantId,
+    int CountedQuantity,
+    string? Notes);
+
+public record InventoryCountResponse(
+    Guid Id,
+    DateTime CountDate,
+    InventoryCountType CountType,
+    InventoryCountStatus Status,
+    int DiscrepancyCount,
+    string? Notes,
+    string? CreatedByName,
+    DateTime CreatedAt,
+    DateTime? CompletedAt);
+
+public record InventoryLevelResponse(
+    Guid ProductId,
+    Guid? ProductVariantId,
+    string ProductName,
+    string? VariantName,
+    string CategoryName,
+    int CurrentStock,
+    int MinimumStock,
+    int MaximumStock,
+    decimal UnitPrice,
+    decimal TotalValue,
+    StockStatus Status,
+    DateTime LastUpdated);
+
+public record InventoryDiscrepancyResponse(
+    Guid Id,
+    Guid ProductId,
+    Guid? ProductVariantId,
+    string ProductName,
+    string? VariantName,
+    int ExpectedQuantity,
+    int ActualQuantity,
+    int Variance,
+    decimal VariancePercentage,
+    InventoryDiscrepancyStatus Status,
+    string? ResolutionNotes,
+    DateTime CreatedAt,
+    DateTime? ResolvedAt);
+
+public record InventoryAdjustmentRequest(
+    Guid ProductId,
+    Guid? ProductVariantId,
+    int NewQuantity);
+
+public record InventoryTurnoverResponse(
+    DateTime FromDate,
+    DateTime ToDate,
+    int TotalItems,
+    decimal TotalValue,
+    decimal AverageTurnoverRate,
+    List<InventoryTurnoverItem> FastMovingItems,
+    List<InventoryTurnoverItem> SlowMovingItems);
+
+public record InventoryTurnoverItem(
+    Guid ProductId,
+    string ProductName,
+    int CurrentStock,
+    int StockOutQuantity,
+    decimal TurnoverRate,
+    decimal DaysToTurnover,
+    decimal UnitPrice,
+    decimal StockValue);
+
+public record SlowMovingInventoryResponse(
+    Guid ProductId,
+    string ProductName,
+    int CurrentStock,
+    decimal UnitPrice,
+    decimal TotalValue,
+    DateTime? LastMovementDate,
+    int DaysSinceLastMovement);
+
+public record InventoryValuationResponse(
+    ValuationMethod Method,
+    DateTime ValuationDate,
+    decimal TotalValue,
+    int TotalItems,
+    List<InventoryValuationItem> TopValueItems);
+
+public record InventoryValuationItem(
+    Guid ProductId,
+    string ProductName,
+    int Quantity,
+    decimal UnitValue,
+    decimal TotalValue);
+
+// Stock Alert DTOs
+public record StockAlertSettingsRequest(
+    bool AutoStockReduction,
+    bool LowStockAlerts,
+    bool OverstockAlerts,
+    int DefaultMinimumStock,
+    int DefaultMaximumStock,
+    bool EnableStockSync,
+    string? ExternalSystemId);
+
+public record StockAlertStatisticsResponse(
+    int TotalAlerts,
+    int LowStockAlerts,
+    int OutOfStockAlerts,
+    int OverstockAlerts,
+    int ResolvedAlerts,
+    int PendingAlerts,
+    Dictionary<StockAlertType, int> AlertsByType,
+    DateTime FromDate,
+    DateTime ToDate);
+
+// Stock Synchronization DTOs
+public record StockSyncHistoryResponse(
+    Guid Id,
+    string ExternalSystemId,
+    StockSyncType SyncType,
+    StockSyncStatus Status,
+    DateTime StartedAt,
+    DateTime? CompletedAt,
+    int SyncedItemsCount,
+    int FailedItemsCount,
+    string? ErrorMessage);
+
+public record StockSyncStatusResponse(
+    bool IsEnabled,
+    string? ExternalSystemId,
+    DateTime? LastSyncAt,
+    StockSyncStatus? LastSyncStatus,
+    int SyncIntervalMinutes,
+    DateTime? LastSyncStartedAt);
+
+public record ExternalSystemConfigRequest(
+    bool EnableStockSync,
+    string? ExternalSystemId,
+    string? ApiUrl,
+    string? ApiKey,
+    int SyncIntervalMinutes);
+
+public record ConnectionTestResponse(
+    bool IsSuccessful,
+    string Message,
+    DateTime TestedAt,
+    string? ErrorMessage);

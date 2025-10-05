@@ -22,6 +22,7 @@ public class StockAlert
     public Guid? ResolvedBy { get; set; }
     public string? ResolutionNotes { get; set; }
     public bool IsActive { get; set; } = true;
+    public DateTime? UpdatedAt { get; set; }
 
     // Navigation properties
     public virtual Product Product { get; set; } = default!;

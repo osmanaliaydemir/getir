@@ -51,7 +51,12 @@ public enum StockChangeType
     Return = 8,
     
     /// <summary>
+    /// Stok senkronizasyonu
+    /// </summary>
+    Sync = 9,
+    
+    /// <summary>
     /// Diğer
     /// </summary>
-    Other = 9
+    Other = 10
 }
