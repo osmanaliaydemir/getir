@@ -2,9 +2,9 @@ using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Application.Services.Notifications;
 using Getir.Application.Abstractions;
+using Getir.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NotificationType = Getir.Application.DTO.NotificationType;
 using NotificationChannel = Getir.Application.DTO.NotificationChannel;
 
 namespace Getir.WebApi.Controllers;
