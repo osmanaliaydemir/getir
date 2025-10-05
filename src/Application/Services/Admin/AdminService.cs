@@ -658,11 +658,11 @@ public class AdminService : BaseService, IAdminService
         return await GetUsersAsync(query, cancellationToken); // Filter by role in implementation
     }
 
-    public async Task<Result<PerformanceMetricsResponse>> GetPerformanceMetricsAsync(CancellationToken cancellationToken = default)
+    public Task<Result<PerformanceMetricsResponse>> GetPerformanceMetricsAsync(CancellationToken cancellationToken = default)
     {
         var metrics = new PerformanceMetricsResponse(
             99.9m, 120m, 150, 45.2m, 67.8m, 25);
-        return Result.Ok(metrics);
+        return Task.FromResult(Result.Ok(metrics));
     }
 
     public async Task<Result<List<AdminNotificationResponse>>> GetSystemNotificationsAsync(CancellationToken cancellationToken = default)
@@ -676,10 +676,10 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok(responses);
     }
 
-    public async Task<Result> MarkNotificationAsReadAsync(Guid notificationId, CancellationToken cancellationToken = default)
+    public Task<Result> MarkNotificationAsReadAsync(Guid notificationId, CancellationToken cancellationToken = default)
     {
         // TODO: Implement notification read tracking
-        return Result.Ok();
+        return Task.FromResult(Result.Ok());
     }
 
     public async Task<Result<PagedResult<AuditLogResponse>>> GetAuditLogsAsync(AuditLogQuery query, CancellationToken cancellationToken = default)
@@ -795,21 +795,21 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok();
     }
 
-    public async Task<Result> BroadcastSystemMessageAsync(string message, List<string> targetRoles, CancellationToken cancellationToken = default)
+    public Task<Result> BroadcastSystemMessageAsync(string message, List<string> targetRoles, CancellationToken cancellationToken = default)
     {
         // TODO: Implement broadcast messaging
-        return Result.Ok();
+        return Task.FromResult(Result.Ok());
     }
 
-    public async Task<Result> ClearCacheAsync(CancellationToken cancellationToken = default)
+    public Task<Result> ClearCacheAsync(CancellationToken cancellationToken = default)
     {
         // TODO: Implement cache clearing
-        return Result.Ok();
+        return Task.FromResult(Result.Ok());
     }
 
-    public async Task<Result> BackupDatabaseAsync(CancellationToken cancellationToken = default)
+    public Task<Result> BackupDatabaseAsync(CancellationToken cancellationToken = default)
     {
         // TODO: Implement database backup
-        return Result.Ok();
+        return Task.FromResult(Result.Ok());
     }
 }

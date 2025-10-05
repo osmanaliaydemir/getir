@@ -155,7 +155,7 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
         }
     }
 
-    public async Task<Result<List<string>>> GetRequiredTransitionDataAsync(
+    public Task<Result<List<string>>> GetRequiredTransitionDataAsync(
         OrderStatus fromStatus,
         OrderStatus toStatus,
         CancellationToken cancellationToken = default)
@@ -186,10 +186,10 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
                 break;
         }
 
-        return Result.Ok(requiredData);
+        return Task.FromResult(Result.Ok(requiredData));
     }
 
-    private async Task<Result> ValidateBusinessRulesAsync(
+    private Task<Result> ValidateBusinessRulesAsync(
         Order order,
         OrderStatus fromStatus,
         OrderStatus toStatus,
@@ -202,7 +202,7 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
                 // Check if merchant is active
                 if (!order.Merchant.IsActive)
                 {
-                    return Result.Fail("Merchant is not active", "MERCHANT_INACTIVE");
+                    return Task.FromResult(Result.Fail("Merchant is not active", "MERCHANT_INACTIVE"));
                 }
                 break;
 
@@ -210,7 +210,7 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
                 // Check if courier is assigned
                 if (order.CourierId == null)
                 {
-                    return Result.Fail("Courier must be assigned before marking as on the way", "COURIER_REQUIRED");
+                    return Task.FromResult(Result.Fail("Courier must be assigned before marking as on the way", "COURIER_REQUIRED"));
                 }
                 break;
 
@@ -219,7 +219,7 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
                 if (order.EstimatedDeliveryTime.HasValue && 
                     DateTime.UtcNow < order.EstimatedDeliveryTime.Value.AddMinutes(-30))
                 {
-                    return Result.Fail("Cannot mark as delivered before estimated delivery time", "TOO_EARLY_DELIVERY");
+                    return Task.FromResult(Result.Fail("Cannot mark as delivered before estimated delivery time", "TOO_EARLY_DELIVERY"));
                 }
                 break;
 
@@ -227,12 +227,12 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
                 // Check if order can be cancelled
                 if (order.Status == OrderStatus.Delivered)
                 {
-                    return Result.Fail("Cannot cancel a delivered order", "CANNOT_CANCEL_DELIVERED");
+                    return Task.FromResult(Result.Fail("Cannot cancel a delivered order", "CANNOT_CANCEL_DELIVERED"));
                 }
                 break;
         }
 
-        return Result.Ok();
+        return Task.FromResult(Result.Ok());
     }
 
     private Result ValidateMerchantOwnerPermission(Order order, OrderStatus toStatus, Guid userId)

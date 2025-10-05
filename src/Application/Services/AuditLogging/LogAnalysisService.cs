@@ -331,11 +331,11 @@ public class LogAnalysisService : ILogAnalysisService
             {
                 ["TotalEvents"] = securityEventLogs.Count,
                 ["EventTypes"] = securityEventLogs.GroupBy(x => x.EventType)
-                    .ToDictionary(g => g.Key, g => g.Count()),
+                    .ToDictionary(g => g.Key ?? "Unknown", g => g.Count()),
                 ["SeverityLevels"] = securityEventLogs.GroupBy(x => x.Severity)
-                    .ToDictionary(g => g.Key, g => g.Count()),
+                    .ToDictionary(g => g.Key ?? "Unknown", g => g.Count()),
                 ["RiskLevels"] = securityEventLogs.GroupBy(x => x.RiskLevel)
-                    .ToDictionary(g => g.Key, g => g.Count()),
+                    .ToDictionary(g => g.Key ?? "Unknown", g => g.Count()),
                 ["Sources"] = securityEventLogs.Where(x => !string.IsNullOrEmpty(x.Source))
                     .GroupBy(x => x.Source)
                     .ToDictionary(g => g.Key!, g => g.Count()),

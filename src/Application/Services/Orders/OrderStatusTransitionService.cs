@@ -102,7 +102,7 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
 
                 return Result.Ok();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 await _unitOfWork.RollbackAsync(cancellationToken);
                 throw;
@@ -188,7 +188,7 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
 
                 return Result.Ok();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 await _unitOfWork.RollbackAsync(cancellationToken);
                 throw;
@@ -252,12 +252,12 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
 
             if (!validStatuses.Success)
             {
-                return Result.Fail<List<OrderStatusTransitionResponse>>(validStatuses.Error, validStatuses.ErrorCode);
+                return Result.Fail<List<OrderStatusTransitionResponse>>(validStatuses.Error ?? "Failed to get valid statuses", validStatuses.ErrorCode);
             }
 
             var transitions = new List<OrderStatusTransitionResponse>();
 
-            foreach (var status in validStatuses.Value)
+            foreach (var status in validStatuses.Value!)
             {
                 var requiredDataResult = await _validatorService.GetRequiredTransitionDataAsync(
                     OrderStatus.Pending, status, cancellationToken); // We'll get current status from order
@@ -267,7 +267,7 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
                     status.ToStringValue(),
                     GetStatusDescription(status),
                     true,
-                    requiredDataResult.Success ? requiredDataResult.Value : new List<string>());
+                    requiredDataResult.Success ? requiredDataResult.Value! : new List<string>());
 
                 transitions.Add(transition);
             }

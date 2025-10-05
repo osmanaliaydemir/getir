@@ -166,7 +166,7 @@ public class ExternalServiceException : ApplicationException
         : base(
             customMessage ?? $"External service '{serviceName}' failed during '{operation}'",
             "EXTERNAL_SERVICE_ERROR",
-            innerException,
+            innerException!,
             new { ServiceName = serviceName, Operation = operation })
     {
         ServiceName = serviceName;
@@ -243,7 +243,7 @@ public class DataIntegrityException : ApplicationException
         : base(
             customMessage ?? $"Data integrity constraint '{constraintName}' violated in table '{tableName}'",
             "DATA_INTEGRITY_VIOLATION",
-            innerException,
+            innerException!,
             new { ConstraintName = constraintName, TableName = tableName })
     {
         ConstraintName = constraintName;

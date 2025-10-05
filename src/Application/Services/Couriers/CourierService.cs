@@ -142,7 +142,7 @@ public class CourierService : BaseService, ICourierService
         var stats = await GetCourierStatsAsync(courierId, cancellationToken);
         if (!stats.Success)
         {
-            return Result.Fail<CourierDashboardResponse>(stats.Error, stats.ErrorCode);
+            return Result.Fail<CourierDashboardResponse>(stats.Error ?? "Failed to get courier stats", stats.ErrorCode);
         }
 
         // Get active orders
@@ -150,7 +150,7 @@ public class CourierService : BaseService, ICourierService
         var activeOrders = await GetAssignedOrdersAsync(courierId, activeOrdersQuery, cancellationToken);
         if (!activeOrders.Success)
         {
-            return Result.Fail<CourierDashboardResponse>(activeOrders.Error, activeOrders.ErrorCode);
+            return Result.Fail<CourierDashboardResponse>(activeOrders.Error ?? "Failed to get active orders", activeOrders.ErrorCode);
         }
 
         // Get recent deliveries (completed orders)
@@ -178,14 +178,14 @@ public class CourierService : BaseService, ICourierService
         var earnings = await GetCourierEarningsAsync(courierId, cancellationToken: cancellationToken);
         if (!earnings.Success)
         {
-            return Result.Fail<CourierDashboardResponse>(earnings.Error, earnings.ErrorCode);
+            return Result.Fail<CourierDashboardResponse>(earnings.Error ?? "Failed to get earnings", earnings.ErrorCode);
         }
 
         var dashboard = new CourierDashboardResponse(
-            stats.Value,
-            activeOrders.Value.Items.ToList(),
+            stats.Value!,
+            activeOrders.Value!.Items.ToList(),
             recentDeliveriesResponse,
-            earnings.Value);
+            earnings.Value!);
 
         return Result.Ok(dashboard);
     }

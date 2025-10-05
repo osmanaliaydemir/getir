@@ -567,7 +567,7 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
         }
     }
 
-    public async Task<Result<RouteOptimizationResponse>> GetTrafficOptimizedRoutesAsync(
+    public Task<Result<RouteOptimizationResponse>> GetTrafficOptimizedRoutesAsync(
         RouteOptimizationRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -611,17 +611,17 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
                 Status: "OK",
                 ErrorMessage: null);
 
-            return Result.Ok(response);
+            return Task.FromResult(Result.Ok(response));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting traffic optimized routes");
             _loggingService.LogError("Get traffic optimized routes failed", ex);
-            return Result.Fail<RouteOptimizationResponse>("Failed to get traffic optimized routes", "TRAFFIC_ROUTES_ERROR");
+            return Task.FromResult(Result.Fail<RouteOptimizationResponse>("Failed to get traffic optimized routes", "TRAFFIC_ROUTES_ERROR"));
         }
     }
 
-    public async Task<Result<RouteOptimizationResponse>> OptimizeMultiPointRouteAsync(
+    public Task<Result<RouteOptimizationResponse>> OptimizeMultiPointRouteAsync(
         List<RouteWaypoint> waypoints,
         RoutePreferences? preferences = null,
         CancellationToken cancellationToken = default)
@@ -630,7 +630,7 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
         {
             if (waypoints.Count < 2)
             {
-                return Result.Fail<RouteOptimizationResponse>("At least 2 waypoints required", "INSUFFICIENT_WAYPOINTS");
+                return Task.FromResult(Result.Fail<RouteOptimizationResponse>("At least 2 waypoints required", "INSUFFICIENT_WAYPOINTS"));
             }
 
             // Çoklu nokta rota optimizasyonu
@@ -654,13 +654,13 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
                 Status: "OK",
                 ErrorMessage: null);
 
-            return Result.Ok(response);
+            return Task.FromResult(Result.Ok(response));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error optimizing multi-point route");
             _loggingService.LogError("Optimize multi-point route failed", ex);
-            return Result.Fail<RouteOptimizationResponse>("Failed to optimize multi-point route", "MULTI_POINT_OPTIMIZATION_ERROR");
+            return Task.FromResult(Result.Fail<RouteOptimizationResponse>("Failed to optimize multi-point route", "MULTI_POINT_OPTIMIZATION_ERROR"));
         }
     }
 

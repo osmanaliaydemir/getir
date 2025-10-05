@@ -43,10 +43,10 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
         var performance = await GetPerformanceMetricsAsync(merchantId, merchantOwnerId, null, null, cancellationToken);
 
         var response = new MerchantDashboardResponse(
-            stats.Value,
-            recentOrders.Value,
-            topProducts.Value,
-            performance.Value
+            stats.Value!,
+            recentOrders.Value!,
+            topProducts.Value!,
+            performance.Value!
         );
 
         return Result.Ok(response);

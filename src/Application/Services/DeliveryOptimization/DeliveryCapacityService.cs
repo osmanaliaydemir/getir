@@ -444,7 +444,7 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
         }
     }
 
-    public async Task<Result> SendCapacityAlertAsync(
+    public Task<Result> SendCapacityAlertAsync(
         CapacityAlertRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -461,12 +461,12 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
                 request.AlertTime
             });
 
-            return Result.Ok();
+            return Task.FromResult(Result.Ok());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error sending capacity alert for merchant {MerchantId}", request.MerchantId);
-            return Result.Fail("Failed to send capacity alert", "SEND_ALERT_ERROR");
+            return Task.FromResult(Result.Fail("Failed to send capacity alert", "SEND_ALERT_ERROR"));
         }
     }
 
