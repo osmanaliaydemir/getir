@@ -28,6 +28,7 @@ using Getir.Application.Services.Reviews;
 using Getir.Application.Services.Search;
 using Getir.Application.Services.ServiceCategories;
 using Getir.Application.Services.WorkingHours;
+using Getir.Application.Services.DeliveryOptimization;
 
 // Infrastructure namespaces
 using Getir.Infrastructure.Persistence;
@@ -134,6 +135,10 @@ builder.Services.AddScoped<IMerchantOnboardingService, MerchantOnboardingService
 builder.Services.AddScoped<IProductOptionGroupService, ProductOptionGroupService>();
 builder.Services.AddScoped<IProductOptionService, ProductOptionService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+
+// Delivery Optimization Services
+builder.Services.AddScoped<IDeliveryCapacityService, DeliveryCapacityService>();
+builder.Services.AddScoped<IRouteOptimizationService, RouteOptimizationService>();
 builder.Services.AddScoped<Getir.Application.Services.Admin.IAdminService, Getir.Application.Services.Admin.AdminService>();
 builder.Services.AddScoped<Getir.Application.Services.Payments.IPaymentService, Getir.Application.Services.Payments.PaymentService>();
 builder.Services.AddScoped<Getir.Application.Services.GeoLocation.IGeoLocationService, Getir.Application.Services.GeoLocation.GeoLocationService>();

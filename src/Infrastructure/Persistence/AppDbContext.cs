@@ -56,6 +56,10 @@ public class AppDbContext : DbContext
     public DbSet<CashPaymentSecurity> CashPaymentSecurities { get; set; }
     public DbSet<CashPaymentEvidence> CashPaymentEvidences { get; set; }
     public DbSet<CashPaymentAuditLog> CashPaymentAuditLogs { get; set; }
+    
+    // Delivery optimization entities
+    public DbSet<DeliveryCapacity> DeliveryCapacities { get; set; }
+    public DbSet<DeliveryRoute> DeliveryRoutes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
