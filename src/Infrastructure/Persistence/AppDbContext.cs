@@ -54,6 +54,11 @@ public class AppDbContext : DbContext
     public DbSet<SystemChangeLog> SystemChangeLogs { get; set; }
     public DbSet<SecurityEventLog> SecurityEventLogs { get; set; }
     public DbSet<LogAnalysisReport> LogAnalysisReports { get; set; }
+
+    // Internationalization entities
+    public DbSet<Language> Languages { get; set; }
+    public DbSet<Translation> Translations { get; set; }
+    public DbSet<UserLanguagePreference> UserLanguagePreferences { get; set; }
     
     // Payment entities
     public DbSet<Payment> Payments { get; set; }
@@ -1044,6 +1049,93 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.GeneratedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Language Configuration
+        modelBuilder.Entity<Language>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Code).IsRequired();
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.NativeName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.CultureCode).IsRequired().HasMaxLength(10);
+            entity.Property(e => e.FlagIcon).HasMaxLength(50);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.CultureCode).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.IsDefault);
+
+            entity.HasOne(e => e.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.UpdatedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.UpdatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Translation Configuration
+        modelBuilder.Entity<Translation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Key).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Value).IsRequired();
+            entity.Property(e => e.LanguageCode).IsRequired();
+            entity.Property(e => e.Category).HasMaxLength(100);
+            entity.Property(e => e.Context).HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => e.Key);
+            entity.HasIndex(e => e.LanguageCode);
+            entity.HasIndex(e => e.Category);
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => new { e.Key, e.LanguageCode }).IsUnique();
+            entity.HasIndex(e => new { e.Category, e.LanguageCode });
+
+            entity.HasOne(e => e.Language)
+                .WithMany(l => l.Translations)
+                .HasForeignKey(e => e.LanguageCode)
+                .HasPrincipalKey(l => l.Code)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.UpdatedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.UpdatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // UserLanguagePreference Configuration
+        modelBuilder.Entity<UserLanguagePreference>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.LanguageId);
+            entity.HasIndex(e => e.IsPrimary);
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => new { e.UserId, e.IsPrimary });
+            entity.HasIndex(e => new { e.UserId, e.LanguageId }).IsUnique();
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Language)
+                .WithMany(l => l.UserLanguagePreferences)
+                .HasForeignKey(e => e.LanguageId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

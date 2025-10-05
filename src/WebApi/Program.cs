@@ -30,6 +30,8 @@ using Getir.Application.Services.ServiceCategories;
 using Getir.Application.Services.WorkingHours;
 using Getir.Application.Services.DeliveryOptimization;
 using Getir.Application.Services.AuditLogging;
+using Getir.Application.Services.Internationalization;
+using Getir.WebApi.Extensions;
 
 // Infrastructure namespaces
 using Getir.Infrastructure.Persistence;
@@ -146,6 +148,12 @@ builder.Services.AddScoped<IUserActivityLogService, UserActivityLogService>();
 builder.Services.AddScoped<ISystemChangeLogService, SystemChangeLogService>();
 builder.Services.AddScoped<ISecurityEventLogService, SecurityEventLogService>();
 builder.Services.AddScoped<ILogAnalysisService, LogAnalysisService>();
+
+// Internationalization Services
+builder.Services.AddScoped<ILanguageService, LanguageService>();
+builder.Services.AddScoped<ITranslationService, TranslationService>();
+builder.Services.AddScoped<IUserLanguageService, UserLanguageService>();
+builder.Services.AddScoped<ILocalizationService, LocalizationService>();
 builder.Services.AddScoped<Getir.Application.Services.Admin.IAdminService, Getir.Application.Services.Admin.AdminService>();
 builder.Services.AddScoped<Getir.Application.Services.Payments.IPaymentService, Getir.Application.Services.Payments.PaymentService>();
 builder.Services.AddScoped<Getir.Application.Services.GeoLocation.IGeoLocationService, Getir.Application.Services.GeoLocation.GeoLocationService>();
@@ -266,6 +274,10 @@ app.Use(async (context, next) =>
 
 // CORS for SignalR
 app.UseCors("SignalRCorsPolicy");
+
+// Localization
+app.AddLocalizationServices();
+app.UseLocalizationMiddleware();
 
 app.UseAuthentication();
 app.UseAuthorization();
