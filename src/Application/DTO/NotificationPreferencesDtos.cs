@@ -78,9 +78,8 @@ public record NotificationPreferencesSummary(
     bool SmsEnabled,
     bool PushEnabled,
     bool RespectQuietHours,
-    TimeSpan? QuietStartTime,
-    TimeSpan? QuietEndTime,
-    string Language);
+    string Language,
+    int ActiveChannelsCount);
 
 /// <summary>
 /// Bulk notification preferences update

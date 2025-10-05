@@ -3,7 +3,9 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Application.Services.Orders;
+using Getir.Application.Services.Payments;
 using Getir.Domain.Entities;
+using Getir.Domain.Enums;
 using Getir.UnitTests.Helpers;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -19,6 +21,7 @@ public class OrderServiceTests
     private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly Mock<IBackgroundTaskService> _backgroundTaskServiceMock;
     private readonly Mock<ISignalRService> _signalRServiceMock;
+    private readonly Mock<IPaymentService> _paymentServiceMock;
     private readonly OrderService _orderService;
 
     public OrderServiceTests()
@@ -29,6 +32,7 @@ public class OrderServiceTests
         _cacheServiceMock = new Mock<ICacheService>();
         _backgroundTaskServiceMock = new Mock<IBackgroundTaskService>();
         _signalRServiceMock = new Mock<ISignalRService>();
+        _paymentServiceMock = new Mock<IPaymentService>();
         
         _orderService = new OrderService(
             _unitOfWorkMock.Object,
@@ -36,7 +40,7 @@ public class OrderServiceTests
             _loggingServiceMock.Object,
             _cacheServiceMock.Object,
             _backgroundTaskServiceMock.Object,
-            paymentService: null, // Mock payment service
+            _paymentServiceMock.Object,
             _signalRServiceMock.Object);
     }
 
@@ -53,7 +57,7 @@ public class OrderServiceTests
             merchant.Id,
             new List<OrderLineRequest>
             {
-                new(product.Id, 2, "Test notes")
+                new(product.Id, null, 2, "Test notes")
             },
             "Test Address",
             40.9897m,
@@ -64,11 +68,16 @@ public class OrderServiceTests
         SetupMerchantMock(merchant);
         SetupProductMock(product);
         SetupOrderRepositories();
+        SetupPaymentServiceMock();
 
         // Act
         var result = await _orderService.CreateOrderAsync(userId, request);
 
         // Assert
+        if (!result.Success)
+        {
+            Console.WriteLine($"Test failed with error: {result.Error}, Code: {result.ErrorCode}");
+        }
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value!.SubTotal.Should().Be(100); // 2 * 50
@@ -93,7 +102,7 @@ public class OrderServiceTests
 
         var request = new CreateOrderRequest(
             merchant.Id,
-            new List<OrderLineRequest> { new(product.Id, 1, null) }, // Only 30 TL
+            new List<OrderLineRequest> { new(product.Id, null, 1, null) }, // Only 30 TL
             "Test Address",
             40.9897m,
             29.0257m,
@@ -124,7 +133,7 @@ public class OrderServiceTests
 
         var request = new CreateOrderRequest(
             merchant.Id,
-            new List<OrderLineRequest> { new(product.Id, 10, null) }, // Request 10, but only 5 available
+            new List<OrderLineRequest> { new(product.Id, null, 10, null) }, // Request 10, but only 5 available
             "Test Address",
             40.9897m,
             29.0257m,
@@ -165,8 +174,8 @@ public class OrderServiceTests
             merchant.Id,
             new List<OrderLineRequest>
             {
-                new(product1.Id, 2, null), // 2 * 40 = 80
-                new(product2.Id, 3, null)  // 3 * 30 = 90
+                new(product1.Id, null, 2, null), // 2 * 40 = 80
+                new(product2.Id, null, 3, null)  // 3 * 30 = 90
             },
             "Test Address",
             40.9897m,
@@ -177,11 +186,16 @@ public class OrderServiceTests
         SetupMerchantMock(merchant);
         SetupMultipleProductsMock(new[] { product1, product2 });
         SetupOrderRepositories();
+        SetupPaymentServiceMock();
 
         // Act
         var result = await _orderService.CreateOrderAsync(userId, request);
 
         // Assert
+        if (!result.Success)
+        {
+            Console.WriteLine($"Test failed with error: {result.Error}, Code: {result.ErrorCode}");
+        }
         result.Success.Should().BeTrue();
         result.Value!.SubTotal.Should().Be(170); // 80 + 90
         result.Value.DeliveryFee.Should().Be(20);
@@ -199,7 +213,7 @@ public class OrderServiceTests
 
         var request = new CreateOrderRequest(
             merchant.Id,
-            new List<OrderLineRequest> { new(Guid.NewGuid(), 1, null) },
+            new List<OrderLineRequest> { new(Guid.NewGuid(), null, 1, null) },
             "Test Address",
             40.9897m,
             29.0257m,
@@ -284,5 +298,32 @@ public class OrderServiceTests
 
         _unitOfWorkMock.Setup(u => u.Repository<Order>()).Returns(orderRepoMock.Object);
         _unitOfWorkMock.Setup(u => u.Repository<OrderLine>()).Returns(orderLineRepoMock.Object);
+    }
+
+    private void SetupPaymentServiceMock()
+    {
+        _paymentServiceMock.Setup(p => p.CreatePaymentAsync(
+            It.IsAny<CreatePaymentRequest>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok(new PaymentResponse(
+                Id: Guid.NewGuid(),
+                OrderId: Guid.NewGuid(),
+                PaymentMethod: PaymentMethod.CreditCard,
+                Status: PaymentStatus.Pending,
+                Amount: 100,
+                ChangeAmount: null,
+                ProcessedAt: null,
+                CompletedAt: null,
+                CollectedAt: null,
+                SettledAt: null,
+                CollectedByCourierId: null,
+                CollectedByCourierName: null,
+                Notes: null,
+                FailureReason: null,
+                ExternalTransactionId: null,
+                RefundAmount: null,
+                RefundedAt: null,
+                RefundReason: null,
+                CreatedAt: DateTime.UtcNow)));
     }
 }

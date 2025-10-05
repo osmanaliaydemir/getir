@@ -83,7 +83,39 @@ public class OrderService : BaseService, IOrderService
                     return ServiceResult.Failure<OrderResponse>($"Insufficient stock for {product.Name}", ErrorCodes.INSUFFICIENT_STOCK);
                 }
 
-                var unitPrice = product.DiscountedPrice ?? product.Price;
+                // Check if this is a market product with variant
+                decimal unitPrice;
+                string? variantName = null;
+                
+                if (item.ProductVariantId.HasValue)
+                {
+                    // Get variant price for market products
+                    var variant = await _unitOfWork.ReadRepository<MarketProductVariant>()
+                        .FirstOrDefaultAsync(v => v.Id == item.ProductVariantId.Value && v.ProductId == item.ProductId,
+                            cancellationToken: cancellationToken);
+                    
+                    if (variant == null)
+                    {
+                        await _unitOfWork.RollbackAsync(cancellationToken);
+                        return ServiceResult.Failure<OrderResponse>($"Product variant not found", ErrorCodes.PRODUCT_VARIANT_NOT_FOUND);
+                    }
+                    
+                    unitPrice = variant.DiscountedPrice ?? variant.Price;
+                    variantName = variant.Name;
+                    
+                    // Check variant stock
+                    if (variant.StockQuantity < item.Quantity)
+                    {
+                        await _unitOfWork.RollbackAsync(cancellationToken);
+                        return ServiceResult.Failure<OrderResponse>($"Insufficient stock for {variant.Name}", ErrorCodes.INSUFFICIENT_STOCK);
+                    }
+                }
+                else
+                {
+                    // Use product base price
+                    unitPrice = product.DiscountedPrice ?? product.Price;
+                }
+                
                 var optionsTotal = 0m;
                 var orderLineOptions = new List<OrderLineOption>();
 
@@ -119,7 +151,9 @@ public class OrderService : BaseService, IOrderService
                 {
                     Id = Guid.NewGuid(),
                     ProductId = item.ProductId,
+                    ProductVariantId = item.ProductVariantId,
                     ProductName = product.Name,
+                    VariantName = variantName,
                     Quantity = item.Quantity,
                     UnitPrice = unitPrice,
                     TotalPrice = totalPrice,
@@ -136,13 +170,33 @@ public class OrderService : BaseService, IOrderService
                 }
 
                 // Stok güncelle
-                var productToUpdate = await _unitOfWork.Repository<Product>()
-                    .GetByIdAsync(product.Id, cancellationToken);
-                
-                if (productToUpdate != null)
+                if (item.ProductVariantId.HasValue)
                 {
-                    productToUpdate.StockQuantity -= item.Quantity;
-                    _unitOfWork.Repository<Product>().Update(productToUpdate);
+                    // Variant stok güncelle
+                    var variantToUpdate = await _unitOfWork.Repository<MarketProductVariant>()
+                        .GetByIdAsync(item.ProductVariantId.Value, cancellationToken);
+                    
+                    if (variantToUpdate != null)
+                    {
+                        variantToUpdate.StockQuantity -= item.Quantity;
+                        variantToUpdate.IsAvailable = variantToUpdate.StockQuantity > 0;
+                        variantToUpdate.UpdatedAt = DateTime.UtcNow;
+                        _unitOfWork.Repository<MarketProductVariant>().Update(variantToUpdate);
+                    }
+                }
+                else
+                {
+                    // Product stok güncelle
+                    var productToUpdate = await _unitOfWork.Repository<Product>()
+                        .GetByIdAsync(product.Id, cancellationToken);
+                    
+                    if (productToUpdate != null)
+                    {
+                        productToUpdate.StockQuantity -= item.Quantity;
+                        productToUpdate.IsAvailable = productToUpdate.StockQuantity > 0;
+                        productToUpdate.UpdatedAt = DateTime.UtcNow;
+                        _unitOfWork.Repository<Product>().Update(productToUpdate);
+                    }
                 }
             }
 
@@ -247,13 +301,14 @@ public class OrderService : BaseService, IOrderService
                 orderLines.Select(ol => new OrderLineResponse(
                     ol.Id,
                     ol.ProductId,
+                    ol.ProductVariantId,
                     ol.ProductName,
+                    ol.VariantName,
                     ol.Quantity,
                     ol.UnitPrice,
                     ol.TotalPrice,
                     ol.Options.Select(opt => new OrderLineOptionResponse(
                         opt.Id,
-                        opt.OrderLineId,
                         opt.ProductOptionId,
                         opt.OptionName,
                         opt.ExtraPrice,
@@ -319,13 +374,14 @@ public class OrderService : BaseService, IOrderService
                 order.OrderLines.Select(ol => new OrderLineResponse(
                     ol.Id,
                     ol.ProductId,
+                    ol.ProductVariantId,
                     ol.ProductName,
+                    ol.VariantName,
                     ol.Quantity,
                     ol.UnitPrice,
                     ol.TotalPrice,
                     ol.Options.Select(opt => new OrderLineOptionResponse(
                         opt.Id,
-                        opt.OrderLineId,
                         opt.ProductOptionId,
                         opt.OptionName,
                         opt.ExtraPrice,
@@ -391,13 +447,14 @@ public class OrderService : BaseService, IOrderService
                 o.OrderLines.Select(ol => new OrderLineResponse(
                     ol.Id,
                     ol.ProductId,
+                    ol.ProductVariantId,
                     ol.ProductName,
+                    ol.VariantName,
                     ol.Quantity,
                     ol.UnitPrice,
                     ol.TotalPrice,
                     ol.Options.Select(opt => new OrderLineOptionResponse(
                         opt.Id,
-                        opt.OrderLineId,
                         opt.ProductOptionId,
                         opt.OptionName,
                         opt.ExtraPrice,
@@ -476,13 +533,14 @@ public class OrderService : BaseService, IOrderService
             o.OrderLines.Select(ol => new OrderLineResponse(
                 ol.Id,
                 ol.ProductId,
+                ol.ProductVariantId,
                 ol.ProductName,
+                ol.VariantName,
                 ol.Quantity,
                 ol.UnitPrice,
                 ol.TotalPrice,
                 ol.Options.Select(opt => new OrderLineOptionResponse(
                     opt.Id,
-                    opt.OrderLineId,
                     opt.ProductOptionId,
                     opt.OptionName,
                     opt.ExtraPrice,
@@ -555,20 +613,21 @@ public class OrderService : BaseService, IOrderService
             order.DeliveryAddress,
             order.EstimatedDeliveryTime,
             order.CreatedAt,
-            order.OrderLines.Select(ol => new OrderLineResponse(
-                ol.Id,
-                ol.ProductId,
-                ol.ProductName,
-                ol.Quantity,
-                ol.UnitPrice,
-                ol.TotalPrice,
-                ol.Options.Select(opt => new OrderLineOptionResponse(
-                    opt.Id,
-                    opt.OrderLineId,
-                    opt.ProductOptionId,
-                    opt.OptionName,
-                    opt.ExtraPrice,
-                    opt.CreatedAt)).ToList())).ToList());
+                order.OrderLines.Select(ol => new OrderLineResponse(
+                    ol.Id,
+                    ol.ProductId,
+                    ol.ProductVariantId,
+                    ol.ProductName,
+                    ol.VariantName,
+                    ol.Quantity,
+                    ol.UnitPrice,
+                    ol.TotalPrice,
+                    ol.Options.Select(opt => new OrderLineOptionResponse(
+                        opt.Id,
+                        opt.ProductOptionId,
+                        opt.OptionName,
+                        opt.ExtraPrice,
+                        opt.CreatedAt)).ToList())).ToList());
 
         return ServiceResult.Success(response);
     }
@@ -932,7 +991,7 @@ public class OrderService : BaseService, IOrderService
             Id: order.Id,
             OrderNumber: order.OrderNumber,
             MerchantId: order.MerchantId,
-            MerchantName: order.Merchant?.Name ?? "Unknown",
+            MerchantName: order.Merchant?.Name ?? "Unknown", // Nullable reference type warning suppressed
             CustomerId: order.UserId,
             CustomerName: "Customer", // TODO: Get from user service
             Status: order.Status.ToString(),
@@ -942,7 +1001,7 @@ public class OrderService : BaseService, IOrderService
             Total: order.Total,
             PaymentMethod: "Cash", // TODO: Get from payment
             PaymentStatus: "Pending", // TODO: Get from payment
-            DeliveryAddress: order.DeliveryAddress ?? "Unknown",
+            DeliveryAddress: order.DeliveryAddress ?? "Unknown", // Nullable reference type warning suppressed
             EstimatedDeliveryTime: order.EstimatedDeliveryTime,
             CreatedAt: order.CreatedAt,
             CompletedAt: null, // TODO: Add CompletedAt property to Order entity
@@ -968,7 +1027,7 @@ public class OrderService : BaseService, IOrderService
 
     private async Task<Result> UpdateOrderStatusInternalAsync(
         Guid orderId,
-        UpdateOrderStatusRequest request,
+        UpdateOrderStatusRequest _,
         Guid merchantOwnerId,
         CancellationToken cancellationToken)
     {
@@ -998,11 +1057,11 @@ public class OrderService : BaseService, IOrderService
             cancellationToken);
     }
 
-    private async Task<Result<OrderAnalyticsResponse>> GetOrderAnalyticsInternalAsync(
-        Guid merchantOwnerId,
-        DateTime? startDate,
-        DateTime? endDate,
-        CancellationToken cancellationToken)
+    private Task<Result<OrderAnalyticsResponse>> GetOrderAnalyticsInternalAsync(
+        Guid _merchantOwnerId,
+        DateTime? _startDate,
+        DateTime? _endDate,
+        CancellationToken _cancellationToken)
     {
         // Simplified analytics implementation
         var response = new OrderAnalyticsResponse(
@@ -1014,7 +1073,7 @@ public class OrderService : BaseService, IOrderService
             GeneratedAt: DateTime.UtcNow
         );
 
-        return Result.Ok(response);
+        return Task.FromResult(Result.Ok(response));
     }
 
     public async Task<Result<PagedResult<OrderResponse>>> GetPendingOrdersAsync(
@@ -1029,10 +1088,10 @@ public class OrderService : BaseService, IOrderService
             cancellationToken);
     }
 
-    private async Task<Result<PagedResult<OrderResponse>>> GetPendingOrdersInternalAsync(
-        Guid merchantOwnerId,
+    private Task<Result<PagedResult<OrderResponse>>> GetPendingOrdersInternalAsync(
+        Guid _merchantOwnerId,
         PaginationQuery query,
-        CancellationToken cancellationToken)
+        CancellationToken _cancellationToken)
     {
         // Simplified pending orders implementation
         var response = new PagedResult<OrderResponse>
@@ -1042,7 +1101,7 @@ public class OrderService : BaseService, IOrderService
             PageSize = query.PageSize
         };
 
-        return Result.Ok(response);
+        return Task.FromResult(Result.Ok(response));
     }
 
     public async Task<Result<OrderTimelineResponse>> GetOrderTimelineAsync(

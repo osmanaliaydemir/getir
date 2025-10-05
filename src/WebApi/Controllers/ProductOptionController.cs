@@ -1,269 +1,289 @@
-using Getir.Application.Common;
-using Getir.Application.DTO;
-using Getir.Application.Services.ProductOptions;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Getir.Application.Services.ProductOptions;
+using Getir.Application.DTO;
+using Getir.Application.Common;
 
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Product option controller for product option management
+/// Product option management controller
 /// </summary>
 [ApiController]
-[Route("api/v1/merchants/products/{productId:guid}/[controller]")]
+[Route("api/v1/[controller]")]
 [Tags("Product Options")]
-[Authorize]
 public class ProductOptionController : BaseController
 {
     private readonly IProductOptionService _productOptionService;
-
-    public ProductOptionController(IProductOptionService productOptionService)
-    {
-        _productOptionService = productOptionService;
-    }
-
-    /// <summary>
-    /// Get product options
-    /// </summary>
-    /// <param name="productId">Product ID</param>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged product options</returns>
-    [HttpGet]
-    [ProducesResponseType(typeof(PagedResult<ProductOptionResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetProductOptions(
-        [FromRoute] Guid productId,
-        [FromQuery] PaginationQuery query,
-        CancellationToken ct = default)
-    {
-        var result = await _productOptionService.GetProductOptionsAsync(productId, query, ct);
-        return ToActionResult(result);
-    }
-
-    /// <summary>
-    /// Get product option by ID
-    /// </summary>
-    /// <param name="productId">Product ID</param>
-    /// <param name="optionId">Option ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Product option</returns>
-    [HttpGet("{optionId:guid}")]
-    [ProducesResponseType(typeof(ProductOptionResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetProductOption(
-        [FromRoute] Guid productId,
-        [FromRoute] Guid optionId,
-        CancellationToken ct = default)
-    {
-        var result = await _productOptionService.GetProductOptionAsync(optionId, ct);
-        return ToActionResult(result);
-    }
-
-    /// <summary>
-    /// Create product option
-    /// </summary>
-    /// <param name="productId">Product ID</param>
-    /// <param name="request">Create option request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Created option</returns>
-    [HttpPost]
-    [ProducesResponseType(typeof(ProductOptionResponse), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> CreateProductOption(
-        [FromRoute] Guid productId,
-        [FromBody] CreateProductOptionRequest request,
-        CancellationToken ct = default)
-    {
-        var validationResult = HandleValidationErrors();
-        if (validationResult != null) return validationResult;
-
-        var result = await _productOptionService.CreateProductOptionAsync(request, productId, ct);
-        if (result.Success)
-        {
-            return Created($"/api/v1/merchants/products/{productId}/options/{result.Value.Id}", result.Value);
-        }
-        return ToActionResult(result);
-    }
-
-    /// <summary>
-    /// Update product option
-    /// </summary>
-    /// <param name="productId">Product ID</param>
-    /// <param name="optionId">Option ID</param>
-    /// <param name="request">Update option request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Updated option</returns>
-    [HttpPut("{optionId:guid}")]
-    [ProducesResponseType(typeof(ProductOptionResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateProductOption(
-        [FromRoute] Guid productId,
-        [FromRoute] Guid optionId,
-        [FromBody] UpdateProductOptionRequest request,
-        CancellationToken ct = default)
-    {
-        var validationResult = HandleValidationErrors();
-        if (validationResult != null) return validationResult;
-
-        var result = await _productOptionService.UpdateProductOptionAsync(optionId, request, productId, ct);
-        return ToActionResult(result);
-    }
-
-    /// <summary>
-    /// Delete product option
-    /// </summary>
-    /// <param name="productId">Product ID</param>
-    /// <param name="optionId">Option ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
-    [HttpDelete("{optionId:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteProductOption(
-        [FromRoute] Guid productId,
-        [FromRoute] Guid optionId,
-        CancellationToken ct = default)
-    {
-        var result = await _productOptionService.DeleteProductOptionAsync(productId, optionId, ct);
-        if (result.Success)
-        {
-            return NoContent();
-        }
-        return ToActionResult(result);
-    }
-}
-
-/// <summary>
-/// Product option group controller for product option group management
-/// </summary>
-[ApiController]
-[Route("api/v1/merchants/products/{productId:guid}/option-groups")]
-[Tags("Product Option Groups")]
-[Authorize]
-public class ProductOptionGroupController : BaseController
-{
     private readonly IProductOptionGroupService _productOptionGroupService;
 
-    public ProductOptionGroupController(IProductOptionGroupService productOptionGroupService)
+    public ProductOptionController(
+        IProductOptionService productOptionService,
+        IProductOptionGroupService productOptionGroupService)
     {
+        _productOptionService = productOptionService;
         _productOptionGroupService = productOptionGroupService;
     }
 
     /// <summary>
-    /// Get product option groups
+    /// Get product option groups for a product
     /// </summary>
     /// <param name="productId">Product ID</param>
     /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged option groups</returns>
-    [HttpGet]
+    /// <returns>List of product option groups</returns>
+    [HttpGet("groups/{productId}")]
     [ProducesResponseType(typeof(PagedResult<ProductOptionGroupResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProductOptionGroups(
-        [FromRoute] Guid productId,
+        Guid productId,
         [FromQuery] PaginationQuery query,
-        CancellationToken ct = default)
+        CancellationToken cancellationToken = default)
     {
-        var result = await _productOptionGroupService.GetProductOptionGroupsAsync(productId, query, ct);
-        return ToActionResult(result);
+        var result = await _productOptionGroupService.GetProductOptionGroupsAsync(
+            productId, query, cancellationToken);
+
+        return result.Success ? Ok(result.Value) : ToActionResult(result);
     }
 
     /// <summary>
-    /// Get product option groups with options (for product display)
+    /// Get a specific product option group
     /// </summary>
-    /// <param name="productId">Product ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Option groups with options</returns>
-    [HttpGet("with-options")]
-    [ProducesResponseType(typeof(List<ProductOptionGroupResponse>), StatusCodes.Status200OK)]
+    /// <param name="id">Option group ID</param>
+    /// <returns>Product option group details</returns>
+    [HttpGet("groups/details/{id}")]
+    [ProducesResponseType(typeof(ProductOptionGroupResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetProductOptionGroupsWithOptions(
-        [FromRoute] Guid productId,
-        CancellationToken ct = default)
+    public async Task<IActionResult> GetProductOptionGroup(
+        Guid id,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _productOptionGroupService.GetProductOptionGroupsWithOptionsAsync(productId, ct);
-        return ToActionResult(result);
+        var result = await _productOptionGroupService.GetProductOptionGroupAsync(id, cancellationToken);
+        return result.Success ? Ok(result.Value) : ToActionResult(result);
     }
 
     /// <summary>
-    /// Create product option group
+    /// Create a new product option group
     /// </summary>
-    /// <param name="productId">Product ID</param>
     /// <param name="request">Create option group request</param>
-    /// <param name="ct">Cancellation token</param>
     /// <returns>Created option group</returns>
-    [HttpPost]
+    [HttpPost("groups")]
     [ProducesResponseType(typeof(ProductOptionGroupResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> CreateProductOptionGroup(
-        [FromRoute] Guid productId,
         [FromBody] CreateProductOptionGroupRequest request,
-        CancellationToken ct = default)
+        CancellationToken cancellationToken = default)
     {
-        var validationResult = HandleValidationErrors();
-        if (validationResult != null) return validationResult;
+        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var merchantOwnerId);
+        if (unauthorizedResult != null) return unauthorizedResult;
+        var result = await _productOptionGroupService.CreateProductOptionGroupAsync(
+            request, merchantOwnerId, cancellationToken);
 
-        var result = await _productOptionGroupService.CreateProductOptionGroupAsync(request, productId, ct);
-        if (result.Success)
-        {
-            return Created($"/api/v1/merchants/products/{productId}/option-groups/{result.Value.Id}", result.Value);
-        }
-        return ToActionResult(result);
+        return result.Success ? CreatedAtAction(nameof(GetProductOptionGroup), 
+            new { id = result.Value!.Id }, result.Value) : ToActionResult(result);
     }
 
     /// <summary>
-    /// Update product option group
+    /// Update a product option group
     /// </summary>
-    /// <param name="productId">Product ID</param>
-    /// <param name="groupId">Group ID</param>
-    /// <param name="request">Update option group request</param>
-    /// <param name="ct">Cancellation token</param>
+    /// <param name="id">Option group ID</param>
+    /// <param name="request">Update request</param>
     /// <returns>Updated option group</returns>
-    [HttpPut("{groupId:guid}")]
+    [HttpPut("groups/{id}")]
     [ProducesResponseType(typeof(ProductOptionGroupResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateProductOptionGroup(
-        [FromRoute] Guid productId,
-        [FromRoute] Guid groupId,
+        Guid id,
         [FromBody] UpdateProductOptionGroupRequest request,
-        CancellationToken ct = default)
+        CancellationToken cancellationToken = default)
     {
-        var validationResult = HandleValidationErrors();
-        if (validationResult != null) return validationResult;
+        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var merchantOwnerId);
+        if (unauthorizedResult != null) return unauthorizedResult;
+        var result = await _productOptionGroupService.UpdateProductOptionGroupAsync(
+            id, request, merchantOwnerId, cancellationToken);
 
-        var result = await _productOptionGroupService.UpdateProductOptionGroupAsync(groupId, request, productId, ct);
-        return ToActionResult(result);
+        return result.Success ? Ok(result.Value) : ToActionResult(result);
     }
 
     /// <summary>
-    /// Delete product option group
+    /// Delete a product option group
     /// </summary>
-    /// <param name="productId">Product ID</param>
-    /// <param name="groupId">Group ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
-    [HttpDelete("{groupId:guid}")]
+    /// <param name="id">Option group ID</param>
+    /// <returns>No content</returns>
+    [HttpDelete("groups/{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteProductOptionGroup(
-        [FromRoute] Guid productId,
-        [FromRoute] Guid groupId,
-        CancellationToken ct = default)
+        Guid id,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _productOptionGroupService.DeleteProductOptionGroupAsync(productId, groupId, ct);
-        if (result.Success)
-        {
-            return NoContent();
-        }
-        return ToActionResult(result);
+        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var merchantOwnerId);
+        if (unauthorizedResult != null) return unauthorizedResult;
+        var result = await _productOptionGroupService.DeleteProductOptionGroupAsync(
+            id, merchantOwnerId, cancellationToken);
+
+        return result.Success ? NoContent() : ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Reorder product option groups
+    /// </summary>
+    /// <param name="productId">Product ID</param>
+    /// <param name="orderedGroupIds">Ordered list of group IDs</param>
+    /// <returns>No content</returns>
+    [HttpPut("groups/{productId}/reorder")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ReorderProductOptionGroups(
+        Guid productId,
+        [FromBody] List<Guid> orderedGroupIds,
+        CancellationToken cancellationToken = default)
+    {
+        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var merchantOwnerId);
+        if (unauthorizedResult != null) return unauthorizedResult;
+        var result = await _productOptionGroupService.ReorderProductOptionGroupsAsync(
+            productId, orderedGroupIds, merchantOwnerId, cancellationToken);
+
+        return result.Success ? NoContent() : ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Get product options for a group
+    /// </summary>
+    /// <param name="productOptionGroupId">Option group ID</param>
+    /// <param name="query">Pagination query</param>
+    /// <returns>List of product options</returns>
+    [HttpGet("groups/{productOptionGroupId}/options")]
+    [ProducesResponseType(typeof(PagedResult<ProductOptionResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetProductOptions(
+        Guid productOptionGroupId,
+        [FromQuery] PaginationQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _productOptionService.GetProductOptionsAsync(
+            productOptionGroupId, query, cancellationToken);
+
+        return result.Success ? Ok(result.Value) : ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Get a specific product option
+    /// </summary>
+    /// <param name="id">Option ID</param>
+    /// <returns>Product option details</returns>
+    [HttpGet("options/{id}")]
+    [ProducesResponseType(typeof(ProductOptionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetProductOption(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _productOptionService.GetProductOptionAsync(id, cancellationToken);
+        return result.Success ? Ok(result.Value) : ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Create a new product option
+    /// </summary>
+    /// <param name="request">Create option request</param>
+    /// <returns>Created option</returns>
+    [HttpPost("options")]
+    [ProducesResponseType(typeof(ProductOptionResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateProductOption(
+        [FromBody] CreateProductOptionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var merchantOwnerId);
+        if (unauthorizedResult != null) return unauthorizedResult;
+        var result = await _productOptionService.CreateProductOptionAsync(
+            request, merchantOwnerId, cancellationToken);
+
+        return result.Success ? CreatedAtAction(nameof(GetProductOption), 
+            new { id = result.Value!.Id }, result.Value) : ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Update a product option
+    /// </summary>
+    /// <param name="id">Option ID</param>
+    /// <param name="request">Update request</param>
+    /// <returns>Updated option</returns>
+    [HttpPut("options/{id}")]
+    [ProducesResponseType(typeof(ProductOptionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateProductOption(
+        Guid id,
+        [FromBody] UpdateProductOptionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var merchantOwnerId);
+        if (unauthorizedResult != null) return unauthorizedResult;
+        var result = await _productOptionService.UpdateProductOptionAsync(
+            id, request, merchantOwnerId, cancellationToken);
+
+        return result.Success ? Ok(result.Value) : ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Delete a product option
+    /// </summary>
+    /// <param name="id">Option ID</param>
+    /// <returns>No content</returns>
+    [HttpDelete("options/{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteProductOption(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var merchantOwnerId);
+        if (unauthorizedResult != null) return unauthorizedResult;
+        var result = await _productOptionService.DeleteProductOptionAsync(
+            id, merchantOwnerId, cancellationToken);
+
+        return result.Success ? NoContent() : ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Bulk create product options
+    /// </summary>
+    /// <param name="request">Bulk create request</param>
+    /// <returns>No content</returns>
+    [HttpPost("options/bulk")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> BulkCreateProductOptions(
+        [FromBody] BulkCreateProductOptionsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var merchantOwnerId);
+        if (unauthorizedResult != null) return unauthorizedResult;
+        var result = await _productOptionService.BulkCreateProductOptionsAsync(
+            request, merchantOwnerId, cancellationToken);
+
+        return result.Success ? NoContent() : ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Bulk update product options
+    /// </summary>
+    /// <param name="request">Bulk update request</param>
+    /// <returns>No content</returns>
+    [HttpPut("options/bulk")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> BulkUpdateProductOptions(
+        [FromBody] BulkUpdateProductOptionsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var merchantOwnerId);
+        if (unauthorizedResult != null) return unauthorizedResult;
+        var result = await _productOptionService.BulkUpdateProductOptionsAsync(
+            request, merchantOwnerId, cancellationToken);
+
+        return result.Success ? NoContent() : ToActionResult(result);
     }
 }

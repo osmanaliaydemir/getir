@@ -4,6 +4,8 @@ using Getir.Application.Services.Notifications;
 using Getir.Application.Abstractions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NotificationType = Getir.Application.DTO.NotificationType;
+using NotificationChannel = Getir.Application.DTO.NotificationChannel;
 
 namespace Getir.WebApi.Controllers;
 

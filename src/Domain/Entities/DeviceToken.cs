@@ -8,12 +8,15 @@ public class DeviceToken
     public Guid UserId { get; set; }
     public string Token { get; set; } = default!;
     public string DeviceType { get; set; } = default!; // iOS, Android, Web
+    public string Platform { get; set; } = default!; // iOS, Android, Web
     public string DeviceId { get; set; } = default!;
     public string? DeviceName { get; set; }
+    public string? DeviceModel { get; set; }
     public string? AppVersion { get; set; }
     public string? OsVersion { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
     public DateTime? LastUsedAt { get; set; }
     public DateTime? ExpiresAt { get; set; }
 

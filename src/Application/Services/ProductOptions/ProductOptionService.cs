@@ -46,8 +46,8 @@ public class ProductOptionService : BaseService, IProductOptionService
             po.Description,
             po.ExtraPrice,
             po.IsDefault,
-            po.IsActive,
             po.DisplayOrder,
+            po.IsActive,
             po.CreatedAt,
             po.UpdatedAt)).ToList();
 
@@ -79,8 +79,8 @@ public class ProductOptionService : BaseService, IProductOptionService
             option.Description,
             option.ExtraPrice,
             option.IsDefault,
-            option.IsActive,
             option.DisplayOrder,
+            option.IsActive,
             option.CreatedAt,
             option.UpdatedAt);
 
@@ -147,8 +147,8 @@ public class ProductOptionService : BaseService, IProductOptionService
             option.Description,
             option.ExtraPrice,
             option.IsDefault,
-            option.IsActive,
             option.DisplayOrder,
+            option.IsActive,
             option.CreatedAt,
             option.UpdatedAt);
 
@@ -211,8 +211,8 @@ public class ProductOptionService : BaseService, IProductOptionService
             option.Description,
             option.ExtraPrice,
             option.IsDefault,
-            option.IsActive,
             option.DisplayOrder,
+            option.IsActive,
             option.CreatedAt,
             option.UpdatedAt);
 

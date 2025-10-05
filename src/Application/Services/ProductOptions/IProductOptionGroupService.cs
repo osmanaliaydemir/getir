@@ -30,7 +30,9 @@ public interface IProductOptionGroupService
         Guid merchantOwnerId,
         CancellationToken cancellationToken = default);
 
-    Task<Result<List<ProductOptionGroupResponse>>> GetProductOptionGroupsWithOptionsAsync(
+    Task<Result> ReorderProductOptionGroupsAsync(
         Guid productId,
+        List<Guid> orderedGroupIds,
+        Guid merchantOwnerId,
         CancellationToken cancellationToken = default);
 }

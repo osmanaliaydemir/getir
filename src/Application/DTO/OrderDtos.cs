@@ -11,6 +11,7 @@ public record CreateOrderRequest(
 
 public record OrderLineRequest(
     Guid ProductId,
+    Guid? ProductVariantId,
     int Quantity,
     string? Notes,
     List<CreateOrderLineOptionRequest>? Options = null);
@@ -35,7 +36,9 @@ public record OrderResponse(
 public record OrderLineResponse(
     Guid Id,
     Guid ProductId,
+    Guid? ProductVariantId,
     string ProductName,
+    string? VariantName,
     int Quantity,
     decimal UnitPrice,
     decimal TotalPrice,

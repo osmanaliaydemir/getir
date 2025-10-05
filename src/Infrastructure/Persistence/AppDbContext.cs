@@ -17,6 +17,10 @@ public class AppDbContext : DbContext
     public DbSet<Product> Products { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderLine> OrderLines { get; set; }
+    public DbSet<OrderStatusTransitionLog> OrderStatusTransitionLogs { get; set; }
+    public DbSet<StockHistory> StockHistories { get; set; }
+    public DbSet<StockAlert> StockAlerts { get; set; }
+    public DbSet<StockSettings> StockSettings { get; set; }
     public DbSet<UserAddress> UserAddresses { get; set; }
     public DbSet<CartItem> CartItems { get; set; }
     public DbSet<Coupon> Coupons { get; set; }
@@ -743,6 +747,150 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.EventType);
             entity.HasIndex(e => e.SeverityLevel);
             entity.HasIndex(e => e.CreatedAt);
+        });
+
+        // OrderStatusTransitionLog configuration
+        modelBuilder.Entity<OrderStatusTransitionLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.FromStatus).IsRequired().HasConversion<int>();
+            entity.Property(e => e.ToStatus).IsRequired().HasConversion<int>();
+            entity.Property(e => e.ChangedByRole).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Reason).HasMaxLength(500);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            entity.Property(e => e.IpAddress).HasMaxLength(45);
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.Property(e => e.IsRollback).HasDefaultValue(false);
+            entity.Property(e => e.ChangedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => e.ChangedBy);
+            entity.HasIndex(e => e.ChangedAt);
+            entity.HasIndex(e => e.FromStatus);
+            entity.HasIndex(e => e.ToStatus);
+            entity.HasIndex(e => e.IsRollback);
+            entity.HasIndex(e => e.ChangedByRole);
+            
+            entity.HasOne(e => e.Order)
+                .WithMany()
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.ChangedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.ChangedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.RollbackFromLog)
+                .WithMany()
+                .HasForeignKey(e => e.RollbackFromLogId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // StockHistory configuration
+        modelBuilder.Entity<StockHistory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ChangeType).IsRequired().HasConversion<int>();
+            entity.Property(e => e.Reason).HasMaxLength(500);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            entity.Property(e => e.ReferenceNumber).HasMaxLength(100);
+            entity.Property(e => e.UnitPrice).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.TotalValue).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.ChangedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.ProductId);
+            entity.HasIndex(e => e.ProductVariantId);
+            entity.HasIndex(e => e.ChangedAt);
+            entity.HasIndex(e => e.ChangeType);
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => e.ChangedBy);
+            
+            entity.HasOne(e => e.Product)
+                .WithMany()
+                .HasForeignKey(e => e.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.ProductVariant)
+                .WithMany()
+                .HasForeignKey(e => e.ProductVariantId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.ChangedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.ChangedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.Order)
+                .WithMany()
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // StockAlert configuration
+        modelBuilder.Entity<StockAlert>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.AlertType).IsRequired().HasConversion<int>();
+            entity.Property(e => e.Message).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.ResolutionNotes).HasMaxLength(2000);
+            entity.Property(e => e.IsResolved).HasDefaultValue(false);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.ProductId);
+            entity.HasIndex(e => e.ProductVariantId);
+            entity.HasIndex(e => e.MerchantId);
+            entity.HasIndex(e => e.AlertType);
+            entity.HasIndex(e => e.IsResolved);
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.CreatedAt);
+            
+            entity.HasOne(e => e.Product)
+                .WithMany()
+                .HasForeignKey(e => e.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.ProductVariant)
+                .WithMany()
+                .HasForeignKey(e => e.ProductVariantId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.Merchant)
+                .WithMany()
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.ResolvedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.ResolvedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // StockSettings configuration
+        modelBuilder.Entity<StockSettings>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.AutoStockReduction).HasDefaultValue(true);
+            entity.Property(e => e.LowStockAlerts).HasDefaultValue(true);
+            entity.Property(e => e.OverstockAlerts).HasDefaultValue(false);
+            entity.Property(e => e.DefaultMinimumStock).HasDefaultValue(10);
+            entity.Property(e => e.DefaultMaximumStock).HasDefaultValue(1000);
+            entity.Property(e => e.EnableStockSync).HasDefaultValue(false);
+            entity.Property(e => e.ExternalSystemId).HasMaxLength(100);
+            entity.Property(e => e.SyncApiKey).HasMaxLength(500);
+            entity.Property(e => e.SyncApiUrl).HasMaxLength(500);
+            entity.Property(e => e.SyncIntervalMinutes).HasDefaultValue(60);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.MerchantId).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+            
+            entity.HasOne(e => e.Merchant)
+                .WithMany()
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

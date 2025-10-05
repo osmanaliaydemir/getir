@@ -62,9 +62,18 @@ public abstract class BaseController : ControllerBase
     }
 
     /// <summary>
+    /// Gets the current user role from claims
+    /// </summary>
+    protected string? GetCurrentUserRole()
+    {
+        var roleClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Role);
+        return roleClaim?.Value;
+    }
+
+    /// <summary>
     /// Handles validation errors
     /// </summary>
-    protected IActionResult HandleValidationErrors()
+    protected IActionResult? HandleValidationErrors()
     {
         if (!ModelState.IsValid)
         {

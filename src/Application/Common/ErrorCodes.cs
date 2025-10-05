@@ -31,6 +31,7 @@ public static class ErrorCodes
     public const string ORDER_NOT_FOUND = "ORDER_NOT_FOUND";
     public const string MERCHANT_NOT_FOUND = "MERCHANT_NOT_FOUND";
     public const string PRODUCT_NOT_FOUND = "PRODUCT_NOT_FOUND";
+    public const string PRODUCT_VARIANT_NOT_FOUND = "PRODUCT_VARIANT_NOT_FOUND";
     public const string COUPON_NOT_FOUND = "COUPON_NOT_FOUND";
     public const string COUPON_EXPIRED = "COUPON_EXPIRED";
     public const string COUPON_USAGE_LIMIT_REACHED = "COUPON_USAGE_LIMIT_REACHED";
