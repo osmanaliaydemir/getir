@@ -49,6 +49,12 @@ public class AppDbContext : DbContext
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<SystemNotification> SystemNotifications { get; set; }
     
+    // Audit Logging entities
+    public DbSet<UserActivityLog> UserActivityLogs { get; set; }
+    public DbSet<SystemChangeLog> SystemChangeLogs { get; set; }
+    public DbSet<SecurityEventLog> SecurityEventLogs { get; set; }
+    public DbSet<LogAnalysisReport> LogAnalysisReports { get; set; }
+    
     // Payment entities
     public DbSet<Payment> Payments { get; set; }
     public DbSet<CourierCashCollection> CourierCashCollections { get; set; }
@@ -895,6 +901,149 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.MerchantId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // UserActivityLog Configuration
+        modelBuilder.Entity<UserActivityLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.UserName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.ActivityType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.ActivityDescription).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.EntityType).HasMaxLength(100);
+            entity.Property(e => e.EntityId).HasMaxLength(50);
+            entity.Property(e => e.ActivityData).HasMaxLength(2000);
+            entity.Property(e => e.IpAddress).HasMaxLength(45);
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.Property(e => e.SessionId).HasMaxLength(100);
+            entity.Property(e => e.RequestId).HasMaxLength(50);
+            entity.Property(e => e.DeviceType).HasMaxLength(100);
+            entity.Property(e => e.Browser).HasMaxLength(100);
+            entity.Property(e => e.OperatingSystem).HasMaxLength(100);
+            entity.Property(e => e.Location).HasMaxLength(200);
+            entity.Property(e => e.ErrorMessage).HasMaxLength(500);
+            entity.Property(e => e.Timestamp).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => new { e.UserId, e.Timestamp });
+            entity.HasIndex(e => new { e.ActivityType, e.Timestamp });
+            entity.HasIndex(e => new { e.EntityType, e.EntityId });
+            entity.HasIndex(e => e.Timestamp);
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // SystemChangeLog Configuration
+        modelBuilder.Entity<SystemChangeLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ChangeType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.EntityType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.EntityId).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.EntityName).HasMaxLength(200);
+            entity.Property(e => e.OldValues).HasMaxLength(2000);
+            entity.Property(e => e.NewValues).HasMaxLength(2000);
+            entity.Property(e => e.ChangedFields).HasMaxLength(2000);
+            entity.Property(e => e.ChangeReason).HasMaxLength(1000);
+            entity.Property(e => e.ChangeSource).HasMaxLength(100);
+            entity.Property(e => e.ChangedByUserName).HasMaxLength(100);
+            entity.Property(e => e.IpAddress).HasMaxLength(45);
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.Property(e => e.SessionId).HasMaxLength(100);
+            entity.Property(e => e.RequestId).HasMaxLength(50);
+            entity.Property(e => e.CorrelationId).HasMaxLength(100);
+            entity.Property(e => e.ErrorMessage).HasMaxLength(500);
+            entity.Property(e => e.Severity).HasMaxLength(50);
+            entity.Property(e => e.Timestamp).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => new { e.EntityType, e.EntityId, e.Timestamp });
+            entity.HasIndex(e => new { e.ChangedByUserId, e.Timestamp });
+            entity.HasIndex(e => new { e.ChangeType, e.Timestamp });
+            entity.HasIndex(e => e.Timestamp);
+
+            entity.HasOne(e => e.ChangedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.ChangedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // SecurityEventLog Configuration
+        modelBuilder.Entity<SecurityEventLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.EventType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.EventTitle).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.EventDescription).IsRequired().HasMaxLength(2000);
+            entity.Property(e => e.Severity).HasMaxLength(50);
+            entity.Property(e => e.RiskLevel).HasMaxLength(50);
+            entity.Property(e => e.UserName).HasMaxLength(100);
+            entity.Property(e => e.UserRole).HasMaxLength(100);
+            entity.Property(e => e.IpAddress).HasMaxLength(45);
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.Property(e => e.DeviceFingerprint).HasMaxLength(100);
+            entity.Property(e => e.SessionId).HasMaxLength(100);
+            entity.Property(e => e.RequestId).HasMaxLength(50);
+            entity.Property(e => e.CorrelationId).HasMaxLength(100);
+            entity.Property(e => e.EventData).HasMaxLength(2000);
+            entity.Property(e => e.ThreatIndicators).HasMaxLength(2000);
+            entity.Property(e => e.MitigationActions).HasMaxLength(1000);
+            entity.Property(e => e.Source).HasMaxLength(100);
+            entity.Property(e => e.Category).HasMaxLength(100);
+            entity.Property(e => e.Location).HasMaxLength(200);
+            entity.Property(e => e.ResolvedBy).HasMaxLength(100);
+            entity.Property(e => e.ResolutionNotes).HasMaxLength(1000);
+            entity.Property(e => e.Timestamp).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => new { e.EventType, e.Timestamp });
+            entity.HasIndex(e => new { e.Severity, e.RiskLevel, e.Timestamp });
+            entity.HasIndex(e => new { e.UserId, e.Timestamp });
+            entity.HasIndex(e => new { e.IpAddress, e.Timestamp });
+            entity.HasIndex(e => new { e.IsResolved, e.RequiresInvestigation });
+            entity.HasIndex(e => e.Timestamp);
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // LogAnalysisReport Configuration
+        modelBuilder.Entity<LogAnalysisReport>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ReportType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.ReportTitle).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.ReportDescription).HasMaxLength(2000);
+            entity.Property(e => e.TimeZone).HasMaxLength(50);
+            entity.Property(e => e.ReportData).HasMaxLength(2000);
+            entity.Property(e => e.Summary).HasMaxLength(2000);
+            entity.Property(e => e.Insights).HasMaxLength(2000);
+            entity.Property(e => e.Alerts).HasMaxLength(2000);
+            entity.Property(e => e.Charts).HasMaxLength(2000);
+            entity.Property(e => e.Status).HasMaxLength(100);
+            entity.Property(e => e.Format).HasMaxLength(50);
+            entity.Property(e => e.FilePath).HasMaxLength(500);
+            entity.Property(e => e.FileName).HasMaxLength(100);
+            entity.Property(e => e.GeneratedByUserName).HasMaxLength(100);
+            entity.Property(e => e.GeneratedByRole).HasMaxLength(100);
+            entity.Property(e => e.Recipients).HasMaxLength(1000);
+            entity.Property(e => e.SchedulePattern).HasMaxLength(100);
+            entity.Property(e => e.ErrorMessage).HasMaxLength(500);
+            entity.Property(e => e.GeneratedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => new { e.ReportType, e.GeneratedAt });
+            entity.HasIndex(e => new { e.Status, e.GeneratedAt });
+            entity.HasIndex(e => new { e.GeneratedByUserId, e.GeneratedAt });
+            entity.HasIndex(e => new { e.IsScheduled, e.NextScheduledRun });
+            entity.HasIndex(e => e.GeneratedAt);
+
+            entity.HasOne(e => e.GeneratedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.GeneratedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
