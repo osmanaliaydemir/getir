@@ -1,18 +1,14 @@
-enum Environment {
-  development,
-  staging,
-  production,
-}
+enum Environment { development, staging, production }
 
 class EnvironmentConfig {
   static Environment _environment = Environment.development;
-  
+
   static Environment get current => _environment;
-  
+
   static void setEnvironment(Environment environment) {
     _environment = environment;
   }
-  
+
   // API URLs based on environment
   static String get apiBaseUrl {
     switch (_environment) {
@@ -24,7 +20,7 @@ class EnvironmentConfig {
         return 'https://api.getir.com/api/v1';
     }
   }
-  
+
   // SignalR Hub URLs
   static String get signalRUrl {
     switch (_environment) {
@@ -36,7 +32,7 @@ class EnvironmentConfig {
         return 'https://api.getir.com/hubs';
     }
   }
-  
+
   // Firebase Project IDs
   static String get firebaseProjectId {
     switch (_environment) {
@@ -48,7 +44,7 @@ class EnvironmentConfig {
         return 'getir-mobile-prod';
     }
   }
-  
+
   // App Configuration
   static bool get enableLogging {
     switch (_environment) {
@@ -60,7 +56,7 @@ class EnvironmentConfig {
         return false;
     }
   }
-  
+
   static bool get enableCrashlytics {
     switch (_environment) {
       case Environment.development:
@@ -71,7 +67,7 @@ class EnvironmentConfig {
         return true;
     }
   }
-  
+
   static bool get enableAnalytics {
     switch (_environment) {
       case Environment.development:
@@ -82,7 +78,7 @@ class EnvironmentConfig {
         return true;
     }
   }
-  
+
   // Security
   static bool get enableCertificatePinning {
     switch (_environment) {
@@ -94,7 +90,7 @@ class EnvironmentConfig {
         return true;
     }
   }
-  
+
   // Feature Flags
   static bool get enableExperimentalFeatures {
     switch (_environment) {
@@ -106,7 +102,7 @@ class EnvironmentConfig {
         return false;
     }
   }
-  
+
   // Debug Information
   static Map<String, dynamic> get debugInfo => {
     'environment': _environment.name,

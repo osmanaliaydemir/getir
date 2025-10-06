@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import '../../../core/navigation/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/localization/app_localizations.dart';
+import '../../../core/providers/language_provider.dart';
 import '../../bloc/auth/auth_bloc.dart';
+import '../../widgets/common/language_selector.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -56,6 +60,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -65,6 +71,21 @@ class _RegisterPageState extends State<RegisterPage> {
           icon: const Icon(Icons.arrow_back),
           onPressed: _goToLogin,
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Consumer<LanguageProvider>(
+              builder: (context, languageProvider, child) {
+                return LanguageSelector(
+                  currentLanguage: languageProvider.currentLanguageCode,
+                  onLanguageChanged: (languageCode) {
+                    languageProvider.changeLanguageByCode(languageCode);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: BlocListener<AuthBloc, AuthState>(
@@ -89,7 +110,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 children: [
                   // Title
                   Text(
-                    'Hesap Oluştur',
+                    l10n.register,
                     style: AppTypography.headlineLarge.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold,
@@ -98,7 +119,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Getir\'e katıl ve hızlı teslimatın keyfini çıkar',
+                    'Join Getir and enjoy fast delivery',
                     style: AppTypography.bodyLarge.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -109,14 +130,14 @@ class _RegisterPageState extends State<RegisterPage> {
                   // First Name Field
                   TextFormField(
                     controller: _firstNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Ad',
-                      hintText: 'Adınızı girin',
-                      prefixIcon: Icon(Icons.person_outlined),
+                    decoration: InputDecoration(
+                      labelText: l10n.firstName,
+                      hintText: l10n.firstName,
+                      prefixIcon: const Icon(Icons.person_outlined),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Ad gerekli';
+                        return l10n.firstNameRequired;
                       }
                       return null;
                     },
@@ -126,14 +147,14 @@ class _RegisterPageState extends State<RegisterPage> {
                   // Last Name Field
                   TextFormField(
                     controller: _lastNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Soyad',
-                      hintText: 'Soyadınızı girin',
-                      prefixIcon: Icon(Icons.person_outlined),
+                    decoration: InputDecoration(
+                      labelText: l10n.lastName,
+                      hintText: l10n.lastName,
+                      prefixIcon: const Icon(Icons.person_outlined),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Soyad gerekli';
+                        return l10n.lastNameRequired;
                       }
                       return null;
                     },
@@ -144,17 +165,17 @@ class _RegisterPageState extends State<RegisterPage> {
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'E-posta',
-                      hintText: 'ornek@email.com',
-                      prefixIcon: Icon(Icons.email_outlined),
+                    decoration: InputDecoration(
+                      labelText: l10n.email,
+                      hintText: 'example@email.com',
+                      prefixIcon: const Icon(Icons.email_outlined),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'E-posta adresi gerekli';
+                        return l10n.emailRequired;
                       }
-                      if (!value.contains('@')) {
-                        return 'Geçerli bir e-posta adresi girin';
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                        return l10n.invalidEmail;
                       }
                       return null;
                     },
@@ -165,10 +186,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   TextFormField(
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Telefon (Opsiyonel)',
-                      hintText: '0555 123 45 67',
-                      prefixIcon: Icon(Icons.phone_outlined),
+                    decoration: InputDecoration(
+                      labelText: '${l10n.phoneNumber} (Optional)',
+                      hintText: '+90 555 123 45 67',
+                      prefixIcon: const Icon(Icons.phone_outlined),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -178,8 +199,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
-                      labelText: 'Şifre',
-                      hintText: 'Şifrenizi girin',
+                      labelText: l10n.password,
+                      hintText: l10n.password,
                       prefixIcon: const Icon(Icons.lock_outlined),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -194,10 +215,10 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Şifre gerekli';
+                        return l10n.passwordRequired;
                       }
                       if (value.length < 6) {
-                        return 'Şifre en az 6 karakter olmalı';
+                        return l10n.passwordTooShort;
                       }
                       return null;
                     },
@@ -209,8 +230,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     controller: _confirmPasswordController,
                     obscureText: _obscureConfirmPassword,
                     decoration: InputDecoration(
-                      labelText: 'Şifre Tekrar',
-                      hintText: 'Şifrenizi tekrar girin',
+                      labelText: l10n.confirmPassword,
+                      hintText: l10n.confirmPassword,
                       prefixIcon: const Icon(Icons.lock_outlined),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -225,10 +246,10 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Şifre tekrarı gerekli';
+                        return l10n.passwordRequired;
                       }
                       if (value != _passwordController.text) {
-                        return 'Şifreler eşleşmiyor';
+                        return l10n.passwordsDoNotMatch;
                       }
                       return null;
                     },
@@ -249,7 +270,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
                                 ),
                               )
-                            : const Text('Kayıt Ol'),
+                            : Text(l10n.register),
                       );
                     },
                   ),
@@ -260,7 +281,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Zaten hesabın var mı? ',
+                        '${l10n.alreadyHaveAccount} ',
                         style: AppTypography.bodyMedium.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -268,7 +289,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       TextButton(
                         onPressed: _goToLogin,
                         child: Text(
-                          'Giriş Yap',
+                          l10n.signIn,
                           style: AppTypography.bodyMedium.copyWith(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w600,

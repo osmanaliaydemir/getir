@@ -2,11 +2,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../domain/entities/user_entity.dart';
 import '../../../domain/usecases/auth_usecases.dart';
+import '../cart/cart_bloc.dart';
+import '../../../core/services/global_keys_service.dart';
 
 // Events
 abstract class AuthEvent extends Equatable {
   const AuthEvent();
-  
+
   @override
   List<Object?> get props => [];
 }
@@ -14,12 +16,9 @@ abstract class AuthEvent extends Equatable {
 class AuthLoginRequested extends AuthEvent {
   final String email;
   final String password;
-  
-  const AuthLoginRequested({
-    required this.email,
-    required this.password,
-  });
-  
+
+  const AuthLoginRequested({required this.email, required this.password});
+
   @override
   List<Object> get props => [email, password];
 }
@@ -30,7 +29,7 @@ class AuthRegisterRequested extends AuthEvent {
   final String firstName;
   final String lastName;
   final String? phoneNumber;
-  
+
   const AuthRegisterRequested({
     required this.email,
     required this.password,
@@ -38,27 +37,33 @@ class AuthRegisterRequested extends AuthEvent {
     required this.lastName,
     this.phoneNumber,
   });
-  
+
   @override
-  List<Object?> get props => [email, password, firstName, lastName, phoneNumber];
+  List<Object?> get props => [
+    email,
+    password,
+    firstName,
+    lastName,
+    phoneNumber,
+  ];
 }
 
 class AuthLogoutRequested extends AuthEvent {}
 
 class AuthRefreshTokenRequested extends AuthEvent {
   final String refreshToken;
-  
+
   const AuthRefreshTokenRequested(this.refreshToken);
-  
+
   @override
   List<Object> get props => [refreshToken];
 }
 
 class AuthForgotPasswordRequested extends AuthEvent {
   final String email;
-  
+
   const AuthForgotPasswordRequested(this.email);
-  
+
   @override
   List<Object> get props => [email];
 }
@@ -66,12 +71,12 @@ class AuthForgotPasswordRequested extends AuthEvent {
 class AuthResetPasswordRequested extends AuthEvent {
   final String token;
   final String newPassword;
-  
+
   const AuthResetPasswordRequested({
     required this.token,
     required this.newPassword,
   });
-  
+
   @override
   List<Object> get props => [token, newPassword];
 }
@@ -83,7 +88,7 @@ class AuthCheckTokenValidityRequested extends AuthEvent {}
 // States
 abstract class AuthState extends Equatable {
   const AuthState();
-  
+
   @override
   List<Object?> get props => [];
 }
@@ -94,9 +99,9 @@ class AuthLoading extends AuthState {}
 
 class AuthAuthenticated extends AuthState {
   final UserEntity user;
-  
+
   const AuthAuthenticated(this.user);
-  
+
   @override
   List<Object> get props => [user];
 }
@@ -105,18 +110,18 @@ class AuthUnauthenticated extends AuthState {}
 
 class AuthError extends AuthState {
   final String message;
-  
+
   const AuthError(this.message);
-  
+
   @override
   List<Object> get props => [message];
 }
 
 class AuthPasswordResetSent extends AuthState {
   final String email;
-  
+
   const AuthPasswordResetSent(this.email);
-  
+
   @override
   List<Object> get props => [email];
 }
@@ -134,7 +139,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final GetCurrentUserUseCase _getCurrentUserUseCase;
   final CheckAuthenticationUseCase _checkAuthenticationUseCase;
   final CheckTokenValidityUseCase _checkTokenValidityUseCase;
-  
+
   AuthBloc({
     required LoginUseCase loginUseCase,
     required RegisterUseCase registerUseCase,
@@ -155,7 +160,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
        _checkAuthenticationUseCase = checkAuthenticationUseCase,
        _checkTokenValidityUseCase = checkTokenValidityUseCase,
        super(AuthInitial()) {
-    
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
@@ -165,21 +169,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthCheckAuthenticationRequested>(_onCheckAuthenticationRequested);
     on<AuthCheckTokenValidityRequested>(_onCheckTokenValidityRequested);
   }
-  
-  Future<void> _onLoginRequested(AuthLoginRequested event, Emitter<AuthState> emit) async {
+
+  Future<void> _onLoginRequested(
+    AuthLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
-    
+
     try {
       final user = await _loginUseCase(event.email, event.password);
       emit(AuthAuthenticated(user));
+      // Trigger cart merge after login via global navigator context
+      final ctx = GlobalKeysService.navigatorKey.currentContext;
+      if (ctx != null) {
+        ctx.read<CartBloc>().add(MergeLocalCartAfterLogin());
+      }
     } catch (e) {
       emit(AuthError(e.toString()));
     }
   }
-  
-  Future<void> _onRegisterRequested(AuthRegisterRequested event, Emitter<AuthState> emit) async {
+
+  Future<void> _onRegisterRequested(
+    AuthRegisterRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
-    
+
     try {
       final user = await _registerUseCase(
         event.email,
@@ -193,10 +208,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthError(e.toString()));
     }
   }
-  
-  Future<void> _onLogoutRequested(AuthLogoutRequested event, Emitter<AuthState> emit) async {
+
+  Future<void> _onLogoutRequested(
+    AuthLogoutRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
-    
+
     try {
       await _logoutUseCase();
       emit(AuthUnauthenticated());
@@ -204,8 +222,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthError(e.toString()));
     }
   }
-  
-  Future<void> _onRefreshTokenRequested(AuthRefreshTokenRequested event, Emitter<AuthState> emit) async {
+
+  Future<void> _onRefreshTokenRequested(
+    AuthRefreshTokenRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     try {
       final user = await _refreshTokenUseCase(event.refreshToken);
       emit(AuthAuthenticated(user));
@@ -213,10 +234,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthError(e.toString()));
     }
   }
-  
-  Future<void> _onForgotPasswordRequested(AuthForgotPasswordRequested event, Emitter<AuthState> emit) async {
+
+  Future<void> _onForgotPasswordRequested(
+    AuthForgotPasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
-    
+
     try {
       await _forgotPasswordUseCase(event.email);
       emit(AuthPasswordResetSent(event.email));
@@ -224,10 +248,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthError(e.toString()));
     }
   }
-  
-  Future<void> _onResetPasswordRequested(AuthResetPasswordRequested event, Emitter<AuthState> emit) async {
+
+  Future<void> _onResetPasswordRequested(
+    AuthResetPasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
-    
+
     try {
       await _resetPasswordUseCase(event.token, event.newPassword);
       emit(AuthPasswordResetSuccess());
@@ -235,11 +262,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthError(e.toString()));
     }
   }
-  
-  Future<void> _onCheckAuthenticationRequested(AuthCheckAuthenticationRequested event, Emitter<AuthState> emit) async {
+
+  Future<void> _onCheckAuthenticationRequested(
+    AuthCheckAuthenticationRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     try {
       final isAuthenticated = await _checkAuthenticationUseCase();
-      
+
       if (isAuthenticated) {
         final user = await _getCurrentUserUseCase();
         if (user != null) {
@@ -254,11 +284,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthError(e.toString()));
     }
   }
-  
-  Future<void> _onCheckTokenValidityRequested(AuthCheckTokenValidityRequested event, Emitter<AuthState> emit) async {
+
+  Future<void> _onCheckTokenValidityRequested(
+    AuthCheckTokenValidityRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     try {
       final isTokenValid = await _checkTokenValidityUseCase();
-      
+
       if (isTokenValid) {
         final user = await _getCurrentUserUseCase();
         if (user != null) {

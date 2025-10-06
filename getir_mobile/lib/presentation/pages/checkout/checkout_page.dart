@@ -1,41 +1,655 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/localization/app_localizations.dart';
+import '../../bloc/address/address_bloc.dart';
+import '../../bloc/cart/cart_bloc.dart';
+import '../../bloc/order/order_bloc.dart';
+import '../../../domain/entities/address.dart';
+import '../../../domain/entities/order.dart';
+import '../../../data/datasources/order_datasource.dart';
 
-class CheckoutPage extends StatelessWidget {
+class CheckoutPage extends StatefulWidget {
   const CheckoutPage({super.key});
 
   @override
+  State<CheckoutPage> createState() => _CheckoutPageState();
+}
+
+class _CheckoutPageState extends State<CheckoutPage> {
+  UserAddress? _selectedAddress;
+  PaymentMethod _selectedPaymentMethod = PaymentMethod.cash;
+  final TextEditingController _notesController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Load addresses and cart
+    context.read<AddressBloc>().add(LoadUserAddresses());
+    context.read<CartBloc>().add(LoadCart());
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Ödeme'),
+        title: Text(l10n.checkout),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
       ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.payment,
-              size: 100,
-              color: AppColors.primary,
-            ),
-            SizedBox(height: 24),
-            Text(
-              'Ödeme Sayfası',
-              style: AppTypography.headlineLarge,
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Sipariş ödemesi',
-              style: AppTypography.bodyLarge,
-            ),
-          ],
+      body: BlocListener<OrderBloc, OrderState>(
+        listener: (context, state) {
+          if (state is OrderCreated) {
+            // Navigate to order confirmation
+            Navigator.pushReplacementNamed(
+              context,
+              '/order-confirmation',
+              arguments: state.order,
+            );
+          } else if (state is OrderError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        },
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Delivery Address Section
+              Semantics(
+                header: true,
+                label: l10n.deliveryAddress,
+                child: _buildSectionTitle(l10n.deliveryAddress),
+              ),
+              const SizedBox(height: 12),
+              _buildAddressSection(l10n),
+
+              const SizedBox(height: 24),
+
+              // Payment Method Section
+              Semantics(
+                header: true,
+                label: l10n.paymentMethod,
+                child: _buildSectionTitle(l10n.paymentMethod),
+              ),
+              const SizedBox(height: 12),
+              _buildPaymentMethodSection(l10n),
+
+              const SizedBox(height: 24),
+
+              // Order Notes Section
+              Semantics(
+                header: true,
+                label: l10n.orderNotes,
+                child: _buildSectionTitle(l10n.orderNotes),
+              ),
+              const SizedBox(height: 12),
+              _buildOrderNotesSection(l10n),
+
+              const SizedBox(height: 24),
+
+              // Order Summary Section
+              Semantics(
+                header: true,
+                label: l10n.orderSummary,
+                child: _buildSectionTitle(l10n.orderSummary),
+              ),
+              const SizedBox(height: 12),
+              _buildOrderSummarySection(l10n),
+
+              const SizedBox(height: 32),
+
+              // Place Order Button
+              Semantics(
+                button: true,
+                label: l10n.placeOrder,
+                enabled:
+                    (context.read<OrderBloc>().state is! OrderLoading) &&
+                    _selectedAddress != null,
+                child: _buildPlaceOrderButton(l10n),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: AppTypography.headlineSmall.copyWith(fontWeight: FontWeight.bold),
+    );
+  }
+
+  Widget _buildAddressSection(AppLocalizations l10n) {
+    return BlocBuilder<AddressBloc, AddressState>(
+      builder: (context, state) {
+        if (state is AddressLoading) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.textSecondary),
+            ),
+            child: const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+            ),
+          );
+        }
+
+        if (state is AddressError) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.textSecondary),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.error_outline, color: AppColors.error, size: 32),
+                const SizedBox(height: 8),
+                Text(
+                  state.message,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.error,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () {
+                    context.read<AddressBloc>().add(LoadUserAddresses());
+                  },
+                  child: Text(l10n.retry),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (state is AddressesLoaded) {
+          final addresses = state.addresses;
+
+          if (addresses.isEmpty) {
+            return Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.textSecondary),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.location_off,
+                    color: AppColors.textSecondary,
+                    size: 32,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.noAddressesFound,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/address-management');
+                    },
+                    child: Text(l10n.addAddress),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // Set default address if none selected
+          if (_selectedAddress == null) {
+            final defaultAddress = addresses.firstWhere(
+              (address) => address.isDefault,
+              orElse: () => addresses.first,
+            );
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              setState(() {
+                _selectedAddress = defaultAddress;
+              });
+            });
+          }
+
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.textSecondary),
+            ),
+            child: Column(
+              children: [
+                // Selected address
+                if (_selectedAddress != null) ...[
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: _getAddressTypeColor(
+                            _selectedAddress!.type,
+                          ).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          _getAddressTypeIcon(_selectedAddress!.type),
+                          color: _getAddressTypeColor(_selectedAddress!.type),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _selectedAddress!.title,
+                              style: AppTypography.bodyLarge.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _selectedAddress!.fullAddress,
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
+                // Change address button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      _showAddressSelectionDialog(addresses, l10n);
+                    },
+                    icon: const Icon(Icons.edit_location),
+                    label: Text(l10n.changeAddress),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  Widget _buildPaymentMethodSection(AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.textSecondary),
+      ),
+      child: Column(
+        children: PaymentMethod.values.map((method) {
+          final isSelected = _selectedPaymentMethod == method;
+          return RadioListTile<PaymentMethod>(
+            title: Row(
+              children: [
+                Icon(
+                  _getPaymentMethodIcon(method),
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.textSecondary,
+                ),
+                const SizedBox(width: 12),
+                Text(method.displayName),
+              ],
+            ),
+            subtitle: Text(_getPaymentMethodDescription(method, l10n)),
+            value: method,
+            groupValue: _selectedPaymentMethod,
+            onChanged: (PaymentMethod? value) {
+              setState(() {
+                _selectedPaymentMethod = value!;
+              });
+            },
+            activeColor: AppColors.primary,
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildOrderNotesSection(AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.textSecondary),
+      ),
+      child: TextField(
+        controller: _notesController,
+        decoration: InputDecoration(
+          hintText: l10n.orderNotesHint,
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.zero,
+        ),
+        maxLines: 3,
+      ),
+    );
+  }
+
+  Widget _buildOrderSummarySection(AppLocalizations l10n) {
+    return BlocBuilder<CartBloc, CartState>(
+      builder: (context, state) {
+        if (state is CartLoaded) {
+          final cart = state.cart;
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.textSecondary),
+            ),
+            child: Column(
+              children: [
+                _buildPriceRow(l10n.subtotal, cart.subtotal),
+                _buildPriceRow(l10n.deliveryFee, cart.deliveryFee),
+                if (cart.discountAmount != null && cart.discountAmount! > 0)
+                  _buildPriceRow(
+                    l10n.discount,
+                    -(cart.discountAmount ?? 0.0),
+                    isDiscount: true,
+                  ),
+                const Divider(),
+                _buildPriceRow(l10n.total, cart.total, isTotal: true),
+              ],
+            ),
+          );
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.textSecondary),
+          ),
+          child: const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPriceRow(
+    String label,
+    double amount, {
+    bool isDiscount = false,
+    bool isTotal = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: AppTypography.bodyMedium.copyWith(
+              fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
+              color: isDiscount ? AppColors.success : AppColors.textPrimary,
+            ),
+          ),
+          Text(
+            '${isDiscount ? '-' : ''}₺${amount.toStringAsFixed(2)}',
+            style: AppTypography.bodyMedium.copyWith(
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
+              color: isDiscount
+                  ? AppColors.success
+                  : (isTotal ? AppColors.primary : AppColors.textPrimary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlaceOrderButton(AppLocalizations l10n) {
+    return BlocBuilder<OrderBloc, OrderState>(
+      builder: (context, state) {
+        final isLoading = state is OrderLoading;
+
+        return SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: isLoading || _selectedAddress == null
+                ? null
+                : _placeOrder,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: isLoading
+                ? const CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                  )
+                : Text(
+                    l10n.placeOrder,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAddressSelectionDialog(
+    List<UserAddress> addresses,
+    AppLocalizations l10n,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.selectAddress),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: addresses.length,
+            itemBuilder: (context, index) {
+              final address = addresses[index];
+              final isSelected = _selectedAddress?.id == address.id;
+
+              return ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _getAddressTypeColor(address.type).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    _getAddressTypeIcon(address.type),
+                    color: _getAddressTypeColor(address.type),
+                    size: 20,
+                  ),
+                ),
+                title: Text(address.title),
+                subtitle: Text(address.fullAddress),
+                trailing: isSelected
+                    ? const Icon(Icons.check, color: AppColors.primary)
+                    : null,
+                onTap: () {
+                  setState(() {
+                    _selectedAddress = address;
+                  });
+                  Navigator.pop(context);
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/address-management');
+            },
+            child: Text(l10n.addAddress),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _placeOrder() {
+    final l10n = AppLocalizations.of(context);
+    // Address required
+    if (_selectedAddress == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.selectAddress),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    // Get cart data
+    final cartState = context.read<CartBloc>().state;
+    if (cartState is! CartLoaded) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.somethingWentWrong),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final cart = cartState.cart;
+
+    // Basic validations: empty cart
+    if (cart.items.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.emptyCart),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    // Create order request
+    final orderRequest = CreateOrderRequest(
+      merchantId: cart.items.isNotEmpty ? cart.items.first.merchantId : '',
+      deliveryAddressId: _selectedAddress!.id,
+      paymentMethod: _selectedPaymentMethod,
+      couponCode: cart.couponCode,
+      notes: _notesController.text.isEmpty ? null : _notesController.text,
+      items: cart.items.map((item) {
+        return CreateOrderItemRequest(
+          productId: item.productId,
+          quantity: item.quantity,
+          selectedVariantId: item.selectedVariantId,
+          selectedOptionIds: item.selectedOptionIds,
+        );
+      }).toList(),
+    );
+
+    // Create order
+    context.read<OrderBloc>().add(CreateOrder(orderRequest));
+  }
+
+  IconData _getAddressTypeIcon(AddressType type) {
+    switch (type) {
+      case AddressType.home:
+        return Icons.home;
+      case AddressType.work:
+        return Icons.work;
+      case AddressType.other:
+        return Icons.location_on;
+    }
+  }
+
+  Color _getAddressTypeColor(AddressType type) {
+    switch (type) {
+      case AddressType.home:
+        return Colors.green;
+      case AddressType.work:
+        return Colors.blue;
+      case AddressType.other:
+        return Colors.orange;
+    }
+  }
+
+  IconData _getPaymentMethodIcon(PaymentMethod method) {
+    switch (method) {
+      case PaymentMethod.cash:
+        return Icons.money;
+      case PaymentMethod.card:
+        return Icons.credit_card;
+      case PaymentMethod.online:
+        return Icons.payment;
+    }
+  }
+
+  String _getPaymentMethodDescription(
+    PaymentMethod method,
+    AppLocalizations l10n,
+  ) {
+    switch (method) {
+      case PaymentMethod.cash:
+        return l10n.cashPaymentDescription;
+      case PaymentMethod.card:
+        return l10n.cardPaymentDescription;
+      case PaymentMethod.online:
+        return l10n.onlinePaymentDescription;
+    }
   }
 }

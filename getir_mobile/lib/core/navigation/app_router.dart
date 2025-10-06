@@ -18,13 +18,18 @@ import '../../presentation/pages/order/order_tracking_page.dart';
 import '../../presentation/pages/payment/payment_page.dart';
 import '../../presentation/pages/addresses/addresses_page.dart';
 import '../../presentation/pages/notifications/notifications_page.dart';
+import '../../presentation/pages/notifications/notification_settings_page.dart';
+import '../../presentation/pages/settings/settings_page.dart';
 import '../../presentation/pages/error/not_found_page.dart';
 import '../../presentation/widgets/common/main_navigation.dart';
+import '../services/local_storage_service.dart';
+import '../services/analytics_service.dart';
 
 class AppRouter {
   static final GoRouter _router = GoRouter(
     initialLocation: RouteConstants.splash,
     debugLogDiagnostics: true,
+    observers: [_AnalyticsRouteObserver()],
     routes: [
       // Splash Route
       GoRoute(
@@ -32,14 +37,14 @@ class AppRouter {
         name: RouteConstants.splashRouteName,
         builder: (context, state) => const SplashPage(),
       ),
-      
+
       // Onboarding Route
       GoRoute(
         path: RouteConstants.onboarding,
         name: RouteConstants.onboardingRouteName,
         builder: (context, state) => const OnboardingPage(),
       ),
-      
+
       // Authentication Routes
       GoRoute(
         path: RouteConstants.login,
@@ -51,7 +56,7 @@ class AppRouter {
         name: RouteConstants.registerRouteName,
         builder: (context, state) => const RegisterPage(),
       ),
-      
+
       // Main App Routes with Bottom Navigation
       ShellRoute(
         builder: (context, state, child) => MainNavigation(child: child),
@@ -83,7 +88,7 @@ class AppRouter {
           ),
         ],
       ),
-      
+
       // Product Routes
       GoRoute(
         path: RouteConstants.merchantDetail,
@@ -101,7 +106,7 @@ class AppRouter {
           return ProductDetailPage(productId: productId);
         },
       ),
-      
+
       // Order Routes
       GoRoute(
         path: RouteConstants.checkout,
@@ -129,7 +134,7 @@ class AppRouter {
         name: RouteConstants.paymentRouteName,
         builder: (context, state) => const PaymentPage(),
       ),
-      
+
       // Profile Routes
       GoRoute(
         path: RouteConstants.addresses,
@@ -141,7 +146,17 @@ class AppRouter {
         name: RouteConstants.notificationsRouteName,
         builder: (context, state) => const NotificationsPage(),
       ),
-      
+      GoRoute(
+        path: RouteConstants.notificationSettings,
+        name: RouteConstants.notificationSettingsRouteName,
+        builder: (context, state) => const NotificationSettingsPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.settings,
+        name: RouteConstants.settingsRouteName,
+        builder: (context, state) => const SettingsPage(),
+      ),
+
       // Error Routes
       GoRoute(
         path: RouteConstants.notFound,
@@ -151,13 +166,72 @@ class AppRouter {
     ],
     errorBuilder: (context, state) => const NotFoundPage(),
     redirect: (context, state) {
-      // TODO: Implement authentication redirect logic
-      // Check if user is authenticated and redirect accordingly
+      // Auth and onboarding guards
+      final storage = LocalStorageService();
+      final hasOnboarded = storage.getUserData('onboarding_complete') == 'true';
+      final token = storage.getUserData('auth_token');
+
+      final currentPath = state.uri.path;
+      final isAuthRoute =
+          currentPath == RouteConstants.login ||
+          currentPath == RouteConstants.register;
+      final isSplash = currentPath == RouteConstants.splash;
+      final isOnboarding = currentPath == RouteConstants.onboarding;
+
+      if (isSplash) {
+        if (!hasOnboarded) return RouteConstants.onboarding;
+        if (token == null || token.isEmpty) return RouteConstants.login;
+        return RouteConstants.home;
+      }
+
+      if (!hasOnboarded && !isOnboarding) {
+        return RouteConstants.onboarding;
+      }
+
+      if ((token == null || token.isEmpty)) {
+        final protectedPaths = <String>{
+          RouteConstants.home,
+          RouteConstants.search,
+          RouteConstants.cart,
+          RouteConstants.orders,
+          RouteConstants.profile,
+          RouteConstants.checkout,
+          RouteConstants.addresses,
+          RouteConstants.notifications,
+          RouteConstants.notificationSettings,
+          RouteConstants.settings,
+        };
+        if (protectedPaths.contains(currentPath)) {
+          return RouteConstants.login;
+        }
+      } else if (isAuthRoute) {
+        return RouteConstants.home;
+      }
+
       return null;
     },
   );
-  
+
   static GoRouter get router => _router;
+}
+
+class _AnalyticsRouteObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    final name = route.settings.name ?? route.settings.toString();
+    AnalyticsService().logScreenView(screenName: name);
+    super.didPush(route, previousRoute);
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    final name =
+        previousRoute?.settings.name ?? previousRoute?.settings.toString();
+    if (name != null) {
+      AnalyticsService().logScreenView(screenName: name);
+    }
+    super.didPop(route, previousRoute);
+  }
 }
 
 // Navigation Helper Class
@@ -166,84 +240,88 @@ class AppNavigation {
   static void goToSplash(BuildContext context) {
     context.go(RouteConstants.splash);
   }
-  
+
   static void goToOnboarding(BuildContext context) {
     context.go(RouteConstants.onboarding);
   }
-  
+
   static void goToLogin(BuildContext context) {
     context.go(RouteConstants.login);
   }
-  
+
   static void goToRegister(BuildContext context) {
     context.go(RouteConstants.register);
   }
-  
+
   // Main App Navigation
   static void goToHome(BuildContext context) {
     context.go(RouteConstants.home);
   }
-  
+
   static void goToSearch(BuildContext context) {
     context.go(RouteConstants.search);
   }
-  
+
   static void goToCart(BuildContext context) {
     context.go(RouteConstants.cart);
   }
-  
+
   static void goToOrders(BuildContext context) {
     context.go(RouteConstants.orders);
   }
-  
+
   static void goToProfile(BuildContext context) {
     context.go(RouteConstants.profile);
   }
-  
+
   // Product Navigation
   static void goToMerchantDetail(BuildContext context, String merchantId) {
-    context.go(RouteConstants.merchantDetail.replaceAll(':merchantId', merchantId));
+    context.go(
+      RouteConstants.merchantDetail.replaceAll(':merchantId', merchantId),
+    );
   }
-  
+
   static void goToProductDetail(BuildContext context, String productId) {
-    context.go(RouteConstants.productDetail.replaceAll(':productId', productId));
+    context.go(
+      RouteConstants.productDetail.replaceAll(':productId', productId),
+    );
   }
-  
+
   // Order Navigation
   static void goToCheckout(BuildContext context) {
     context.go(RouteConstants.checkout);
   }
-  
+
   static void goToOrderDetail(BuildContext context, String orderId) {
     context.go(RouteConstants.orderDetail.replaceAll(':orderId', orderId));
   }
-  
+
   static void goToOrderTracking(BuildContext context, String orderId) {
     context.go(RouteConstants.orderTracking.replaceAll(':orderId', orderId));
   }
-  
+
   static void goToPayment(BuildContext context) {
     context.go(RouteConstants.payment);
   }
-  
+
   // Profile Navigation
   static void goToAddresses(BuildContext context) {
     context.go(RouteConstants.addresses);
   }
-  
+
   static void goToNotifications(BuildContext context) {
     context.go(RouteConstants.notifications);
   }
-  
+
   // Utility Navigation
   static void goBack(BuildContext context) {
     context.pop();
   }
-  
+
   static void goBackToRoot(BuildContext context) {
     context.go(RouteConstants.home);
   }
-  
+
   // Deep Link Navigation
   static void handleDeepLink(BuildContext context, String deepLink) {
     try {

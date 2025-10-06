@@ -100,7 +100,7 @@ public class RateLimitMiddleware
             IpAddress = ipAddress,
             UserAgent = context.Request.Headers.UserAgent.ToString(),
             RequestId = context.TraceIdentifier,
-            SessionId = context.Session?.Id
+            SessionId = null // Session kullanmıyoruz, API için gerekli değil
         };
     }
 

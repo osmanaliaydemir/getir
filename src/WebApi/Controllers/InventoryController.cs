@@ -2,6 +2,7 @@ using Getir.Application.Abstractions;
 using Getir.Application.DTO;
 using Getir.Application.Services.Stock;
 using Getir.Domain.Entities;
+using Getir.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

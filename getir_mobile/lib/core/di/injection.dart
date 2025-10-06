@@ -4,6 +4,7 @@ import '../../domain/repositories/auth_repository.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/datasources/auth_datasource.dart';
 import '../../data/datasources/auth_datasource_impl.dart';
+import '../services/signalr_service.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -18,4 +19,7 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<AuthDataSource>(
     () => AuthDataSourceImpl(),
   );
+
+  // Realtime services
+  getIt.registerLazySingleton<SignalRService>(() => SignalRService());
 }

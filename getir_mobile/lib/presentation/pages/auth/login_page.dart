@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import '../../../core/navigation/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/localization/app_localizations.dart';
+import '../../../core/providers/language_provider.dart';
 import '../../bloc/auth/auth_bloc.dart';
+import '../../widgets/common/language_selector.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -42,6 +46,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -65,7 +71,24 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 20),
+                  
+                  // Language Selector
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Consumer<LanguageProvider>(
+                      builder: (context, languageProvider, child) {
+                        return LanguageSelector(
+                          currentLanguage: languageProvider.currentLanguageCode,
+                          onLanguageChanged: (languageCode) {
+                            languageProvider.changeLanguageByCode(languageCode);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 40),
                   
                   // App Logo
                   Center(
@@ -87,7 +110,7 @@ class _LoginPageState extends State<LoginPage> {
                   
                   // Welcome Text
                   Text(
-                    'Hoş Geldin!',
+                    l10n.welcome,
                     style: AppTypography.headlineLarge.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold,
@@ -96,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Hesabına giriş yap',
+                    l10n.signIn,
                     style: AppTypography.bodyLarge.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -108,17 +131,17 @@ class _LoginPageState extends State<LoginPage> {
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'E-posta',
-                      hintText: 'ornek@email.com',
-                      prefixIcon: Icon(Icons.email_outlined),
+                    decoration: InputDecoration(
+                      labelText: l10n.email,
+                      hintText: 'example@email.com',
+                      prefixIcon: const Icon(Icons.email_outlined),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'E-posta adresi gerekli';
+                        return l10n.emailRequired;
                       }
-                      if (!value.contains('@')) {
-                        return 'Geçerli bir e-posta adresi girin';
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                        return l10n.invalidEmail;
                       }
                       return null;
                     },
@@ -130,8 +153,8 @@ class _LoginPageState extends State<LoginPage> {
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
-                      labelText: 'Şifre',
-                      hintText: 'Şifrenizi girin',
+                      labelText: l10n.password,
+                      hintText: l10n.password,
                       prefixIcon: const Icon(Icons.lock_outlined),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -146,10 +169,10 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Şifre gerekli';
+                        return l10n.passwordRequired;
                       }
                       if (value.length < 6) {
-                        return 'Şifre en az 6 karakter olmalı';
+                        return l10n.passwordTooShort;
                       }
                       return null;
                     },
@@ -170,7 +193,7 @@ class _LoginPageState extends State<LoginPage> {
                                   valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
                                 ),
                               )
-                            : const Text('Giriş Yap'),
+                            : Text(l10n.login),
                       );
                     },
                   ),
@@ -181,7 +204,7 @@ class _LoginPageState extends State<LoginPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Hesabın yok mu? ',
+                        '${l10n.dontHaveAccount} ',
                         style: AppTypography.bodyMedium.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -189,7 +212,7 @@ class _LoginPageState extends State<LoginPage> {
                       TextButton(
                         onPressed: _goToRegister,
                         child: Text(
-                          'Kayıt Ol',
+                          l10n.signUp,
                           style: AppTypography.bodyMedium.copyWith(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w600,
