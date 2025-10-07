@@ -1,11 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/localization/app_localizations.dart';
-import '../../bloc/order/order_bloc.dart';
-import '../../../domain/entities/order.dart';
+import '../../../core/services/signalr_service.dart';
 
+/// Real-time Order Tracking Page
+/// Displays live courier location and order status updates
 class OrderTrackingPage extends StatefulWidget {
   final String orderId;
 
@@ -16,510 +17,445 @@ class OrderTrackingPage extends StatefulWidget {
 }
 
 class _OrderTrackingPageState extends State<OrderTrackingPage> {
+  final SignalRService _signalRService = SignalRService();
+  GoogleMapController? _mapController;
+
+  // Tracking data
+  TrackingData? _currentTracking;
+  StreamSubscription<TrackingData>? _trackingSubscription;
+  StreamSubscription<LocationUpdate>? _locationSubscription;
+
+  // Map markers
+  final Set<Marker> _markers = {};
+  final Set<Polyline> _polylines = {};
+
   @override
   void initState() {
     super.initState();
-    // Load order details for tracking
-    context.read<OrderBloc>().add(LoadOrderById(widget.orderId));
+    _initializeTracking();
+  }
+
+  @override
+  void dispose() {
+    _trackingSubscription?.cancel();
+    _locationSubscription?.cancel();
+    _signalRService.leaveOrderTrackingGroup(widget.orderId);
+    super.dispose();
+  }
+
+  Future<void> _initializeTracking() async {
+    // Subscribe to tracking updates
+    await _signalRService.joinOrderTrackingGroup(widget.orderId);
+
+    // Listen to tracking data stream
+    _trackingSubscription = _signalRService.trackingDataStream.listen((
+      tracking,
+    ) {
+      if (mounted) {
+        setState(() {
+          _currentTracking = tracking;
+          _updateMapMarkers(tracking);
+        });
+      }
+    });
+
+    // Listen to location updates
+    _locationSubscription = _signalRService.locationUpdateStream.listen((
+      location,
+    ) {
+      if (mounted) {
+        _updateCourierLocation(location);
+      }
+    });
+
+    // Request initial tracking data
+    await _signalRService.requestTrackingData(widget.orderId);
+  }
+
+  void _updateMapMarkers(TrackingData tracking) {
+    _markers.clear();
+
+    // Add courier marker
+    if (tracking.courierLatitude != null && tracking.courierLongitude != null) {
+      _markers.add(
+        Marker(
+          markerId: const MarkerId('courier'),
+          position: LatLng(
+            tracking.courierLatitude!,
+            tracking.courierLongitude!,
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          infoWindow: const InfoWindow(title: 'Kurye'),
+        ),
+      );
+    }
+
+    // Add destination marker
+    if (tracking.destinationLatitude != null &&
+        tracking.destinationLongitude != null) {
+      _markers.add(
+        Marker(
+          markerId: const MarkerId('destination'),
+          position: LatLng(
+            tracking.destinationLatitude!,
+            tracking.destinationLongitude!,
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          infoWindow: const InfoWindow(title: 'Teslimat Adresi'),
+        ),
+      );
+
+      // Draw route line
+      if (tracking.courierLatitude != null &&
+          tracking.courierLongitude != null) {
+        _polylines.add(
+          Polyline(
+            polylineId: const PolylineId('route'),
+            points: [
+              LatLng(tracking.courierLatitude!, tracking.courierLongitude!),
+              LatLng(
+                tracking.destinationLatitude!,
+                tracking.destinationLongitude!,
+              ),
+            ],
+            color: AppColors.primary,
+            width: 4,
+          ),
+        );
+      }
+
+      // Update camera to show both markers
+      _updateCamera(tracking);
+    }
+  }
+
+  void _updateCourierLocation(LocationUpdate location) {
+    // Update courier marker
+    _markers.removeWhere((m) => m.markerId.value == 'courier');
+    _markers.add(
+      Marker(
+        markerId: const MarkerId('courier'),
+        position: LatLng(location.latitude, location.longitude),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        infoWindow: InfoWindow(title: 'Kurye', snippet: location.address ?? ''),
+      ),
+    );
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _updateCamera(TrackingData tracking) {
+    if (tracking.courierLatitude != null &&
+        tracking.courierLongitude != null &&
+        tracking.destinationLatitude != null &&
+        tracking.destinationLongitude != null) {
+      // Calculate bounds to show both markers
+      final bounds = LatLngBounds(
+        southwest: LatLng(
+          tracking.courierLatitude! < tracking.destinationLatitude!
+              ? tracking.courierLatitude!
+              : tracking.destinationLatitude!,
+          tracking.courierLongitude! < tracking.destinationLongitude!
+              ? tracking.courierLongitude!
+              : tracking.destinationLongitude!,
+        ),
+        northeast: LatLng(
+          tracking.courierLatitude! > tracking.destinationLatitude!
+              ? tracking.courierLatitude!
+              : tracking.destinationLatitude!,
+          tracking.courierLongitude! > tracking.destinationLongitude!
+              ? tracking.courierLongitude!
+              : tracking.destinationLongitude!,
+        ),
+      );
+
+      _mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(l10n.trackOrder),
+        title: const Text('Sipariş Takibi'),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              context.read<OrderBloc>().add(LoadOrderById(widget.orderId));
-            },
-          ),
-        ],
       ),
-      body: BlocBuilder<OrderBloc, OrderState>(
-        builder: (context, state) {
-          if (state is OrderLoading) {
-            return const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-              ),
-            );
-          }
-
-          if (state is OrderError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: AppColors.error),
-                  const SizedBox(height: 16),
-                  Text(
-                    state.message,
-                    style: AppTypography.bodyLarge.copyWith(
-                      color: AppColors.error,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<OrderBloc>().add(
-                        LoadOrderById(widget.orderId),
-                      );
-                    },
-                    child: Text(l10n.retry),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          if (state is OrderLoaded) {
-            final order = state.order;
-            return _buildTrackingContent(order, l10n);
-          }
-
-          return const SizedBox.shrink();
-        },
-      ),
-    );
-  }
-
-  Widget _buildTrackingContent(dynamic order, AppLocalizations l10n) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Order info header
-          _buildOrderHeader(order, l10n),
-
-          const SizedBox(height: 24),
-
-          // Tracking timeline
-          _buildTrackingTimeline(order, l10n),
-
-          const SizedBox(height: 24),
-
-          // Delivery info
-          _buildDeliveryInfo(order, l10n),
-
-          const SizedBox(height: 24),
-
-          // Contact info
-          _buildContactInfo(order, l10n),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOrderHeader(dynamic order, AppLocalizations l10n) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Order number
-          Text(
-            '${l10n.orderNumber}: ${order.id}',
-            style: AppTypography.headlineSmall.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // Current status
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: _getStatusColor(order.status).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              _getStatusText(order.status, l10n),
-              style: AppTypography.bodyMedium.copyWith(
-                color: _getStatusColor(order.status),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Estimated delivery time
-          if (order.estimatedDeliveryTime != null)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+      body: _currentTracking == null
+          ? _buildLoadingState()
+          : Column(
               children: [
-                Icon(Icons.access_time, color: AppColors.primary, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  '${l10n.estimatedDelivery}: ${_formatDateTime(order.estimatedDeliveryTime)}',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
+                // Map
+                Expanded(flex: 2, child: _buildMap()),
+
+                // Tracking Info
+                Expanded(flex: 1, child: _buildTrackingInfo()),
               ],
             ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+          ),
+          SizedBox(height: 16),
+          Text(
+            'Sipariş bilgileri yükleniyor...',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTrackingTimeline(dynamic order, AppLocalizations l10n) {
-    final trackingSteps = [
-      {
-        'status': OrderStatus.pending,
-        'title': l10n.orderReceived,
-        'description': l10n.orderReceivedDescription,
-        'icon': Icons.receipt_long,
+  Widget _buildMap() {
+    final initialPosition =
+        _currentTracking?.courierLatitude != null &&
+            _currentTracking?.courierLongitude != null
+        ? LatLng(
+            _currentTracking!.courierLatitude!,
+            _currentTracking!.courierLongitude!,
+          )
+        : const LatLng(41.0082, 28.9784); // Istanbul default
+
+    return GoogleMap(
+      initialCameraPosition: CameraPosition(target: initialPosition, zoom: 14),
+      markers: _markers,
+      polylines: _polylines,
+      myLocationEnabled: true,
+      myLocationButtonEnabled: true,
+      zoomControlsEnabled: false,
+      onMapCreated: (controller) {
+        _mapController = controller;
+        if (_currentTracking != null) {
+          _updateCamera(_currentTracking!);
+        }
       },
-      {
-        'status': OrderStatus.confirmed,
-        'title': l10n.orderConfirmed,
-        'description': l10n.orderConfirmedDescription,
-        'icon': Icons.check_circle,
-      },
-      {
-        'status': OrderStatus.preparing,
-        'title': l10n.orderPreparing,
-        'description': l10n.orderPreparingDescription,
-        'icon': Icons.restaurant,
-      },
-      {
-        'status': OrderStatus.onTheWay,
-        'title': l10n.orderOnTheWay,
-        'description': l10n.orderOnTheWayDescription,
-        'icon': Icons.delivery_dining,
-      },
-      {
-        'status': OrderStatus.delivered,
-        'title': l10n.orderDelivered,
-        'description': l10n.orderDeliveredDescription,
-        'icon': Icons.check_circle_outline,
-      },
-    ];
+    );
+  }
+
+  Widget _buildTrackingInfo() {
+    final tracking = _currentTracking!;
 
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.trackingProgress,
-            style: AppTypography.bodyLarge.copyWith(
-              fontWeight: FontWeight.w600,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Drag handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-          ...trackingSteps.asMap().entries.map((entry) {
-            final index = entry.key;
-            final step = entry.value;
-            final isCompleted = _isStepCompleted(
-              order.status,
-              step['status'] as OrderStatus,
-            );
-            final isCurrent = order.status == step['status'];
+            const SizedBox(height: 16),
 
-            return _buildTimelineStep(
-              step['title'] as String,
-              step['description'] as String,
-              step['icon'] as IconData,
-              isCompleted,
-              isCurrent,
-              index == trackingSteps.length - 1,
-            );
-          }),
-        ],
+            // Status
+            _buildStatusSection(tracking.status),
+            const SizedBox(height: 16),
+
+            // ETA
+            if (tracking.estimatedArrivalMinutes != null) ...[
+              _buildETASection(tracking.estimatedArrivalMinutes!),
+              const SizedBox(height: 16),
+            ],
+
+            // Distance
+            if (tracking.distanceFromDestination != null) ...[
+              _buildDistanceSection(tracking.distanceFromDestination!),
+              const SizedBox(height: 16),
+            ],
+
+            // Last updated
+            Text(
+              'Son güncelleme: ${_formatTime(tracking.lastUpdated)}',
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildTimelineStep(
-    String title,
-    String description,
-    IconData icon,
-    bool isCompleted,
-    bool isCurrent,
-    bool isLast,
-  ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Timeline indicator
-        Column(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: isCompleted
-                    ? AppColors.primary
-                    : isCurrent
-                    ? AppColors.primary.withOpacity(0.3)
-                    : AppColors.textSecondary.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: isCompleted
-                    ? AppColors.white
-                    : isCurrent
-                    ? AppColors.primary
-                    : AppColors.textSecondary,
-                size: 20,
-              ),
-            ),
-            if (!isLast)
-              Container(
-                width: 2,
-                height: 40,
-                color: isCompleted
-                    ? AppColors.primary
-                    : AppColors.textSecondary.withOpacity(0.2),
-              ),
-          ],
-        ),
+  Widget _buildStatusSection(String status) {
+    final statusInfo = _getStatusInfo(status);
 
-        const SizedBox(width: 16),
-
-        // Step content
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 24),
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: statusInfo['color'].withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: statusInfo['color'], width: 2),
+      ),
+      child: Row(
+        children: [
+          Icon(statusInfo['icon'], color: statusInfo['color'], size: 32),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  statusInfo['title'],
                   style: AppTypography.bodyLarge.copyWith(
-                    fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
-                    color: isCompleted || isCurrent
-                        ? AppColors.primary
-                        : AppColors.textSecondary,
+                    fontWeight: FontWeight.bold,
+                    color: statusInfo['color'],
                   ),
                 ),
-                const SizedBox(height: 4),
                 Text(
-                  description,
-                  style: AppTypography.bodyMedium.copyWith(
+                  statusInfo['subtitle'],
+                  style: AppTypography.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildETASection(int minutes) {
+    return Row(
+      children: [
+        Icon(Icons.access_time, color: AppColors.primary, size: 24),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Tahmini Varış',
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            Text(
+              '$minutes dakika',
+              style: AppTypography.bodyLarge.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildDeliveryInfo(dynamic order, AppLocalizations l10n) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.location_on, color: AppColors.primary, size: 24),
-              const SizedBox(width: 12),
-              Text(
-                l10n.deliveryAddress,
-                style: AppTypography.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+  Widget _buildDistanceSection(double distance) {
+    return Row(
+      children: [
+        Icon(Icons.place, color: AppColors.error, size: 24),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Kalan Mesafe',
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            order.deliveryAddress,
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Icon(Icons.store, color: AppColors.primary, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                order.merchantName,
-                style: AppTypography.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+            Text(
+              '${distance.toStringAsFixed(2)} km',
+              style: AppTypography.bodyLarge.copyWith(
+                fontWeight: FontWeight.bold,
               ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
-  Widget _buildContactInfo(dynamic order, AppLocalizations l10n) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.needHelp,
-            style: AppTypography.bodyLarge.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    // TODO: Call merchant
-                  },
-                  icon: const Icon(Icons.phone),
-                  label: Text(l10n.callMerchant),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    // TODO: Contact support
-                  },
-                  icon: const Icon(Icons.support_agent),
-                  label: Text(l10n.contactSupport),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  bool _isStepCompleted(OrderStatus currentStatus, OrderStatus stepStatus) {
-    final statusOrder = [
-      OrderStatus.pending,
-      OrderStatus.confirmed,
-      OrderStatus.preparing,
-      OrderStatus.onTheWay,
-      OrderStatus.delivered,
-    ];
-
-    final currentIndex = statusOrder.indexOf(currentStatus);
-    final stepIndex = statusOrder.indexOf(stepStatus);
-
-    return currentIndex >= stepIndex;
-  }
-
-  Color _getStatusColor(dynamic status) {
-    switch (status) {
-      case OrderStatus.pending:
-        return Colors.orange;
-      case OrderStatus.confirmed:
-        return Colors.blue;
-      case OrderStatus.preparing:
-        return Colors.purple;
-      case OrderStatus.onTheWay:
-        return Colors.indigo;
-      case OrderStatus.delivered:
-        return Colors.green;
-      case OrderStatus.cancelled:
-        return Colors.red;
+  Map<String, dynamic> _getStatusInfo(String status) {
+    switch (status.toLowerCase()) {
+      case 'preparing':
+        return {
+          'icon': Icons.restaurant_menu,
+          'color': Colors.orange,
+          'title': 'Hazırlanıyor',
+          'subtitle': 'Siparişiniz hazırlanıyor',
+        };
+      case 'ready':
+        return {
+          'icon': Icons.check_circle,
+          'color': Colors.green,
+          'title': 'Hazır',
+          'subtitle': 'Kurye yolda',
+        };
+      case 'pickedup':
+        return {
+          'icon': Icons.delivery_dining,
+          'color': Colors.blue,
+          'title': 'Kuryede',
+          'subtitle': 'Kurye siparişi aldı',
+        };
+      case 'ontheway':
+        return {
+          'icon': Icons.local_shipping,
+          'color': AppColors.primary,
+          'title': 'Yolda',
+          'subtitle': 'Siparişiniz size geliyor',
+        };
+      case 'delivered':
+        return {
+          'icon': Icons.done_all,
+          'color': Colors.green,
+          'title': 'Teslim Edildi',
+          'subtitle': 'Afiyet olsun!',
+        };
       default:
-        return Colors.grey;
+        return {
+          'icon': Icons.info,
+          'color': Colors.grey,
+          'title': 'Bilinmeyen Durum',
+          'subtitle': '',
+        };
     }
   }
 
-  String _getStatusText(dynamic status, AppLocalizations l10n) {
-    switch (status) {
-      case OrderStatus.pending:
-        return l10n.pending;
-      case OrderStatus.confirmed:
-        return l10n.confirmed;
-      case OrderStatus.preparing:
-        return l10n.preparing;
-      case OrderStatus.onTheWay:
-        return l10n.onTheWay;
-      case OrderStatus.delivered:
-        return l10n.delivered;
-      case OrderStatus.cancelled:
-        return l10n.cancelled;
-      default:
-        return l10n.unknown;
-    }
-  }
+  String _formatTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final diff = now.difference(dateTime);
 
-  String _formatDateTime(DateTime dateTime) {
-    return '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+    if (diff.inMinutes < 1) {
+      return 'Az önce';
+    } else if (diff.inMinutes < 60) {
+      return '${diff.inMinutes} dakika önce';
+    } else if (diff.inHours < 24) {
+      return '${diff.inHours} saat önce';
+    } else {
+      return '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+    }
   }
 }

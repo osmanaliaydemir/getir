@@ -43,10 +43,14 @@ import 'presentation/bloc/notification_preferences/notification_preferences_bloc
 import 'presentation/bloc/search/search_bloc.dart';
 import 'presentation/bloc/notifications_feed/notifications_feed_bloc.dart';
 import 'presentation/bloc/working_hours/working_hours_bloc.dart';
+import 'presentation/bloc/review/review_bloc.dart';
 import 'domain/usecases/notification_usecases.dart';
 import 'domain/usecases/working_hours_usecases.dart';
+import 'domain/usecases/review_usecases.dart';
 import 'data/datasources/working_hours_datasource.dart';
+import 'data/datasources/review_datasource.dart';
 import 'data/repositories/working_hours_repository_impl.dart';
+import 'data/repositories/review_repository_impl.dart';
 import 'core/services/firebase_service.dart';
 import 'core/services/search_history_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -142,6 +146,9 @@ class GetirApp extends StatelessWidget {
     );
     final workingHoursRepository = WorkingHoursRepositoryImpl(
       WorkingHoursDataSourceImpl(dio: dio),
+    );
+    final reviewRepository = ReviewRepositoryImpl(
+      ReviewDataSourceImpl(dio: dio),
     );
 
     return MultiProvider(
@@ -262,6 +269,17 @@ class GetirApp extends StatelessWidget {
             ),
             getNextOpenTimeUseCase: GetNextOpenTimeUseCase(
               workingHoursRepository,
+            ),
+          ),
+        ),
+        BlocProvider<ReviewBloc>(
+          create: (context) => ReviewBloc(
+            submitReviewUseCase: SubmitReviewUseCase(reviewRepository),
+            getMerchantReviewsUseCase: GetMerchantReviewsUseCase(
+              reviewRepository,
+            ),
+            markReviewAsHelpfulUseCase: MarkReviewAsHelpfulUseCase(
+              reviewRepository,
             ),
           ),
         ),
