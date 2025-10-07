@@ -62,10 +62,28 @@ import 'core/services/global_keys_service.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/api_client.dart';
 import 'core/services/order_realtime_binder.dart';
+import 'core/services/encryption_service.dart';
+import 'core/config/environment_config.dart';
+import 'core/interceptors/ssl_pinning_interceptor.dart';
+import 'core/interceptors/cache_interceptor.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 🔐 SECURITY & PERFORMANCE INITIALIZATION
+  // Initialize Environment Configuration
+  await EnvironmentConfig.initialize(environment: EnvironmentConfig.dev);
+  EnvironmentConfig.printConfig();
+
+  // Initialize Encryption Service (Secure Storage)
+  await EncryptionService().initialize();
+
+  // Initialize SSL Pinning (Production only)
+  await SslPinningInterceptor.initialize();
+
+  // Initialize API Cache
+  await ApiCacheInterceptor.initialize();
 
   // Initialize timeago locales
   timeago.setLocaleMessages('tr', timeago.TrMessages());
@@ -86,6 +104,9 @@ void main() async {
 
   // Initialize SharedPreferences
   final prefs = await SharedPreferences.getInstance();
+
+  // 🎉 All systems ready
+  debugPrint('✅ All services initialized successfully');
 
   runApp(GetirApp(prefs: prefs));
 }

@@ -2,27 +2,50 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'local_storage_service.dart';
-import '../constants/environment.dart' as envcfg;
+import '../config/environment_config.dart';
+import '../interceptors/ssl_pinning_interceptor.dart';
+import '../interceptors/cache_interceptor.dart';
+import 'encryption_service.dart';
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
   factory ApiClient() => _instance;
   ApiClient._internal() {
+    // Use new EnvironmentConfig for base URL and timeout
     dio = Dio(
       BaseOptions(
-        baseUrl: envcfg.EnvironmentConfig.apiBaseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        headers: {'Accept': 'application/json'},
+        baseUrl: EnvironmentConfig.apiBaseUrl,
+        connectTimeout: Duration(milliseconds: EnvironmentConfig.apiTimeout),
+        receiveTimeout: Duration(milliseconds: EnvironmentConfig.apiTimeout),
+        headers: {
+          'Accept': 'application/json',
+          'X-API-Key': EnvironmentConfig.apiKey,
+        },
       ),
     );
 
+    // Add interceptors in order:
+    // 1. Cache (if initialized)
+    // 2. SSL Pinning (production only)
+    // 3. Auth
+    // 4. Logging
+    // 5. Retry
+    // 6. Response Adapter
     dio.interceptors.addAll([
+      if (ApiCacheInterceptor.isInitialized) ApiCacheInterceptor.interceptor,
+      SslPinningInterceptor(),
       _AuthInterceptor(_storage),
       _LoggingInterceptor(),
       _RetryInterceptor(dio: dio),
       _ResponseAdapterInterceptor(),
     ]);
+
+    if (EnvironmentConfig.debugMode) {
+      debugPrint('🚀 ApiClient initialized');
+      debugPrint('   Base URL: ${EnvironmentConfig.apiBaseUrl}');
+      debugPrint('   Timeout: ${EnvironmentConfig.apiTimeout}ms');
+      debugPrint('   SSL Pinning: ${EnvironmentConfig.enableSslPinning}');
+    }
   }
 
   late final Dio dio;
@@ -31,6 +54,8 @@ class ApiClient {
 
 class _AuthInterceptor extends Interceptor {
   final LocalStorageService storage;
+  final EncryptionService _encryptionService = EncryptionService();
+
   _AuthInterceptor(this.storage);
 
   @override
@@ -38,7 +63,10 @@ class _AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = storage.getUserData('auth_token');
+    // Try to get token from secure storage first
+    final secureToken = await _encryptionService.getAccessToken();
+    final token = secureToken ?? storage.getUserData('auth_token');
+
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }

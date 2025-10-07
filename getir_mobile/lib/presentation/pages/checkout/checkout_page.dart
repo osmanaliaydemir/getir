@@ -89,12 +89,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 // Load working hours
                 if (!_workingHoursLoaded && _merchantId != null) {
                   Future.microtask(() {
-                    context
-                        .read<WorkingHoursBloc>()
-                        .add(LoadWorkingHours(_merchantId!));
-                    context
-                        .read<MerchantBloc>()
-                        .add(LoadMerchantById(_merchantId!));
+                    context.read<WorkingHoursBloc>().add(
+                      LoadWorkingHours(_merchantId!),
+                    );
+                    context.read<MerchantBloc>().add(
+                      LoadMerchantById(_merchantId!),
+                    );
                   });
                   _workingHoursLoaded = true;
                 }
@@ -108,7 +108,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     builder: (context, whState) {
                       if (whState is WorkingHoursLoaded && !whState.isOpen) {
                         return _buildMerchantClosedWarning(
-                            l10n, whState.nextOpenTime);
+                          l10n,
+                          whState.nextOpenTime,
+                        );
                       }
                       return const SizedBox.shrink();
                     },
@@ -116,71 +118,71 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
                   // Delivery Address Section
                   Semantics(
-                header: true,
-                label: l10n.deliveryAddress,
-                child: _buildSectionTitle(l10n.deliveryAddress),
-              ),
-              const SizedBox(height: 12),
-              _buildAddressSection(l10n),
+                    header: true,
+                    label: l10n.deliveryAddress,
+                    child: _buildSectionTitle(l10n.deliveryAddress),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildAddressSection(l10n),
 
-              const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-              // Payment Method Section
-              Semantics(
-                header: true,
-                label: l10n.paymentMethod,
-                child: _buildSectionTitle(l10n.paymentMethod),
-              ),
-              const SizedBox(height: 12),
-              _buildPaymentMethodSection(l10n),
+                  // Payment Method Section
+                  Semantics(
+                    header: true,
+                    label: l10n.paymentMethod,
+                    child: _buildSectionTitle(l10n.paymentMethod),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildPaymentMethodSection(l10n),
 
-              const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-              // Order Notes Section
-              Semantics(
-                header: true,
-                label: l10n.orderNotes,
-                child: _buildSectionTitle(l10n.orderNotes),
-              ),
-              const SizedBox(height: 12),
-              _buildOrderNotesSection(l10n),
+                  // Order Notes Section
+                  Semantics(
+                    header: true,
+                    label: l10n.orderNotes,
+                    child: _buildSectionTitle(l10n.orderNotes),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildOrderNotesSection(l10n),
 
-              const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-              // Delivery Details Section (YENİ)
-              Semantics(
-                header: true,
-                label: 'Teslimat Detayları',
-                child: _buildSectionTitle('Teslimat Detayları'),
-              ),
-              const SizedBox(height: 12),
-              _buildDeliveryDetailsSection(l10n),
+                  // Delivery Details Section (YENİ)
+                  Semantics(
+                    header: true,
+                    label: 'Teslimat Detayları',
+                    child: _buildSectionTitle('Teslimat Detayları'),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildDeliveryDetailsSection(l10n),
 
-              const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-              // Coupon Section (YENİ)
-              Semantics(
-                header: true,
-                label: 'Kampanya ve İndirim Kodu',
-                child: _buildSectionTitle('Kampanya ve İndirim Kodu'),
-              ),
-              const SizedBox(height: 12),
-              _buildCouponSection(l10n),
+                  // Coupon Section (YENİ)
+                  Semantics(
+                    header: true,
+                    label: 'Kampanya ve İndirim Kodu',
+                    child: _buildSectionTitle('Kampanya ve İndirim Kodu'),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildCouponSection(l10n),
 
-              const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-              // Order Summary Section
-              Semantics(
-                header: true,
-                label: l10n.orderSummary,
-                child: _buildSectionTitle(l10n.orderSummary),
-              ),
-              const SizedBox(height: 12),
-              _buildOrderSummarySection(l10n),
+                  // Order Summary Section
+                  Semantics(
+                    header: true,
+                    label: l10n.orderSummary,
+                    child: _buildSectionTitle(l10n.orderSummary),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildOrderSummarySection(l10n),
 
-              const SizedBox(height: 32),
+                  const SizedBox(height: 32),
 
-              // Place Order Button
+                  // Place Order Button
                   Semantics(
                     button: true,
                     label: l10n.placeOrder,
@@ -946,10 +948,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       decoration: BoxDecoration(
         color: Colors.orange.shade50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.orange.shade300,
-          width: 2,
-        ),
+        border: Border.all(color: Colors.orange.shade300, width: 2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
