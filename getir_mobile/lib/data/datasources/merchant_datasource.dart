@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../domain/entities/merchant.dart';
+import '../../domain/entities/service_category_type.dart';
 
 abstract class MerchantDataSource {
   Future<List<Merchant>> getMerchants({
@@ -17,6 +18,13 @@ abstract class MerchantDataSource {
   Future<List<Merchant>> getNearbyMerchants({
     required double latitude,
     required double longitude,
+    double radius = 5.0,
+  });
+
+  Future<List<Merchant>> getNearbyMerchantsByCategory({
+    required double latitude,
+    required double longitude,
+    required int categoryType,
     double radius = 5.0,
   });
 }
@@ -74,12 +82,19 @@ class MerchantDataSourceImpl implements MerchantDataSource {
   Future<List<Merchant>> searchMerchants(String query) async {
     try {
       final response = await _dio.get(
-        '/api/v1/merchants/search',
-        queryParameters: {'query': query},
+        '/api/v1/search/merchants',
+        queryParameters: {
+          'query': query,
+          'pageNumber': 1,
+          'pageSize': 20,
+        },
       );
 
-      final List<dynamic> data = response.data['data'] ?? response.data;
-      return data.map((json) => _merchantFromJson(json)).toList();
+      final data = response.data['data'];
+      if (data == null) return [];
+      
+      final List<dynamic> items = data['items'] ?? data;
+      return items.map((json) => _merchantFromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to search merchants: $e');
     }
@@ -108,6 +123,31 @@ class MerchantDataSourceImpl implements MerchantDataSource {
     }
   }
 
+  @override
+  Future<List<Merchant>> getNearbyMerchantsByCategory({
+    required double latitude,
+    required double longitude,
+    required int categoryType,
+    double radius = 5.0,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/api/v1/geo/merchants/nearby',
+        queryParameters: {
+          'latitude': latitude,
+          'longitude': longitude,
+          'categoryType': categoryType,
+          'radius': radius,
+        },
+      );
+
+      final List<dynamic> data = response.data['data'] ?? response.data;
+      return data.map((json) => _merchantFromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch nearby merchants by category: $e');
+    }
+  }
+
   Merchant _merchantFromJson(Map<String, dynamic> json) {
     return Merchant(
       id: json['id']?.toString() ?? '',
@@ -128,6 +168,9 @@ class MerchantDataSourceImpl implements MerchantDataSource {
       minimumOrderAmount: (json['minimumOrderAmount'] ?? 0.0).toDouble(),
       isDeliveryAvailable: json['isDeliveryAvailable'] ?? true,
       isPickupAvailable: json['isPickupAvailable'] ?? false,
+      categoryType: json['categoryType'] != null 
+          ? ServiceCategoryType.fromInt(json['categoryType'] as int)
+          : null,
     );
   }
 }

@@ -124,7 +124,7 @@ class LocalStorageService {
     try {
       final cached = _cacheBox.get(cacheKey);
       if (cached == null) return null;
-      return Map<String, dynamic>.from(cached as Map);
+      return Map<String, dynamic>.from(cached);
     } catch (e) {
       if (kDebugMode) {
         print('Failed to get raw cache by key: $e');

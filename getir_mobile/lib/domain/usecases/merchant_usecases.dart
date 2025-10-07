@@ -64,3 +64,23 @@ class GetNearbyMerchantsUseCase {
     );
   }
 }
+
+class GetNearbyMerchantsByCategoryUseCase {
+  final MerchantRepository _repository;
+
+  GetNearbyMerchantsByCategoryUseCase(this._repository);
+
+  Future<List<Merchant>> call({
+    required double latitude,
+    required double longitude,
+    required int categoryType,
+    double radius = 5.0,
+  }) async {
+    return await _repository.getNearbyMerchantsByCategory(
+      latitude: latitude,
+      longitude: longitude,
+      categoryType: categoryType,
+      radius: radius,
+    );
+  }
+}

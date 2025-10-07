@@ -48,8 +48,9 @@ class _PaginatedListViewState<T> extends State<PaginatedListView<T>> {
   }
 
   void _onScroll() {
-    if (!_scrollController.hasClients || _isLoadingMore || !widget.hasMore)
+    if (!_scrollController.hasClients || _isLoadingMore || !widget.hasMore) {
       return;
+    }
     final threshold = 200.0; // px to bottom before loading more
     final maxScroll = _scrollController.position.maxScrollExtent;
     final current = _scrollController.position.pixels;

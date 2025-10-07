@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'service_category_type.dart';
 
 class Merchant extends Equatable {
   final String id;
@@ -19,6 +20,8 @@ class Merchant extends Equatable {
   final double minimumOrderAmount;
   final bool isDeliveryAvailable;
   final bool isPickupAvailable;
+  final ServiceCategoryType?
+  categoryType; // Servis kategori tipi (Market, Restaurant, vb.)
 
   const Merchant({
     required this.id,
@@ -39,29 +42,31 @@ class Merchant extends Equatable {
     required this.minimumOrderAmount,
     required this.isDeliveryAvailable,
     required this.isPickupAvailable,
+    this.categoryType,
   });
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        description,
-        logoUrl,
-        coverImageUrl,
-        rating,
-        reviewCount,
-        deliveryFee,
-        estimatedDeliveryTime,
-        distance,
-        isOpen,
-        address,
-        phoneNumber,
-        categories,
-        workingHours,
-        minimumOrderAmount,
-        isDeliveryAvailable,
-        isPickupAvailable,
-      ];
+    id,
+    name,
+    description,
+    logoUrl,
+    coverImageUrl,
+    rating,
+    reviewCount,
+    deliveryFee,
+    estimatedDeliveryTime,
+    distance,
+    isOpen,
+    address,
+    phoneNumber,
+    categories,
+    workingHours,
+    minimumOrderAmount,
+    isDeliveryAvailable,
+    isPickupAvailable,
+    categoryType,
+  ];
 
   Merchant copyWith({
     String? id,
@@ -82,6 +87,7 @@ class Merchant extends Equatable {
     double? minimumOrderAmount,
     bool? isDeliveryAvailable,
     bool? isPickupAvailable,
+    ServiceCategoryType? categoryType,
   }) {
     return Merchant(
       id: id ?? this.id,
@@ -92,7 +98,8 @@ class Merchant extends Equatable {
       rating: rating ?? this.rating,
       reviewCount: reviewCount ?? this.reviewCount,
       deliveryFee: deliveryFee ?? this.deliveryFee,
-      estimatedDeliveryTime: estimatedDeliveryTime ?? this.estimatedDeliveryTime,
+      estimatedDeliveryTime:
+          estimatedDeliveryTime ?? this.estimatedDeliveryTime,
       distance: distance ?? this.distance,
       isOpen: isOpen ?? this.isOpen,
       address: address ?? this.address,
@@ -102,6 +109,7 @@ class Merchant extends Equatable {
       minimumOrderAmount: minimumOrderAmount ?? this.minimumOrderAmount,
       isDeliveryAvailable: isDeliveryAvailable ?? this.isDeliveryAvailable,
       isPickupAvailable: isPickupAvailable ?? this.isPickupAvailable,
+      categoryType: categoryType ?? this.categoryType,
     );
   }
 }

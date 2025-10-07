@@ -31,7 +31,15 @@ class LoadMerchants extends MerchantEvent {
   });
 
   @override
-  List<Object?> get props => [page, limit, search, category, latitude, longitude, radius];
+  List<Object?> get props => [
+    page,
+    limit,
+    search,
+    category,
+    latitude,
+    longitude,
+    radius,
+  ];
 }
 
 class LoadMerchantById extends MerchantEvent {
@@ -65,6 +73,24 @@ class LoadNearbyMerchants extends MerchantEvent {
 
   @override
   List<Object> get props => [latitude, longitude, radius];
+}
+
+class LoadNearbyMerchantsByCategory extends MerchantEvent {
+  final double latitude;
+  final double longitude;
+  final int
+  categoryType; // ServiceCategoryType value (1=Restaurant, 2=Market, vb.)
+  final double radius;
+
+  const LoadNearbyMerchantsByCategory({
+    required this.latitude,
+    required this.longitude,
+    required this.categoryType,
+    this.radius = 5.0,
+  });
+
+  @override
+  List<Object> get props => [latitude, longitude, categoryType, radius];
 }
 
 // States
@@ -112,21 +138,28 @@ class MerchantBloc extends Bloc<MerchantEvent, MerchantState> {
   final GetMerchantByIdUseCase _getMerchantByIdUseCase;
   final SearchMerchantsUseCase _searchMerchantsUseCase;
   final GetNearbyMerchantsUseCase _getNearbyMerchantsUseCase;
+  final GetNearbyMerchantsByCategoryUseCase
+  _getNearbyMerchantsByCategoryUseCase;
 
   MerchantBloc({
     required GetMerchantsUseCase getMerchantsUseCase,
     required GetMerchantByIdUseCase getMerchantByIdUseCase,
     required SearchMerchantsUseCase searchMerchantsUseCase,
     required GetNearbyMerchantsUseCase getNearbyMerchantsUseCase,
-  })  : _getMerchantsUseCase = getMerchantsUseCase,
-        _getMerchantByIdUseCase = getMerchantByIdUseCase,
-        _searchMerchantsUseCase = searchMerchantsUseCase,
-        _getNearbyMerchantsUseCase = getNearbyMerchantsUseCase,
-        super(MerchantInitial()) {
+    required GetNearbyMerchantsByCategoryUseCase
+    getNearbyMerchantsByCategoryUseCase,
+  }) : _getMerchantsUseCase = getMerchantsUseCase,
+       _getMerchantByIdUseCase = getMerchantByIdUseCase,
+       _searchMerchantsUseCase = searchMerchantsUseCase,
+       _getNearbyMerchantsUseCase = getNearbyMerchantsUseCase,
+       _getNearbyMerchantsByCategoryUseCase =
+           getNearbyMerchantsByCategoryUseCase,
+       super(MerchantInitial()) {
     on<LoadMerchants>(_onLoadMerchants);
     on<LoadMerchantById>(_onLoadMerchantById);
     on<SearchMerchants>(_onSearchMerchants);
     on<LoadNearbyMerchants>(_onLoadNearbyMerchants);
+    on<LoadNearbyMerchantsByCategory>(_onLoadNearbyMerchantsByCategory);
   }
 
   Future<void> _onLoadMerchants(
@@ -185,6 +218,24 @@ class MerchantBloc extends Bloc<MerchantEvent, MerchantState> {
       final merchants = await _getNearbyMerchantsUseCase(
         latitude: event.latitude,
         longitude: event.longitude,
+        radius: event.radius,
+      );
+      emit(MerchantsLoaded(merchants));
+    } catch (e) {
+      emit(MerchantError(e.toString()));
+    }
+  }
+
+  Future<void> _onLoadNearbyMerchantsByCategory(
+    LoadNearbyMerchantsByCategory event,
+    Emitter<MerchantState> emit,
+  ) async {
+    emit(MerchantLoading());
+    try {
+      final merchants = await _getNearbyMerchantsByCategoryUseCase(
+        latitude: event.latitude,
+        longitude: event.longitude,
+        categoryType: event.categoryType,
         radius: event.radius,
       );
       emit(MerchantsLoaded(merchants));

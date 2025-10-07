@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/optimized_image.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/localization/app_localizations.dart';
 import '../../../domain/entities/order.dart';
 
 class OrderConfirmationPage extends StatefulWidget {
@@ -17,13 +16,12 @@ class OrderConfirmationPage extends StatefulWidget {
 class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final order = widget.order;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(l10n.orderConfirmation),
+        title: const Text('Sipariş Onayı'),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         automaticallyImplyLeading: false,
@@ -31,11 +29,7 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: () {
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/home',
-                (route) => false,
-              );
+              Navigator.of(context).popUntil((route) => route.isFirst);
             },
           ),
         ],
@@ -44,26 +38,43 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Success Animation/Icon
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.check_circle,
-                color: AppColors.success,
-                size: 80,
-              ),
+            // Success Animation/Icon with Scale Animation
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.elasticOut,
+              builder: (context, value, child) {
+                return Transform.scale(
+                  scale: value,
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.success.withOpacity(0.3),
+                          blurRadius: 20,
+                          spreadRadius: 5,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.check_circle,
+                      color: AppColors.success,
+                      size: 80,
+                    ),
+                  ),
+                );
+              },
             ),
 
             const SizedBox(height: 24),
 
             // Order Confirmed Title
             Text(
-              l10n.orderConfirmed,
+              'Siparişiniz Alındı!',
               style: AppTypography.headlineMedium.copyWith(
                 fontWeight: FontWeight.bold,
                 color: AppColors.success,
@@ -75,7 +86,7 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
 
             // Order Number
             Text(
-              '${l10n.orderNumber}: ${order.id}',
+              'Sipariş No: ${order.id}',
               style: AppTypography.bodyLarge.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -140,7 +151,7 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${l10n.estimatedDeliveryTime}: ${_formatDateTime(order.estimatedDeliveryTime)}',
+                              'Tahmini Teslimat: ${_formatDateTime(order.estimatedDeliveryTime)}',
                               style: AppTypography.bodyMedium.copyWith(
                                 color: AppColors.textSecondary,
                               ),
@@ -168,7 +179,7 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              l10n.deliveryAddress,
+                              'Teslimat Adresi',
                               style: AppTypography.bodyMedium.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
@@ -202,7 +213,7 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              l10n.paymentMethod,
+                              'Ödeme Yöntemi',
                               style: AppTypography.bodyMedium.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
@@ -224,13 +235,13 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
 
                   // Order Items
                   Text(
-                    l10n.orderItems,
+                    'Sipariş Ürünleri',
                     style: AppTypography.bodyMedium.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  ...order.items.map((item) => _buildOrderItem(item, l10n)),
+                  ...order.items.map((item) => _buildOrderItem(item)),
 
                   const SizedBox(height: 20),
 
@@ -243,17 +254,17 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
                     ),
                     child: Column(
                       children: [
-                        _buildPriceRow(l10n.subtotal, order.subtotal),
-                        _buildPriceRow(l10n.deliveryFee, order.deliveryFee),
+                        _buildPriceRow('Ara Toplam', order.subtotal),
+                        _buildPriceRow('Teslimat Ücreti', order.deliveryFee),
                         if (order.discountAmount > 0)
                           _buildPriceRow(
-                            l10n.discount,
-                            -order.discountAmount,
+                            'İndirim',
+                            order.discountAmount,
                             isDiscount: true,
                           ),
                         const Divider(),
                         _buildPriceRow(
-                          l10n.total,
+                          'Toplam',
                           order.totalAmount,
                           isTotal: true,
                         ),
@@ -276,12 +287,11 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
                     onPressed: () {
                       Navigator.pushNamed(
                         context,
-                        '/order-tracking',
-                        arguments: order.id,
+                        '/order/${order.id}/tracking',
                       );
                     },
-                    icon: const Icon(Icons.track_changes),
-                    label: Text(l10n.trackOrder),
+                    icon: const Icon(Icons.local_shipping),
+                    label: const Text('Siparişimi Takip Et'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.white,
@@ -300,14 +310,11 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () {
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        '/home',
-                        (route) => false,
-                      );
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                      // veya context.go('/home');
                     },
-                    icon: const Icon(Icons.shopping_bag),
-                    label: Text(l10n.continueShopping),
+                    icon: const Icon(Icons.home),
+                    label: const Text('Ana Sayfaya Dön'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.primary,
                       side: const BorderSide(color: AppColors.primary),
@@ -337,7 +344,7 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      l10n.orderStatusInfo,
+                      'Siparişiniz hazırlanıyor. Sipariş takip ekranından güncel durumu görebilirsiniz.',
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.primary,
                       ),
@@ -352,7 +359,7 @@ class _OrderConfirmationPageState extends State<OrderConfirmationPage> {
     );
   }
 
-  Widget _buildOrderItem(OrderItem item, AppLocalizations l10n) {
+  Widget _buildOrderItem(OrderItem item) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),

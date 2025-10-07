@@ -5,6 +5,8 @@ import 'core/navigation/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/providers/language_provider.dart';
+import 'core/providers/theme_provider.dart';
+import 'core/services/notification_badge_service.dart';
 import 'presentation/bloc/auth/auth_bloc.dart';
 import 'presentation/bloc/merchant/merchant_bloc.dart';
 import 'presentation/bloc/product/product_bloc.dart';
@@ -34,10 +36,16 @@ import 'data/datasources/address_datasource.dart';
 import 'data/datasources/order_datasource.dart';
 import 'data/datasources/profile_datasource.dart';
 import 'data/datasources/notification_preferences_datasource.dart';
+import 'data/datasources/notifications_feed_datasource.dart';
+import 'data/repositories/notifications_feed_repository_impl.dart';
 import 'presentation/bloc/profile/profile_bloc.dart';
 import 'presentation/bloc/notification_preferences/notification_preferences_bloc.dart';
+import 'presentation/bloc/search/search_bloc.dart';
+import 'presentation/bloc/notifications_feed/notifications_feed_bloc.dart';
 import 'domain/usecases/notification_usecases.dart';
 import 'core/services/firebase_service.dart';
+import 'core/services/search_history_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/providers/network_provider.dart';
 import 'core/services/network_service.dart';
 import 'core/services/local_storage_service.dart';
@@ -50,9 +58,13 @@ import 'core/services/global_keys_service.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/api_client.dart';
 import 'core/services/order_realtime_binder.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize timeago locales
+  timeago.setLocaleMessages('tr', timeago.TrMessages());
 
   // Initialize Hive
   await Hive.initFlutter();
@@ -68,19 +80,27 @@ void main() async {
   AppStartupTracker().markAppStart();
   await AnalyticsService().initialize();
 
-  runApp(const GetirApp());
+  // Initialize SharedPreferences
+  final prefs = await SharedPreferences.getInstance();
+
+  runApp(GetirApp(prefs: prefs));
 }
 
 class GetirApp extends StatelessWidget {
-  const GetirApp({super.key});
+  final SharedPreferences prefs;
+
+  const GetirApp({super.key, required this.prefs});
 
   @override
   Widget build(BuildContext context) {
     // Create Dio instance via ApiClient
     final dio = ApiClient().dio;
 
+    // Create SearchHistoryService
+    final searchHistoryService = SearchHistoryService(prefs);
+
     // Create repository instances
-    final authRepository = AuthRepositoryImpl(AuthDataSourceImpl());
+    final authRepository = AuthRepositoryImpl(AuthDataSourceImpl(dio: dio));
     final merchantRepository = MerchantRepositoryImpl(
       MerchantDataSourceImpl(dio),
     );
@@ -92,11 +112,16 @@ class GetirApp extends StatelessWidget {
     final notificationRepository = NotificationRepositoryImpl(
       NotificationPreferencesDataSourceImpl(dio),
     );
+    final notificationsFeedRepository = NotificationsFeedRepositoryImpl(
+      NotificationsFeedDataSourceImpl(dio),
+    );
 
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => NetworkProvider()..initialize()),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationBadgeService()),
         BlocProvider<AuthBloc>(
           create: (context) => AuthBloc(
             loginUseCase: LoginUseCase(authRepository),
@@ -122,6 +147,8 @@ class GetirApp extends StatelessWidget {
             getNearbyMerchantsUseCase: GetNearbyMerchantsUseCase(
               merchantRepository,
             ),
+            getNearbyMerchantsByCategoryUseCase:
+                GetNearbyMerchantsByCategoryUseCase(merchantRepository),
           ),
         ),
         BlocProvider<ProductBloc>(
@@ -186,15 +213,26 @@ class GetirApp extends StatelessWidget {
             ),
           ),
         ),
+        BlocProvider<SearchBloc>(
+          create: (context) => SearchBloc(
+            searchMerchantsUseCase: SearchMerchantsUseCase(merchantRepository),
+            searchProductsUseCase: SearchProductsUseCase(productRepository),
+            searchHistoryService: searchHistoryService,
+          ),
+        ),
+        BlocProvider<NotificationsFeedBloc>(
+          create: (context) =>
+              NotificationsFeedBloc(repository: notificationsFeedRepository),
+        ),
       ],
-      child: Consumer<LanguageProvider>(
-        builder: (context, languageProvider, child) {
+      child: Consumer2<LanguageProvider, ThemeProvider>(
+        builder: (context, languageProvider, themeProvider, child) {
           return MaterialApp.router(
             title: 'Getir Mobile',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
-            themeMode: ThemeMode.system,
+            themeMode: themeProvider.themeMode,
             locale: languageProvider.currentLocale,
             scaffoldMessengerKey: GlobalKeysService.scaffoldMessengerKey,
             localizationsDelegates: [

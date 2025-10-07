@@ -1,6 +1,7 @@
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Application.Services.GeoLocation;
+using Getir.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,10 +25,11 @@ public class GeoLocationController : BaseController
     #region Public Endpoints
 
     /// <summary>
-    /// Get nearby merchants within specified radius
+    /// Get nearby merchants within specified radius, optionally filtered by category type
     /// </summary>
     /// <param name="latitude">Latitude</param>
     /// <param name="longitude">Longitude</param>
+    /// <param name="categoryType">Optional: Service category type (Restaurant=1, Market=2, Pharmacy=3, Water=4, Cafe=5, Bakery=6, Other=99)</param>
     /// <param name="radius">Radius in kilometers</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Nearby merchants</returns>
@@ -37,10 +39,23 @@ public class GeoLocationController : BaseController
     public async Task<IActionResult> GetNearbyMerchants(
         [FromQuery] double latitude,
         [FromQuery] double longitude,
+        [FromQuery] ServiceCategoryType? categoryType = null,
         [FromQuery] double radius = 5.0,
         CancellationToken ct = default)
     {
-        var result = await _geoLocationService.GetNearbyMerchantsAsync(latitude, longitude, radius, ct);
+        Result<IEnumerable<NearbyMerchantResponse>> result;
+        
+        if (categoryType.HasValue)
+        {
+            result = await _geoLocationService.GetNearbyMerchantsByCategoryAsync(
+                latitude, longitude, categoryType.Value, radius, ct);
+        }
+        else
+        {
+            result = await _geoLocationService.GetNearbyMerchantsAsync(
+                latitude, longitude, radius, ct);
+        }
+        
         return ToActionResult(result);
     }
 

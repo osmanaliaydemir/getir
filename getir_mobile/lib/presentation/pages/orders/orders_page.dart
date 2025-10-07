@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../widgets/order/order_card_skeleton.dart';
+import '../../../core/widgets/error_state_widget.dart';
 import '../../../core/navigation/app_navigation.dart';
 import '../../bloc/order/order_bloc.dart';
 import '../../../domain/entities/order.dart';
@@ -21,7 +23,7 @@ class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    
+
     // Load user orders
     context.read<OrderBloc>().add(LoadUserOrders());
   }
@@ -69,46 +71,22 @@ class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
     return BlocBuilder<OrderBloc, OrderState>(
       builder: (context, state) {
         if (state is OrderLoading) {
-          return const Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-            ),
-          );
+          return const OrderListSkeleton(itemCount: 5);
         }
 
         if (state is OrderError) {
-          return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: AppColors.error,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  state.message,
-                  style: AppTypography.bodyLarge.copyWith(
-                    color: AppColors.error,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    context.read<OrderBloc>().add(LoadUserOrders());
-                  },
-                  child: Text(l10n.retry),
-                ),
-              ],
-            ),
+          return ErrorStateWidget(
+            errorType: _getErrorTypeFromMessage(state.message),
+            customMessage: state.message,
+            onRetry: () {
+              context.read<OrderBloc>().add(LoadUserOrders());
+            },
           );
         }
 
         if (state is OrdersLoaded) {
           final orders = _filterOrders(state.orders, filter);
-          
+
           if (orders.isEmpty) {
             return _buildEmptyState(filter, l10n);
           }
@@ -160,13 +138,9 @@ class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            icon,
-            size: 80,
-            color: AppColors.textSecondary,
-          ),
+          Icon(icon, size: 80, color: AppColors.textSecondary),
           const SizedBox(height: 24),
-            Text(
+          Text(
             title,
             style: AppTypography.headlineSmall.copyWith(
               color: AppColors.textSecondary,
@@ -174,7 +148,7 @@ class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
             ),
           ),
           const SizedBox(height: 8),
-            Text(
+          Text(
             message,
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.textSecondary,
@@ -229,7 +203,10 @@ class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: _getStatusColor(order.status).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -244,9 +221,9 @@ class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Merchant info
               Row(
                 children: [
@@ -256,7 +233,9 @@ class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
                       width: 40,
                       height: 40,
                       color: Colors.grey[200],
-                      child: order.merchantLogoUrl != null && order.merchantLogoUrl!.isNotEmpty
+                      child:
+                          order.merchantLogoUrl != null &&
+                              order.merchantLogoUrl!.isNotEmpty
                           ? Image.network(
                               order.merchantLogoUrl!,
                               fit: BoxFit.cover,
@@ -298,9 +277,9 @@ class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Order details
               Row(
                 children: [
@@ -326,9 +305,9 @@ class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Action buttons
               Row(
                 children: [
@@ -346,7 +325,8 @@ class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  if (order.status == OrderStatus.confirmed || order.status == OrderStatus.preparing)
+                  if (order.status == OrderStatus.confirmed ||
+                      order.status == OrderStatus.preparing)
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
@@ -374,16 +354,22 @@ class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
       case OrderStatusFilter.all:
         return orders;
       case OrderStatusFilter.active:
-        return orders.where((order) => 
-          order.status == OrderStatus.confirmed ||
-          order.status == OrderStatus.preparing ||
-          order.status == OrderStatus.onTheWay
-        ).toList();
+        return orders
+            .where(
+              (order) =>
+                  order.status == OrderStatus.confirmed ||
+                  order.status == OrderStatus.preparing ||
+                  order.status == OrderStatus.onTheWay,
+            )
+            .toList();
       case OrderStatusFilter.completed:
-        return orders.where((order) => 
-          order.status == OrderStatus.delivered ||
-          order.status == OrderStatus.cancelled
-        ).toList();
+        return orders
+            .where(
+              (order) =>
+                  order.status == OrderStatus.delivered ||
+                  order.status == OrderStatus.cancelled,
+            )
+            .toList();
     }
   }
 
@@ -430,8 +416,34 @@ class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
   }
 }
 
-enum OrderStatusFilter {
-  all,
-  active,
-  completed,
+enum OrderStatusFilter { all, active, completed }
+
+extension _OrdersPageExtension on _OrdersPageState {
+  ErrorType _getErrorTypeFromMessage(String message) {
+    final lowerMessage = message.toLowerCase();
+
+    if (lowerMessage.contains('network') ||
+        lowerMessage.contains('connection') ||
+        lowerMessage.contains('internet') ||
+        lowerMessage.contains('bağlantı')) {
+      return ErrorType.network;
+    } else if (lowerMessage.contains('500') ||
+        lowerMessage.contains('502') ||
+        lowerMessage.contains('503') ||
+        lowerMessage.contains('server') ||
+        lowerMessage.contains('sunucu')) {
+      return ErrorType.server;
+    } else if (lowerMessage.contains('404') ||
+        lowerMessage.contains('not found') ||
+        lowerMessage.contains('bulunamadı')) {
+      return ErrorType.notFound;
+    } else if (lowerMessage.contains('401') ||
+        lowerMessage.contains('403') ||
+        lowerMessage.contains('unauthorized') ||
+        lowerMessage.contains('yetkisiz')) {
+      return ErrorType.unauthorized;
+    }
+
+    return ErrorType.generic;
+  }
 }

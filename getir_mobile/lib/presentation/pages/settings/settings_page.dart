@@ -6,7 +6,9 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/navigation/app_navigation.dart';
 import '../../../core/providers/language_provider.dart';
+import '../../../core/providers/theme_provider.dart';
 import '../../bloc/auth/auth_bloc.dart';
+import '../../widgets/common/theme_switcher.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -62,13 +64,7 @@ class SettingsPage extends StatelessWidget {
           // App Settings Section
           _buildSectionHeader(l10n.appSettings, Icons.settings_outlined),
           _buildLanguageTile(context),
-          _buildSettingsTile(
-            icon: Icons.dark_mode_outlined,
-            title: l10n.theme,
-            subtitle: l10n.systemTheme,
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () => _showThemeDialog(context),
-          ),
+          _buildThemeTile(context),
 
           const SizedBox(height: 24),
 
@@ -262,39 +258,57 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  void _showThemeDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context).selectTheme),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: Text(AppLocalizations.of(context).systemTheme),
-              onTap: () {
-                // TODO: Implement theme selection
-                Navigator.pop(context);
-              },
+  Widget _buildThemeTile(BuildContext context) {
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 4,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+          child: ListTile(
+            leading: Icon(
+              _getThemeIcon(themeProvider.themeMode),
+              color: AppColors.textSecondary,
             ),
-            ListTile(
-              title: Text(AppLocalizations.of(context).lightTheme),
-              onTap: () {
-                // TODO: Implement theme selection
-                Navigator.pop(context);
-              },
+            title: Text(
+              AppLocalizations.of(context).theme,
+              style: AppTypography.bodyLarge,
             ),
-            ListTile(
-              title: Text(AppLocalizations.of(context).darkTheme),
-              onTap: () {
-                // TODO: Implement theme selection
-                Navigator.pop(context);
-              },
+            subtitle: Text(
+              themeProvider.themeModeString,
+              style: AppTypography.bodySmall,
             ),
-          ],
-        ),
-      ),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => ThemeSelectorBottomSheet.show(context),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
+          ),
+        );
+      },
     );
+  }
+
+  IconData _getThemeIcon(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return Icons.light_mode;
+      case ThemeMode.dark:
+        return Icons.dark_mode;
+      case ThemeMode.system:
+        return Icons.brightness_auto;
+    }
   }
 
   void _showLogoutDialog(BuildContext context) {

@@ -5,6 +5,7 @@ import '../../presentation/pages/splash/splash_page.dart';
 import '../../presentation/pages/onboarding/onboarding_page.dart';
 import '../../presentation/pages/auth/login_page.dart';
 import '../../presentation/pages/auth/register_page.dart';
+import '../../presentation/pages/auth/forgot_password_page.dart';
 import '../../presentation/pages/home/home_page.dart';
 import '../../presentation/pages/search/search_page.dart';
 import '../../presentation/pages/cart/cart_page.dart';
@@ -15,7 +16,9 @@ import '../../presentation/pages/product/product_detail_page.dart';
 import '../../presentation/pages/checkout/checkout_page.dart';
 import '../../presentation/pages/order/order_detail_page.dart';
 import '../../presentation/pages/order/order_tracking_page.dart';
+import '../../presentation/pages/order/order_confirmation_page.dart';
 import '../../presentation/pages/payment/payment_page.dart';
+import '../../../domain/entities/order.dart';
 import '../../presentation/pages/addresses/addresses_page.dart';
 import '../../presentation/pages/notifications/notifications_page.dart';
 import '../../presentation/pages/notifications/notification_settings_page.dart';
@@ -55,6 +58,11 @@ class AppRouter {
         path: RouteConstants.register,
         name: RouteConstants.registerRouteName,
         builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        name: 'forgot-password',
+        builder: (context, state) => const ForgotPasswordPage(),
       ),
 
       // Main App Routes with Bottom Navigation
@@ -112,6 +120,14 @@ class AppRouter {
         path: RouteConstants.checkout,
         name: RouteConstants.checkoutRouteName,
         builder: (context, state) => const CheckoutPage(),
+      ),
+      GoRoute(
+        path: '/order-confirmation',
+        name: 'order-confirmation',
+        builder: (context, state) {
+          final order = state.extra as Order;
+          return OrderConfirmationPage(order: order);
+        },
       ),
       GoRoute(
         path: RouteConstants.orderDetail,
@@ -290,6 +306,10 @@ class AppNavigation {
   // Order Navigation
   static void goToCheckout(BuildContext context) {
     context.go(RouteConstants.checkout);
+  }
+
+  static void goToOrderConfirmation(BuildContext context, dynamic order) {
+    context.goNamed('order-confirmation', extra: order);
   }
 
   static void goToOrderDetail(BuildContext context, String orderId) {

@@ -62,18 +62,24 @@ class RegisterRequest {
   }
 }
 
-// Auth Response Model
+// Auth Response Model (Backend'den gelen response'a uygun)
 class AuthResponse {
   final String accessToken;
   final String refreshToken;
   final DateTime expiresAt;
-  final UserModel user;
+  final String role;
+  final String userId;
+  final String email;
+  final String fullName;
   
   const AuthResponse({
     required this.accessToken,
     required this.refreshToken,
     required this.expiresAt,
-    required this.user,
+    required this.role,
+    required this.userId,
+    required this.email,
+    required this.fullName,
   });
   
   Map<String, dynamic> toJson() {
@@ -81,7 +87,10 @@ class AuthResponse {
       'accessToken': accessToken,
       'refreshToken': refreshToken,
       'expiresAt': expiresAt.toIso8601String(),
-      'user': user.toJson(),
+      'role': role,
+      'userId': userId,
+      'email': email,
+      'fullName': fullName,
     };
   }
   
@@ -90,7 +99,28 @@ class AuthResponse {
       accessToken: json['accessToken'] as String,
       refreshToken: json['refreshToken'] as String,
       expiresAt: DateTime.parse(json['expiresAt'] as String),
-      user: UserModel.fromJson(json['user'] as Map<String, dynamic>),
+      role: json['role'] as String,
+      userId: json['userId'] as String,
+      email: json['email'] as String,
+      fullName: json['fullName'] as String,
+    );
+  }
+  
+  // UserModel'e çevir (geriye dönük uyumluluk için)
+  UserModel toUserModel() {
+    final names = fullName.split(' ');
+    return UserModel(
+      id: userId,
+      email: email,
+      firstName: names.isNotEmpty ? names[0] : '',
+      lastName: names.length > 1 ? names.sublist(1).join(' ') : '',
+      phoneNumber: null,
+      role: role,
+      isEmailVerified: true,
+      isActive: true,
+      createdAt: DateTime.now(),
+      updatedAt: null,
+      lastLoginAt: DateTime.now(),
     );
   }
 }

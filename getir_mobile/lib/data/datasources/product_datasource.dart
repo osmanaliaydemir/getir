@@ -76,12 +76,19 @@ class ProductDataSourceImpl implements ProductDataSource {
   Future<List<Product>> searchProducts(String query) async {
     try {
       final response = await _dio.get(
-        '/api/v1/products/search',
-        queryParameters: {'query': query},
+        '/api/v1/search/products',
+        queryParameters: {
+          'query': query,
+          'pageNumber': 1,
+          'pageSize': 20,
+        },
       );
 
-      final List<dynamic> data = response.data['data'] ?? response.data;
-      return data.map((json) => _productFromJson(json)).toList();
+      final data = response.data['data'];
+      if (data == null) return [];
+      
+      final List<dynamic> items = data['items'] ?? data;
+      return items.map((json) => _productFromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to search products: $e');
     }

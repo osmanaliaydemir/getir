@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
@@ -21,6 +22,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
   UserAddress? _selectedAddress;
   PaymentMethod _selectedPaymentMethod = PaymentMethod.cash;
   final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _couponController = TextEditingController();
+
+  // Yeni state değişkenleri
+  bool _ringDoorbell = true; // Zile basma opsiyonu
+  bool _isApplyingCoupon = false;
 
   @override
   void initState() {
@@ -33,6 +39,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   @override
   void dispose() {
     _notesController.dispose();
+    _couponController.dispose();
     super.dispose();
   }
 
@@ -50,12 +57,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
       body: BlocListener<OrderBloc, OrderState>(
         listener: (context, state) {
           if (state is OrderCreated) {
-            // Navigate to order confirmation
-            Navigator.pushReplacementNamed(
-              context,
-              '/order-confirmation',
-              arguments: state.order,
-            );
+            // Navigate to order confirmation with GoRouter
+            context.goNamed('order-confirmation', extra: state.order);
           } else if (state is OrderError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -100,6 +103,28 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
               const SizedBox(height: 12),
               _buildOrderNotesSection(l10n),
+
+              const SizedBox(height: 24),
+
+              // Delivery Details Section (YENİ)
+              Semantics(
+                header: true,
+                label: 'Teslimat Detayları',
+                child: _buildSectionTitle('Teslimat Detayları'),
+              ),
+              const SizedBox(height: 12),
+              _buildDeliveryDetailsSection(l10n),
+
+              const SizedBox(height: 24),
+
+              // Coupon Section (YENİ)
+              Semantics(
+                header: true,
+                label: 'Kampanya ve İndirim Kodu',
+                child: _buildSectionTitle('Kampanya ve İndirim Kodu'),
+              ),
+              const SizedBox(height: 12),
+              _buildCouponSection(l10n),
 
               const SizedBox(height: 24),
 
@@ -368,6 +393,220 @@ class _CheckoutPageState extends State<CheckoutPage> {
         ),
         maxLines: 3,
       ),
+    );
+  }
+
+  /// YENİ: Teslimat Detayları Section
+  Widget _buildDeliveryDetailsSection(AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.textSecondary),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Teslimat Süresi
+          Row(
+            children: [
+              const Icon(Icons.schedule, color: AppColors.primary, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Tahmini Teslimat:',
+                style: AppTypography.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '25-35 dakika',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.success,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+          const Divider(),
+          const SizedBox(height: 12),
+
+          // İleri Tarihli Sipariş (Mağaza kapalıysa)
+          // TODO: Merchant isOpen durumuna göre göster
+          // if (!merchant.isOpen) ...
+
+          // Zile Basma Opsiyonu
+          CheckboxListTile(
+            value: _ringDoorbell,
+            onChanged: (value) {
+              setState(() {
+                _ringDoorbell = value ?? true;
+              });
+            },
+            title: const Text('Kapı zili çalınsın'),
+            subtitle: const Text('Kurye kapı zilinizi çalacaktır'),
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            activeColor: AppColors.primary,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// YENİ: Kampanya ve Kupon Kodu Section
+  Widget _buildCouponSection(AppLocalizations l10n) {
+    return BlocBuilder<CartBloc, CartState>(
+      builder: (context, state) {
+        final hasCoupon =
+            state is CartLoaded &&
+            state.cart.couponCode != null &&
+            state.cart.couponCode!.isNotEmpty;
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.textSecondary),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Kupon kodu input
+              if (!hasCoupon) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _couponController,
+                        decoration: InputDecoration(
+                          hintText: 'Kampanya kodu girin',
+                          hintStyle: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.local_offer,
+                            color: AppColors.primary,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                              color: AppColors.primary,
+                              width: 2,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                        ),
+                        textCapitalization: TextCapitalization.characters,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: _isApplyingCoupon
+                          ? null
+                          : () {
+                              if (_couponController.text.trim().isNotEmpty) {
+                                setState(() => _isApplyingCoupon = true);
+                                context.read<CartBloc>().add(
+                                  ApplyCoupon(_couponController.text.trim()),
+                                );
+                                Future.delayed(const Duration(seconds: 1), () {
+                                  if (mounted) {
+                                    setState(() => _isApplyingCoupon = false);
+                                  }
+                                });
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                      ),
+                      child: _isApplyingCoupon
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.white,
+                                ),
+                              ),
+                            )
+                          : const Text('Uygula'),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                // Aktif kupon gösterimi
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.success, width: 1),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.check_circle,
+                        color: AppColors.success,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Kampanya Uygulandı',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.success,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              state.cart.couponCode!.toUpperCase(),
+                              style: AppTypography.bodyLarge.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 20),
+                        color: AppColors.error,
+                        onPressed: () {
+                          context.read<CartBloc>().add(RemoveCoupon());
+                          _couponController.clear();
+                        },
+                        tooltip: 'Kampanyayı kaldır',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 

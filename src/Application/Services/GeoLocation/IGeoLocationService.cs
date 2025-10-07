@@ -1,5 +1,6 @@
 using Getir.Application.Common;
 using Getir.Application.DTO;
+using Getir.Domain.Enums;
 
 namespace Getir.Application.Services.GeoLocation;
 
@@ -16,6 +17,16 @@ public interface IGeoLocationService
     Task<Result<IEnumerable<NearbyMerchantResponse>>> GetNearbyMerchantsAsync(
         double userLatitude, 
         double userLongitude, 
+        double radiusKm = 10.0,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Belirtilen yarıçap ve kategori tipine göre merchantları bulur
+    /// </summary>
+    Task<Result<IEnumerable<NearbyMerchantResponse>>> GetNearbyMerchantsByCategoryAsync(
+        double userLatitude,
+        double userLongitude,
+        ServiceCategoryType categoryType,
         double radiusKm = 10.0,
         CancellationToken cancellationToken = default);
 

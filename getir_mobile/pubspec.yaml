@@ -74,6 +74,7 @@ dependencies:
   injectable: ^2.3.2
   connectivity_plus: ^6.0.5
   flutter_secure_storage: ^9.2.2
+  timeago: ^3.6.1
   
   # Localization
   flutter_localizations:

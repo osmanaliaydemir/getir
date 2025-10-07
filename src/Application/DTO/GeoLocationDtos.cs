@@ -1,3 +1,5 @@
+using Getir.Domain.Enums;
+
 namespace Getir.Application.DTO;
 
 /// <summary>
@@ -14,7 +16,8 @@ public record NearbyMerchantResponse(
     decimal? Rating,
     int TotalReviews,
     bool IsOpen,
-    string? LogoUrl);
+    string? LogoUrl,
+    ServiceCategoryType? CategoryType = null);
 
 /// <summary>
 /// Teslimat tahmini bilgileri

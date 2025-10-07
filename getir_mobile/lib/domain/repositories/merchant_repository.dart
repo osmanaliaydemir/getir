@@ -18,4 +18,11 @@ abstract class MerchantRepository {
     required double longitude,
     double radius = 5.0,
   });
+
+  Future<List<Merchant>> getNearbyMerchantsByCategory({
+    required double latitude,
+    required double longitude,
+    required int categoryType,
+    double radius = 5.0,
+  });
 }

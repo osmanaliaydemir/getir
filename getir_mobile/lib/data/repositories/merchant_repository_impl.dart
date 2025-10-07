@@ -50,4 +50,19 @@ class MerchantRepositoryImpl implements MerchantRepository {
       radius: radius,
     );
   }
+
+  @override
+  Future<List<Merchant>> getNearbyMerchantsByCategory({
+    required double latitude,
+    required double longitude,
+    required int categoryType,
+    double radius = 5.0,
+  }) async {
+    return await _dataSource.getNearbyMerchantsByCategory(
+      latitude: latitude,
+      longitude: longitude,
+      categoryType: categoryType,
+      radius: radius,
+    );
+  }
 }

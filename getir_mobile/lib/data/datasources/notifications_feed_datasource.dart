@@ -30,6 +30,11 @@ class NotificationsFeedDataSourceImpl implements NotificationsFeedDataSource {
 
   @override
   Future<void> markAsRead(String notificationId) async {
-    await _dio.put('/api/v1/notifications/$notificationId/read');
+    await _dio.post(
+      '/api/v1/notifications/mark-as-read',
+      data: {
+        'notificationIds': [notificationId],
+      },
+    );
   }
 }

@@ -2,6 +2,7 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
+using Getir.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.GeoLocation;
@@ -59,6 +60,7 @@ public class GeoLocationService : BaseService, IGeoLocationService
             var merchants = await _unitOfWork.ReadRepository<Merchant>()
                 .ListAsync(
                     filter: m => m.IsActive,
+                    include: "ServiceCategory",
                     cancellationToken: cancellationToken);
 
             var nearbyMerchants = new List<NearbyMerchantResponse>();
@@ -99,7 +101,9 @@ public class GeoLocationService : BaseService, IGeoLocationService
                             merchant.Rating,
                             merchant.TotalReviews,
                             merchant.IsOpen,
-                            merchant.LogoUrl));
+                            merchant.LogoUrl,
+                            merchant.ServiceCategory?.Type
+                        ));
                     }
                 }
             }
@@ -122,6 +126,115 @@ public class GeoLocationService : BaseService, IGeoLocationService
             _loggingService.LogError("Error getting nearby merchants", ex, 
                 new { userLatitude, userLongitude, radiusKm });
             return Result.Fail<IEnumerable<NearbyMerchantResponse>>("Error getting nearby merchants", "GEO_LOCATION_ERROR");
+        }
+    }
+
+    /// <summary>
+    /// Belirtilen yarıçap ve kategori tipine göre merchantları bulur
+    /// </summary>
+    public async Task<Result<IEnumerable<NearbyMerchantResponse>>> GetNearbyMerchantsByCategoryAsync(
+        double userLatitude,
+        double userLongitude,
+        ServiceCategoryType categoryType,
+        double radiusKm = 10.0,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Validate input
+            if (userLatitude < -90 || userLatitude > 90)
+            {
+                return Result.Fail<IEnumerable<NearbyMerchantResponse>>(
+                    "Invalid latitude. Must be between -90 and 90", 
+                    "INVALID_LATITUDE");
+            }
+
+            if (userLongitude < -180 || userLongitude > 180)
+            {
+                return Result.Fail<IEnumerable<NearbyMerchantResponse>>(
+                    "Invalid longitude. Must be between -180 and 180", 
+                    "INVALID_LONGITUDE");
+            }
+
+            if (radiusKm <= 0 || radiusKm > 50)
+            {
+                return Result.Fail<IEnumerable<NearbyMerchantResponse>>(
+                    "Radius must be between 0 and 50 km", 
+                    "INVALID_RADIUS");
+            }
+
+            // Get merchants filtered by category type and active status
+            var merchants = await _unitOfWork.ReadRepository<Merchant>()
+                .ListAsync(
+                    filter: m => m.IsActive && m.ServiceCategory.Type == categoryType,
+                    include: "ServiceCategory",
+                    cancellationToken: cancellationToken);
+
+            var nearbyMerchants = new List<NearbyMerchantResponse>();
+
+            foreach (var merchant in merchants)
+            {
+                var distance = CalculateDistance(
+                    userLatitude, 
+                    userLongitude, 
+                    (double)merchant.Latitude, 
+                    (double)merchant.Longitude);
+
+                if (distance <= radiusKm)
+                {
+                    // Delivery zone kontrolü
+                    var isInDeliveryZone = await IsInDeliveryZoneAsync(
+                        merchant.Id, 
+                        userLatitude, 
+                        userLongitude, 
+                        cancellationToken);
+
+                    if (isInDeliveryZone.Success && isInDeliveryZone.Value)
+                    {
+                        var deliveryEstimate = await CalculateDeliveryEstimateAsync(
+                            merchant.Id, 
+                            userLatitude, 
+                            userLongitude, 
+                            cancellationToken);
+
+                        nearbyMerchants.Add(new NearbyMerchantResponse(
+                            merchant.Id,
+                            merchant.Name,
+                            merchant.Description,
+                            merchant.Address,
+                            distance,
+                            deliveryEstimate.Success ? deliveryEstimate.Value?.DeliveryFee ?? merchant.DeliveryFee : merchant.DeliveryFee,
+                            deliveryEstimate.Success ? deliveryEstimate.Value?.EstimatedDeliveryTimeMinutes ?? merchant.AverageDeliveryTime : merchant.AverageDeliveryTime,
+                            merchant.Rating,
+                            merchant.TotalReviews,
+                            merchant.IsOpen,
+                            merchant.LogoUrl,
+                            merchant.ServiceCategory?.Type));
+                    }
+                }
+            }
+
+            // Mesafeye göre sırala
+            var sortedMerchants = nearbyMerchants
+                .OrderBy(m => m.DistanceKm)
+                .ThenByDescending(m => m.Rating ?? 0)
+                .ToList();
+
+            _loggingService.LogBusinessEvent("NearbyMerchantsByCategoryFound", new { 
+                sortedMerchants.Count, 
+                categoryType = categoryType.ToString(),
+                radiusKm 
+            });
+
+            return Result.Ok(sortedMerchants.AsEnumerable());
+        }
+        catch (Exception ex)
+        {
+            _loggingService.LogError("Error getting nearby merchants by category", ex, 
+                new { userLatitude, userLongitude, categoryType = categoryType.ToString(), radiusKm });
+            return Result.Fail<IEnumerable<NearbyMerchantResponse>>(
+                "Error getting nearby merchants by category", 
+                "GEO_LOCATION_ERROR");
         }
     }
 

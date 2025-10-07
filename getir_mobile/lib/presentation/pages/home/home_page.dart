@@ -6,9 +6,13 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/providers/language_provider.dart';
+import '../../../domain/entities/service_category_type.dart';
 import '../../widgets/common/language_selector.dart';
+import '../../widgets/merchant/merchant_card.dart';
+import '../../widgets/merchant/merchant_card_skeleton.dart';
+import '../../../core/widgets/error_state_widget.dart';
 import '../../bloc/merchant/merchant_bloc.dart';
-import '../merchant/merchant_detail_page.dart';
+import '../merchant/category_merchants_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -193,43 +197,52 @@ class _HomePageState extends State<HomePage> {
               mainAxisSpacing: 16,
               children: [
                 _buildCategoryItem(
+                  context: context,
+                  categoryType: ServiceCategoryType.market,
                   icon: Icons.local_grocery_store,
                   label: 'Market',
                   color: Colors.orange,
                 ),
                 _buildCategoryItem(
+                  context: context,
+                  categoryType: ServiceCategoryType.restaurant,
                   icon: Icons.restaurant,
                   label: 'Restoran',
                   color: Colors.red,
                 ),
                 _buildCategoryItem(
+                  context: context,
+                  categoryType: ServiceCategoryType.pharmacy,
                   icon: Icons.local_pharmacy,
                   label: 'Eczane',
                   color: Colors.green,
                 ),
                 _buildCategoryItem(
-                  icon: Icons.local_laundry_service,
-                  label: 'Temizlik',
+                  context: context,
+                  categoryType: ServiceCategoryType.water,
+                  icon: Icons.water_drop,
+                  label: 'Su',
                   color: Colors.blue,
                 ),
                 _buildCategoryItem(
-                  icon: Icons.pets,
-                  label: 'Pet Shop',
-                  color: Colors.purple,
+                  context: context,
+                  categoryType: ServiceCategoryType.cafe,
+                  icon: Icons.local_cafe,
+                  label: 'Kafe',
+                  color: Colors.brown,
                 ),
                 _buildCategoryItem(
-                  icon: Icons.local_florist,
-                  label: 'Çiçek',
+                  context: context,
+                  categoryType: ServiceCategoryType.bakery,
+                  icon: Icons.bakery_dining,
+                  label: 'Pastane',
                   color: Colors.pink,
                 ),
                 _buildCategoryItem(
-                  icon: Icons.local_taxi,
-                  label: 'Taksi',
-                  color: Colors.yellow,
-                ),
-                _buildCategoryItem(
+                  context: context,
+                  categoryType: ServiceCategoryType.other,
                   icon: Icons.more_horiz,
-                  label: 'Daha Fazla',
+                  label: 'Diğer',
                   color: Colors.grey,
                 ),
               ],
@@ -374,55 +387,27 @@ class _HomePageState extends State<HomePage> {
             BlocBuilder<MerchantBloc, MerchantState>(
               builder: (context, state) {
                 if (state is MerchantLoading) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(32),
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.primary,
-                        ),
-                      ),
-                    ),
+                  return const MerchantListSkeleton(
+                    itemCount: 5,
+                    showCategoryBadge: true,
                   );
                 }
 
                 if (state is MerchantError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 48,
-                            color: AppColors.error,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            state.message,
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.error,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () {
-                              if (_currentPosition != null) {
-                                context.read<MerchantBloc>().add(
-                                  LoadNearbyMerchants(
-                                    latitude: _currentPosition!.latitude,
-                                    longitude: _currentPosition!.longitude,
-                                    radius: 5.0,
-                                  ),
-                                );
-                              }
-                            },
-                            child: Text(l10n.retry),
-                          ),
-                        ],
-                      ),
-                    ),
+                  return ErrorStateWidget(
+                    errorType: _getErrorTypeFromMessage(state.message),
+                    customMessage: state.message,
+                    onRetry: _currentPosition != null
+                        ? () {
+                            context.read<MerchantBloc>().add(
+                              LoadNearbyMerchants(
+                                latitude: _currentPosition!.latitude,
+                                longitude: _currentPosition!.longitude,
+                                radius: 5.0,
+                              ),
+                            );
+                          }
+                        : null,
                   );
                 }
 
@@ -459,7 +444,10 @@ class _HomePageState extends State<HomePage> {
                     itemCount: merchants.length,
                     itemBuilder: (context, index) {
                       final merchant = merchants[index];
-                      return _buildMerchantCard(merchant, l10n);
+                      return MerchantCard(
+                        merchant: merchant,
+                        showCategoryBadge: true, // Ana sayfada badge göster
+                      );
                     },
                   );
                 }
@@ -475,144 +463,39 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildMerchantCard(dynamic merchant, AppLocalizations l10n) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => MerchantDetailPage(merchantId: merchant.id),
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Merchant logo
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  width: 60,
-                  height: 60,
-                  color: Colors.grey[200],
-                  child: merchant.logoUrl != null && merchant.logoUrl.isNotEmpty
-                      ? Image.network(
-                          merchant.logoUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(
-                              Icons.store,
-                              size: 30,
-                              color: Colors.grey,
-                            );
-                          },
-                        )
-                      : const Icon(Icons.store, size: 30, color: Colors.grey),
-                ),
-              ),
-              const SizedBox(width: 16),
-              // Merchant info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      merchant.name ?? '',
-                      style: AppTypography.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${merchant.categories?.isNotEmpty == true ? merchant.categories.first : 'Market'} • ${merchant.distance?.toStringAsFixed(1) ?? '0.0'} km',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        // Status indicator
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: merchant.isOpen == true
-                                ? Colors.green
-                                : Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          merchant.isOpen == true ? l10n.open : l10n.closed,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: merchant.isOpen == true
-                                ? Colors.green
-                                : Colors.red,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const Spacer(),
-                        // Rating
-                        if (merchant.rating != null && merchant.rating > 0) ...[
-                          const Icon(Icons.star, color: Colors.amber, size: 16),
-                          const SizedBox(width: 2),
-                          Text(
-                            '${merchant.rating}',
-                            style: AppTypography.bodySmall.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                        // Delivery time
-                        Text(
-                          '${merchant.estimatedDeliveryTime ?? 30} ${l10n.minutes}',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.arrow_forward_ios,
-                color: AppColors.textSecondary,
-                size: 16,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildCategoryItem({
+    required BuildContext context,
+    required ServiceCategoryType categoryType,
     required IconData icon,
     required String label,
     required Color color,
   }) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        // Konum yoksa hata göster
+        if (_currentPosition == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Lütfen konum izni verin'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          return;
+        }
+
+        // Kategori sayfasına git
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CategoryMerchantsPage(
+              categoryType: categoryType,
+              categoryName: label,
+              latitude: _currentPosition!.latitude,
+              longitude: _currentPosition!.longitude,
+            ),
+          ),
+        );
+      },
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -652,5 +535,33 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  ErrorType _getErrorTypeFromMessage(String message) {
+    final lowerMessage = message.toLowerCase();
+
+    if (lowerMessage.contains('network') ||
+        lowerMessage.contains('connection') ||
+        lowerMessage.contains('internet') ||
+        lowerMessage.contains('bağlantı')) {
+      return ErrorType.network;
+    } else if (lowerMessage.contains('500') ||
+        lowerMessage.contains('502') ||
+        lowerMessage.contains('503') ||
+        lowerMessage.contains('server') ||
+        lowerMessage.contains('sunucu')) {
+      return ErrorType.server;
+    } else if (lowerMessage.contains('404') ||
+        lowerMessage.contains('not found') ||
+        lowerMessage.contains('bulunamadı')) {
+      return ErrorType.notFound;
+    } else if (lowerMessage.contains('401') ||
+        lowerMessage.contains('403') ||
+        lowerMessage.contains('unauthorized') ||
+        lowerMessage.contains('yetkisiz')) {
+      return ErrorType.unauthorized;
+    }
+
+    return ErrorType.generic;
   }
 }
