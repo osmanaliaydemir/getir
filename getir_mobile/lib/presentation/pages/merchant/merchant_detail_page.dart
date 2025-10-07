@@ -8,15 +8,16 @@ import '../../../core/providers/language_provider.dart';
 import '../../widgets/common/language_selector.dart';
 import '../../bloc/merchant/merchant_bloc.dart';
 import '../../bloc/product/product_bloc.dart';
+import '../../bloc/working_hours/working_hours_bloc.dart';
+import '../../bloc/working_hours/working_hours_event.dart';
+import '../../bloc/working_hours/working_hours_state.dart';
+import '../../../domain/entities/working_hours.dart';
 import 'product_list_page.dart';
 
 class MerchantDetailPage extends StatefulWidget {
   final String merchantId;
 
-  const MerchantDetailPage({
-    super.key,
-    required this.merchantId,
-  });
+  const MerchantDetailPage({super.key, required this.merchantId});
 
   @override
   State<MerchantDetailPage> createState() => _MerchantDetailPageState();
@@ -30,11 +31,13 @@ class _MerchantDetailPageState extends State<MerchantDetailPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    
+
     // Load merchant details
     context.read<MerchantBloc>().add(LoadMerchantById(widget.merchantId));
     // Load merchant products
     context.read<ProductBloc>().add(LoadProductsByMerchant(widget.merchantId));
+    // Load working hours
+    context.read<WorkingHoursBloc>().add(LoadWorkingHours(widget.merchantId));
   }
 
   @override
@@ -64,11 +67,7 @@ class _MerchantDetailPageState extends State<MerchantDetailPage>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: AppColors.error,
-                  ),
+                  Icon(Icons.error_outline, size: 64, color: AppColors.error),
                   const SizedBox(height: 16),
                   Text(
                     state.message,
@@ -80,7 +79,9 @@ class _MerchantDetailPageState extends State<MerchantDetailPage>
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      context.read<MerchantBloc>().add(LoadMerchantById(widget.merchantId));
+                      context.read<MerchantBloc>().add(
+                        LoadMerchantById(widget.merchantId),
+                      );
                     },
                     child: Text(l10n.retry),
                   ),
@@ -167,11 +168,7 @@ class _MerchantDetailPageState extends State<MerchantDetailPage>
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            Icon(
-                              Icons.star,
-                              color: Colors.amber,
-                              size: 16,
-                            ),
+                            Icon(Icons.star, color: Colors.amber, size: 16),
                             const SizedBox(width: 4),
                             Text(
                               '${merchant.rating ?? 0.0}',
@@ -244,7 +241,9 @@ class _MerchantDetailPageState extends State<MerchantDetailPage>
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: merchant.isOpen == true ? Colors.green : Colors.red,
+                        color: merchant.isOpen == true
+                            ? Colors.green
+                            : Colors.red,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -252,7 +251,9 @@ class _MerchantDetailPageState extends State<MerchantDetailPage>
                     Text(
                       merchant.isOpen == true ? l10n.open : l10n.closed,
                       style: AppTypography.bodyMedium.copyWith(
-                        color: merchant.isOpen == true ? Colors.green : Colors.red,
+                        color: merchant.isOpen == true
+                            ? Colors.green
+                            : Colors.red,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -269,13 +270,17 @@ class _MerchantDetailPageState extends State<MerchantDetailPage>
                   ),
                 const SizedBox(height: 12),
                 // Categories
-                if (merchant.categories != null && merchant.categories.isNotEmpty)
+                if (merchant.categories != null &&
+                    merchant.categories.isNotEmpty)
                   Wrap(
                     spacing: 8,
                     runSpacing: 4,
                     children: merchant.categories.map((category) {
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
@@ -330,36 +335,14 @@ class _MerchantDetailPageState extends State<MerchantDetailPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Working hours
-          _buildInfoSection(
-            title: l10n.workingHours,
-            child: Column(
-              children: [
-                if (merchant.workingHours != null)
-                  ...merchant.workingHours.entries.map((entry) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            entry.key,
-                            style: AppTypography.bodyMedium.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Text(
-                            entry.value,
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-              ],
-            ),
+          // Working hours - BLoC Integration
+          BlocBuilder<WorkingHoursBloc, WorkingHoursState>(
+            builder: (context, whState) {
+              return _buildInfoSection(
+                title: l10n.workingHours,
+                child: _buildWorkingHoursContent(whState),
+              );
+            },
           ),
           const SizedBox(height: 24),
           // Contact info
@@ -396,7 +379,8 @@ class _MerchantDetailPageState extends State<MerchantDetailPage>
                 _buildInfoRow(
                   icon: Icons.access_time,
                   label: l10n.estimatedDeliveryTime,
-                  value: '${merchant.estimatedDeliveryTime ?? 30} ${l10n.minutes}',
+                  value:
+                      '${merchant.estimatedDeliveryTime ?? 30} ${l10n.minutes}',
                 ),
                 _buildInfoRow(
                   icon: Icons.shopping_cart,
@@ -411,10 +395,7 @@ class _MerchantDetailPageState extends State<MerchantDetailPage>
     );
   }
 
-  Widget _buildInfoSection({
-    required String title,
-    required Widget child,
-  }) {
+  Widget _buildInfoSection({required String title, required Widget child}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -455,11 +436,7 @@ class _MerchantDetailPageState extends State<MerchantDetailPage>
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: AppColors.primary,
-            size: 20,
-          ),
+          Icon(icon, color: AppColors.primary, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -478,5 +455,173 @@ class _MerchantDetailPageState extends State<MerchantDetailPage>
         ],
       ),
     );
+  }
+
+  /// Working hours content builder based on BLoC state
+  Widget _buildWorkingHoursContent(WorkingHoursState state) {
+    if (state is WorkingHoursLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+          ),
+        ),
+      );
+    }
+
+    if (state is WorkingHoursError) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Text(
+          'Çalışma saatleri yüklenemedi',
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.error,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      );
+    }
+
+    if (state is WorkingHoursNotFound) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Text(
+          'Çalışma saatleri henüz belirlenmemiş',
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      );
+    }
+
+    if (state is WorkingHoursLoaded) {
+      final workingHours = state.workingHours;
+      final today = WorkingHoursHelper.getTodayWorkingHours(workingHours);
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Current status badge
+          if (today != null)
+            Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: state.isOpen ? Colors.green.shade50 : Colors.red.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: state.isOpen
+                      ? Colors.green.shade200
+                      : Colors.red.shade200,
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: state.isOpen ? Colors.green : Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    state.isOpen ? 'Şu an açık' : 'Şu an kapalı',
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: state.isOpen
+                          ? Colors.green.shade800
+                          : Colors.red.shade800,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (!state.isOpen && state.nextOpenTime != null) ...[
+                    const SizedBox(width: 8),
+                    Text(
+                      '• Açılış: ${state.nextOpenTime!.$1} ${WorkingHoursHelper.formatTimeOfDay(state.nextOpenTime!.$2)}',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: Colors.red.shade700,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+          // 7 days working hours list
+          ...workingHours.map((wh) {
+            final isToday = today != null && wh.dayOfWeek == today.dayOfWeek;
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: isToday
+                    ? AppColors.primaryLight.withOpacity(0.1)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Day name
+                  Row(
+                    children: [
+                      Text(
+                        wh.getDayName(),
+                        style: AppTypography.bodyMedium.copyWith(
+                          fontWeight: isToday
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                          color: isToday
+                              ? AppColors.primary
+                              : AppColors.textPrimary,
+                        ),
+                      ),
+                      if (isToday) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Bugün',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  // Hours
+                  Text(
+                    wh.getFormattedHours(),
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: wh.isClosed
+                          ? AppColors.error
+                          : AppColors.textSecondary,
+                      fontWeight: isToday ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 }

@@ -147,26 +147,44 @@ class MerchantCard extends StatelessWidget {
   }
 
   Widget _buildStatusIndicator(AppLocalizations l10n) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: merchant.isOpen ? Colors.green : Colors.red,
-            shape: BoxShape.circle,
+    return Semantics(
+      label: merchant.isOpen ? 'Açık' : 'Kapalı',
+      hint: merchant.isOpen
+          ? 'Bu işletme şu an sipariş alıyor'
+          : 'Bu işletme şu an kapalı. Çalışma saatlerini görmek için dokunun.',
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: merchant.isOpen ? Colors.green : Colors.red,
+              shape: BoxShape.circle,
+            ),
           ),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          merchant.isOpen ? l10n.open : l10n.closed,
-          style: AppTypography.bodySmall.copyWith(
-            color: merchant.isOpen ? Colors.green : Colors.red,
-            fontWeight: FontWeight.w500,
+          const SizedBox(width: 4),
+          Text(
+            merchant.isOpen ? l10n.open : l10n.closed,
+            style: AppTypography.bodySmall.copyWith(
+              color: merchant.isOpen ? Colors.green : Colors.red,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-      ],
+          // Info icon for closed merchants
+          if (!merchant.isOpen) ...[
+            const SizedBox(width: 4),
+            Tooltip(
+              message: 'Çalışma saatlerini görmek için tıklayın',
+              child: Icon(
+                Icons.info_outline,
+                size: 14,
+                color: Colors.red.shade700,
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 

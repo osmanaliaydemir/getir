@@ -7,8 +7,13 @@ import '../../../core/localization/app_localizations.dart';
 import '../../bloc/address/address_bloc.dart';
 import '../../bloc/cart/cart_bloc.dart';
 import '../../bloc/order/order_bloc.dart';
+import '../../bloc/merchant/merchant_bloc.dart';
+import '../../bloc/working_hours/working_hours_bloc.dart';
+import '../../bloc/working_hours/working_hours_event.dart';
+import '../../bloc/working_hours/working_hours_state.dart';
 import '../../../domain/entities/address.dart';
 import '../../../domain/entities/order.dart';
+import '../../../domain/entities/working_hours.dart';
 import '../../../data/datasources/order_datasource.dart';
 
 class CheckoutPage extends StatefulWidget {
@@ -27,6 +32,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
   // Yeni state değişkenleri
   bool _ringDoorbell = true; // Zile basma opsiyonu
   bool _isApplyingCoupon = false;
+  bool _scheduleForLater = false; // Gelecek tarihli sipariş
+  DateTime? _scheduledTime; // Planl anan teslimat zamanı
+  String? _merchantId; // Merchant ID
+  bool _workingHoursLoaded = false;
 
   @override
   void initState() {
@@ -70,11 +79,43 @@ class _CheckoutPageState extends State<CheckoutPage> {
         },
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Delivery Address Section
-              Semantics(
+          child: BlocBuilder<CartBloc, CartState>(
+            builder: (context, cartState) {
+              // Get merchantId from cart
+              if (cartState is CartLoaded &&
+                  cartState.cart.items.isNotEmpty &&
+                  _merchantId == null) {
+                _merchantId = cartState.cart.items.first.merchantId;
+                // Load working hours
+                if (!_workingHoursLoaded && _merchantId != null) {
+                  Future.microtask(() {
+                    context
+                        .read<WorkingHoursBloc>()
+                        .add(LoadWorkingHours(_merchantId!));
+                    context
+                        .read<MerchantBloc>()
+                        .add(LoadMerchantById(_merchantId!));
+                  });
+                  _workingHoursLoaded = true;
+                }
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Merchant Status Warning (if closed)
+                  BlocBuilder<WorkingHoursBloc, WorkingHoursState>(
+                    builder: (context, whState) {
+                      if (whState is WorkingHoursLoaded && !whState.isOpen) {
+                        return _buildMerchantClosedWarning(
+                            l10n, whState.nextOpenTime);
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+
+                  // Delivery Address Section
+                  Semantics(
                 header: true,
                 label: l10n.deliveryAddress,
                 child: _buildSectionTitle(l10n.deliveryAddress),
@@ -140,15 +181,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
               const SizedBox(height: 32),
 
               // Place Order Button
-              Semantics(
-                button: true,
-                label: l10n.placeOrder,
-                enabled:
-                    (context.read<OrderBloc>().state is! OrderLoading) &&
-                    _selectedAddress != null,
-                child: _buildPlaceOrderButton(l10n),
-              ),
-            ],
+                  Semantics(
+                    button: true,
+                    label: l10n.placeOrder,
+                    enabled:
+                        (context.read<OrderBloc>().state is! OrderLoading) &&
+                        _selectedAddress != null,
+                    child: _buildPlaceOrderButton(l10n),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -890,5 +933,177 @@ class _CheckoutPageState extends State<CheckoutPage> {
       case PaymentMethod.online:
         return l10n.onlinePaymentDescription;
     }
+  }
+
+  /// Merchant kapalıysa uyarı göster
+  Widget _buildMerchantClosedWarning(
+    AppLocalizations l10n,
+    (String, TimeOfDay)? nextOpenTime,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.orange.shade300,
+          width: 2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.orange.shade700,
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Bu işletme şu an kapalı',
+                  style: AppTypography.bodyLarge.copyWith(
+                    color: Colors.orange.shade900,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (nextOpenTime != null) ...[
+            Text(
+              'Açılış: ${nextOpenTime.$1} ${WorkingHoursHelper.formatTimeOfDay(nextOpenTime.$2)}',
+              style: AppTypography.bodyMedium.copyWith(
+                color: Colors.orange.shade800,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Gelecek tarihli sipariş seçeneği
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: _scheduleForLater,
+                        onChanged: (value) {
+                          setState(() {
+                            _scheduleForLater = value ?? false;
+                            if (_scheduleForLater) {
+                              // Set default scheduled time to next open time
+                              final now = DateTime.now();
+                              _scheduledTime = DateTime(
+                                now.year,
+                                now.month,
+                                now.day,
+                                nextOpenTime.$2.hour,
+                                nextOpenTime.$2.minute,
+                              );
+                              // If it's today but already past that time, schedule for next week
+                              if (_scheduledTime!.isBefore(now)) {
+                                _scheduledTime = _scheduledTime!.add(
+                                  const Duration(days: 1),
+                                );
+                              }
+                            } else {
+                              _scheduledTime = null;
+                            }
+                          });
+                        },
+                        activeColor: AppColors.primary,
+                      ),
+                      Expanded(
+                        child: Text(
+                          'Gelecek tarihe sipariş ver',
+                          style: AppTypography.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (_scheduleForLater && _scheduledTime != null) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryLight.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.schedule,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Teslimat: ${_formatScheduledTime(_scheduledTime!)}',
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Siparişiniz açılış saatinde hazırlanmaya başlayacak',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ] else ...[
+            Text(
+              'Bu işletme için çalışma saatleri henüz belirlenmemiş.',
+              style: AppTypography.bodyMedium.copyWith(
+                color: Colors.orange.shade800,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Planlanmış zamanı formatla
+  String _formatScheduledTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final diff = dateTime.difference(now);
+
+    String dateStr;
+    if (diff.inDays == 0) {
+      dateStr = 'Bugün';
+    } else if (diff.inDays == 1) {
+      dateStr = 'Yarın';
+    } else {
+      dateStr = '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+    }
+
+    final timeStr =
+        '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+
+    return '$dateStr $timeStr';
   }
 }
