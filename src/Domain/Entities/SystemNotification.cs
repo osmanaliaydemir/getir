@@ -22,7 +22,6 @@ public class SystemNotification
     public Guid? ReadBy { get; set; }
 
     // Navigation properties
-    public virtual User? CreatedByUser { get; set; }
-    public virtual User? ReadByUser { get; set; }
     public virtual User? Creator { get; set; }
+    public virtual User? ReadByUser { get; set; }
 }

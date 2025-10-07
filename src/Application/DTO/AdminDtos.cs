@@ -170,7 +170,7 @@ public record PerformanceMetricsResponse(
 // Audit Log DTOs
 public record AuditLogResponse(
     Guid Id,
-    string UserId,
+    Guid UserId,
     string UserName,
     string Action,
     string EntityType,

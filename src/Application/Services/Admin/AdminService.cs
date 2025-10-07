@@ -732,7 +732,7 @@ public class AdminService : BaseService, IAdminService
         var auditLog = new AuditLog
         {
             Id = Guid.NewGuid(),
-            UserId = userId,
+            UserId = userId != null ? Guid.Parse(userId) : Guid.NewGuid(),
             UserName = user != null ? string.Concat(user.FirstName, " ", user.LastName) : "System",
             Action = action,
             EntityType = entityType,

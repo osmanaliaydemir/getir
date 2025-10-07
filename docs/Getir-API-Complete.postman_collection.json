@@ -1,63 +1,49 @@
 {
   "info": {
-    "name": "Getir Clone API - Complete Collection",
-    "description": "Complete API collection for Getir Clone project with all endpoints, authentication, and test scenarios",
-    "version": "2.0.0",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "name": "Getir API - Tam Koleksiyon",
+    "description": "Getir e-ticaret platformu için kapsamlı API koleksiyonu. Tüm endpoint'ler, örnek request'ler ve response'lar dahil.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
   },
   "auth": {
     "type": "bearer",
     "bearer": [
       {
         "key": "token",
-        "value": "{{accessToken}}",
+        "value": "{{access_token}}",
         "type": "string"
       }
     ]
   },
   "variable": [
     {
-      "key": "baseUrl",
+      "key": "base_url",
       "value": "https://localhost:7001",
       "type": "string"
     },
     {
-      "key": "accessToken",
+      "key": "access_token",
       "value": "",
       "type": "string"
     },
     {
-      "key": "refreshToken",
+      "key": "user_id",
       "value": "",
       "type": "string"
     },
     {
-      "key": "userId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "merchantId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "orderId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "productId",
+      "key": "merchant_id",
       "value": "",
       "type": "string"
     }
   ],
   "item": [
     {
-      "name": "🔐 Authentication",
+      "name": "🔐 Kimlik Doğrulama",
+      "description": "Kullanıcı kaydı, giriş, çıkış ve token yönetimi",
       "item": [
         {
-          "name": "Register User",
+          "name": "Kullanıcı Kaydı",
           "request": {
             "method": "POST",
             "header": [
@@ -68,35 +54,19 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Test123!\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"phoneNumber\": \"+905551234567\"\n}"
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Test123!\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"phoneNumber\": \"+905551234567\",\n  \"role\": \"Customer\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/register",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": ["{{base_url}}"],
               "path": ["api", "v1", "auth", "register"]
-            }
+            },
+            "description": "Yeni kullanıcı kaydı oluşturur"
           },
           "response": []
         },
         {
-          "name": "Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    const response = pm.response.json();",
-                  "    if (response.data && response.data.accessToken) {",
-                  "        pm.collectionVariables.set('accessToken', response.data.accessToken);",
-                  "        pm.collectionVariables.set('refreshToken', response.data.refreshToken);",
-                  "        pm.collectionVariables.set('userId', response.data.user.id);",
-                  "    }",
-                  "}"
-                ]
-              }
-            }
-          ],
+          "name": "Kullanıcı Girişi",
           "request": {
             "method": "POST",
             "header": [
@@ -107,18 +77,19 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"customer1@example.com\",\n  \"password\": \"Test123!\"\n}"
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Test123!\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/login",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
               "path": ["api", "v1", "auth", "login"]
-            }
+            },
+            "description": "Kullanıcı girişi yapar ve token döner"
           },
           "response": []
         },
         {
-          "name": "Refresh Token",
+          "name": "Token Yenileme",
           "request": {
             "method": "POST",
             "header": [
@@ -129,65 +100,237 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/refresh",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{base_url}}/api/v1/auth/refresh",
+              "host": ["{{base_url}}"],
               "path": ["api", "v1", "auth", "refresh"]
-            }
+            },
+            "description": "Refresh token ile yeni access token alır"
           },
           "response": []
         },
         {
-          "name": "Logout",
+          "name": "Çıkış Yapma",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
+                "value": "Bearer {{access_token}}"
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/logout",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{base_url}}/api/v1/auth/logout",
+              "host": ["{{base_url}}"],
               "path": ["api", "v1", "auth", "logout"]
-            }
+            },
+            "description": "Kullanıcı çıkışı yapar"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "👤 User Management",
+      "name": "👤 Kullanıcı Yönetimi",
+      "description": "Kullanıcı adres yönetimi ve profil işlemleri",
       "item": [
         {
-          "name": "Get User Profile",
+          "name": "Kullanıcı Adresleri",
+          "item": [
+            {
+              "name": "Adresleri Listele",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/user/addresses",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "user", "addresses"]
+                },
+                "description": "Kullanıcının tüm adreslerini listeler"
+              },
+              "response": []
+            },
+            {
+              "name": "Yeni Adres Ekle",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Ev\",\n  \"address\": \"Atatürk Caddesi No:123 Kadıköy/İstanbul\",\n  \"latitude\": 40.9884,\n  \"longitude\": 29.0260,\n  \"isDefault\": true,\n  \"notes\": \"Apartman kapısı çal\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/user/addresses",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "user", "addresses"]
+                },
+                "description": "Kullanıcıya yeni adres ekler"
+              },
+              "response": []
+            },
+            {
+              "name": "Adres Güncelle",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Ev - Güncellenmiş\",\n  \"address\": \"Atatürk Caddesi No:125 Kadıköy/İstanbul\",\n  \"latitude\": 40.9884,\n  \"longitude\": 29.0260,\n  \"isDefault\": true,\n  \"notes\": \"Yeni kapı numarası\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/user/addresses/{{address_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "user", "addresses", "{{address_id}}"]
+                },
+                "description": "Mevcut adresi günceller"
+              },
+              "response": []
+            },
+            {
+              "name": "Adres Sil",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/user/addresses/{{address_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "user", "addresses", "{{address_id}}"]
+                },
+                "description": "Adresi siler"
+              },
+              "response": []
+            },
+            {
+              "name": "Varsayılan Adres Ayarla",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/user/addresses/{{address_id}}/set-default",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "user", "addresses", "{{address_id}}", "set-default"]
+                },
+                "description": "Adresi varsayılan olarak ayarlar"
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🏪 Mağaza Yönetimi",
+      "description": "Mağaza bilgileri ve yönetim işlemleri",
+      "item": [
+        {
+          "name": "Mağaza Listesi",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/users/profile",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "users", "profile"]
-            }
+              "raw": "{{base_url}}/api/v1/merchant?page=1&pageSize=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchant"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Tüm mağazaları listeler"
           },
           "response": []
         },
         {
-          "name": "Update User Profile",
+          "name": "Mağaza Detayı",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/merchant/{{merchant_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchant", "{{merchant_id}}"]
+            },
+            "description": "Belirli bir mağazanın detaylarını getirir"
+          },
+          "response": []
+        },
+        {
+          "name": "Yeni Mağaza Oluştur",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Mağaza\",\n  \"description\": \"Test mağaza açıklaması\",\n  \"serviceCategoryId\": \"{{service_category_id}}\",\n  \"address\": \"Test Adres\",\n  \"latitude\": 40.9884,\n  \"longitude\": 29.0260,\n  \"phoneNumber\": \"+905551234567\",\n  \"email\": \"merchant@test.com\",\n  \"minimumOrderAmount\": 50.00,\n  \"deliveryFee\": 10.00\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/merchant",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchant"]
+            },
+            "description": "Yeni mağaza oluşturur"
+          },
+          "response": []
+        },
+        {
+          "name": "Mağaza Güncelle",
           "request": {
             "method": "PUT",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
+                "value": "Bearer {{access_token}}"
               },
               {
                 "key": "Content-Type",
@@ -196,74 +339,26 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Name\",\n  \"phoneNumber\": \"+905551234568\"\n}"
+              "raw": "{\n  \"name\": \"Güncellenmiş Mağaza\",\n  \"description\": \"Güncellenmiş açıklama\",\n  \"address\": \"Güncellenmiş Adres\",\n  \"phoneNumber\": \"+905551234567\",\n  \"email\": \"updated@test.com\",\n  \"minimumOrderAmount\": 75.00,\n  \"deliveryFee\": 15.00\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/users/profile",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "users", "profile"]
-            }
+              "raw": "{{base_url}}/api/v1/merchant/{{merchant_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchant", "{{merchant_id}}"]
+            },
+            "description": "Mağaza bilgilerini günceller"
           },
           "response": []
         },
         {
-          "name": "Get User Addresses",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/users/addresses",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "users", "addresses"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Add User Address",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Home\",\n  \"fullAddress\": \"Kadıköy, İstanbul\",\n  \"city\": \"İstanbul\",\n  \"district\": \"Kadıköy\",\n  \"latitude\": 40.9923,\n  \"longitude\": 29.0244,\n  \"isDefault\": true\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/users/addresses",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "users", "addresses"]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "🏪 Merchants",
-      "item": [
-        {
-          "name": "Get All Merchants",
+          "name": "Kategoriye Göre Mağazalar",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/merchants?page=1&pageSize=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "merchants"],
+              "raw": "{{base_url}}/api/v1/merchant/by-category-type/Restaurant?page=1&pageSize=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchant", "by-category-type", "Restaurant"],
               "query": [
                 {
                   "key": "page",
@@ -274,90 +369,40 @@
                   "value": "20"
                 }
               ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Merchant by ID",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/merchants/77777777-7777-7777-7777-777777777777",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "merchants", "77777777-7777-7777-7777-777777777777"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Search Merchants",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/merchants/search?query=Migros&latitude=40.9923&longitude=29.0244",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "merchants", "search"],
-              "query": [
-                {
-                  "key": "query",
-                  "value": "Migros"
-                },
-                {
-                  "key": "latitude",
-                  "value": "40.9923"
-                },
-                {
-                  "key": "longitude",
-                  "value": "29.0244"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Create Merchant",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"My Store\",\n  \"description\": \"A great store\",\n  \"serviceCategoryId\": \"{{serviceCategoryId}}\",\n  \"address\": \"Test Address\",\n  \"latitude\": 40.9923,\n  \"longitude\": 29.0244,\n  \"phoneNumber\": \"+905551234567\",\n  \"email\": \"store@example.com\",\n  \"minimumOrderAmount\": 50.00,\n  \"deliveryFee\": 5.00,\n  \"averageDeliveryTime\": 30\n}"
             },
+            "description": "Belirli kategorideki mağazaları listeler"
+          },
+          "response": []
+        },
+        {
+          "name": "Aktif Mağazalar (Kategoriye Göre)",
+          "request": {
+            "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/merchants",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "merchants"]
-            }
+              "raw": "{{base_url}}/api/v1/merchant/active/by-category-type/Restaurant",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchant", "active", "by-category-type", "Restaurant"]
+            },
+            "description": "Belirli kategorideki aktif mağazaları listeler"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "🛍️ Products",
+      "name": "🛍️ Ürün Yönetimi",
+      "description": "Ürün listeleme, oluşturma ve yönetim işlemleri",
       "item": [
         {
-          "name": "Get Products by Merchant",
+          "name": "Mağaza Ürünleri",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/products/merchant/77777777-7777-7777-7777-777777777777?page=1&pageSize=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "products", "merchant", "77777777-7777-7777-7777-777777777777"],
+              "raw": "{{base_url}}/api/v1/product/merchant/{{merchant_id}}?page=1&pageSize=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "product", "merchant", "{{merchant_id}}"],
               "query": [
                 {
                   "key": "page",
@@ -368,802 +413,851 @@
                   "value": "20"
                 }
               ]
-            }
+            },
+            "description": "Belirli bir mağazanın ürünlerini listeler"
           },
           "response": []
         },
         {
-          "name": "Get Product by ID",
+          "name": "Ürün Detayı",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/products/{{productId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "products", "{{productId}}"]
-            }
+              "raw": "{{base_url}}/api/v1/product/{{product_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "product", "{{product_id}}"]
+            },
+            "description": "Belirli bir ürünün detaylarını getirir"
           },
           "response": []
         },
         {
-          "name": "Search Products",
+          "name": "Yeni Ürün Oluştur",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchantId\": \"{{merchant_id}}\",\n  \"productCategoryId\": \"{{category_id}}\",\n  \"name\": \"Test Ürün\",\n  \"description\": \"Test ürün açıklaması\",\n  \"price\": 25.50,\n  \"discountedPrice\": 20.00,\n  \"stockQuantity\": 100,\n  \"unit\": \"adet\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/product",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "product"]
+            },
+            "description": "Yeni ürün oluşturur"
+          },
+          "response": []
+        },
+        {
+          "name": "Ürün Güncelle",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Güncellenmiş Ürün\",\n  \"description\": \"Güncellenmiş açıklama\",\n  \"price\": 30.00,\n  \"discountedPrice\": 25.00,\n  \"stockQuantity\": 150,\n  \"unit\": \"kg\",\n  \"isAvailable\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/product/{{product_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "product", "{{product_id}}"]
+            },
+            "description": "Ürün bilgilerini günceller"
+          },
+          "response": []
+        },
+        {
+          "name": "Ürün Sil",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/product/{{product_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "product", "{{product_id}}"]
+            },
+            "description": "Ürünü siler"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🛒 Sepet Yönetimi",
+      "description": "Alışveriş sepeti işlemleri",
+      "item": [
+        {
+          "name": "Sepeti Getir",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cart",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "cart"]
+            },
+            "description": "Kullanıcının sepetini getirir"
+          },
+          "response": []
+        },
+        {
+          "name": "Sepete Ürün Ekle",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{product_id}}\",\n  \"quantity\": 2,\n  \"notes\": \"Ekstra soğan istiyorum\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/cart/items",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "cart", "items"]
+            },
+            "description": "Sepete ürün ekler"
+          },
+          "response": []
+        },
+        {
+          "name": "Sepet Öğesi Güncelle",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 3,\n  \"notes\": \"Güncellenmiş not\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/cart/items/{{cart_item_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "cart", "items", "{{cart_item_id}}"]
+            },
+            "description": "Sepet öğesini günceller"
+          },
+          "response": []
+        },
+        {
+          "name": "Sepet Öğesi Sil",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cart/items/{{cart_item_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "cart", "items", "{{cart_item_id}}"]
+            },
+            "description": "Sepet öğesini siler"
+          },
+          "response": []
+        },
+        {
+          "name": "Sepeti Temizle",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cart/clear",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "cart", "clear"]
+            },
+            "description": "Sepeti tamamen temizler"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📦 Sipariş Yönetimi",
+      "description": "Sipariş oluşturma, takip ve yönetim işlemleri",
+      "item": [
+        {
+          "name": "Yeni Sipariş Oluştur",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchantId\": \"{{merchant_id}}\",\n  \"items\": [\n    {\n      \"productId\": \"{{product_id}}\",\n      \"quantity\": 2,\n      \"notes\": \"Ekstra soğan\"\n    }\n  ],\n  \"deliveryAddress\": \"Atatürk Caddesi No:123 Kadıköy/İstanbul\",\n  \"deliveryLatitude\": 40.9884,\n  \"deliveryLongitude\": 29.0260,\n  \"paymentMethod\": \"CreditCard\",\n  \"notes\": \"Kapıyı çal\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/order",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "order"]
+            },
+            "description": "Yeni sipariş oluşturur"
+          },
+          "response": []
+        },
+        {
+          "name": "Sipariş Detayı",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/order/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "order", "{{order_id}}"]
+            },
+            "description": "Belirli bir siparişin detaylarını getirir"
+          },
+          "response": []
+        },
+        {
+          "name": "Kullanıcı Siparişleri",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/order?page=1&pageSize=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "order"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Kullanıcının siparişlerini listeler"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "💳 Ödeme Yönetimi",
+      "description": "Ödeme işlemleri ve yönetimi",
+      "item": [
+        {
+          "name": "Ödeme Oluştur",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{order_id}}\",\n  \"paymentMethod\": \"CreditCard\",\n  \"amount\": 75.50,\n  \"currency\": \"TRY\",\n  \"paymentProvider\": \"Iyzico\",\n  \"paymentData\": {\n    \"cardToken\": \"card_token_here\",\n    \"installment\": 1\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payment",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payment"]
+            },
+            "description": "Yeni ödeme oluşturur"
+          },
+          "response": []
+        },
+        {
+          "name": "Ödeme Detayı",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/payment/{{payment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payment", "{{payment_id}}"]
+            },
+            "description": "Belirli bir ödemenin detaylarını getirir"
+          },
+          "response": []
+        },
+        {
+          "name": "Sipariş Ödemeleri",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/payment/order/{{order_id}}?page=1&pageSize=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payment", "order", "{{order_id}}"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Belirli siparişin ödemelerini listeler"
+          },
+          "response": []
+        },
+        {
+          "name": "Nakit Ödeme Toplama (Kurye)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"collectedAmount\": 75.50,\n  \"notes\": \"Ödeme başarıyla alındı\",\n  \"collectedAt\": \"2024-01-15T14:30:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payment/courier/{{payment_id}}/collect",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payment", "courier", "{{payment_id}}", "collect"]
+            },
+            "description": "Kurye tarafından nakit ödeme toplama işlemi"
+          },
+          "response": []
+        },
+        {
+          "name": "Nakit Ödeme Başarısız (Kurye)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Müşteri ödeme yapamadı\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payment/courier/{{payment_id}}/fail",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payment", "courier", "{{payment_id}}", "fail"]
+            },
+            "description": "Kurye tarafından nakit ödeme başarısızlığı"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🚚 Kurye Yönetimi",
+      "description": "Kurye paneli ve teslimat işlemleri",
+      "item": [
+        {
+          "name": "Kurye Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/courier/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courier", "dashboard"]
+            },
+            "description": "Kurye dashboard verilerini getirir"
+          },
+          "response": []
+        },
+        {
+          "name": "Kurye İstatistikleri",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/courier/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courier", "stats"]
+            },
+            "description": "Kurye performans istatistiklerini getirir"
+          },
+          "response": []
+        },
+        {
+          "name": "Kurye Kazançları",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/courier/earnings?startDate=2024-01-01&endDate=2024-01-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courier", "earnings"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-01-31"
+                }
+              ]
+            },
+            "description": "Kurye kazançlarını getirir"
+          },
+          "response": []
+        },
+        {
+          "name": "Atanan Siparişler",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/courier/orders?page=1&pageSize=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courier", "orders"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Kuryeye atanan siparişleri listeler"
+          },
+          "response": []
+        },
+        {
+          "name": "Sipariş Kabul Et",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{order_id}}\",\n  \"estimatedPickupTime\": \"2024-01-15T15:00:00Z\",\n  \"estimatedDeliveryTime\": \"2024-01-15T15:30:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/courier/orders/accept",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courier", "orders", "accept"]
+            },
+            "description": "Siparişi kabul eder"
+          },
+          "response": []
+        },
+        {
+          "name": "Teslimat Başlat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{order_id}}\",\n  \"latitude\": 40.9884,\n  \"longitude\": 29.0260\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/courier/orders/start-delivery",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courier", "orders", "start-delivery"]
+            },
+            "description": "Teslimatı başlatır"
+          },
+          "response": []
+        },
+        {
+          "name": "Teslimat Tamamla",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{order_id}}\",\n  \"latitude\": 40.9884,\n  \"longitude\": 29.0260,\n  \"deliveryNotes\": \"Teslimat başarıyla tamamlandı\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/courier/orders/complete-delivery",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courier", "orders", "complete-delivery"]
+            },
+            "description": "Teslimatı tamamlar"
+          },
+          "response": []
+        },
+        {
+          "name": "Konum Güncelle",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 40.9884,\n  \"longitude\": 29.0260,\n  \"accuracy\": 5.0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/courier/location",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courier", "location"]
+            },
+            "description": "Kurye konumunu günceller"
+          },
+          "response": []
+        },
+        {
+          "name": "Müsaitlik Durumu Ayarla",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isAvailable\": true,\n  \"reason\": \"Müsait\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/courier/availability",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "courier", "availability"]
+            },
+            "description": "Kurye müsaitlik durumunu ayarlar"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔍 Arama",
+      "description": "Ürün ve mağaza arama işlemleri",
+      "item": [
+        {
+          "name": "Ürün Ara",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/products/search?query=elma&merchantId=77777777-7777-7777-7777-777777777777",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "products", "search"],
+              "raw": "{{base_url}}/api/v1/search/products?query=pizza&page=1&pageSize=20&merchantId={{merchant_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "search", "products"],
               "query": [
                 {
                   "key": "query",
-                  "value": "elma"
+                  "value": "pizza"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
                 },
                 {
                   "key": "merchantId",
-                  "value": "77777777-7777-7777-7777-777777777777"
+                  "value": "{{merchant_id}}"
                 }
               ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Create Product",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"merchantId\": \"{{merchantId}}\",\n  \"productCategoryId\": \"{{categoryId}}\",\n  \"name\": \"Test Product\",\n  \"description\": \"A test product\",\n  \"price\": 25.50,\n  \"stockQuantity\": 100,\n  \"unit\": \"adet\"\n}"
             },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/products",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "products"]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "🛒 Cart",
-      "item": [
-        {
-          "name": "Get Cart Items",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/cart",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "cart"]
-            }
+            "description": "Ürün arama yapar"
           },
           "response": []
         },
         {
-          "name": "Add Item to Cart",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"merchantId\": \"77777777-7777-7777-7777-777777777777\",\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 2,\n  \"notes\": \"Extra fresh please\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/cart/items",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "cart", "items"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update Cart Item",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"quantity\": 3,\n  \"notes\": \"Updated notes\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/cart/items/{{cartItemId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "cart", "items", "{{cartItemId}}"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Remove Cart Item",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/cart/items/{{cartItemId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "cart", "items", "{{cartItemId}}"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Clear Cart",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/cart",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "cart"]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "📦 Orders",
-      "item": [
-        {
-          "name": "Create Order",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    const response = pm.response.json();",
-                  "    if (response.data && response.data.id) {",
-                  "        pm.collectionVariables.set('orderId', response.data.id);",
-                  "    }",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"merchantId\": \"77777777-7777-7777-7777-777777777777\",\n  \"deliveryAddress\": \"Kadıköy, İstanbul\",\n  \"deliveryLatitude\": 40.9923,\n  \"deliveryLongitude\": 29.0244,\n  \"paymentMethod\": \"CreditCard\",\n  \"notes\": \"Please ring the doorbell\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/orders",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "orders"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get User Orders",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/orders?page=1&pageSize=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "orders"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "pageSize",
-                  "value": "20"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Order by ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "orders", "{{orderId}}"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Cancel Order",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"reason\": \"Changed my mind\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}/cancel",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "orders", "{{orderId}}", "cancel"]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "🎫 Coupons",
-      "item": [
-        {
-          "name": "Get Available Coupons",
+          "name": "Mağaza Ara",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/coupons?page=1&pageSize=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "coupons"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "pageSize",
-                  "value": "20"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Validate Coupon",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"WELCOME10\",\n  \"orderAmount\": 100.00\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/coupons/validate",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "coupons", "validate"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get User Coupons",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/coupons/user",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "coupons", "user"]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "⭐ Reviews",
-      "item": [
-        {
-          "name": "Create Review",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"revieweeId\": \"77777777-7777-7777-7777-777777777777\",\n  \"revieweeType\": \"Merchant\",\n  \"orderId\": \"{{orderId}}\",\n  \"rating\": 5,\n  \"comment\": \"Great service and fast delivery!\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/reviews",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "reviews"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Reviews by Merchant",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/reviews/merchant/77777777-7777-7777-7777-777777777777?page=1&pageSize=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "reviews", "merchant", "77777777-7777-7777-7777-777777777777"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "pageSize",
-                  "value": "20"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get User Reviews",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/reviews/user?page=1&pageSize=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "reviews", "user"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "pageSize",
-                  "value": "20"
-                }
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "🚚 Courier",
-      "item": [
-        {
-          "name": "Get Available Couriers",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/couriers/available",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "couriers", "available"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update Courier Location",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"latitude\": 40.9923,\n  \"longitude\": 29.0244\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/couriers/location",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "couriers", "location"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Courier Orders",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/couriers/orders?page=1&pageSize=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "couriers", "orders"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "pageSize",
-                  "value": "20"
-                }
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "🔔 Notifications",
-      "item": [
-        {
-          "name": "Get User Notifications",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/notifications?page=1&pageSize=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "notifications"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "pageSize",
-                  "value": "20"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Mark Notification as Read",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/notifications/{{notificationId}}/read",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "notifications", "{{notificationId}}", "read"]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "🏢 Merchant Dashboard",
-      "item": [
-        {
-          "name": "Get Dashboard Stats",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/merchant/dashboard/stats",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "merchant", "dashboard", "stats"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Recent Orders",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/merchant/dashboard/recent-orders?page=1&pageSize=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "merchant", "dashboard", "recent-orders"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "pageSize",
-                  "value": "10"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Top Products",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/merchant/dashboard/top-products?limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "merchant", "dashboard", "top-products"],
-              "query": [
-                {
-                  "key": "limit",
-                  "value": "10"
-                }
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "🔧 Database Test",
-      "item": [
-        {
-          "name": "Test Database Connection",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/database-test/connection",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "database-test", "connection"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Check Indexes",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/database-test/indexes",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "database-test", "indexes"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Performance Test",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/database-test/performance-test",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "database-test", "performance-test"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Schema Validation",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/database-test/schema-validation",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "database-test", "schema-validation"]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "🔍 Search",
-      "item": [
-        {
-          "name": "Global Search",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/search?query=elma&latitude=40.9923&longitude=29.0244",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "search"],
+              "raw": "{{base_url}}/api/v1/search/merchants?query=restoran&page=1&pageSize=20&latitude=40.9884&longitude=29.0260",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "search", "merchants"],
               "query": [
                 {
                   "key": "query",
-                  "value": "elma"
+                  "value": "restoran"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
                 },
                 {
                   "key": "latitude",
-                  "value": "40.9923"
+                  "value": "40.9884"
                 },
                 {
                   "key": "longitude",
-                  "value": "29.0244"
+                  "value": "29.0260"
                 }
               ]
-            }
+            },
+            "description": "Mağaza arama yapar"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "📊 Health & Metrics",
+      "name": "🔔 Bildirim Yönetimi",
+      "description": "Bildirim işlemleri ve tercihleri",
       "item": [
         {
-          "name": "Health Check",
+          "name": "Bildirimleri Getir",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/health",
-              "host": ["{{baseUrl}}"],
-              "path": ["health"]
-            }
+              "raw": "{{base_url}}/api/v1/notification?page=1&pageSize=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "notification"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Kullanıcının bildirimlerini listeler"
           },
           "response": []
         },
         {
-          "name": "Metrics",
+          "name": "Bildirimleri Okundu Olarak İşaretle",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notificationIds\": [\"{{notification_id}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/notification/mark-as-read",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "notification", "mark-as-read"]
+            },
+            "description": "Bildirimleri okundu olarak işaretler"
+          },
+          "response": []
+        },
+        {
+          "name": "Bildirim Tercihlerini Getir",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/metrics",
-              "host": ["{{baseUrl}}"],
-              "path": ["metrics"]
-            }
+              "raw": "{{base_url}}/api/v1/notification/preferences",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "notification", "preferences"]
+            },
+            "description": "Kullanıcının bildirim tercihlerini getirir"
+          },
+          "response": []
+        },
+        {
+          "name": "Bildirim Tercihlerini Güncelle",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emailEnabled\": true,\n  \"emailOrderUpdates\": true,\n  \"emailPromotions\": false,\n  \"smsEnabled\": true,\n  \"smsOrderUpdates\": true,\n  \"pushEnabled\": true,\n  \"pushOrderUpdates\": true,\n  \"quietStartTime\": \"22:00:00\",\n  \"quietEndTime\": \"08:00:00\",\n  \"respectQuietHours\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/notification/preferences",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "notification", "preferences"]
+            },
+            "description": "Bildirim tercihlerini günceller"
           },
           "response": []
         }
       ]
-    }
-  ],
-  "event": [
-    {
-      "listen": "prerequest",
-      "script": {
-        "type": "text/javascript",
-        "exec": [
-          "// Auto-set base URL if not set",
-          "if (!pm.collectionVariables.get('baseUrl')) {",
-          "    pm.collectionVariables.set('baseUrl', 'https://localhost:7001');",
-          "}"
-        ]
-      }
-    },
-    {
-      "listen": "test",
-      "script": {
-        "type": "text/javascript",
-        "exec": [
-          "// Global test script",
-          "pm.test('Response time is less than 5000ms', function () {",
-          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
-          "});",
-          "",
-          "pm.test('Response has proper structure', function () {",
-          "    const response = pm.response.json();",
-          "    pm.expect(response).to.have.property('isSuccess');",
-          "    pm.expect(response).to.have.property('message');",
-          "});"
-        ]
-      }
     }
   ]
 }

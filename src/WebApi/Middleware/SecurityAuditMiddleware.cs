@@ -35,7 +35,7 @@ public class SecurityAuditMiddleware
                 await LogSecurityEvent(dbContext, new AuditLog
                 {
                     Id = Guid.NewGuid(),
-                    UserId = userId ?? "anonymous",
+                    UserId = userId != null ? Guid.Parse(userId) : Guid.NewGuid(),
                     UserName = userName ?? "anonymous",
                     Action = GetActionFromPath(context.Request.Path, context.Request.Method),
                     EntityType = GetEntityTypeFromPath(context.Request.Path),
@@ -58,7 +58,7 @@ public class SecurityAuditMiddleware
                 await LogSecurityEvent(dbContext, new AuditLog
                 {
                     Id = Guid.NewGuid(),
-                    UserId = userId ?? "anonymous",
+                    UserId = userId != null ? Guid.Parse(userId) : Guid.NewGuid(),
                     UserName = userName ?? "anonymous",
                     Action = GetActionFromPath(context.Request.Path, context.Request.Method),
                     EntityType = GetEntityTypeFromPath(context.Request.Path),

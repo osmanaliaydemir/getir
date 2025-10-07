@@ -13,11 +13,11 @@ class EnvironmentConfig {
   static String get apiBaseUrl {
     switch (_environment) {
       case Environment.development:
-        return 'https://localhost:7000/api/v1';
+        return 'http://ajilgo.runasp.net/api/v1';
       case Environment.staging:
-        return 'https://staging-api.getir.com/api/v1';
+        return 'http://ajilgo.runasp.net/api/v1';
       case Environment.production:
-        return 'https://api.getir.com/api/v1';
+        return 'http://ajilgo.runasp.net/api/v1';
     }
   }
 
@@ -25,11 +25,11 @@ class EnvironmentConfig {
   static String get signalRUrl {
     switch (_environment) {
       case Environment.development:
-        return 'https://localhost:7000/hubs';
+        return 'http://ajilgo.runasp.net/hubs';
       case Environment.staging:
-        return 'https://staging-api.getir.com/hubs';
+        return 'http://ajilgo.runasp.net/hubs';
       case Environment.production:
-        return 'https://api.getir.com/hubs';
+        return 'http://ajilgo.runasp.net/hubs';
     }
   }
 

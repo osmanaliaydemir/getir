@@ -171,7 +171,7 @@ public class LogAnalysisService : ILogAnalysisService
                 filteredLogs = filteredLogs.Where(x => x.Action == request.Action);
 
             if (!string.IsNullOrEmpty(request.UserId))
-                filteredLogs = filteredLogs.Where(x => x.UserId == request.UserId);
+                filteredLogs = filteredLogs.Where(x => x.UserId == Guid.Parse(request.UserId));
 
             var data = GroupAuditLogsByPeriod(filteredLogs.ToList(), request.GroupBy);
             var summary = GenerateAuditLogSummary(filteredLogs.ToList());

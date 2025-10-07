@@ -105,23 +105,36 @@ public class ErrorHandlingMiddleware
     {
         _logger.LogError(exception, "An unhandled exception occurred");
 
-        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-        context.Response.ContentType = "application/json";
-
-        var problemDetails = new
+        // Response'un zaten başlamış olup olmadığını kontrol et
+        if (!context.Response.HasStarted)
         {
-            type = "https://tools.ietf.org/html/rfc7231#section-6.6.1",
-            title = "An error occurred while processing your request.",
-            status = context.Response.StatusCode,
-            errorCode = "INTERNAL_SERVER_ERROR",
-            detail = exception.Message,
-            traceId = context.TraceIdentifier,
-            requestId = context.Items["RequestId"]?.ToString()
-        };
+            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            context.Response.ContentType = "application/json";
+        }
 
-        await context.Response.WriteAsync(JsonSerializer.Serialize(problemDetails, new JsonSerializerOptions
+        // Response başlamışsa yazma, sadece logla
+        if (!context.Response.HasStarted)
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        }));
+            var problemDetails = new
+            {
+                type = "https://tools.ietf.org/html/rfc7231#section-6.6.1",
+                title = "An error occurred while processing your request.",
+                status = context.Response.StatusCode,
+                errorCode = "INTERNAL_SERVER_ERROR",
+                detail = exception.Message,
+                traceId = context.TraceIdentifier,
+                requestId = context.Items["RequestId"]?.ToString()
+            };
+
+            await context.Response.WriteAsync(JsonSerializer.Serialize(problemDetails, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            }));
+        }
+        else
+        {
+            // Response zaten başlamışsa sadece logla
+            _logger.LogWarning("Cannot write error response because response has already started. Exception: {Exception}", exception.Message);
+        }
     }
 }

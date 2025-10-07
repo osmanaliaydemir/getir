@@ -1,4 +1,5 @@
 using Getir.Domain.Entities;
+using Getir.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Getir.Infrastructure.Persistence;
@@ -202,7 +203,7 @@ public class AppDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.OrderNumber).IsRequired().HasMaxLength(50);
             entity.HasIndex(e => e.OrderNumber).IsUnique();
-            entity.Property(e => e.Status).IsRequired().HasMaxLength(50).HasDefaultValue("Pending");
+            entity.Property(e => e.Status).IsRequired().HasConversion<int>();
             entity.Property(e => e.PaymentMethod).IsRequired().HasMaxLength(50);
             entity.Property(e => e.PaymentStatus).IsRequired().HasMaxLength(50).HasDefaultValue("Pending");
             entity.Property(e => e.DeliveryAddress).IsRequired().HasMaxLength(500);
@@ -560,7 +561,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<AuditLog>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
+            entity.Property(e => e.UserId).IsRequired();
             entity.Property(e => e.UserName).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Action).IsRequired().HasMaxLength(100);
             entity.Property(e => e.EntityType).IsRequired().HasMaxLength(100);
@@ -603,6 +604,12 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.Creator)
                 .WithMany()
                 .HasForeignKey(e => e.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Relationship with User (ReadByUser)
+            entity.HasOne(e => e.ReadByUser)
+                .WithMany()
+                .HasForeignKey(e => e.ReadBy)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -727,7 +734,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.FileHash).IsRequired().HasMaxLength(256);
             entity.Property(e => e.Description).HasMaxLength(500);
             entity.Property(e => e.DeviceInfo).HasMaxLength(500);
-            entity.Property(e => e.Status).IsRequired().HasConversion<int>().HasDefaultValue(Domain.Enums.EvidenceStatus.Pending);
+            entity.Property(e => e.Status).IsRequired().HasConversion<int>();
             entity.Property(e => e.VerificationNotes).HasMaxLength(500);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
             

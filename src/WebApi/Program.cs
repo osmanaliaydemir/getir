@@ -63,21 +63,23 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         sqlOptions =>
         {
             sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(ApplicationConstants.MaxDatabaseRetryDelaySeconds),
+                maxRetryCount: 3, // Retry sayısını azalttık
+                maxRetryDelay: TimeSpan.FromSeconds(10), // Retry delay'i azalttık
                 errorNumbersToAdd: null);
             
-                    // Connection pooling optimization
-                    sqlOptions.CommandTimeout(ApplicationConstants.DatabaseCommandTimeoutSeconds);
+            // Connection pooling optimization
+            sqlOptions.CommandTimeout(ApplicationConstants.DatabaseCommandTimeoutSeconds);
         });
 
     // Query optimization
     options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+    options.EnableServiceProviderCaching();
     
-            if (builder.Environment.IsDevelopment())
-            {
-                options.EnableDetailedErrors();
-            }
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableDetailedErrors();
+        options.EnableSensitiveDataLogging();
+    }
 });
 
 // ============= DEPENDENCY INJECTION =============

@@ -169,7 +169,7 @@ public static class ApplicationConstants
     /// <summary>
     /// Database command timeout in seconds
     /// </summary>
-    public const int DatabaseCommandTimeoutSeconds = 30;
+    public const int DatabaseCommandTimeoutSeconds = 120;
     
     /// <summary>
     /// SignalR client timeout in seconds

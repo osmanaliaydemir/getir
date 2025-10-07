@@ -10,7 +10,7 @@ public class AuditLog
     public Guid Id { get; set; }
     
     [Required]
-    public string UserId { get; set; } = string.Empty;
+    public Guid UserId { get; set; }
     
     [Required]
     [MaxLength(100)]
