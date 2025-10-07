@@ -1,25 +1,36 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:signalr_core/signalr_core.dart';
+import 'package:injectable/injectable.dart';
 import '../config/environment_config.dart';
 import 'encryption_service.dart';
 
+/// SignalR Connection State
+enum SignalRConnectionState {
+  disconnected,
+  connecting,
+  connected,
+  reconnecting,
+  failed,
+}
+
 /// SignalR Service for Real-time Communication
 /// Manages connections to OrderHub, RealtimeTrackingHub, NotificationHub
+@lazySingleton
 class SignalRService {
-  static final SignalRService _instance = SignalRService._internal();
-  factory SignalRService() => _instance;
-  SignalRService._internal();
+  final EncryptionService _encryptionService;
+
+  SignalRService(this._encryptionService);
 
   HubConnection? _orderHubConnection;
   HubConnection? _trackingHubConnection;
   HubConnection? _notificationHubConnection;
 
-  bool _isOrderHubConnected = false;
-  bool _isTrackingHubConnected = false;
-  bool _isNotificationHubConnected = false;
-
-  final EncryptionService _encryptionService = EncryptionService();
+  SignalRConnectionState _orderHubState = SignalRConnectionState.disconnected;
+  SignalRConnectionState _trackingHubState =
+      SignalRConnectionState.disconnected;
+  SignalRConnectionState _notificationHubState =
+      SignalRConnectionState.disconnected;
 
   // Event streams
   final _orderStatusController =
@@ -30,6 +41,14 @@ class SignalRService {
   final _notificationController =
       StreamController<RealtimeNotification>.broadcast();
 
+  // Connection state streams
+  final _orderHubStateController =
+      StreamController<SignalRConnectionState>.broadcast();
+  final _trackingHubStateController =
+      StreamController<SignalRConnectionState>.broadcast();
+  final _notificationHubStateController =
+      StreamController<SignalRConnectionState>.broadcast();
+
   Stream<OrderStatusUpdate> get orderStatusStream =>
       _orderStatusController.stream;
   Stream<TrackingData> get trackingDataStream => _trackingDataController.stream;
@@ -37,6 +56,19 @@ class SignalRService {
       _locationUpdateController.stream;
   Stream<RealtimeNotification> get notificationStream =>
       _notificationController.stream;
+
+  // Connection state streams
+  Stream<SignalRConnectionState> get orderHubStateStream =>
+      _orderHubStateController.stream;
+  Stream<SignalRConnectionState> get trackingHubStateStream =>
+      _trackingHubStateController.stream;
+  Stream<SignalRConnectionState> get notificationHubStateStream =>
+      _notificationHubStateController.stream;
+
+  // Connection state getters
+  SignalRConnectionState get orderHubState => _orderHubState;
+  SignalRConnectionState get trackingHubState => _trackingHubState;
+  SignalRConnectionState get notificationHubState => _notificationHubState;
 
   /// Initialize all SignalR hubs
   Future<void> initialize() async {
@@ -47,7 +79,12 @@ class SignalRService {
 
   /// Initialize Order Hub
   Future<void> initializeOrderHub() async {
-    if (_isOrderHubConnected) return;
+    if (_orderHubState == SignalRConnectionState.connected ||
+        _orderHubState == SignalRConnectionState.connecting)
+      return;
+
+    _orderHubState = SignalRConnectionState.connecting;
+    _orderHubStateController.add(_orderHubState);
 
     try {
       final accessToken = await _encryptionService.getAccessToken();
@@ -83,17 +120,24 @@ class SignalRService {
 
       // Start connection
       await _orderHubConnection!.start();
-      _isOrderHubConnected = true;
+      _orderHubState = SignalRConnectionState.connected;
+      _orderHubStateController.add(_orderHubState);
       debugPrint('✅ OrderHub connected successfully');
     } catch (e) {
       debugPrint('❌ OrderHub connection failed: $e');
-      _isOrderHubConnected = false;
+      _orderHubState = SignalRConnectionState.failed;
+      _orderHubStateController.add(_orderHubState);
     }
   }
 
   /// Initialize Realtime Tracking Hub
   Future<void> initializeTrackingHub() async {
-    if (_isTrackingHubConnected) return;
+    if (_trackingHubState == SignalRConnectionState.connected ||
+        _trackingHubState == SignalRConnectionState.connecting)
+      return;
+
+    _trackingHubState = SignalRConnectionState.connecting;
+    _trackingHubStateController.add(_trackingHubState);
 
     try {
       final accessToken = await _encryptionService.getAccessToken();
@@ -122,17 +166,24 @@ class SignalRService {
 
       // Start connection
       await _trackingHubConnection!.start();
-      _isTrackingHubConnected = true;
+      _trackingHubState = SignalRConnectionState.connected;
+      _trackingHubStateController.add(_trackingHubState);
       debugPrint('✅ TrackingHub connected successfully');
     } catch (e) {
       debugPrint('❌ TrackingHub connection failed: $e');
-      _isTrackingHubConnected = false;
+      _trackingHubState = SignalRConnectionState.failed;
+      _trackingHubStateController.add(_trackingHubState);
     }
   }
 
   /// Initialize Notification Hub
   Future<void> initializeNotificationHub() async {
-    if (_isNotificationHubConnected) return;
+    if (_notificationHubState == SignalRConnectionState.connected ||
+        _notificationHubState == SignalRConnectionState.connecting)
+      return;
+
+    _notificationHubState = SignalRConnectionState.connecting;
+    _notificationHubStateController.add(_notificationHubState);
 
     try {
       final accessToken = await _encryptionService.getAccessToken();
@@ -165,17 +216,20 @@ class SignalRService {
 
       // Start connection
       await _notificationHubConnection!.start();
-      _isNotificationHubConnected = true;
+      _notificationHubState = SignalRConnectionState.connected;
+      _notificationHubStateController.add(_notificationHubState);
       debugPrint('✅ NotificationHub connected successfully');
     } catch (e) {
       debugPrint('❌ NotificationHub connection failed: $e');
-      _isNotificationHubConnected = false;
+      _notificationHubState = SignalRConnectionState.failed;
+      _notificationHubStateController.add(_notificationHubState);
     }
   }
 
   /// Subscribe to order updates
   Future<void> subscribeToOrder(String orderId) async {
-    if (!_isOrderHubConnected || _orderHubConnection == null) {
+    if (_orderHubState != SignalRConnectionState.connected ||
+        _orderHubConnection == null) {
       await initializeOrderHub();
     }
 
@@ -189,7 +243,8 @@ class SignalRService {
 
   /// Subscribe to order tracking
   Future<void> joinOrderTrackingGroup(String orderId) async {
-    if (!_isTrackingHubConnected || _trackingHubConnection == null) {
+    if (_trackingHubState != SignalRConnectionState.connected ||
+        _trackingHubConnection == null) {
       await initializeTrackingHub();
     }
 
@@ -365,9 +420,13 @@ class SignalRService {
     await _trackingHubConnection?.stop();
     await _notificationHubConnection?.stop();
 
-    _isOrderHubConnected = false;
-    _isTrackingHubConnected = false;
-    _isNotificationHubConnected = false;
+    _orderHubState = SignalRConnectionState.disconnected;
+    _trackingHubState = SignalRConnectionState.disconnected;
+    _notificationHubState = SignalRConnectionState.disconnected;
+
+    _orderHubStateController.add(_orderHubState);
+    _trackingHubStateController.add(_trackingHubState);
+    _notificationHubStateController.add(_notificationHubState);
 
     debugPrint('🔌 All SignalR hubs disconnected');
   }
@@ -378,13 +437,16 @@ class SignalRService {
     _trackingDataController.close();
     _locationUpdateController.close();
     _notificationController.close();
+    _orderHubStateController.close();
+    _trackingHubStateController.close();
+    _notificationHubStateController.close();
   }
 
   /// Check connection status
   bool get isConnected =>
-      _isOrderHubConnected ||
-      _isTrackingHubConnected ||
-      _isNotificationHubConnected;
+      _orderHubState == SignalRConnectionState.connected ||
+      _trackingHubState == SignalRConnectionState.connected ||
+      _notificationHubState == SignalRConnectionState.connected;
 }
 
 /// Order Status Update Model

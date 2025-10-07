@@ -3,15 +3,14 @@ import 'dart:typed_data';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:injectable/injectable.dart';
 import '../config/environment_config.dart';
 
 /// Encryption Service for sensitive data
 /// Uses flutter_secure_storage for token/password storage
 /// Uses AES encryption for additional sensitive data
+@lazySingleton
 class EncryptionService {
-  static final EncryptionService _instance = EncryptionService._internal();
-  factory EncryptionService() => _instance;
-  EncryptionService._internal();
 
   // Secure storage instance
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage(

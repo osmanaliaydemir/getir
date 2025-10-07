@@ -1,18 +1,17 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:injectable/injectable.dart';
 import 'auth_datasource.dart';
 import '../models/auth_models.dart';
 
+@LazySingleton(as: AuthDataSource)
 class AuthDataSourceImpl implements AuthDataSource {
   final Dio _dio;
-  SharedPreferences? _prefs;
+  final SharedPreferences _prefs;
 
-  AuthDataSourceImpl({Dio? dio}) : _dio = dio ?? Dio();
+  AuthDataSourceImpl(this._dio, this._prefs);
 
-  Future<SharedPreferences> get prefs async {
-    _prefs ??= await SharedPreferences.getInstance();
-    return _prefs!;
-  }
+  SharedPreferences get prefs => _prefs;
 
   @override
   Future<AuthResponse> login(LoginRequest request) async {
@@ -173,26 +172,22 @@ class AuthDataSourceImpl implements AuthDataSource {
 
   @override
   Future<String?> getAccessToken() async {
-    final prefs = await this.prefs;
     return prefs.getString('access_token');
   }
 
   @override
   Future<String?> getRefreshToken() async {
-    final prefs = await this.prefs;
     return prefs.getString('refresh_token');
   }
 
   @override
   Future<void> saveTokens(String accessToken, String refreshToken) async {
-    final prefs = await this.prefs;
     await prefs.setString('access_token', accessToken);
     await prefs.setString('refresh_token', refreshToken);
   }
 
   @override
   Future<void> clearTokens() async {
-    final prefs = await this.prefs;
     await prefs.remove('access_token');
     await prefs.remove('refresh_token');
   }
@@ -200,7 +195,6 @@ class AuthDataSourceImpl implements AuthDataSource {
   @override
   Future<UserModel?> getCurrentUser() async {
     try {
-      final prefs = await this.prefs;
       final userJson = prefs.getString('current_user');
 
       if (userJson != null && userJson.isNotEmpty) {
@@ -233,7 +227,6 @@ class AuthDataSourceImpl implements AuthDataSource {
   @override
   Future<void> saveCurrentUser(UserModel user) async {
     try {
-      final prefs = await this.prefs;
       // Simple serialization (pipe-separated values)
       final userString =
           '${user.id}|${user.email}|${user.firstName}|${user.lastName}|${user.phoneNumber ?? ''}|${user.role}|${user.isEmailVerified}';
@@ -246,7 +239,6 @@ class AuthDataSourceImpl implements AuthDataSource {
 
   @override
   Future<void> clearCurrentUser() async {
-    final prefs = await this.prefs;
     await prefs.remove('current_user');
   }
 
@@ -264,7 +256,6 @@ class AuthDataSourceImpl implements AuthDataSource {
     }
 
     // Token expiration kontrolü (SharedPreferences'tan)
-    final prefs = await this.prefs;
     final expiresAtString = prefs.getString('token_expires_at');
 
     if (expiresAtString != null) {
@@ -336,7 +327,6 @@ class AuthDataSourceImpl implements AuthDataSource {
 
   /// Token expiration'ı kaydet
   Future<void> _saveTokenExpiration(DateTime expiresAt) async {
-    final prefs = await this.prefs;
     await prefs.setString('token_expires_at', expiresAt.toIso8601String());
   }
 }

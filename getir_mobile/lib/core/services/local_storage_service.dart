@@ -1,11 +1,10 @@
 import 'package:hive/hive.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:injectable/injectable.dart';
 
+@lazySingleton
 class LocalStorageService {
-  static final LocalStorageService _instance = LocalStorageService._internal();
-  factory LocalStorageService() => _instance;
-  LocalStorageService._internal();
 
   late Box<Map> _cacheBox;
   late Box<String> _userBox;

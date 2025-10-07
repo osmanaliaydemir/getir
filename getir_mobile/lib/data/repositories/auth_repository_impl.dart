@@ -1,8 +1,10 @@
+import 'package:injectable/injectable.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_datasource.dart';
 import '../models/auth_models.dart';
 
+@LazySingleton(as: AuthRepository)
 class AuthRepositoryImpl implements AuthRepository {
   final AuthDataSource _dataSource;
 
@@ -10,17 +12,13 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<UserEntity> login(String email, String password) async {
-    try {
-      final request = LoginRequest(email: email, password: password);
-      final response = await _dataSource.login(request);
+    final request = LoginRequest(email: email, password: password);
+    final response = await _dataSource.login(request);
 
-      // Token'lar ve user data zaten datasource'da kaydedildi
-      // AuthResponse'dan UserEntity oluştur
-      final userModel = response.toUserModel();
-      return userModel.toEntity();
-    } catch (e) {
-      throw Exception('Login failed: $e');
-    }
+    // Token'lar ve user data zaten datasource'da kaydedildi
+    // AuthResponse'dan UserEntity oluştur
+    final userModel = response.toUserModel();
+    return userModel.toDomain();
   }
 
   @override
@@ -31,78 +29,58 @@ class AuthRepositoryImpl implements AuthRepository {
     String lastName, {
     String? phoneNumber,
   }) async {
-    try {
-      final request = RegisterRequest(
-        email: email,
-        password: password,
-        firstName: firstName,
-        lastName: lastName,
-        phoneNumber: phoneNumber,
-      );
-      final response = await _dataSource.register(request);
+    final request = RegisterRequest(
+      email: email,
+      password: password,
+      firstName: firstName,
+      lastName: lastName,
+      phoneNumber: phoneNumber,
+    );
+    final response = await _dataSource.register(request);
 
-      // Token'lar ve user data zaten datasource'da kaydedildi
-      // AuthResponse'dan UserEntity oluştur
-      final userModel = response.toUserModel();
-      return userModel.toEntity();
-    } catch (e) {
-      throw Exception('Registration failed: $e');
-    }
+    // Token'lar ve user data zaten datasource'da kaydedildi
+    // AuthResponse'dan UserEntity oluştur
+    final userModel = response.toUserModel();
+    return userModel.toDomain();
   }
 
   @override
   Future<void> logout() async {
-    try {
-      await _dataSource.logout();
-      await _dataSource.clearTokens();
-      await _dataSource.clearCurrentUser();
-    } catch (e) {
-      throw Exception('Logout failed: $e');
-    }
+    await _dataSource.logout();
+    await _dataSource.clearTokens();
+    await _dataSource.clearCurrentUser();
   }
 
   @override
   Future<UserEntity> refreshToken(String refreshToken) async {
-    try {
-      final request = RefreshTokenRequest(refreshToken: refreshToken);
-      final response = await _dataSource.refreshToken(request);
+    final request = RefreshTokenRequest(refreshToken: refreshToken);
+    final response = await _dataSource.refreshToken(request);
 
-      // Save new tokens
-      await _dataSource.saveTokens(response.accessToken, response.refreshToken);
+    // Save new tokens
+    await _dataSource.saveTokens(response.accessToken, response.refreshToken);
 
-      // Get current user
-      final user = await _dataSource.getCurrentUser();
-      if (user == null) {
-        throw Exception('User not found after token refresh');
-      }
-
-      return user.toEntity();
-    } catch (e) {
-      throw Exception('Token refresh failed: $e');
+    // Get current user
+    final user = await _dataSource.getCurrentUser();
+    if (user == null) {
+      throw Exception('User not found after token refresh');
     }
+
+    return user.toDomain();
   }
 
   @override
   Future<void> forgotPassword(String email) async {
-    try {
-      final request = ForgotPasswordRequest(email: email);
-      await _dataSource.forgotPassword(request);
-    } catch (e) {
-      throw Exception('Forgot password failed: $e');
-    }
+    final request = ForgotPasswordRequest(email: email);
+    await _dataSource.forgotPassword(request);
   }
 
   @override
   Future<void> resetPassword(String token, String newPassword) async {
-    try {
-      final request = ResetPasswordRequest(
-        token: token,
-        newPassword: newPassword,
-      );
-      await _dataSource.resetPassword(request);
-    } catch (e) {
-      throw Exception('Reset password failed: $e');
-    }
+    final request = ResetPasswordRequest(
+      token: token,
+      newPassword: newPassword,
+    );
+    await _dataSource.resetPassword(request);
   }
 
   @override
@@ -128,12 +106,12 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<UserEntity?> getCurrentUser() async {
     final user = await _dataSource.getCurrentUser();
-    return user?.toEntity();
+    return user?.toDomain();
   }
 
   @override
   Future<void> saveCurrentUser(UserEntity user) async {
-    final userModel = UserModel.fromEntity(user);
+    final userModel = UserModel.fromDomain(user);
     await _dataSource.saveCurrentUser(userModel);
   }
 

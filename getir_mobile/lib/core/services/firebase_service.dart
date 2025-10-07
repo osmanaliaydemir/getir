@@ -3,10 +3,11 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:dio/dio.dart';
 import 'dart:convert';
 import '../../core/navigation/app_router.dart';
 import '../../core/constants/route_constants.dart';
-import '../services/api_client.dart';
+import '../di/injection.dart';
 
 class FirebaseService {
   static final FirebaseService _instance = FirebaseService._internal();
@@ -126,10 +127,9 @@ class FirebaseService {
   // Send FCM token to server
   static Future<void> _sendTokenToServer(String token) async {
     try {
-      await ApiClient().dio.post(
-        '/api/v1/notifications/token',
-        data: {'token': token},
-      );
+      // Get Dio from DI instead of ApiClient singleton
+      final dio = getIt<Dio>();
+      await dio.post('/api/v1/notifications/token', data: {'token': token});
       if (kDebugMode) {
         print('FCM Token sent to server: $token');
       }

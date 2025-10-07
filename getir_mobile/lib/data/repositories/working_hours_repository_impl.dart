@@ -11,28 +11,16 @@ class WorkingHoursRepositoryImpl implements WorkingHoursRepository {
   Future<List<WorkingHours>> getWorkingHoursByMerchant(
     String merchantId,
   ) async {
-    try {
-      return await _dataSource.getWorkingHoursByMerchant(merchantId);
-    } catch (e) {
-      throw Exception('Repository: Failed to fetch working hours: $e');
-    }
+    return await _dataSource.getWorkingHoursByMerchant(merchantId);
   }
 
   @override
   Future<bool> isMerchantOpen(String merchantId, {DateTime? checkTime}) async {
-    try {
-      return await _dataSource.isMerchantOpen(merchantId, checkTime: checkTime);
-    } catch (e) {
-      throw Exception('Repository: Failed to check merchant status: $e');
-    }
+    return await _dataSource.isMerchantOpen(merchantId, checkTime: checkTime);
   }
 
   @override
   Future<WorkingHours> getWorkingHoursById(String id) async {
-    try {
-      return await _dataSource.getWorkingHoursById(id);
-    } catch (e) {
-      throw Exception('Repository: Failed to fetch working hours: $e');
-    }
+    return await _dataSource.getWorkingHoursById(id);
   }
 }

@@ -7,6 +7,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/providers/language_provider.dart';
 import '../../bloc/auth/auth_bloc.dart';
+import '../../bloc/cart/cart_bloc.dart';
 import '../../widgets/common/language_selector.dart';
 
 class LoginPage extends StatefulWidget {
@@ -54,6 +55,8 @@ class _LoginPageState extends State<LoginPage> {
         child: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthAuthenticated) {
+              // ✅ Trigger cart merge after successful login
+              context.read<CartBloc>().add(MergeLocalCartAfterLogin());
               AppNavigation.goToHome(context);
             } else if (state is AuthError) {
               ScaffoldMessenger.of(context).showSnackBar(

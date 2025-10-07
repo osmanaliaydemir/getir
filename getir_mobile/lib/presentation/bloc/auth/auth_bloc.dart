@@ -1,9 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:injectable/injectable.dart';
 import '../../../domain/entities/user_entity.dart';
 import '../../../domain/usecases/auth_usecases.dart';
-import '../cart/cart_bloc.dart';
-import '../../../core/services/global_keys_service.dart';
 
 // Events
 abstract class AuthEvent extends Equatable {
@@ -129,6 +128,7 @@ class AuthPasswordResetSent extends AuthState {
 class AuthPasswordResetSuccess extends AuthState {}
 
 // BLoC
+@injectable
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase _loginUseCase;
   final RegisterUseCase _registerUseCase;
@@ -140,26 +140,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final CheckAuthenticationUseCase _checkAuthenticationUseCase;
   final CheckTokenValidityUseCase _checkTokenValidityUseCase;
 
-  AuthBloc({
-    required LoginUseCase loginUseCase,
-    required RegisterUseCase registerUseCase,
-    required LogoutUseCase logoutUseCase,
-    required RefreshTokenUseCase refreshTokenUseCase,
-    required ForgotPasswordUseCase forgotPasswordUseCase,
-    required ResetPasswordUseCase resetPasswordUseCase,
-    required GetCurrentUserUseCase getCurrentUserUseCase,
-    required CheckAuthenticationUseCase checkAuthenticationUseCase,
-    required CheckTokenValidityUseCase checkTokenValidityUseCase,
-  }) : _loginUseCase = loginUseCase,
-       _registerUseCase = registerUseCase,
-       _logoutUseCase = logoutUseCase,
-       _refreshTokenUseCase = refreshTokenUseCase,
-       _forgotPasswordUseCase = forgotPasswordUseCase,
-       _resetPasswordUseCase = resetPasswordUseCase,
-       _getCurrentUserUseCase = getCurrentUserUseCase,
-       _checkAuthenticationUseCase = checkAuthenticationUseCase,
-       _checkTokenValidityUseCase = checkTokenValidityUseCase,
-       super(AuthInitial()) {
+  AuthBloc(
+    this._loginUseCase,
+    this._registerUseCase,
+    this._logoutUseCase,
+    this._refreshTokenUseCase,
+    this._forgotPasswordUseCase,
+    this._resetPasswordUseCase,
+    this._getCurrentUserUseCase,
+    this._checkAuthenticationUseCase,
+    this._checkTokenValidityUseCase,
+  ) : super(AuthInitial()) {
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
@@ -179,11 +170,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = await _loginUseCase(event.email, event.password);
       emit(AuthAuthenticated(user));
-      // Trigger cart merge after login via global navigator context
-      final ctx = GlobalKeysService.navigatorKey.currentContext;
-      if (ctx != null) {
-        ctx.read<CartBloc>().add(MergeLocalCartAfterLogin());
-      }
+      // ✅ Cart merge logic moved to UI layer (login_page.dart)
     } catch (e) {
       emit(AuthError(e.toString()));
     }

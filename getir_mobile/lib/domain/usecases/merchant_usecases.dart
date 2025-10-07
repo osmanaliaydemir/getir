@@ -1,6 +1,15 @@
 import '../entities/merchant.dart';
 import '../repositories/merchant_repository.dart';
 
+/// Merchant Use Cases
+///
+/// **Note:** These are currently simple repository wrappers.
+/// Future enhancements should include:
+/// - Caching strategy (local storage)
+/// - Business rules (operating hours, delivery zones)
+/// - Analytics (merchant views, search terms)
+/// - Personalization (favorite merchants, recommendations)
+
 class GetMerchantsUseCase {
   final MerchantRepository _repository;
 

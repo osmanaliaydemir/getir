@@ -1,6 +1,16 @@
 import '../entities/product.dart';
 import '../repositories/product_repository.dart';
 
+/// Product Use Cases
+///
+/// **Note:** These are currently simple repository wrappers.
+/// Future enhancements should include:
+/// - Stock validation
+/// - Price history tracking
+/// - Recommendation engine
+/// - Analytics (product views, searches)
+/// - Inventory alerts
+
 class GetProductsUseCase {
   final ProductRepository _repository;
 

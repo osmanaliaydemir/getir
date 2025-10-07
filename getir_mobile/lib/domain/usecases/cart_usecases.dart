@@ -1,6 +1,16 @@
 import '../entities/cart.dart';
 import '../repositories/cart_repository.dart';
 
+/// Get Cart Use Case
+///
+/// Retrieves current user's shopping cart.
+///
+/// **Current Implementation:** Simple repository wrapper
+/// **Future Enhancements:**
+/// - Validate cart items (stock availability)
+/// - Calculate dynamic pricing (time-based discounts)
+/// - Apply automatic coupons
+/// - Merge local/server cart intelligently
 class GetCartUseCase {
   final CartRepository _repository;
 
@@ -11,6 +21,17 @@ class GetCartUseCase {
   }
 }
 
+/// Add To Cart Use Case
+///
+/// Adds a product to the shopping cart.
+///
+/// **Current Implementation:** Simple repository wrapper
+/// **Future Enhancements:**
+/// - Stock availability check before adding
+/// - Maximum quantity limit validation
+/// - Product price change detection
+/// - Cross-sell/upsell recommendations
+/// - Analytics tracking (add_to_cart event)
 class AddToCartUseCase {
   final CartRepository _repository;
 
@@ -22,6 +43,11 @@ class AddToCartUseCase {
     String? variantId,
     List<String>? optionIds,
   }) async {
+    // TODO: Add business logic
+    // - Validate quantity > 0
+    // - Check stock availability
+    // - Validate product exists and is active
+
     return await _repository.addToCart(
       productId: productId,
       quantity: quantity,
@@ -36,14 +62,8 @@ class UpdateCartItemUseCase {
 
   UpdateCartItemUseCase(this._repository);
 
-  Future<CartItem> call({
-    required String itemId,
-    required int quantity,
-  }) async {
-    return await _repository.updateCartItem(
-      itemId: itemId,
-      quantity: quantity,
-    );
+  Future<CartItem> call({required String itemId, required int quantity}) async {
+    return await _repository.updateCartItem(itemId: itemId, quantity: quantity);
   }
 }
 

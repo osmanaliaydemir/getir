@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import '../../presentation/bloc/order/order_bloc.dart';
 import 'signalr_service.dart';
+import '../di/injection.dart';
 
 /// Order Realtime Binder
 /// Binds SignalR order status updates to OrderBloc
@@ -20,7 +21,7 @@ class OrderRealtimeBinder {
     if (_started) return;
     _started = true;
 
-    final signalR = SignalRService();
+    final signalR = getIt<SignalRService>();
 
     // Initialize SignalR connections
     await signalR.initialize();
