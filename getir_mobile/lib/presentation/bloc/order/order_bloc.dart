@@ -207,14 +207,14 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       // 📊 Analytics: Track order creation (purchase)
       await _analytics.logPurchase(
         orderId: order.id,
-        total: order.totalPrice,
+        total: order.totalAmount,
         currency: 'TRY',
         items: order.items
             .map(
               (item) => AnalyticsEventItem(
                 itemId: item.productId,
                 itemName: item.productName,
-                price: item.price,
+                price: item.unitPrice,
                 quantity: item.quantity,
               ),
             )
@@ -240,7 +240,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       // 📊 Analytics: Track order cancellation
       await _analytics.logOrderCancelled(
         orderId: order.id,
-        value: order.totalPrice,
+        value: order.totalAmount,
         reason: 'user_cancelled',
       );
 
@@ -261,7 +261,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
       // 📊 Analytics: Track payment info added
       await _analytics.logAddPaymentInfo(
-        paymentType: event.request.paymentMethod,
+        paymentType: event.request.paymentMethod.value,
         value: event.request.amount,
         currency: 'TRY',
       );

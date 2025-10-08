@@ -4,6 +4,7 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:getir_mobile/presentation/bloc/auth/auth_bloc.dart';
 import 'package:getir_mobile/domain/usecases/auth_usecases.dart';
+import 'package:getir_mobile/core/services/analytics_service.dart';
 import '../../helpers/mock_data.dart';
 
 @GenerateMocks([
@@ -16,6 +17,7 @@ import '../../helpers/mock_data.dart';
   ResetPasswordUseCase,
   CheckAuthenticationUseCase,
   CheckTokenValidityUseCase,
+  AnalyticsService,
 ])
 import 'auth_bloc_test.mocks.dart';
 
@@ -25,12 +27,31 @@ void main() {
   late MockRegisterUseCase mockRegisterUseCase;
   late MockLogoutUseCase mockLogoutUseCase;
   late MockGetCurrentUserUseCase mockGetCurrentUserUseCase;
+  late MockAnalyticsService mockAnalyticsService;
 
   setUp(() {
     mockLoginUseCase = MockLoginUseCase();
     mockRegisterUseCase = MockRegisterUseCase();
     mockLogoutUseCase = MockLogoutUseCase();
     mockGetCurrentUserUseCase = MockGetCurrentUserUseCase();
+    mockAnalyticsService = MockAnalyticsService();
+
+    // Stub analytics methods to prevent errors
+    when(mockAnalyticsService.logLogin(method: anyNamed('method')))
+        .thenAnswer((_) async => {});
+    when(mockAnalyticsService.logSignUp(method: anyNamed('method')))
+        .thenAnswer((_) async => {});
+    when(mockAnalyticsService.logLogout()).thenAnswer((_) async => {});
+    when(mockAnalyticsService.setUserId(any)).thenAnswer((_) async => {});
+    when(
+      mockAnalyticsService.logError(
+        error: anyNamed('error'),
+        stackTrace: anyNamed('stackTrace'),
+        reason: anyNamed('reason'),
+        context: anyNamed('context'),
+        fatal: anyNamed('fatal'),
+      ),
+    ).thenAnswer((_) async => {});
 
     authBloc = AuthBloc(
       mockLoginUseCase,
@@ -42,6 +63,7 @@ void main() {
       mockGetCurrentUserUseCase,
       MockCheckAuthenticationUseCase(),
       MockCheckTokenValidityUseCase(),
+      mockAnalyticsService,
     );
   });
 
