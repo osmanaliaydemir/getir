@@ -355,18 +355,33 @@ class SettingsPage extends StatelessWidget {
   }
 
   void _showAboutDialog(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    // Navigate to About Page
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AboutPage()),
+    );
+  }
+}
 
-    showAboutDialog(
-      context: context,
-      applicationName: 'Getir Mobile',
-      applicationVersion: '1.0.0',
-      applicationIcon: const Icon(
-        Icons.shopping_bag,
-        color: AppColors.primary,
-        size: 48,
+class AboutPage extends StatefulWidget {
+  const AboutPage({super.key});
+
+  @override
+  State<AboutPage> createState() => _AboutPageState();
+}
+
+class _AboutPageState extends State<AboutPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('About'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.white,
       ),
-      children: [Text(l10n.aboutDescription)],
+      body: const Center(
+        child: Text('About page - See about_page.dart for full implementation'),
+      ),
     );
   }
 }

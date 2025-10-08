@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/widgets/optimized_image.dart';
 
 typedef ItemWidgetBuilder<T> =
     Widget Function(BuildContext context, T item, int index);

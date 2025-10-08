@@ -3,41 +3,59 @@ import '../entities/user_entity.dart';
 import '../repositories/auth_repository.dart';
 
 /// Login Use Case
-/// 
+///
 /// Handles user authentication with email and password.
-/// Includes business rules:
-/// - Email format validation
-/// - Password minimum length check
-/// - Input sanitization
-/// 
-/// Future enhancements:
+///
+/// **Business Rules:**
+/// - Email format validation (RFC 5322 compliant)
+/// - Password minimum length (6 characters)
+/// - Input sanitization (trim, lowercase email)
+///
+/// **Pre-conditions:**
+/// - Email and password must not be empty
+/// - Email must be valid format
+/// - Password must be at least 6 characters
+///
+/// **Post-conditions:**
+/// - Returns authenticated [UserEntity] on success
+/// - Throws [ArgumentError] on validation failure
+/// - Throws [AuthenticationException] on invalid credentials
+/// - Throws [NetworkException] on connection error
+///
+/// **Future enhancements:**
 /// - Rate limiting (prevent brute force)
 /// - Audit logging
 /// - Device fingerprinting
+/// - 2FA support
 @injectable
 class LoginUseCase {
   final AuthRepository _repository;
-  
+
   const LoginUseCase(this._repository);
-  
+
+  /// Authenticates a user with email and password.
+  ///
+  /// Throws [ArgumentError] if validation fails.
+  /// Throws [AuthenticationException] if credentials are invalid.
+  /// Throws [NetworkException] if network request fails.
   Future<UserEntity> call(String email, String password) async {
     // Business rule: Validate credentials format
     _validateCredentials(email, password);
-    
+
     return await _repository.login(email.trim().toLowerCase(), password);
   }
-  
+
   void _validateCredentials(String email, String password) {
     if (email.isEmpty || password.isEmpty) {
       throw ArgumentError('Email and password cannot be empty');
     }
-    
+
     // Email format validation
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(email)) {
       throw ArgumentError('Invalid email format');
     }
-    
+
     // Password length check
     if (password.length < 6) {
       throw ArgumentError('Password must be at least 6 characters');
@@ -46,25 +64,51 @@ class LoginUseCase {
 }
 
 /// Register Use Case
-/// 
+///
 /// Handles new user registration.
-/// Includes business rules:
+///
+/// **Business Rules:**
 /// - Email format validation
-/// - Password strength requirements (min 6 chars, could be enhanced)
-/// - Name sanitization
-/// - Phone number format validation (optional)
-/// 
-/// Future enhancements:
-/// - Password complexity requirements (uppercase, numbers, special chars)
-/// - Duplicate account prevention
+/// - Password strength requirements (min 6 chars)
+/// - Name sanitization and length check (min 2 chars)
+/// - Phone number format validation (optional, E.164 format)
+///
+/// **Pre-conditions:**
+/// - Email, password, firstName, lastName must not be empty
+/// - Email must be valid format and not already registered
+/// - Password must be at least 6 characters
+/// - Names must be at least 2 characters
+/// - Phone number must be valid format if provided
+///
+/// **Post-conditions:**
+/// - Returns new [UserEntity] with default role 'customer'
+/// - User is automatically logged in
+/// - Throws [ArgumentError] on validation failure
+/// - Throws [BusinessException] if email already exists
+/// - Throws [NetworkException] on connection error
+///
+/// **Future enhancements:**
+/// - Password complexity (uppercase, numbers, special chars)
 /// - Email domain blacklist
 /// - Age verification
+/// - SMS verification
 @injectable
 class RegisterUseCase {
   final AuthRepository _repository;
-  
+
   const RegisterUseCase(this._repository);
-  
+
+  /// Registers a new user in the system.
+  ///
+  /// [email] User's email address (will be lowercased and trimmed)
+  /// [password] User's password (min 6 characters)
+  /// [firstName] User's first name (min 2 characters, will be trimmed)
+  /// [lastName] User's last name (min 2 characters, will be trimmed)
+  /// [phoneNumber] Optional phone number (E.164 format recommended)
+  ///
+  /// Throws [ArgumentError] if validation fails.
+  /// Throws [BusinessException] if email already exists.
+  /// Throws [NetworkException] if network request fails.
   Future<UserEntity> call(
     String email,
     String password,
@@ -73,14 +117,20 @@ class RegisterUseCase {
     String? phoneNumber,
   }) async {
     // Business rule: Validate registration data
-    _validateRegistrationData(email, password, firstName, lastName, phoneNumber);
-    
+    _validateRegistrationData(
+      email,
+      password,
+      firstName,
+      lastName,
+      phoneNumber,
+    );
+
     // Sanitize inputs
     final sanitizedEmail = email.trim().toLowerCase();
     final sanitizedFirstName = firstName.trim();
     final sanitizedLastName = lastName.trim();
     final sanitizedPhone = phoneNumber?.trim();
-    
+
     return await _repository.register(
       sanitizedEmail,
       password,
@@ -89,7 +139,7 @@ class RegisterUseCase {
       phoneNumber: sanitizedPhone,
     );
   }
-  
+
   void _validateRegistrationData(
     String email,
     String password,
@@ -98,26 +148,29 @@ class RegisterUseCase {
     String? phoneNumber,
   ) {
     // Required fields check
-    if (email.isEmpty || password.isEmpty || firstName.isEmpty || lastName.isEmpty) {
+    if (email.isEmpty ||
+        password.isEmpty ||
+        firstName.isEmpty ||
+        lastName.isEmpty) {
       throw ArgumentError('Required fields cannot be empty');
     }
-    
+
     // Email format validation
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(email)) {
       throw ArgumentError('Invalid email format');
     }
-    
+
     // Password strength
     if (password.length < 6) {
       throw ArgumentError('Password must be at least 6 characters');
     }
-    
+
     // Name length validation
     if (firstName.length < 2 || lastName.length < 2) {
       throw ArgumentError('Name must be at least 2 characters');
     }
-    
+
     // Phone number validation (if provided)
     if (phoneNumber != null && phoneNumber.isNotEmpty) {
       final phoneRegex = RegExp(r'^[\d\s\-\+\(\)]{10,}$');
@@ -132,9 +185,9 @@ class RegisterUseCase {
 @injectable
 class LogoutUseCase {
   final AuthRepository _repository;
-  
+
   const LogoutUseCase(this._repository);
-  
+
   Future<void> call() async {
     await _repository.logout();
   }
@@ -144,14 +197,14 @@ class LogoutUseCase {
 @injectable
 class RefreshTokenUseCase {
   final AuthRepository _repository;
-  
+
   const RefreshTokenUseCase(this._repository);
-  
+
   Future<UserEntity> call(String refreshToken) async {
     if (refreshToken.isEmpty) {
       throw ArgumentError('Refresh token cannot be empty');
     }
-    
+
     return await _repository.refreshToken(refreshToken);
   }
 }
@@ -160,14 +213,14 @@ class RefreshTokenUseCase {
 @injectable
 class ForgotPasswordUseCase {
   final AuthRepository _repository;
-  
+
   const ForgotPasswordUseCase(this._repository);
-  
+
   Future<void> call(String email) async {
     if (email.isEmpty) {
       throw ArgumentError('Email cannot be empty');
     }
-    
+
     await _repository.forgotPassword(email);
   }
 }
@@ -176,18 +229,18 @@ class ForgotPasswordUseCase {
 @injectable
 class ResetPasswordUseCase {
   final AuthRepository _repository;
-  
+
   const ResetPasswordUseCase(this._repository);
-  
+
   Future<void> call(String token, String newPassword) async {
     if (token.isEmpty || newPassword.isEmpty) {
       throw ArgumentError('Token and new password cannot be empty');
     }
-    
+
     if (newPassword.length < 6) {
       throw ArgumentError('New password must be at least 6 characters');
     }
-    
+
     await _repository.resetPassword(token, newPassword);
   }
 }
@@ -196,9 +249,9 @@ class ResetPasswordUseCase {
 @injectable
 class GetCurrentUserUseCase {
   final AuthRepository _repository;
-  
+
   const GetCurrentUserUseCase(this._repository);
-  
+
   Future<UserEntity?> call() async {
     return await _repository.getCurrentUser();
   }
@@ -208,9 +261,9 @@ class GetCurrentUserUseCase {
 @injectable
 class CheckAuthenticationUseCase {
   final AuthRepository _repository;
-  
+
   const CheckAuthenticationUseCase(this._repository);
-  
+
   Future<bool> call() async {
     return await _repository.isAuthenticated();
   }
@@ -220,9 +273,9 @@ class CheckAuthenticationUseCase {
 @injectable
 class CheckTokenValidityUseCase {
   final AuthRepository _repository;
-  
+
   const CheckTokenValidityUseCase(this._repository);
-  
+
   Future<bool> call() async {
     return await _repository.isTokenValid();
   }

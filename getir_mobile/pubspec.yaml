@@ -94,6 +94,9 @@ dependencies:
   # Image Processing
   image_picker: ^1.0.7
   
+  # App Info
+  package_info_plus: ^8.0.0
+  
   # Animations
   animations: ^2.0.8
 

@@ -14,7 +14,8 @@ class SyncService {
 
   bool _isSyncing = false;
   final int _maxRetries = 3;
-  final Duration _retryDelay = const Duration(seconds: 5);
+  // ignore: unused_field
+  final Duration _retryDelay = const Duration(seconds: 5); // Reserved for retry logic
 
   // Getters
   bool get isSyncing => _isSyncing;

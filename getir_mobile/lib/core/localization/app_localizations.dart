@@ -524,11 +524,6 @@ class AppLocalizations {
       'serverError': 'Sunucu hatası',
       'unknownError': 'Bilinmeyen hata',
       'somethingWentWrong': 'Bir şeyler ters gitti',
-      'error': 'Hata',
-      'retry': 'Tekrar Dene',
-      'cancel': 'İptal',
-      'ok': 'Tamam',
-      'success': 'Başarılı',
       'failed': 'Başarısız',
       'dismiss': 'Kapat',
 
@@ -723,8 +718,8 @@ class AppLocalizations {
       // Order Tracking
       'orderReceived': 'Sipariş Alındı',
       'orderReceivedDescription': 'Siparişiniz alındı ve işleme alındı',
-      'orderConfirmed': 'Sipariş Onaylandı',
-      'orderConfirmedDescription':
+      'orderStatusConfirmed': 'Sipariş Onaylandı',
+      'orderStatusConfirmedDescription':
           'Siparişiniz onaylandı ve hazırlanmaya başlandı',
       'orderPreparing': 'Sipariş Hazırlanıyor',
       'orderPreparingDescription': 'Siparişiniz hazırlanıyor',
@@ -801,11 +796,6 @@ class AppLocalizations {
       'serverError': 'Server error',
       'unknownError': 'Unknown error',
       'somethingWentWrong': 'Something went wrong',
-      'error': 'Error',
-      'retry': 'Retry',
-      'cancel': 'Cancel',
-      'ok': 'OK',
-      'success': 'Success',
       'failed': 'Failed',
       'dismiss': 'Dismiss',
 
@@ -977,8 +967,8 @@ class AppLocalizations {
       'orderReceived': 'Order Received',
       'orderReceivedDescription':
           'Your order has been received and is being processed.',
-      'orderConfirmed': 'Order Confirmed',
-      'orderConfirmedDescription':
+      'orderStatusConfirmed': 'Order Confirmed',
+      'orderStatusConfirmedDescription':
           'Your order has been confirmed by the merchant.',
       'orderPreparing': 'Preparing',
       'orderPreparingDescription': 'Your order is being prepared.',
@@ -1085,11 +1075,6 @@ class AppLocalizations {
       'serverError': 'خطأ في الخادم',
       'unknownError': 'خطأ غير معروف',
       'somethingWentWrong': 'حدث خطأ ما',
-      'error': 'خطأ',
-      'retry': 'إعادة المحاولة',
-      'cancel': 'إلغاء',
-      'ok': 'موافق',
-      'success': 'نجح',
       'failed': 'فشل',
       'dismiss': 'إغلاق',
 
@@ -1258,8 +1243,8 @@ class AppLocalizations {
       'offlineMessage': 'لا يوجد اتصال بالإنترنت. يرجى التحقق من اتصالك.',
       'orderReceived': 'تم استلام الطلب',
       'orderReceivedDescription': 'تم استلام طلبك وهو قيد المعالجة.',
-      'orderConfirmed': 'تم تأكيد الطلب',
-      'orderConfirmedDescription': 'تم تأكيد طلبك من قبل التاجر.',
+      'orderStatusConfirmed': 'تم تأكيد الطلب',
+      'orderStatusConfirmedDescription': 'تم تأكيد طلبك من قبل التاجر.',
       'orderPreparing': 'قيد التحضير',
       'orderPreparingDescription': 'طلبك قيد التحضير.',
       'orderOnTheWay': 'في الطريق',

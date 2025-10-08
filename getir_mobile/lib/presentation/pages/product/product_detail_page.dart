@@ -22,7 +22,8 @@ class ProductDetailPage extends StatefulWidget {
 class _ProductDetailPageState extends State<ProductDetailPage> {
   int _quantity = 1;
   String? _selectedVariantId;
-  String? _selectedVariantName;
+  // ignore: unused_field
+  String? _selectedVariantName; // Reserved for displaying selected variant
   List<String> _selectedOptionIds = [];
   List<String> _selectedOptionNames = [];
   double _totalPrice = 0.0;
@@ -365,7 +366,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     const SizedBox(height: 12),
                     if (option.type == 'single')
                       ...option.values.map<Widget>((value) {
-                        final isSelected = _selectedOptionIds.contains(value.id);
                         return RadioListTile<String>(
                           title: Text(value.name),
                           subtitle: value.price > 0 ? Text('+₺${value.price}') : null,

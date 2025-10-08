@@ -112,6 +112,8 @@ class _SuccessFeedbackState extends State<SuccessFeedback>
   }
 
   /// Show success feedback as overlay
+  /// Reserved for future non-SnackBar feedback
+  // ignore: unused_element
   static void show(
     BuildContext context, {
     required String message,

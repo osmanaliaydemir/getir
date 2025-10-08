@@ -149,7 +149,8 @@ class _TouchFeedbackButtonState extends State<TouchFeedbackButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
-  bool _isPressed = false;
+  // ignore: unused_field
+  bool _isPressed = false; // Reserved for future haptic feedback feature
 
   @override
   void initState() {
