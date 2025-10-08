@@ -1,9 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:injectable/injectable.dart';
 import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/user_entity.dart';
-import '../../../domain/usecases/auth_usecases.dart';
+import '../../../domain/services/auth_service.dart';
 import '../../../core/services/analytics_service.dart';
 
 // Events
@@ -131,29 +130,10 @@ class AuthPasswordResetSuccess extends AuthState {}
 
 // BLoC
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final LoginUseCase _loginUseCase;
-  final RegisterUseCase _registerUseCase;
-  final LogoutUseCase _logoutUseCase;
-  final RefreshTokenUseCase _refreshTokenUseCase;
-  final ForgotPasswordUseCase _forgotPasswordUseCase;
-  final ResetPasswordUseCase _resetPasswordUseCase;
-  final GetCurrentUserUseCase _getCurrentUserUseCase;
-  final CheckAuthenticationUseCase _checkAuthenticationUseCase;
-  final CheckTokenValidityUseCase _checkTokenValidityUseCase;
+  final AuthService _authService;
   final AnalyticsService _analytics;
 
-  AuthBloc(
-    this._loginUseCase,
-    this._registerUseCase,
-    this._logoutUseCase,
-    this._refreshTokenUseCase,
-    this._forgotPasswordUseCase,
-    this._resetPasswordUseCase,
-    this._getCurrentUserUseCase,
-    this._checkAuthenticationUseCase,
-    this._checkTokenValidityUseCase,
-    this._analytics,
-  ) : super(AuthInitial()) {
+  AuthBloc(this._authService, this._analytics) : super(AuthInitial()) {
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
@@ -170,7 +150,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    final result = await _loginUseCase(event.email, event.password);
+    final result = await _authService.login(event.email, event.password);
 
     result.when(
       success: (user) async {
@@ -195,12 +175,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    final result = await _registerUseCase(
-      event.email,
-      event.password,
-      event.firstName,
-      event.lastName,
-      phoneNumber: event.phoneNumber,
+    final result = await _authService.register(
+      email: event.email,
+      password: event.password,
+      firstName: event.firstName,
+      lastName: event.lastName,
+      phoneNumber: event.phoneNumber ?? '',
     );
 
     result.when(
@@ -228,7 +208,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    final result = await _logoutUseCase();
+    final result = await _authService.logout();
 
     result.when(
       success: (_) async {
@@ -254,7 +234,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthRefreshTokenRequested event,
     Emitter<AuthState> emit,
   ) async {
-    final result = await _refreshTokenUseCase(event.refreshToken);
+    final result = await _authService.refreshToken();
 
     result.when(
       success: (user) => emit(AuthAuthenticated(user)),
@@ -271,7 +251,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    final result = await _forgotPasswordUseCase(event.email);
+    final result = await _authService.forgotPassword(event.email);
 
     result.when(
       success: (_) => emit(AuthPasswordResetSent(event.email)),
@@ -288,7 +268,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    final result = await _resetPasswordUseCase(event.token, event.newPassword);
+    final result = await _authService.resetPassword(
+      email: '', // TODO: Get from state or event
+      resetCode: event.token,
+      newPassword: event.newPassword,
+    );
 
     result.when(
       success: (_) => emit(AuthPasswordResetSuccess()),
@@ -311,43 +295,43 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthCheckAuthenticationRequested event,
     Emitter<AuthState> emit,
   ) async {
-    try {
-      final isAuthenticated = await _checkAuthenticationUseCase();
+    final authResult = await _authService.checkAuthentication();
 
-      if (isAuthenticated) {
-        final user = await _getCurrentUserUseCase();
-        if (user != null) {
-          emit(AuthAuthenticated(user));
+    authResult.when(
+      success: (isAuthenticated) async {
+        if (isAuthenticated) {
+          final userResult = await _authService.getCurrentUser();
+          userResult.when(
+            success: (user) => emit(AuthAuthenticated(user)),
+            failure: (_) => emit(AuthUnauthenticated()),
+          );
         } else {
           emit(AuthUnauthenticated());
         }
-      } else {
-        emit(AuthUnauthenticated());
-      }
-    } catch (e) {
-      emit(AuthError(e.toString()));
-    }
+      },
+      failure: (_) => emit(AuthUnauthenticated()),
+    );
   }
 
   Future<void> _onCheckTokenValidityRequested(
     AuthCheckTokenValidityRequested event,
     Emitter<AuthState> emit,
   ) async {
-    try {
-      final isTokenValid = await _checkTokenValidityUseCase();
+    final tokenResult = await _authService.checkTokenValidity();
 
-      if (isTokenValid) {
-        final user = await _getCurrentUserUseCase();
-        if (user != null) {
-          emit(AuthAuthenticated(user));
+    tokenResult.when(
+      success: (isValid) async {
+        if (isValid) {
+          final userResult = await _authService.getCurrentUser();
+          userResult.when(
+            success: (user) => emit(AuthAuthenticated(user)),
+            failure: (_) => emit(AuthUnauthenticated()),
+          );
         } else {
           emit(AuthUnauthenticated());
         }
-      } else {
-        emit(AuthUnauthenticated());
-      }
-    } catch (e) {
-      emit(AuthError(e.toString()));
-    }
+      },
+      failure: (_) => emit(AuthUnauthenticated()),
+    );
   }
 }

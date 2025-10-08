@@ -2,7 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/cart.dart';
-import '../../../domain/usecases/cart_usecases.dart';
+import '../../../domain/services/cart_service.dart';
 import '../../../core/services/analytics_service.dart';
 
 // Events
@@ -141,33 +141,10 @@ class CartError extends CartState {
 
 // BLoC
 class CartBloc extends Bloc<CartEvent, CartState> {
-  final GetCartUseCase _getCartUseCase;
-  final AddToCartUseCase _addToCartUseCase;
-  final UpdateCartItemUseCase _updateCartItemUseCase;
-  final RemoveFromCartUseCase _removeFromCartUseCase;
-  final ClearCartUseCase _clearCartUseCase;
-  final ApplyCouponUseCase _applyCouponUseCase;
-  final RemoveCouponUseCase _removeCouponUseCase;
+  final CartService _cartService;
   final AnalyticsService _analytics;
 
-  CartBloc({
-    required GetCartUseCase getCartUseCase,
-    required AddToCartUseCase addToCartUseCase,
-    required UpdateCartItemUseCase updateCartItemUseCase,
-    required RemoveFromCartUseCase removeFromCartUseCase,
-    required ClearCartUseCase clearCartUseCase,
-    required ApplyCouponUseCase applyCouponUseCase,
-    required RemoveCouponUseCase removeCouponUseCase,
-    required AnalyticsService analytics,
-  }) : _getCartUseCase = getCartUseCase,
-       _addToCartUseCase = addToCartUseCase,
-       _updateCartItemUseCase = updateCartItemUseCase,
-       _removeFromCartUseCase = removeFromCartUseCase,
-       _clearCartUseCase = clearCartUseCase,
-       _applyCouponUseCase = applyCouponUseCase,
-       _removeCouponUseCase = removeCouponUseCase,
-       _analytics = analytics,
-       super(CartInitial()) {
+  CartBloc(this._cartService, this._analytics) : super(CartInitial()) {
     on<LoadCart>(_onLoadCart);
     on<AddToCart>(_onAddToCart);
     on<UpdateCartItem>(_onUpdateCartItem);
@@ -181,7 +158,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   Future<void> _onLoadCart(LoadCart event, Emitter<CartState> emit) async {
     emit(CartLoading());
 
-    final result = await _getCartUseCase();
+    final result = await _cartService.getCart();
 
     result.when(
       success: (cart) => emit(CartLoaded(cart)),
@@ -197,7 +174,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     Emitter<CartState> emit,
   ) async {
     // Strategy: backend is source of truth
-    final result = await _getCartUseCase();
+    final result = await _cartService.getCart();
 
     result.when(
       success: (cart) => emit(CartLoaded(cart)),
@@ -209,7 +186,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   }
 
   Future<void> _onAddToCart(AddToCart event, Emitter<CartState> emit) async {
-    final result = await _addToCartUseCase(
+    final result = await _cartService.addToCart(
       productId: event.productId,
       quantity: event.quantity,
       variantId: event.variantId,
@@ -248,8 +225,8 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     UpdateCartItem event,
     Emitter<CartState> emit,
   ) async {
-    final result = await _updateCartItemUseCase(
-      itemId: event.itemId,
+    final result = await _cartService.updateCartItem(
+      cartItemId: event.itemId,
       quantity: event.quantity,
     );
 
@@ -270,7 +247,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     RemoveFromCart event,
     Emitter<CartState> emit,
   ) async {
-    final result = await _removeFromCartUseCase(event.itemId);
+    final result = await _cartService.removeFromCart(event.itemId);
 
     result.when(
       success: (_) async {
@@ -296,7 +273,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   }
 
   Future<void> _onClearCart(ClearCart event, Emitter<CartState> emit) async {
-    final result = await _clearCartUseCase();
+    final result = await _cartService.clearCart();
 
     result.when(
       success: (_) {
@@ -315,7 +292,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     ApplyCoupon event,
     Emitter<CartState> emit,
   ) async {
-    final result = await _applyCouponUseCase(event.couponCode);
+    final result = await _cartService.applyCoupon(event.couponCode);
 
     result.when(
       success: (cart) => emit(CartLoaded(cart)),
@@ -330,7 +307,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     RemoveCoupon event,
     Emitter<CartState> emit,
   ) async {
-    final result = await _removeCouponUseCase();
+    final result = await _cartService.removeCoupon();
 
     result.when(
       success: (cart) => emit(CartLoaded(cart)),

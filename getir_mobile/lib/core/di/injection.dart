@@ -34,17 +34,17 @@ import '../../data/repositories/notifications_feed_repository_impl.dart';
 import '../../data/repositories/working_hours_repository_impl.dart';
 import '../../data/repositories/review_repository_impl.dart';
 
-// Use Cases
-import '../../domain/usecases/auth_usecases.dart';
-import '../../domain/usecases/merchant_usecases.dart';
-import '../../domain/usecases/product_usecases.dart';
-import '../../domain/usecases/cart_usecases.dart';
-import '../../domain/usecases/address_usecases.dart';
-import '../../domain/usecases/order_usecases.dart';
-import '../../domain/usecases/profile_usecases.dart';
-import '../../domain/usecases/notification_usecases.dart';
-import '../../domain/usecases/working_hours_usecases.dart';
-import '../../domain/usecases/review_usecases.dart';
+// Services (replaces 49 Use Case classes)
+import '../../domain/services/auth_service.dart';
+import '../../domain/services/merchant_service.dart';
+import '../../domain/services/product_service.dart';
+import '../../domain/services/cart_service.dart';
+import '../../domain/services/address_service.dart';
+import '../../domain/services/order_service.dart';
+import '../../domain/services/profile_service.dart';
+import '../../domain/services/notification_service.dart';
+import '../../domain/services/working_hours_service.dart';
+import '../../domain/services/review_service.dart';
 
 // BLoCs
 import '../../presentation/bloc/auth/auth_bloc.dart';
@@ -93,7 +93,7 @@ Future<void> configureDependencies() async {
   // Register all datasources, repositories, use cases, and BLoCs
   _registerDatasources();
   _registerRepositories();
-  _registerUseCases();
+  _registerServices();
   _registerBlocs();
   _registerOtherServices(prefs);
 }
@@ -130,96 +130,26 @@ void _registerRepositories() {
 
 void _registerOtherServices(SharedPreferences prefs) {
   getIt.registerLazySingleton(() => SearchHistoryService(prefs));
-
-  // Register Use Cases
-  _registerUseCases();
 }
 
-void _registerUseCases() {
-  // Auth Use Cases
-  getIt.registerFactory(() => LoginUseCase(getIt()));
-  getIt.registerFactory(() => RegisterUseCase(getIt()));
-  getIt.registerFactory(() => LogoutUseCase(getIt()));
-  getIt.registerFactory(() => RefreshTokenUseCase(getIt()));
-  getIt.registerFactory(() => ForgotPasswordUseCase(getIt()));
-  getIt.registerFactory(() => ResetPasswordUseCase(getIt()));
-  getIt.registerFactory(() => GetCurrentUserUseCase(getIt()));
-  getIt.registerFactory(() => CheckAuthenticationUseCase(getIt()));
-  getIt.registerFactory(() => CheckTokenValidityUseCase(getIt()));
-
-  // Merchant Use Cases
-  getIt.registerFactory(() => GetMerchantsUseCase(getIt()));
-  getIt.registerFactory(() => GetMerchantByIdUseCase(getIt()));
-  getIt.registerFactory(() => SearchMerchantsUseCase(getIt()));
-  getIt.registerFactory(() => GetNearbyMerchantsUseCase(getIt()));
-  getIt.registerFactory(() => GetNearbyMerchantsByCategoryUseCase(getIt()));
-
-  // Product Use Cases
-  getIt.registerFactory(() => GetProductsUseCase(getIt()));
-  getIt.registerFactory(() => GetProductByIdUseCase(getIt()));
-  getIt.registerFactory(() => GetProductsByMerchantUseCase(getIt()));
-  getIt.registerFactory(() => SearchProductsUseCase(getIt()));
-  getIt.registerFactory(() => GetCategoriesUseCase(getIt()));
-
-  // Cart Use Cases
-  getIt.registerFactory(() => GetCartUseCase(getIt()));
-  getIt.registerFactory(() => AddToCartUseCase(getIt()));
-  getIt.registerFactory(() => UpdateCartItemUseCase(getIt()));
-  getIt.registerFactory(() => RemoveFromCartUseCase(getIt()));
-  getIt.registerFactory(() => ClearCartUseCase(getIt()));
-  getIt.registerFactory(() => ApplyCouponUseCase(getIt()));
-  getIt.registerFactory(() => RemoveCouponUseCase(getIt()));
-
-  // Address Use Cases
-  getIt.registerFactory(() => GetUserAddressesUseCase(getIt()));
-  getIt.registerFactory(() => GetAddressByIdUseCase(getIt()));
-  getIt.registerFactory(() => CreateAddressUseCase(getIt()));
-  getIt.registerFactory(() => UpdateAddressUseCase(getIt()));
-  getIt.registerFactory(() => DeleteAddressUseCase(getIt()));
-  getIt.registerFactory(() => SetDefaultAddressUseCase(getIt()));
-
-  // Order Use Cases
-  getIt.registerFactory(() => GetUserOrdersUseCase(getIt()));
-  getIt.registerFactory(() => GetOrderByIdUseCase(getIt()));
-  getIt.registerFactory(() => CreateOrderUseCase(getIt()));
-  getIt.registerFactory(() => CancelOrderUseCase(getIt()));
-  getIt.registerFactory(() => ProcessPaymentUseCase(getIt()));
-  getIt.registerFactory(() => GetPaymentStatusUseCase(getIt()));
-
-  // Profile Use Cases
-  getIt.registerFactory(() => GetUserProfileUseCase(getIt()));
-  getIt.registerFactory(() => UpdateUserProfileUseCase(getIt()));
-
-  // Notification Use Cases
-  getIt.registerFactory(() => GetNotificationPreferencesUseCase(getIt()));
-  getIt.registerFactory(() => UpdateNotificationPreferencesUseCase(getIt()));
-
-  // Working Hours Use Cases
-  getIt.registerFactory(() => GetWorkingHoursUseCase(getIt()));
-  getIt.registerFactory(() => CheckIfMerchantOpenUseCase(getIt()));
-  getIt.registerFactory(() => GetNextOpenTimeUseCase(getIt()));
-
-  // Review Use Cases
-  getIt.registerFactory(() => SubmitReviewUseCase(getIt()));
-  getIt.registerFactory(() => GetMerchantReviewsUseCase(getIt()));
-  getIt.registerFactory(() => MarkReviewAsHelpfulUseCase(getIt()));
+/// Registers domain services (replaces 49 UseCase registrations!)
+void _registerServices() {
+  getIt.registerFactory(() => AuthService(getIt()));
+  getIt.registerFactory(() => MerchantService(getIt()));
+  getIt.registerFactory(() => ProductService(getIt()));
+  getIt.registerFactory(() => CartService(getIt()));
+  getIt.registerFactory(() => AddressService(getIt()));
+  getIt.registerFactory(() => OrderService(getIt()));
+  getIt.registerFactory(() => ProfileService(getIt()));
+  getIt.registerFactory(() => NotificationService(getIt()));
+  getIt.registerFactory(() => WorkingHoursService(getIt()));
+  getIt.registerFactory(() => ReviewService(getIt()));
 }
 
 void _registerBlocs() {
-  // AuthBloc
+  // AuthBloc (2 dependencies instead of 10!)
   getIt.registerFactory(
-    () => AuthBloc(
-      getIt(), // LoginUseCase
-      getIt(), // RegisterUseCase
-      getIt(), // LogoutUseCase
-      getIt(), // RefreshTokenUseCase
-      getIt(), // ForgotPasswordUseCase
-      getIt(), // ResetPasswordUseCase
-      getIt(), // GetCurrentUserUseCase
-      getIt(), // CheckAuthenticationUseCase
-      getIt(), // CheckTokenValidityUseCase
-      getIt(), // AnalyticsService
-    ),
+    () => AuthBloc(getIt<AuthService>(), getIt<AnalyticsService>()),
   );
 
   // MerchantBloc
@@ -246,16 +176,7 @@ void _registerBlocs() {
 
   // CartBloc
   getIt.registerFactory(
-    () => CartBloc(
-      getCartUseCase: getIt(),
-      addToCartUseCase: getIt(),
-      updateCartItemUseCase: getIt(),
-      removeFromCartUseCase: getIt(),
-      clearCartUseCase: getIt(),
-      applyCouponUseCase: getIt(),
-      removeCouponUseCase: getIt(),
-      analytics: getIt(),
-    ),
+    () => CartBloc(getIt<CartService>(), getIt<AnalyticsService>()),
   );
 
   // AddressBloc
