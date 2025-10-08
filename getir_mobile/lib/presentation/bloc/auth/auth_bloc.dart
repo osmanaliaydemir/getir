@@ -69,16 +69,18 @@ class AuthForgotPasswordRequested extends AuthEvent {
 }
 
 class AuthResetPasswordRequested extends AuthEvent {
+  final String email;
   final String token;
   final String newPassword;
 
   const AuthResetPasswordRequested({
+    required this.email,
     required this.token,
     required this.newPassword,
   });
 
   @override
-  List<Object> get props => [token, newPassword];
+  List<Object> get props => [email, token, newPassword];
 }
 
 class AuthCheckAuthenticationRequested extends AuthEvent {}
@@ -269,7 +271,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
 
     final result = await _authService.resetPassword(
-      email: '', // TODO: Get from state or event
+      email: event.email,
       resetCode: event.token,
       newPassword: event.newPassword,
     );
