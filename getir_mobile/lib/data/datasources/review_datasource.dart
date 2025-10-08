@@ -41,7 +41,7 @@ class ReviewDataSourceImpl implements ReviewDataSource {
   Future<Review> submitReview(SubmitReviewRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/reviews',
+        '/api/v1/Review',
         data: request.toJson(),
       );
 
@@ -71,7 +71,7 @@ class ReviewDataSourceImpl implements ReviewDataSource {
   }) async {
     try {
       final response = await _dio.get(
-        '/api/v1/reviews/merchant/$merchantId',
+        '/api/v1/Review/merchant/$merchantId',
         queryParameters: {'pageNumber': page, 'pageSize': pageSize},
       );
 
@@ -93,7 +93,7 @@ class ReviewDataSourceImpl implements ReviewDataSource {
   }) async {
     try {
       final response = await _dio.get(
-        '/api/v1/reviews/courier/$courierId',
+        '/api/v1/Review/courier/$courierId',
         queryParameters: {'pageNumber': page, 'pageSize': pageSize},
       );
 
@@ -110,7 +110,7 @@ class ReviewDataSourceImpl implements ReviewDataSource {
   @override
   Future<Review> getReviewById(String reviewId) async {
     try {
-      final response = await _dio.get('/api/v1/reviews/$reviewId');
+      final response = await _dio.get('/api/v1/Review/$reviewId');
       final data = response.data['data'] ?? response.data;
       return _reviewFromJson(data);
     } catch (e) {
@@ -121,7 +121,7 @@ class ReviewDataSourceImpl implements ReviewDataSource {
   @override
   Future<void> markReviewAsHelpful(String reviewId) async {
     try {
-      await _dio.post('/api/v1/reviews/$reviewId/helpful');
+      await _dio.post('/api/v1/Review/$reviewId/helpful');
     } catch (e) {
       throw Exception('Failed to mark review as helpful: $e');
     }
@@ -135,7 +135,7 @@ class ReviewDataSourceImpl implements ReviewDataSource {
   }) async {
     try {
       final response = await _dio.put(
-        '/api/v1/reviews/$reviewId',
+        '/api/v1/Review/$reviewId',
         data: {
           if (rating != null) 'rating': rating,
           if (comment != null) 'comment': comment,
@@ -152,7 +152,7 @@ class ReviewDataSourceImpl implements ReviewDataSource {
   @override
   Future<void> deleteReview(String reviewId) async {
     try {
-      await _dio.delete('/api/v1/reviews/$reviewId');
+      await _dio.delete('/api/v1/Review/$reviewId');
     } catch (e) {
       throw Exception('Failed to delete review: $e');
     }

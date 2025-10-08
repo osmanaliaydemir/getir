@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/app_exceptions.dart';
 import 'search_event.dart';
 import 'search_state.dart';
 import '../../../domain/usecases/merchant_usecases.dart';
@@ -88,45 +89,75 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
 
     emit(SearchLoading(searchType: searchType));
 
-    try {
-      // Save to search history
-      await _searchHistoryService.addSearchQuery(event.query.trim());
+    // Save to search history
+    await _searchHistoryService.addSearchQuery(event.query.trim());
 
-      switch (searchType) {
-        case SearchType.all:
-          final merchants = await _searchMerchantsUseCase(event.query.trim());
-          final products = await _searchProductsUseCase(event.query.trim());
+    switch (searchType) {
+      case SearchType.all:
+        final merchantsResult =
+            await _searchMerchantsUseCase(event.query.trim());
+        final productsResult =
+            await _searchProductsUseCase(event.query.trim());
+
+        // Check if both succeeded
+        if (merchantsResult.isSuccess && productsResult.isSuccess) {
           emit(SearchSuccess(
-            merchants: merchants,
-            products: products,
+            merchants: merchantsResult.data,
+            products: productsResult.data,
             query: event.query.trim(),
             searchType: searchType,
           ));
-          break;
+        } else {
+          // If either failed, show error from the first failure
+          final exception =
+              merchantsResult.exceptionOrNull ?? productsResult.exceptionOrNull;
+          final message = _getErrorMessage(exception!);
+          emit(SearchError(message));
+        }
+        break;
 
-        case SearchType.merchants:
-          final merchants = await _searchMerchantsUseCase(event.query.trim());
-          emit(SearchSuccess(
+      case SearchType.merchants:
+        final result = await _searchMerchantsUseCase(event.query.trim());
+
+        result.when(
+          success: (merchants) => emit(SearchSuccess(
             merchants: merchants,
             products: const [],
             query: event.query.trim(),
             searchType: searchType,
-          ));
-          break;
+          )),
+          failure: (exception) {
+            final message = _getErrorMessage(exception);
+            emit(SearchError(message));
+          },
+        );
+        break;
 
-        case SearchType.products:
-          final products = await _searchProductsUseCase(event.query.trim());
-          emit(SearchSuccess(
+      case SearchType.products:
+        final result = await _searchProductsUseCase(event.query.trim());
+
+        result.when(
+          success: (products) => emit(SearchSuccess(
             merchants: const [],
             products: products,
             query: event.query.trim(),
             searchType: searchType,
-          ));
-          break;
-      }
-    } catch (e) {
-      emit(SearchError(e.toString()));
+          )),
+          failure: (exception) {
+            final message = _getErrorMessage(exception);
+            emit(SearchError(message));
+          },
+        );
+        break;
     }
+  }
+
+  /// Extract user-friendly error message from exception
+  String _getErrorMessage(Exception exception) {
+    if (exception is AppException) {
+      return exception.message;
+    }
+    return 'An unexpected error occurred';
   }
 
   Future<void> _onSearchHistoryLoaded(

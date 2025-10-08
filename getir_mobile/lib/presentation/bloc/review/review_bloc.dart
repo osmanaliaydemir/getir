@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/usecases/review_usecases.dart';
 import 'review_event.dart';
 import 'review_state.dart';
@@ -12,10 +13,10 @@ class ReviewBloc extends Bloc<ReviewEvent, ReviewState> {
     required SubmitReviewUseCase submitReviewUseCase,
     required GetMerchantReviewsUseCase getMerchantReviewsUseCase,
     required MarkReviewAsHelpfulUseCase markReviewAsHelpfulUseCase,
-  }) : _submitReviewUseCase = submitReviewUseCase,
-       _getMerchantReviewsUseCase = getMerchantReviewsUseCase,
-       _markReviewAsHelpfulUseCase = markReviewAsHelpfulUseCase,
-       super(ReviewInitial()) {
+  })  : _submitReviewUseCase = submitReviewUseCase,
+        _getMerchantReviewsUseCase = getMerchantReviewsUseCase,
+        _markReviewAsHelpfulUseCase = markReviewAsHelpfulUseCase,
+        super(ReviewInitial()) {
     on<SubmitReview>(_onSubmitReview);
     on<LoadMerchantReviews>(_onLoadMerchantReviews);
     on<MarkReviewHelpful>(_onMarkReviewHelpful);
@@ -26,12 +27,16 @@ class ReviewBloc extends Bloc<ReviewEvent, ReviewState> {
     Emitter<ReviewState> emit,
   ) async {
     emit(ReviewLoading());
-    try {
-      final review = await _submitReviewUseCase(event.request);
-      emit(ReviewSubmitted(review));
-    } catch (e) {
-      emit(ReviewError(e.toString()));
-    }
+
+    final result = await _submitReviewUseCase(event.request);
+
+    result.when(
+      success: (review) => emit(ReviewSubmitted(review)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(ReviewError(message));
+      },
+    );
   }
 
   Future<void> _onLoadMerchantReviews(
@@ -39,26 +44,42 @@ class ReviewBloc extends Bloc<ReviewEvent, ReviewState> {
     Emitter<ReviewState> emit,
   ) async {
     emit(ReviewLoading());
-    try {
-      final reviews = await _getMerchantReviewsUseCase(
-        event.merchantId,
-        page: event.page,
-      );
-      emit(ReviewsLoaded(reviews, hasMore: reviews.length >= 20));
-    } catch (e) {
-      emit(ReviewError(e.toString()));
-    }
+
+    final result = await _getMerchantReviewsUseCase(
+      event.merchantId,
+      page: event.page,
+    );
+
+    result.when(
+      success: (reviews) =>
+          emit(ReviewsLoaded(reviews, hasMore: reviews.length >= 20)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(ReviewError(message));
+      },
+    );
   }
 
   Future<void> _onMarkReviewHelpful(
     MarkReviewHelpful event,
     Emitter<ReviewState> emit,
   ) async {
-    try {
-      await _markReviewAsHelpfulUseCase(event.reviewId);
-      emit(ReviewMarkedHelpful(event.reviewId));
-    } catch (e) {
-      emit(ReviewError(e.toString()));
+    final result = await _markReviewAsHelpfulUseCase(event.reviewId);
+
+    result.when(
+      success: (_) => emit(ReviewMarkedHelpful(event.reviewId)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(ReviewError(message));
+      },
+    );
+  }
+
+  /// Extract user-friendly error message from exception
+  String _getErrorMessage(Exception exception) {
+    if (exception is AppException) {
+      return exception.message;
     }
+    return 'An unexpected error occurred';
   }
 }

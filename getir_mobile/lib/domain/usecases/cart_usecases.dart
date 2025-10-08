@@ -1,52 +1,40 @@
+import '../../core/errors/app_exceptions.dart';
+import '../../core/errors/result.dart';
 import '../entities/cart.dart';
 import '../repositories/cart_repository.dart';
 
 /// Get Cart Use Case
-///
-/// Retrieves current user's shopping cart.
-///
-/// **Current Implementation:** Simple repository wrapper
-/// **Future Enhancements:**
-/// - Validate cart items (stock availability)
-/// - Calculate dynamic pricing (time-based discounts)
-/// - Apply automatic coupons
-/// - Merge local/server cart intelligently
 class GetCartUseCase {
   final CartRepository _repository;
 
   GetCartUseCase(this._repository);
 
-  Future<Cart> call() async {
+  Future<Result<Cart>> call() async {
     return await _repository.getCart();
   }
 }
 
 /// Add To Cart Use Case
-///
-/// Adds a product to the shopping cart.
-///
-/// **Current Implementation:** Simple repository wrapper
-/// **Future Enhancements:**
-/// - Stock availability check before adding
-/// - Maximum quantity limit validation
-/// - Product price change detection
-/// - Cross-sell/upsell recommendations
-/// - Analytics tracking (add_to_cart event)
 class AddToCartUseCase {
   final CartRepository _repository;
 
   AddToCartUseCase(this._repository);
 
-  Future<CartItem> call({
+  Future<Result<CartItem>> call({
     required String productId,
     required int quantity,
     String? variantId,
     List<String>? optionIds,
   }) async {
-    // TODO: Add business logic
-    // - Validate quantity > 0
-    // - Check stock availability
-    // - Validate product exists and is active
+    // Validate quantity
+    if (quantity <= 0) {
+      return Result.failure(
+        const ValidationException(
+          message: 'Quantity must be greater than 0',
+          code: 'INVALID_QUANTITY',
+        ),
+      );
+    }
 
     return await _repository.addToCart(
       productId: productId,
@@ -57,52 +45,88 @@ class AddToCartUseCase {
   }
 }
 
+/// Update Cart Item Use Case
 class UpdateCartItemUseCase {
   final CartRepository _repository;
 
   UpdateCartItemUseCase(this._repository);
 
-  Future<CartItem> call({required String itemId, required int quantity}) async {
+  Future<Result<CartItem>> call({
+    required String itemId,
+    required int quantity,
+  }) async {
+    // Validate quantity
+    if (quantity <= 0) {
+      return Result.failure(
+        const ValidationException(
+          message: 'Quantity must be greater than 0',
+          code: 'INVALID_QUANTITY',
+        ),
+      );
+    }
+
     return await _repository.updateCartItem(itemId: itemId, quantity: quantity);
   }
 }
 
+/// Remove From Cart Use Case
 class RemoveFromCartUseCase {
   final CartRepository _repository;
 
   RemoveFromCartUseCase(this._repository);
 
-  Future<void> call(String itemId) async {
+  Future<Result<void>> call(String itemId) async {
+    if (itemId.isEmpty) {
+      return Result.failure(
+        const ValidationException(
+          message: 'Item ID cannot be empty',
+          code: 'EMPTY_ITEM_ID',
+        ),
+      );
+    }
+
     return await _repository.removeFromCart(itemId);
   }
 }
 
+/// Clear Cart Use Case
 class ClearCartUseCase {
   final CartRepository _repository;
 
   ClearCartUseCase(this._repository);
 
-  Future<void> call() async {
+  Future<Result<void>> call() async {
     return await _repository.clearCart();
   }
 }
 
+/// Apply Coupon Use Case
 class ApplyCouponUseCase {
   final CartRepository _repository;
 
   ApplyCouponUseCase(this._repository);
 
-  Future<Cart> call(String couponCode) async {
+  Future<Result<Cart>> call(String couponCode) async {
+    if (couponCode.isEmpty) {
+      return Result.failure(
+        const ValidationException(
+          message: 'Coupon code cannot be empty',
+          code: 'EMPTY_COUPON_CODE',
+        ),
+      );
+    }
+
     return await _repository.applyCoupon(couponCode);
   }
 }
 
+/// Remove Coupon Use Case
 class RemoveCouponUseCase {
   final CartRepository _repository;
 
   RemoveCouponUseCase(this._repository);
 
-  Future<Cart> call() async {
+  Future<Result<Cart>> call() async {
     return await _repository.removeCoupon();
   }
 }

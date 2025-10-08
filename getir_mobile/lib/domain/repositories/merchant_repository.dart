@@ -1,7 +1,8 @@
+import '../../core/errors/result.dart';
 import '../entities/merchant.dart';
 
 abstract class MerchantRepository {
-  Future<List<Merchant>> getMerchants({
+  Future<Result<List<Merchant>>> getMerchants({
     int page = 1,
     int limit = 20,
     String? search,
@@ -11,15 +12,15 @@ abstract class MerchantRepository {
     double? radius,
   });
 
-  Future<Merchant> getMerchantById(String id);
-  Future<List<Merchant>> searchMerchants(String query);
-  Future<List<Merchant>> getNearbyMerchants({
+  Future<Result<Merchant>> getMerchantById(String id);
+  Future<Result<List<Merchant>>> searchMerchants(String query);
+  Future<Result<List<Merchant>>> getNearbyMerchants({
     required double latitude,
     required double longitude,
     double radius = 5.0,
   });
 
-  Future<List<Merchant>> getNearbyMerchantsByCategory({
+  Future<Result<List<Merchant>>> getNearbyMerchantsByCategory({
     required double latitude,
     required double longitude,
     required int categoryType,

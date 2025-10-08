@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/merchant.dart';
 import '../../../domain/usecases/merchant_usecases.dart';
 
@@ -167,20 +168,24 @@ class MerchantBloc extends Bloc<MerchantEvent, MerchantState> {
     Emitter<MerchantState> emit,
   ) async {
     emit(MerchantLoading());
-    try {
-      final merchants = await _getMerchantsUseCase(
-        page: event.page,
-        limit: event.limit,
-        search: event.search,
-        category: event.category,
-        latitude: event.latitude,
-        longitude: event.longitude,
-        radius: event.radius,
-      );
-      emit(MerchantsLoaded(merchants));
-    } catch (e) {
-      emit(MerchantError(e.toString()));
-    }
+
+    final result = await _getMerchantsUseCase(
+      page: event.page,
+      limit: event.limit,
+      search: event.search,
+      category: event.category,
+      latitude: event.latitude,
+      longitude: event.longitude,
+      radius: event.radius,
+    );
+
+    result.when(
+      success: (merchants) => emit(MerchantsLoaded(merchants)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(MerchantError(message));
+      },
+    );
   }
 
   Future<void> _onLoadMerchantById(
@@ -188,12 +193,16 @@ class MerchantBloc extends Bloc<MerchantEvent, MerchantState> {
     Emitter<MerchantState> emit,
   ) async {
     emit(MerchantLoading());
-    try {
-      final merchant = await _getMerchantByIdUseCase(event.id);
-      emit(MerchantLoaded(merchant));
-    } catch (e) {
-      emit(MerchantError(e.toString()));
-    }
+
+    final result = await _getMerchantByIdUseCase(event.id);
+
+    result.when(
+      success: (merchant) => emit(MerchantLoaded(merchant)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(MerchantError(message));
+      },
+    );
   }
 
   Future<void> _onSearchMerchants(
@@ -201,12 +210,16 @@ class MerchantBloc extends Bloc<MerchantEvent, MerchantState> {
     Emitter<MerchantState> emit,
   ) async {
     emit(MerchantLoading());
-    try {
-      final merchants = await _searchMerchantsUseCase(event.query);
-      emit(MerchantsLoaded(merchants));
-    } catch (e) {
-      emit(MerchantError(e.toString()));
-    }
+
+    final result = await _searchMerchantsUseCase(event.query);
+
+    result.when(
+      success: (merchants) => emit(MerchantsLoaded(merchants)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(MerchantError(message));
+      },
+    );
   }
 
   Future<void> _onLoadNearbyMerchants(
@@ -214,16 +227,20 @@ class MerchantBloc extends Bloc<MerchantEvent, MerchantState> {
     Emitter<MerchantState> emit,
   ) async {
     emit(MerchantLoading());
-    try {
-      final merchants = await _getNearbyMerchantsUseCase(
-        latitude: event.latitude,
-        longitude: event.longitude,
-        radius: event.radius,
-      );
-      emit(MerchantsLoaded(merchants));
-    } catch (e) {
-      emit(MerchantError(e.toString()));
-    }
+
+    final result = await _getNearbyMerchantsUseCase(
+      latitude: event.latitude,
+      longitude: event.longitude,
+      radius: event.radius,
+    );
+
+    result.when(
+      success: (merchants) => emit(MerchantsLoaded(merchants)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(MerchantError(message));
+      },
+    );
   }
 
   Future<void> _onLoadNearbyMerchantsByCategory(
@@ -231,16 +248,28 @@ class MerchantBloc extends Bloc<MerchantEvent, MerchantState> {
     Emitter<MerchantState> emit,
   ) async {
     emit(MerchantLoading());
-    try {
-      final merchants = await _getNearbyMerchantsByCategoryUseCase(
-        latitude: event.latitude,
-        longitude: event.longitude,
-        categoryType: event.categoryType,
-        radius: event.radius,
-      );
-      emit(MerchantsLoaded(merchants));
-    } catch (e) {
-      emit(MerchantError(e.toString()));
+
+    final result = await _getNearbyMerchantsByCategoryUseCase(
+      latitude: event.latitude,
+      longitude: event.longitude,
+      categoryType: event.categoryType,
+      radius: event.radius,
+    );
+
+    result.when(
+      success: (merchants) => emit(MerchantsLoaded(merchants)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(MerchantError(message));
+      },
+    );
+  }
+
+  /// Extract user-friendly error message from exception
+  String _getErrorMessage(Exception exception) {
+    if (exception is AppException) {
+      return exception.message;
     }
+    return 'An unexpected error occurred';
   }
 }

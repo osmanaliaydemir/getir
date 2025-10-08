@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/address.dart';
 import '../../../domain/usecases/address_usecases.dart';
 import '../../../data/datasources/address_datasource.dart';
@@ -151,13 +152,13 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     required UpdateAddressUseCase updateAddressUseCase,
     required DeleteAddressUseCase deleteAddressUseCase,
     required SetDefaultAddressUseCase setDefaultAddressUseCase,
-  })  : _getUserAddressesUseCase = getUserAddressesUseCase,
-        _getAddressByIdUseCase = getAddressByIdUseCase,
-        _createAddressUseCase = createAddressUseCase,
-        _updateAddressUseCase = updateAddressUseCase,
-        _deleteAddressUseCase = deleteAddressUseCase,
-        _setDefaultAddressUseCase = setDefaultAddressUseCase,
-        super(AddressInitial()) {
+  }) : _getUserAddressesUseCase = getUserAddressesUseCase,
+       _getAddressByIdUseCase = getAddressByIdUseCase,
+       _createAddressUseCase = createAddressUseCase,
+       _updateAddressUseCase = updateAddressUseCase,
+       _deleteAddressUseCase = deleteAddressUseCase,
+       _setDefaultAddressUseCase = setDefaultAddressUseCase,
+       super(AddressInitial()) {
     on<LoadUserAddresses>(_onLoadUserAddresses);
     on<LoadAddressById>(_onLoadAddressById);
     on<CreateAddress>(_onCreateAddress);
@@ -171,12 +172,16 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     Emitter<AddressState> emit,
   ) async {
     emit(AddressLoading());
-    try {
-      final addresses = await _getUserAddressesUseCase();
-      emit(AddressesLoaded(addresses));
-    } catch (e) {
-      emit(AddressError(e.toString()));
-    }
+
+    final result = await _getUserAddressesUseCase();
+
+    result.when(
+      success: (addresses) => emit(AddressesLoaded(addresses)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(AddressError(message));
+      },
+    );
   }
 
   Future<void> _onLoadAddressById(
@@ -184,12 +189,16 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     Emitter<AddressState> emit,
   ) async {
     emit(AddressLoading());
-    try {
-      final address = await _getAddressByIdUseCase(event.addressId);
-      emit(AddressLoaded(address));
-    } catch (e) {
-      emit(AddressError(e.toString()));
-    }
+
+    final result = await _getAddressByIdUseCase(event.addressId);
+
+    result.when(
+      success: (address) => emit(AddressLoaded(address)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(AddressError(message));
+      },
+    );
   }
 
   Future<void> _onCreateAddress(
@@ -197,12 +206,16 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     Emitter<AddressState> emit,
   ) async {
     emit(AddressLoading());
-    try {
-      final address = await _createAddressUseCase(event.request);
-      emit(AddressCreated(address));
-    } catch (e) {
-      emit(AddressError(e.toString()));
-    }
+
+    final result = await _createAddressUseCase(event.request);
+
+    result.when(
+      success: (address) => emit(AddressCreated(address)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(AddressError(message));
+      },
+    );
   }
 
   Future<void> _onUpdateAddress(
@@ -210,12 +223,16 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     Emitter<AddressState> emit,
   ) async {
     emit(AddressLoading());
-    try {
-      final address = await _updateAddressUseCase(event.addressId, event.request);
-      emit(AddressUpdated(address));
-    } catch (e) {
-      emit(AddressError(e.toString()));
-    }
+
+    final result = await _updateAddressUseCase(event.addressId, event.request);
+
+    result.when(
+      success: (address) => emit(AddressUpdated(address)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(AddressError(message));
+      },
+    );
   }
 
   Future<void> _onDeleteAddress(
@@ -223,12 +240,16 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     Emitter<AddressState> emit,
   ) async {
     emit(AddressLoading());
-    try {
-      await _deleteAddressUseCase(event.addressId);
-      emit(AddressDeleted(event.addressId));
-    } catch (e) {
-      emit(AddressError(e.toString()));
-    }
+
+    final result = await _deleteAddressUseCase(event.addressId);
+
+    result.when(
+      success: (_) => emit(AddressDeleted(event.addressId)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(AddressError(message));
+      },
+    );
   }
 
   Future<void> _onSetDefaultAddress(
@@ -236,11 +257,23 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     Emitter<AddressState> emit,
   ) async {
     emit(AddressLoading());
-    try {
-      final address = await _setDefaultAddressUseCase(event.addressId);
-      emit(DefaultAddressSet(address));
-    } catch (e) {
-      emit(AddressError(e.toString()));
+
+    final result = await _setDefaultAddressUseCase(event.addressId);
+
+    result.when(
+      success: (address) => emit(DefaultAddressSet(address)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(AddressError(message));
+      },
+    );
+  }
+
+  /// Extract user-friendly error message from exception
+  String _getErrorMessage(Exception exception) {
+    if (exception is AppException) {
+      return exception.message;
     }
+    return 'An unexpected error occurred';
   }
 }

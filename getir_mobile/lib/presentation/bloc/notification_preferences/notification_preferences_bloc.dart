@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/notification_preferences.dart';
 import '../../../domain/usecases/notification_usecases.dart';
 
@@ -17,21 +18,36 @@ class NotificationPreferencesBloc
   }) : super(NotificationPreferencesInitial()) {
     on<LoadNotificationPreferences>((event, emit) async {
       emit(NotificationPreferencesLoading());
-      try {
-        final prefs = await getUseCase();
-        emit(NotificationPreferencesLoaded(prefs));
-      } catch (e) {
-        emit(NotificationPreferencesError(e.toString()));
-      }
+
+      final result = await getUseCase();
+
+      result.when(
+        success: (prefs) => emit(NotificationPreferencesLoaded(prefs)),
+        failure: (exception) {
+          final message = _getErrorMessage(exception);
+          emit(NotificationPreferencesError(message));
+        },
+      );
     });
 
     on<UpdateNotificationPreferencesEvent>((event, emit) async {
-      try {
-        final updated = await updateUseCase(event.preferences);
-        emit(NotificationPreferencesLoaded(updated));
-      } catch (e) {
-        emit(NotificationPreferencesError(e.toString()));
-      }
+      final result = await updateUseCase(event.preferences);
+
+      result.when(
+        success: (updated) => emit(NotificationPreferencesLoaded(updated)),
+        failure: (exception) {
+          final message = _getErrorMessage(exception);
+          emit(NotificationPreferencesError(message));
+        },
+      );
     });
+  }
+
+  /// Extract user-friendly error message from exception
+  String _getErrorMessage(Exception exception) {
+    if (exception is AppException) {
+      return exception.message;
+    }
+    return 'An unexpected error occurred';
   }
 }

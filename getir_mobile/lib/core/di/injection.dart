@@ -1,5 +1,4 @@
 import 'package:get_it/get_it.dart';
-import 'package:injectable/injectable.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
@@ -9,8 +8,8 @@ import 'package:firebase_performance/firebase_performance.dart';
 import '../services/local_storage_service.dart';
 import '../services/encryption_service.dart';
 import '../services/search_history_service.dart';
+import '../services/analytics_service.dart';
 import '../config/environment_config.dart';
-import 'injection.config.dart';
 
 // Manual DI imports (temporary)
 import '../../data/datasources/merchant_datasource.dart';
@@ -23,6 +22,7 @@ import '../../data/datasources/notification_preferences_datasource.dart';
 import '../../data/datasources/notifications_feed_datasource.dart';
 import '../../data/datasources/working_hours_datasource.dart';
 import '../../data/datasources/review_datasource.dart';
+import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/merchant_repository_impl.dart';
 import '../../data/repositories/product_repository_impl.dart';
 import '../../data/repositories/cart_repository_impl.dart';
@@ -35,6 +35,7 @@ import '../../data/repositories/working_hours_repository_impl.dart';
 import '../../data/repositories/review_repository_impl.dart';
 
 // Use Cases
+import '../../domain/usecases/auth_usecases.dart';
 import '../../domain/usecases/merchant_usecases.dart';
 import '../../domain/usecases/product_usecases.dart';
 import '../../domain/usecases/cart_usecases.dart';
@@ -46,6 +47,7 @@ import '../../domain/usecases/working_hours_usecases.dart';
 import '../../domain/usecases/review_usecases.dart';
 
 // BLoCs
+import '../../presentation/bloc/auth/auth_bloc.dart';
 import '../../presentation/bloc/merchant/merchant_bloc.dart';
 import '../../presentation/bloc/product/product_bloc.dart';
 import '../../presentation/bloc/cart/cart_bloc.dart';
@@ -61,23 +63,45 @@ import '../../presentation/bloc/review/review_bloc.dart';
 final GetIt getIt = GetIt.instance;
 
 /// Configure all dependencies
-@InjectableInit(
-  initializerName: 'init',
-  preferRelativeImports: true,
-  asExtension: true,
-)
 Future<void> configureDependencies() async {
-  await getIt.init(); // Injectable-generated registrations
-  registerManualDependencies(); // Manual registrations
+  // Register external dependencies first
+  final prefs = await SharedPreferences.getInstance();
+  getIt.registerSingleton<SharedPreferences>(prefs);
+
+  // Register core services
+  getIt.registerLazySingleton(() => EncryptionService());
+  getIt.registerLazySingleton(() => LocalStorageService());
+
+  // Register Firebase services
+  getIt.registerLazySingleton(() => FirebaseAnalytics.instance);
+  getIt.registerLazySingleton(() => FirebaseCrashlytics.instance);
+  getIt.registerLazySingleton(() => FirebasePerformance.instance);
+
+  // Register Analytics service
+  getIt.registerLazySingleton(
+    () => AnalyticsService(
+      getIt<FirebaseAnalytics>(),
+      getIt<FirebaseCrashlytics>(),
+      getIt<FirebasePerformance>(),
+    ),
+  );
+
+  // Register Dio
+  final dio = _createDio(getIt<EncryptionService>());
+  getIt.registerSingleton<Dio>(dio);
+
+  // Register all datasources, repositories, use cases, and BLoCs
+  _registerDatasources();
+  _registerRepositories();
+  _registerUseCases();
+  _registerBlocs();
+  _registerOtherServices(prefs);
 }
 
-/// Register non-injectable dependencies manually
-void registerManualDependencies() {
-  // Dio is already registered via AppModule
+void _registerDatasources() {
   final dio = getIt<Dio>();
-  final prefs = getIt<SharedPreferences>();
 
-  // Register remaining datasources
+  // Register all datasources
   getIt.registerLazySingleton(() => MerchantDataSourceImpl(dio));
   getIt.registerLazySingleton(() => ProductDataSourceImpl(dio));
   getIt.registerLazySingleton(() => CartDataSourceImpl(dio));
@@ -88,8 +112,10 @@ void registerManualDependencies() {
   getIt.registerLazySingleton(() => NotificationsFeedDataSourceImpl(dio));
   getIt.registerLazySingleton(() => WorkingHoursDataSourceImpl(dio: dio));
   getIt.registerLazySingleton(() => ReviewDataSourceImpl(dio: dio));
+}
 
-  // Register repositories
+void _registerRepositories() {
+  getIt.registerLazySingleton(() => AuthRepositoryImpl(getIt()));
   getIt.registerLazySingleton(() => MerchantRepositoryImpl(getIt()));
   getIt.registerLazySingleton(() => ProductRepositoryImpl(getIt()));
   getIt.registerLazySingleton(() => CartRepositoryImpl(getIt()));
@@ -100,18 +126,27 @@ void registerManualDependencies() {
   getIt.registerLazySingleton(() => NotificationsFeedRepositoryImpl(getIt()));
   getIt.registerLazySingleton(() => WorkingHoursRepositoryImpl(getIt()));
   getIt.registerLazySingleton(() => ReviewRepositoryImpl(getIt()));
+}
 
-  // Register SearchHistoryService
+void _registerOtherServices(SharedPreferences prefs) {
   getIt.registerLazySingleton(() => SearchHistoryService(prefs));
 
   // Register Use Cases
   _registerUseCases();
-
-  // Register BLoCs
-  _registerBlocs();
 }
 
 void _registerUseCases() {
+  // Auth Use Cases
+  getIt.registerFactory(() => LoginUseCase(getIt()));
+  getIt.registerFactory(() => RegisterUseCase(getIt()));
+  getIt.registerFactory(() => LogoutUseCase(getIt()));
+  getIt.registerFactory(() => RefreshTokenUseCase(getIt()));
+  getIt.registerFactory(() => ForgotPasswordUseCase(getIt()));
+  getIt.registerFactory(() => ResetPasswordUseCase(getIt()));
+  getIt.registerFactory(() => GetCurrentUserUseCase(getIt()));
+  getIt.registerFactory(() => CheckAuthenticationUseCase(getIt()));
+  getIt.registerFactory(() => CheckTokenValidityUseCase(getIt()));
+
   // Merchant Use Cases
   getIt.registerFactory(() => GetMerchantsUseCase(getIt()));
   getIt.registerFactory(() => GetMerchantByIdUseCase(getIt()));
@@ -171,6 +206,22 @@ void _registerUseCases() {
 }
 
 void _registerBlocs() {
+  // AuthBloc
+  getIt.registerFactory(
+    () => AuthBloc(
+      getIt(), // LoginUseCase
+      getIt(), // RegisterUseCase
+      getIt(), // LogoutUseCase
+      getIt(), // RefreshTokenUseCase
+      getIt(), // ForgotPasswordUseCase
+      getIt(), // ResetPasswordUseCase
+      getIt(), // GetCurrentUserUseCase
+      getIt(), // CheckAuthenticationUseCase
+      getIt(), // CheckTokenValidityUseCase
+      getIt(), // AnalyticsService
+    ),
+  );
+
   // MerchantBloc
   getIt.registerFactory(
     () => MerchantBloc(
@@ -279,59 +330,30 @@ void _registerBlocs() {
   );
 }
 
-/// Module for external dependencies
-@module
-abstract class AppModule {
-  /// Provide Dio instance with interceptors
-  @lazySingleton
-  Dio provideDio(LocalStorageService storage, EncryptionService encryption) {
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: EnvironmentConfig.apiBaseUrl,
-        connectTimeout: Duration(milliseconds: EnvironmentConfig.apiTimeout),
-        receiveTimeout: Duration(milliseconds: EnvironmentConfig.apiTimeout),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'X-API-Key': EnvironmentConfig.apiKey,
-        },
-      ),
-    );
+/// Create Dio instance with interceptors
+Dio _createDio(EncryptionService encryption) {
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: EnvironmentConfig.apiBaseUrl,
+      connectTimeout: Duration(milliseconds: EnvironmentConfig.apiTimeout),
+      receiveTimeout: Duration(milliseconds: EnvironmentConfig.apiTimeout),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-API-Key': EnvironmentConfig.apiKey,
+      },
+    ),
+  );
 
-    // Add interceptors
-    dio.interceptors.addAll([
-      _AuthInterceptor(encryption),
-      _LoggingInterceptor(),
-      _RetryInterceptor(dio: dio),
-      _ResponseAdapterInterceptor(),
-    ]);
+  // Add interceptors
+  dio.interceptors.addAll([
+    _AuthInterceptor(encryption),
+    _LoggingInterceptor(),
+    _RetryInterceptor(dio: dio),
+    _ResponseAdapterInterceptor(),
+  ]);
 
-    return dio;
-  }
-
-  /// Provide SharedPreferences instance
-  @preResolve
-  Future<SharedPreferences> provideSharedPreferences() {
-    return SharedPreferences.getInstance();
-  }
-
-  /// Provide Firebase Analytics instance
-  @lazySingleton
-  FirebaseAnalytics provideFirebaseAnalytics() {
-    return FirebaseAnalytics.instance;
-  }
-
-  /// Provide Firebase Crashlytics instance
-  @lazySingleton
-  FirebaseCrashlytics provideFirebaseCrashlytics() {
-    return FirebaseCrashlytics.instance;
-  }
-
-  /// Provide Firebase Performance instance
-  @lazySingleton
-  FirebasePerformance provideFirebasePerformance() {
-    return FirebasePerformance.instance;
-  }
+  return dio;
 }
 
 class _AuthInterceptor extends Interceptor {

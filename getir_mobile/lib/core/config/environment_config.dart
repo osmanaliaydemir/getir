@@ -98,12 +98,12 @@ class EnvironmentConfig {
   static String _getDefaultApiBaseUrl() {
     switch (_currentEnvironment) {
       case prod:
-        return 'https://api.getir.com';
+        return 'http://ajilgo.runasp.net';
       case staging:
-        return 'https://staging-api.getir.com';
+        return 'http://ajilgo.runasp.net';
       case dev:
       default:
-        return 'http://localhost:5000';
+        return 'http://ajilgo.runasp.net'; // Backend URL
     }
   }
 

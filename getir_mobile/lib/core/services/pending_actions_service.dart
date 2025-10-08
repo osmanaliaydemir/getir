@@ -4,7 +4,7 @@ import 'local_storage_service.dart';
 import 'network_service.dart';
 
 /// Pending Actions Service
-/// 
+///
 /// Manages offline actions and syncs them when back online.
 /// Supports: Add to cart, remove from cart, favorites, ratings, etc.
 @lazySingleton
@@ -12,10 +12,7 @@ class PendingActionsService {
   final LocalStorageService _localStorage;
   final NetworkService _networkService;
 
-  PendingActionsService(
-    this._localStorage,
-    this._networkService,
-  );
+  PendingActionsService(this._localStorage, this._networkService);
 
   /// Action types
   static const String actionAddToCart = 'add_to_cart';
@@ -66,15 +63,10 @@ class PendingActionsService {
   }
 
   /// Queue remove from cart action
-  Future<void> queueRemoveFromCart({
-    required String itemId,
-  }) async {
+  Future<void> queueRemoveFromCart({required String itemId}) async {
     await queueAction(
       action: actionRemoveFromCart,
-      data: {
-        'itemId': itemId,
-        'timestamp': DateTime.now().toIso8601String(),
-      },
+      data: {'itemId': itemId, 'timestamp': DateTime.now().toIso8601String()},
     );
   }
 

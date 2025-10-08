@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/product.dart';
 import '../../../domain/usecases/product_usecases.dart';
 
@@ -130,12 +131,12 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     required GetProductsByMerchantUseCase getProductsByMerchantUseCase,
     required SearchProductsUseCase searchProductsUseCase,
     required GetCategoriesUseCase getCategoriesUseCase,
-  })  : _getProductsUseCase = getProductsUseCase,
-        _getProductByIdUseCase = getProductByIdUseCase,
-        _getProductsByMerchantUseCase = getProductsByMerchantUseCase,
-        _searchProductsUseCase = searchProductsUseCase,
-        _getCategoriesUseCase = getCategoriesUseCase,
-        super(ProductInitial()) {
+  }) : _getProductsUseCase = getProductsUseCase,
+       _getProductByIdUseCase = getProductByIdUseCase,
+       _getProductsByMerchantUseCase = getProductsByMerchantUseCase,
+       _searchProductsUseCase = searchProductsUseCase,
+       _getCategoriesUseCase = getCategoriesUseCase,
+       super(ProductInitial()) {
     on<LoadProducts>(_onLoadProducts);
     on<LoadProductById>(_onLoadProductById);
     on<LoadProductsByMerchant>(_onLoadProductsByMerchant);
@@ -149,18 +150,22 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     Emitter<ProductState> emit,
   ) async {
     emit(ProductLoading());
-    try {
-      final products = await _getProductsUseCase(
-        page: event.page,
-        limit: event.limit,
-        merchantId: event.merchantId,
-        category: event.category,
-        search: event.search,
-      );
-      emit(ProductsLoaded(products));
-    } catch (e) {
-      emit(ProductError(e.toString()));
-    }
+
+    final result = await _getProductsUseCase(
+      page: event.page,
+      limit: event.limit,
+      merchantId: event.merchantId,
+      category: event.category,
+      search: event.search,
+    );
+
+    result.when(
+      success: (products) => emit(ProductsLoaded(products)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(ProductError(message));
+      },
+    );
   }
 
   Future<void> _onLoadProductById(
@@ -168,12 +173,16 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     Emitter<ProductState> emit,
   ) async {
     emit(ProductLoading());
-    try {
-      final product = await _getProductByIdUseCase(event.id);
-      emit(ProductLoaded(product));
-    } catch (e) {
-      emit(ProductError(e.toString()));
-    }
+
+    final result = await _getProductByIdUseCase(event.id);
+
+    result.when(
+      success: (product) => emit(ProductLoaded(product)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(ProductError(message));
+      },
+    );
   }
 
   Future<void> _onLoadProductsByMerchant(
@@ -181,12 +190,16 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     Emitter<ProductState> emit,
   ) async {
     emit(ProductLoading());
-    try {
-      final products = await _getProductsByMerchantUseCase(event.merchantId);
-      emit(ProductsLoaded(products));
-    } catch (e) {
-      emit(ProductError(e.toString()));
-    }
+
+    final result = await _getProductsByMerchantUseCase(event.merchantId);
+
+    result.when(
+      success: (products) => emit(ProductsLoaded(products)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(ProductError(message));
+      },
+    );
   }
 
   Future<void> _onSearchProducts(
@@ -194,12 +207,16 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     Emitter<ProductState> emit,
   ) async {
     emit(ProductLoading());
-    try {
-      final products = await _searchProductsUseCase(event.query);
-      emit(ProductsLoaded(products));
-    } catch (e) {
-      emit(ProductError(e.toString()));
-    }
+
+    final result = await _searchProductsUseCase(event.query);
+
+    result.when(
+      success: (products) => emit(ProductsLoaded(products)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(ProductError(message));
+      },
+    );
   }
 
   Future<void> _onLoadProductsByCategory(
@@ -207,25 +224,38 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     Emitter<ProductState> emit,
   ) async {
     emit(ProductLoading());
-    try {
-      final products = await _getProductsUseCase(
-        category: event.category,
-      );
-      emit(ProductsLoaded(products));
-    } catch (e) {
-      emit(ProductError(e.toString()));
-    }
+
+    final result = await _getProductsUseCase(category: event.category);
+
+    result.when(
+      success: (products) => emit(ProductsLoaded(products)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(ProductError(message));
+      },
+    );
   }
 
   Future<void> _onLoadCategories(
     LoadCategories event,
     Emitter<ProductState> emit,
   ) async {
-    try {
-      final categories = await _getCategoriesUseCase();
-      emit(ProductCategoriesLoaded(categories));
-    } catch (e) {
-      emit(ProductError(e.toString()));
+    final result = await _getCategoriesUseCase();
+
+    result.when(
+      success: (categories) => emit(ProductCategoriesLoaded(categories)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(ProductError(message));
+      },
+    );
+  }
+
+  /// Extract user-friendly error message from exception
+  String _getErrorMessage(Exception exception) {
+    if (exception is AppException) {
+      return exception.message;
     }
+    return 'An unexpected error occurred';
   }
 }

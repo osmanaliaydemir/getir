@@ -5,7 +5,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
 /// Offline Indicator Banner
-/// 
+///
 /// Shows a banner at the top of the screen when the device is offline.
 /// Features:
 /// - Automatic show/hide based on network status
@@ -44,11 +44,7 @@ class OfflineIndicatorBanner extends StatelessWidget {
               bottom: false,
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.wifi_off,
-                    color: AppColors.white,
-                    size: 20,
-                  ),
+                  const Icon(Icons.wifi_off, color: AppColors.white, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -109,7 +105,7 @@ class OfflineIndicatorBanner extends StatelessWidget {
 }
 
 /// Connection Status Indicator
-/// 
+///
 /// Shows a small connection status indicator (e.g. in app bar)
 class ConnectionStatusIndicator extends StatelessWidget {
   const ConnectionStatusIndicator({super.key});
@@ -131,11 +127,7 @@ class ConnectionStatusIndicator extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.wifi_off,
-                color: AppColors.white,
-                size: 14,
-              ),
+              const Icon(Icons.wifi_off, color: AppColors.white, size: 14),
               const SizedBox(width: 4),
               Text(
                 'Offline',
@@ -153,7 +145,7 @@ class ConnectionStatusIndicator extends StatelessWidget {
 }
 
 /// Offline Mode Snackbar
-/// 
+///
 /// Shows a snackbar when going offline/online
 class OfflineModeSnackbar {
   static void show(BuildContext context, bool isOffline) {
@@ -172,9 +164,7 @@ class OfflineModeSnackbar {
               isOffline
                   ? 'You are offline. Changes will be synced when you reconnect.'
                   : 'Back online! Syncing your data...',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.white,
-              ),
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.white),
             ),
           ],
         ),
@@ -186,8 +176,10 @@ class OfflineModeSnackbar {
                 label: 'Retry',
                 textColor: AppColors.white,
                 onPressed: () {
-                  Provider.of<NetworkProvider>(context, listen: false)
-                      .retryConnection();
+                  Provider.of<NetworkProvider>(
+                    context,
+                    listen: false,
+                  ).retryConnection();
                 },
               )
             : null,

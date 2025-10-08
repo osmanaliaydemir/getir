@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
+import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/user_entity.dart';
 import '../../../domain/usecases/auth_usecases.dart';
 import '../../../core/services/analytics_service.dart';
@@ -129,7 +130,6 @@ class AuthPasswordResetSent extends AuthState {
 class AuthPasswordResetSuccess extends AuthState {}
 
 // BLoC
-@injectable
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase _loginUseCase;
   final RegisterUseCase _registerUseCase;
@@ -170,19 +170,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    try {
-      final user = await _loginUseCase(event.email, event.password);
+    final result = await _loginUseCase(event.email, event.password);
 
-      // 📊 Analytics: Track login
-      await _analytics.logLogin(method: 'email');
-      await _analytics.setUserId(user.id);
+    result.when(
+      success: (user) async {
+        // 📊 Analytics: Track login
+        await _analytics.logLogin(method: 'email');
+        await _analytics.setUserId(user.id);
 
-      emit(AuthAuthenticated(user));
-      // ✅ Cart merge logic moved to UI layer (login_page.dart)
-    } catch (e) {
-      emit(AuthError(e.toString()));
-      await _analytics.logError(error: e, reason: 'Login failed');
-    }
+        emit(AuthAuthenticated(user));
+        // ✅ Cart merge logic moved to UI layer (login_page.dart)
+      },
+      failure: (exception) async {
+        final message = _getErrorMessage(exception);
+        emit(AuthError(message));
+        await _analytics.logError(error: exception, reason: 'Login failed');
+      },
+    );
   }
 
   Future<void> _onRegisterRequested(
@@ -191,24 +195,31 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    try {
-      final user = await _registerUseCase(
-        event.email,
-        event.password,
-        event.firstName,
-        event.lastName,
-        phoneNumber: event.phoneNumber,
-      );
+    final result = await _registerUseCase(
+      event.email,
+      event.password,
+      event.firstName,
+      event.lastName,
+      phoneNumber: event.phoneNumber,
+    );
 
-      // 📊 Analytics: Track sign up
-      await _analytics.logSignUp(method: 'email');
-      await _analytics.setUserId(user.id);
+    result.when(
+      success: (user) async {
+        // 📊 Analytics: Track sign up
+        await _analytics.logSignUp(method: 'email');
+        await _analytics.setUserId(user.id);
 
-      emit(AuthAuthenticated(user));
-    } catch (e) {
-      emit(AuthError(e.toString()));
-      await _analytics.logError(error: e, reason: 'Registration failed');
-    }
+        emit(AuthAuthenticated(user));
+      },
+      failure: (exception) async {
+        final message = _getErrorMessage(exception);
+        emit(AuthError(message));
+        await _analytics.logError(
+          error: exception,
+          reason: 'Registration failed',
+        );
+      },
+    );
   }
 
   Future<void> _onLogoutRequested(
@@ -217,30 +228,41 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    try {
-      await _logoutUseCase();
+    final result = await _logoutUseCase();
 
-      // 📊 Analytics: Track logout
-      await _analytics.logLogout();
-      await _analytics.setUserId(null);
+    result.when(
+      success: (_) async {
+        // 📊 Analytics: Track logout
+        await _analytics.logLogout();
+        await _analytics.setUserId(null);
 
-      emit(AuthUnauthenticated());
-    } catch (e) {
-      emit(AuthError(e.toString()));
-      await _analytics.logError(error: e, reason: 'Logout failed');
-    }
+        emit(AuthUnauthenticated());
+      },
+      failure: (exception) async {
+        // Even if logout fails, clear local state
+        await _analytics.logLogout();
+        await _analytics.setUserId(null);
+
+        // Logout failed but still show unauthenticated
+        emit(AuthUnauthenticated());
+        await _analytics.logError(error: exception, reason: 'Logout failed');
+      },
+    );
   }
 
   Future<void> _onRefreshTokenRequested(
     AuthRefreshTokenRequested event,
     Emitter<AuthState> emit,
   ) async {
-    try {
-      final user = await _refreshTokenUseCase(event.refreshToken);
-      emit(AuthAuthenticated(user));
-    } catch (e) {
-      emit(AuthError(e.toString()));
-    }
+    final result = await _refreshTokenUseCase(event.refreshToken);
+
+    result.when(
+      success: (user) => emit(AuthAuthenticated(user)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(AuthError(message));
+      },
+    );
   }
 
   Future<void> _onForgotPasswordRequested(
@@ -249,12 +271,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    try {
-      await _forgotPasswordUseCase(event.email);
-      emit(AuthPasswordResetSent(event.email));
-    } catch (e) {
-      emit(AuthError(e.toString()));
-    }
+    final result = await _forgotPasswordUseCase(event.email);
+
+    result.when(
+      success: (_) => emit(AuthPasswordResetSent(event.email)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(AuthError(message));
+      },
+    );
   }
 
   Future<void> _onResetPasswordRequested(
@@ -263,12 +288,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    try {
-      await _resetPasswordUseCase(event.token, event.newPassword);
-      emit(AuthPasswordResetSuccess());
-    } catch (e) {
-      emit(AuthError(e.toString()));
+    final result = await _resetPasswordUseCase(event.token, event.newPassword);
+
+    result.when(
+      success: (_) => emit(AuthPasswordResetSuccess()),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(AuthError(message));
+      },
+    );
+  }
+
+  /// Extract user-friendly error message from exception
+  String _getErrorMessage(Exception exception) {
+    if (exception is AppException) {
+      return exception.message;
     }
+    return 'An unexpected error occurred';
   }
 
   Future<void> _onCheckAuthenticationRequested(

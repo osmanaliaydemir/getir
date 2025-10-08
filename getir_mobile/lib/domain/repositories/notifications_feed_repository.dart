@@ -1,6 +1,10 @@
+import '../../core/errors/result.dart';
 import '../entities/notification.dart';
 
 abstract class NotificationsFeedRepository {
-  Future<List<AppNotification>> getNotifications({int page, int pageSize});
-  Future<void> markAsRead(String notificationId);
+  Future<Result<List<AppNotification>>> getNotifications({
+    int page,
+    int pageSize,
+  });
+  Future<Result<void>> markAsRead(String notificationId);
 }

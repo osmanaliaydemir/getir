@@ -4,7 +4,7 @@ import '../providers/network_provider.dart';
 import '../widgets/offline_indicator_banner.dart';
 
 /// Offline Mode Helper
-/// 
+///
 /// Utility functions and widgets for handling offline mode gracefully
 class OfflineModeHelper {
   /// Show offline warning dialog
@@ -41,8 +41,11 @@ class OfflineModeHelper {
     required String action,
     bool allowOffline = false,
   }) async {
-    final networkProvider = Provider.of<NetworkProvider>(context, listen: false);
-    
+    final networkProvider = Provider.of<NetworkProvider>(
+      context,
+      listen: false,
+    );
+
     if (networkProvider.isOnline) {
       return true;
     }
@@ -79,12 +82,12 @@ class OfflineModeHelper {
 }
 
 /// Offline Indicator Wrapper
-/// 
+///
 /// Wraps a screen with automatic offline indicator
 class OfflineIndicatorWrapper extends StatelessWidget {
   final Widget child;
   final bool showBanner;
-  
+
   const OfflineIndicatorWrapper({
     super.key,
     required this.child,
@@ -109,7 +112,7 @@ class OfflineIndicatorWrapper extends StatelessWidget {
 }
 
 /// Offline Mode Mixin
-/// 
+///
 /// Mixin for pages that need offline mode handling
 mixin OfflineModeMixin<T extends StatefulWidget> on State<T> {
   bool _wasOffline = false;
@@ -123,13 +126,19 @@ mixin OfflineModeMixin<T extends StatefulWidget> on State<T> {
   }
 
   void _setupOfflineListener() {
-    final networkProvider = Provider.of<NetworkProvider>(context, listen: false);
+    final networkProvider = Provider.of<NetworkProvider>(
+      context,
+      listen: false,
+    );
     networkProvider.addListener(_handleNetworkChange);
   }
 
   void _handleNetworkChange() {
-    final networkProvider = Provider.of<NetworkProvider>(context, listen: false);
-    
+    final networkProvider = Provider.of<NetworkProvider>(
+      context,
+      listen: false,
+    );
+
     if (networkProvider.isOffline && !_wasOffline) {
       onOffline();
       _wasOffline = true;
@@ -151,7 +160,10 @@ mixin OfflineModeMixin<T extends StatefulWidget> on State<T> {
 
   @override
   void dispose() {
-    final networkProvider = Provider.of<NetworkProvider>(context, listen: false);
+    final networkProvider = Provider.of<NetworkProvider>(
+      context,
+      listen: false,
+    );
     networkProvider.removeListener(_handleNetworkChange);
     super.dispose();
   }

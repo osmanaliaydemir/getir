@@ -1,57 +1,111 @@
 import 'package:flutter/material.dart';
+import '../../core/errors/app_exceptions.dart';
+import '../../core/errors/result.dart';
 import '../entities/working_hours.dart';
 import '../repositories/working_hours_repository.dart';
 
-/// Merchant'ın çalışma saatlerini getirir
+/// Get Working Hours Use Case
 class GetWorkingHoursUseCase {
   final WorkingHoursRepository _repository;
 
   GetWorkingHoursUseCase(this._repository);
 
-  Future<List<WorkingHours>> call(String merchantId) async {
+  Future<Result<List<WorkingHours>>> call(String merchantId) async {
+    if (merchantId.isEmpty) {
+      return Result.failure(
+        const ValidationException(
+          message: 'Merchant ID cannot be empty',
+          code: 'EMPTY_MERCHANT_ID',
+        ),
+      );
+    }
+
     return await _repository.getWorkingHoursByMerchant(merchantId);
   }
 }
 
-/// Merchant'ın açık olup olmadığını kontrol eder
+/// Check If Merchant Open Use Case
 class CheckIfMerchantOpenUseCase {
   final WorkingHoursRepository _repository;
 
   CheckIfMerchantOpenUseCase(this._repository);
 
-  Future<bool> call(String merchantId, {DateTime? checkTime}) async {
+  Future<Result<bool>> call(String merchantId, {DateTime? checkTime}) async {
+    if (merchantId.isEmpty) {
+      return Result.failure(
+        const ValidationException(
+          message: 'Merchant ID cannot be empty',
+          code: 'EMPTY_MERCHANT_ID',
+        ),
+      );
+    }
+
     return await _repository.isMerchantOpen(merchantId, checkTime: checkTime);
   }
 }
 
-/// Merchant'ın sonraki açılış zamanını hesaplar
+/// Get Next Open Time Use Case
 class GetNextOpenTimeUseCase {
   final WorkingHoursRepository _repository;
 
   GetNextOpenTimeUseCase(this._repository);
 
-  Future<(String dayName, TimeOfDay openTime)?> call(String merchantId) async {
-    final workingHours = await _repository.getWorkingHoursByMerchant(
-      merchantId,
-    );
-    if (workingHours.isEmpty) return null;
+  Future<Result<(String dayName, TimeOfDay openTime)?>> call(
+    String merchantId,
+  ) async {
+    if (merchantId.isEmpty) {
+      return Result.failure(
+        const ValidationException(
+          message: 'Merchant ID cannot be empty',
+          code: 'EMPTY_MERCHANT_ID',
+        ),
+      );
+    }
 
-    return WorkingHoursHelper.getNextOpenTime(workingHours);
+    final result = await _repository.getWorkingHoursByMerchant(merchantId);
+
+    return result.when(
+      success: (workingHours) {
+        if (workingHours.isEmpty) {
+          return Result.success(null);
+        }
+        final nextOpenTime = WorkingHoursHelper.getNextOpenTime(workingHours);
+        return Result.success(nextOpenTime);
+      },
+      failure: (exception) => Result.failure(exception),
+    );
   }
 }
 
-/// Merchant'ın bugünkü çalışma saatlerini getirir
+/// Get Today Working Hours Use Case
 class GetTodayWorkingHoursUseCase {
   final WorkingHoursRepository _repository;
 
   GetTodayWorkingHoursUseCase(this._repository);
 
-  Future<WorkingHours?> call(String merchantId) async {
-    final workingHours = await _repository.getWorkingHoursByMerchant(
-      merchantId,
-    );
-    if (workingHours.isEmpty) return null;
+  Future<Result<WorkingHours?>> call(String merchantId) async {
+    if (merchantId.isEmpty) {
+      return Result.failure(
+        const ValidationException(
+          message: 'Merchant ID cannot be empty',
+          code: 'EMPTY_MERCHANT_ID',
+        ),
+      );
+    }
 
-    return WorkingHoursHelper.getTodayWorkingHours(workingHours);
+    final result = await _repository.getWorkingHoursByMerchant(merchantId);
+
+    return result.when(
+      success: (workingHours) {
+        if (workingHours.isEmpty) {
+          return Result.success(null);
+        }
+        final todayHours = WorkingHoursHelper.getTodayWorkingHours(
+          workingHours,
+        );
+        return Result.success(todayHours);
+      },
+      failure: (exception) => Result.failure(exception),
+    );
   }
 }

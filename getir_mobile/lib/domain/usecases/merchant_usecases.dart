@@ -1,21 +1,15 @@
+import '../../core/errors/app_exceptions.dart';
+import '../../core/errors/result.dart';
 import '../entities/merchant.dart';
 import '../repositories/merchant_repository.dart';
 
-/// Merchant Use Cases
-///
-/// **Note:** These are currently simple repository wrappers.
-/// Future enhancements should include:
-/// - Caching strategy (local storage)
-/// - Business rules (operating hours, delivery zones)
-/// - Analytics (merchant views, search terms)
-/// - Personalization (favorite merchants, recommendations)
-
+/// Get Merchants Use Case
 class GetMerchantsUseCase {
   final MerchantRepository _repository;
 
   GetMerchantsUseCase(this._repository);
 
-  Future<List<Merchant>> call({
+  Future<Result<List<Merchant>>> call({
     int page = 1,
     int limit = 20,
     String? search,
@@ -36,32 +30,53 @@ class GetMerchantsUseCase {
   }
 }
 
+/// Get Merchant By ID Use Case
 class GetMerchantByIdUseCase {
   final MerchantRepository _repository;
 
   GetMerchantByIdUseCase(this._repository);
 
-  Future<Merchant> call(String id) async {
+  Future<Result<Merchant>> call(String id) async {
+    if (id.isEmpty) {
+      return Result.failure(
+        const ValidationException(
+          message: 'Merchant ID cannot be empty',
+          code: 'EMPTY_MERCHANT_ID',
+        ),
+      );
+    }
+
     return await _repository.getMerchantById(id);
   }
 }
 
+/// Search Merchants Use Case
 class SearchMerchantsUseCase {
   final MerchantRepository _repository;
 
   SearchMerchantsUseCase(this._repository);
 
-  Future<List<Merchant>> call(String query) async {
+  Future<Result<List<Merchant>>> call(String query) async {
+    if (query.isEmpty) {
+      return Result.failure(
+        const ValidationException(
+          message: 'Search query cannot be empty',
+          code: 'EMPTY_SEARCH_QUERY',
+        ),
+      );
+    }
+
     return await _repository.searchMerchants(query);
   }
 }
 
+/// Get Nearby Merchants Use Case
 class GetNearbyMerchantsUseCase {
   final MerchantRepository _repository;
 
   GetNearbyMerchantsUseCase(this._repository);
 
-  Future<List<Merchant>> call({
+  Future<Result<List<Merchant>>> call({
     required double latitude,
     required double longitude,
     double radius = 5.0,
@@ -74,12 +89,13 @@ class GetNearbyMerchantsUseCase {
   }
 }
 
+/// Get Nearby Merchants By Category Use Case
 class GetNearbyMerchantsByCategoryUseCase {
   final MerchantRepository _repository;
 
   GetNearbyMerchantsByCategoryUseCase(this._repository);
 
-  Future<List<Merchant>> call({
+  Future<Result<List<Merchant>>> call({
     required double latitude,
     required double longitude,
     required int categoryType,

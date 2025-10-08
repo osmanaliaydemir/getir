@@ -1,10 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/order.dart';
 import '../../../domain/usecases/order_usecases.dart';
 import '../../../data/datasources/order_datasource.dart';
 import '../../../core/services/analytics_service.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 
 // Events
 abstract class OrderEvent extends Equatable {
@@ -175,12 +176,16 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     Emitter<OrderState> emit,
   ) async {
     emit(OrderLoading());
-    try {
-      final orders = await _getUserOrdersUseCase();
-      emit(OrdersLoaded(orders));
-    } catch (e) {
-      emit(OrderError(e.toString()));
-    }
+
+    final result = await _getUserOrdersUseCase();
+
+    result.when(
+      success: (orders) => emit(OrdersLoaded(orders)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(OrderError(message));
+      },
+    );
   }
 
   Future<void> _onLoadOrderById(
@@ -188,12 +193,16 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     Emitter<OrderState> emit,
   ) async {
     emit(OrderLoading());
-    try {
-      final order = await _getOrderByIdUseCase(event.orderId);
-      emit(OrderLoaded(order));
-    } catch (e) {
-      emit(OrderError(e.toString()));
-    }
+
+    final result = await _getOrderByIdUseCase(event.orderId);
+
+    result.when(
+      success: (order) => emit(OrderLoaded(order)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(OrderError(message));
+      },
+    );
   }
 
   Future<void> _onCreateOrder(
@@ -201,32 +210,40 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     Emitter<OrderState> emit,
   ) async {
     emit(OrderLoading());
-    try {
-      final order = await _createOrderUseCase(event.request);
 
-      // 📊 Analytics: Track order creation (purchase)
-      await _analytics.logPurchase(
-        orderId: order.id,
-        total: order.totalAmount,
-        currency: 'TRY',
-        items: order.items
-            .map(
-              (item) => AnalyticsEventItem(
-                itemId: item.productId,
-                itemName: item.productName,
-                price: item.unitPrice,
-                quantity: item.quantity,
-              ),
-            )
-            .toList(),
-        shipping: order.deliveryFee,
-      );
+    final result = await _createOrderUseCase(event.request);
 
-      emit(OrderCreated(order));
-    } catch (e) {
-      emit(OrderError(e.toString()));
-      await _analytics.logError(error: e, reason: 'Order creation failed');
-    }
+    result.when(
+      success: (order) async {
+        // 📊 Analytics: Track order creation (purchase)
+        await _analytics.logPurchase(
+          orderId: order.id,
+          total: order.totalAmount,
+          currency: 'TRY',
+          items: order.items
+              .map(
+                (item) => AnalyticsEventItem(
+                  itemId: item.productId,
+                  itemName: item.productName,
+                  price: item.unitPrice,
+                  quantity: item.quantity,
+                ),
+              )
+              .toList(),
+          shipping: order.deliveryFee,
+        );
+
+        emit(OrderCreated(order));
+      },
+      failure: (exception) async {
+        final message = _getErrorMessage(exception);
+        emit(OrderError(message));
+        await _analytics.logError(
+          error: exception,
+          reason: 'Order creation failed',
+        );
+      },
+    );
   }
 
   Future<void> _onCancelOrder(
@@ -234,21 +251,29 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     Emitter<OrderState> emit,
   ) async {
     emit(OrderLoading());
-    try {
-      final order = await _cancelOrderUseCase(event.orderId);
 
-      // 📊 Analytics: Track order cancellation
-      await _analytics.logOrderCancelled(
-        orderId: order.id,
-        value: order.totalAmount,
-        reason: 'user_cancelled',
-      );
+    final result = await _cancelOrderUseCase(event.orderId);
 
-      emit(OrderCancelled(order));
-    } catch (e) {
-      emit(OrderError(e.toString()));
-      await _analytics.logError(error: e, reason: 'Order cancellation failed');
-    }
+    result.when(
+      success: (order) async {
+        // 📊 Analytics: Track order cancellation
+        await _analytics.logOrderCancelled(
+          orderId: order.id,
+          value: order.totalAmount,
+          reason: 'user_cancelled',
+        );
+
+        emit(OrderCancelled(order));
+      },
+      failure: (exception) async {
+        final message = _getErrorMessage(exception);
+        emit(OrderError(message));
+        await _analytics.logError(
+          error: exception,
+          reason: 'Order cancellation failed',
+        );
+      },
+    );
   }
 
   Future<void> _onProcessPayment(
@@ -256,21 +281,29 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     Emitter<OrderState> emit,
   ) async {
     emit(OrderLoading());
-    try {
-      final paymentResult = await _processPaymentUseCase(event.request);
 
-      // 📊 Analytics: Track payment info added
-      await _analytics.logAddPaymentInfo(
-        paymentType: event.request.paymentMethod.value,
-        value: event.request.amount,
-        currency: 'TRY',
-      );
+    final result = await _processPaymentUseCase(event.request);
 
-      emit(PaymentProcessed(paymentResult));
-    } catch (e) {
-      emit(OrderError(e.toString()));
-      await _analytics.logError(error: e, reason: 'Payment processing failed');
-    }
+    result.when(
+      success: (paymentResult) async {
+        // 📊 Analytics: Track payment info added
+        await _analytics.logAddPaymentInfo(
+          paymentType: event.request.paymentMethod.value,
+          value: event.request.amount,
+          currency: 'TRY',
+        );
+
+        emit(PaymentProcessed(paymentResult));
+      },
+      failure: (exception) async {
+        final message = _getErrorMessage(exception);
+        emit(OrderError(message));
+        await _analytics.logError(
+          error: exception,
+          reason: 'Payment processing failed',
+        );
+      },
+    );
   }
 
   Future<void> _onGetPaymentStatus(
@@ -278,11 +311,23 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     Emitter<OrderState> emit,
   ) async {
     emit(OrderLoading());
-    try {
-      final paymentResult = await _getPaymentStatusUseCase(event.paymentId);
-      emit(PaymentStatusLoaded(paymentResult));
-    } catch (e) {
-      emit(OrderError(e.toString()));
+
+    final result = await _getPaymentStatusUseCase(event.paymentId);
+
+    result.when(
+      success: (paymentResult) => emit(PaymentStatusLoaded(paymentResult)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(OrderError(message));
+      },
+    );
+  }
+
+  /// Extract user-friendly error message from exception
+  String _getErrorMessage(Exception exception) {
+    if (exception is AppException) {
+      return exception.message;
     }
+    return 'An unexpected error occurred';
   }
 }

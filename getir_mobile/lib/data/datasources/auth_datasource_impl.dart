@@ -17,7 +17,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<AuthResponse> login(LoginRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/auth/login',
+        '/api/v1/Auth/login',
         data: request.toJson(),
       );
 
@@ -48,7 +48,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<AuthResponse> register(RegisterRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/auth/register',
+        '/api/v1/Auth/register',
         data: request.toJson(),
       );
 
@@ -79,7 +79,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<void> logout() async {
     try {
       // Backend'e logout isteği gönder
-      await _dio.post('/api/v1/auth/logout');
+      await _dio.post('/api/v1/Auth/logout');
 
       // Local token'ları temizle
       await clearTokens();
@@ -104,7 +104,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<RefreshTokenResponse> refreshToken(RefreshTokenRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/auth/refresh',
+        '/api/v1/Auth/refresh',
         data: request.toJson(),
       );
 
@@ -138,7 +138,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<void> forgotPassword(ForgotPasswordRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/auth/forgot-password',
+        '/api/v1/Auth/forgot-password',
         data: request.toJson(),
       );
 
@@ -156,7 +156,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<void> resetPassword(ResetPasswordRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/auth/reset-password',
+        '/api/v1/Auth/reset-password',
         data: request.toJson(),
       );
 
