@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
 import '../../../domain/entities/user_entity.dart';
 import '../../../domain/usecases/auth_usecases.dart';
+import '../../../core/services/analytics_service.dart';
 
 // Events
 abstract class AuthEvent extends Equatable {
@@ -139,6 +140,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final GetCurrentUserUseCase _getCurrentUserUseCase;
   final CheckAuthenticationUseCase _checkAuthenticationUseCase;
   final CheckTokenValidityUseCase _checkTokenValidityUseCase;
+  final AnalyticsService _analytics;
 
   AuthBloc(
     this._loginUseCase,
@@ -150,6 +152,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     this._getCurrentUserUseCase,
     this._checkAuthenticationUseCase,
     this._checkTokenValidityUseCase,
+    this._analytics,
   ) : super(AuthInitial()) {
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
@@ -169,10 +172,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     try {
       final user = await _loginUseCase(event.email, event.password);
+
+      // 📊 Analytics: Track login
+      await _analytics.logLogin(method: 'email');
+      await _analytics.setUserId(user.id);
+
       emit(AuthAuthenticated(user));
       // ✅ Cart merge logic moved to UI layer (login_page.dart)
     } catch (e) {
       emit(AuthError(e.toString()));
+      await _analytics.logError(error: e, reason: 'Login failed');
     }
   }
 
@@ -190,9 +199,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         event.lastName,
         phoneNumber: event.phoneNumber,
       );
+
+      // 📊 Analytics: Track sign up
+      await _analytics.logSignUp(method: 'email');
+      await _analytics.setUserId(user.id);
+
       emit(AuthAuthenticated(user));
     } catch (e) {
       emit(AuthError(e.toString()));
+      await _analytics.logError(error: e, reason: 'Registration failed');
     }
   }
 
@@ -204,9 +219,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     try {
       await _logoutUseCase();
+
+      // 📊 Analytics: Track logout
+      await _analytics.logLogout();
+      await _analytics.setUserId(null);
+
       emit(AuthUnauthenticated());
     } catch (e) {
       emit(AuthError(e.toString()));
+      await _analytics.logError(error: e, reason: 'Logout failed');
     }
   }
 

@@ -111,14 +111,17 @@ class _ProfilePageState extends State<ProfilePage> {
                         children: [
                           CircleAvatar(
                             radius: 60,
-                            backgroundColor: AppColors.primary.withOpacity(0.15),
+                            backgroundColor: AppColors.primary.withOpacity(
+                              0.15,
+                            ),
                             backgroundImage: _selectedImage != null
                                 ? FileImage(_selectedImage!)
                                 : state.profile.avatarUrl != null
-                                    ? NetworkImage(state.profile.avatarUrl!)
-                                        as ImageProvider
-                                    : null,
-                            child: _selectedImage == null &&
+                                ? NetworkImage(state.profile.avatarUrl!)
+                                      as ImageProvider
+                                : null,
+                            child:
+                                _selectedImage == null &&
                                     state.profile.avatarUrl == null
                                 ? const Icon(
                                     Icons.person,
@@ -153,9 +156,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Email (readonly)
                     Center(
                       child: Column(
@@ -171,7 +174,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
 
                     const SizedBox(height: 32),
-                    
+
                     // Edit Profile Section
                     Text(
                       'Profile Information',
@@ -343,9 +346,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Account Actions Section
                     Text(
                       'Account Actions',
@@ -353,9 +356,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Change Password
                     ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -375,9 +378,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => _showChangePasswordDialog(context),
                     ),
-                    
+
                     const Divider(),
-                    
+
                     // Delete Account
                     ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -408,7 +411,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-  
+
   /// Show image source dialog (camera or gallery)
   void _showImageSourceDialog(BuildContext context) {
     showModalBottomSheet(
@@ -431,7 +434,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library, color: AppColors.primary),
+                leading: const Icon(
+                  Icons.photo_library,
+                  color: AppColors.primary,
+                ),
                 title: const Text('Choose from Gallery'),
                 onTap: () {
                   Navigator.pop(context);
@@ -454,7 +460,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-  
+
   /// Pick image from camera or gallery
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -464,12 +470,12 @@ class _ProfilePageState extends State<ProfilePage> {
         maxHeight: 800,
         imageQuality: 85,
       );
-      
+
       if (image != null) {
         setState(() {
           _selectedImage = File(image.path);
         });
-        
+
         // TODO: Upload image to server
         // context.read<ProfileBloc>().add(UploadProfilePicture(_selectedImage!));
       }
@@ -482,14 +488,14 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     }
   }
-  
+
   /// Show change password dialog
   void _showChangePasswordDialog(BuildContext context) {
     final currentPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -506,8 +512,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   labelText: 'Current Password',
                   prefixIcon: Icon(Icons.lock_outline),
                 ),
-                validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Required' : null,
+                validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -571,11 +576,11 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-  
+
   /// Show delete account confirmation dialog
   void _showDeleteAccountDialog(BuildContext context) {
     final passwordController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -644,7 +649,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 );
                 return;
               }
-              
+
               // TODO: Implement account deletion
               // context.read<ProfileBloc>().add(
               //   DeleteAccount(password: passwordController.text),
@@ -657,9 +662,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Delete Account'),
           ),
         ],

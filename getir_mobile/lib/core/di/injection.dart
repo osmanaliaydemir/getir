@@ -3,6 +3,9 @@ import 'package:injectable/injectable.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_performance/firebase_performance.dart';
 import '../services/local_storage_service.dart';
 import '../services/encryption_service.dart';
 import '../services/search_history_service.dart';
@@ -200,6 +203,7 @@ void _registerBlocs() {
       clearCartUseCase: getIt(),
       applyCouponUseCase: getIt(),
       removeCouponUseCase: getIt(),
+      analytics: getIt(),
     ),
   );
 
@@ -224,6 +228,7 @@ void _registerBlocs() {
       cancelOrderUseCase: getIt(),
       processPaymentUseCase: getIt(),
       getPaymentStatusUseCase: getIt(),
+      analytics: getIt(),
     ),
   );
 
@@ -308,6 +313,24 @@ abstract class AppModule {
   @preResolve
   Future<SharedPreferences> provideSharedPreferences() {
     return SharedPreferences.getInstance();
+  }
+
+  /// Provide Firebase Analytics instance
+  @lazySingleton
+  FirebaseAnalytics provideFirebaseAnalytics() {
+    return FirebaseAnalytics.instance;
+  }
+
+  /// Provide Firebase Crashlytics instance
+  @lazySingleton
+  FirebaseCrashlytics provideFirebaseCrashlytics() {
+    return FirebaseCrashlytics.instance;
+  }
+
+  /// Provide Firebase Performance instance
+  @lazySingleton
+  FirebasePerformance provideFirebasePerformance() {
+    return FirebasePerformance.instance;
   }
 }
 

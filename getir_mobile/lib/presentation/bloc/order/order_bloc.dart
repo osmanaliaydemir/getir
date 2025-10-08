@@ -3,6 +3,8 @@ import 'package:equatable/equatable.dart';
 import '../../../domain/entities/order.dart';
 import '../../../domain/usecases/order_usecases.dart';
 import '../../../data/datasources/order_datasource.dart';
+import '../../../core/services/analytics_service.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 // Events
 abstract class OrderEvent extends Equatable {
@@ -142,6 +144,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   final CancelOrderUseCase _cancelOrderUseCase;
   final ProcessPaymentUseCase _processPaymentUseCase;
   final GetPaymentStatusUseCase _getPaymentStatusUseCase;
+  final AnalyticsService _analytics;
 
   OrderBloc({
     required GetUserOrdersUseCase getUserOrdersUseCase,
@@ -150,12 +153,14 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     required CancelOrderUseCase cancelOrderUseCase,
     required ProcessPaymentUseCase processPaymentUseCase,
     required GetPaymentStatusUseCase getPaymentStatusUseCase,
+    required AnalyticsService analytics,
   }) : _getUserOrdersUseCase = getUserOrdersUseCase,
        _getOrderByIdUseCase = getOrderByIdUseCase,
        _createOrderUseCase = createOrderUseCase,
        _cancelOrderUseCase = cancelOrderUseCase,
        _processPaymentUseCase = processPaymentUseCase,
        _getPaymentStatusUseCase = getPaymentStatusUseCase,
+       _analytics = analytics,
        super(OrderInitial()) {
     on<LoadUserOrders>(_onLoadUserOrders);
     on<LoadOrderById>(_onLoadOrderById);
@@ -198,9 +203,29 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     emit(OrderLoading());
     try {
       final order = await _createOrderUseCase(event.request);
+
+      // 📊 Analytics: Track order creation (purchase)
+      await _analytics.logPurchase(
+        orderId: order.id,
+        total: order.totalPrice,
+        currency: 'TRY',
+        items: order.items
+            .map(
+              (item) => AnalyticsEventItem(
+                itemId: item.productId,
+                itemName: item.productName,
+                price: item.price,
+                quantity: item.quantity,
+              ),
+            )
+            .toList(),
+        shipping: order.deliveryFee,
+      );
+
       emit(OrderCreated(order));
     } catch (e) {
       emit(OrderError(e.toString()));
+      await _analytics.logError(error: e, reason: 'Order creation failed');
     }
   }
 
@@ -211,9 +236,18 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     emit(OrderLoading());
     try {
       final order = await _cancelOrderUseCase(event.orderId);
+
+      // 📊 Analytics: Track order cancellation
+      await _analytics.logOrderCancelled(
+        orderId: order.id,
+        value: order.totalPrice,
+        reason: 'user_cancelled',
+      );
+
       emit(OrderCancelled(order));
     } catch (e) {
       emit(OrderError(e.toString()));
+      await _analytics.logError(error: e, reason: 'Order cancellation failed');
     }
   }
 
@@ -224,9 +258,18 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     emit(OrderLoading());
     try {
       final paymentResult = await _processPaymentUseCase(event.request);
+
+      // 📊 Analytics: Track payment info added
+      await _analytics.logAddPaymentInfo(
+        paymentType: event.request.paymentMethod,
+        value: event.request.amount,
+        currency: 'TRY',
+      );
+
       emit(PaymentProcessed(paymentResult));
     } catch (e) {
       emit(OrderError(e.toString()));
+      await _analytics.logError(error: e, reason: 'Payment processing failed');
     }
   }
 

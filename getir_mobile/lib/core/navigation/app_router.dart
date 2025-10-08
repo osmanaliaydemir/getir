@@ -27,12 +27,13 @@ import '../../presentation/pages/error/not_found_page.dart';
 import '../../presentation/widgets/common/main_navigation.dart';
 import '../services/local_storage_service.dart';
 import '../services/analytics_service.dart';
+import '../di/injection.dart';
 
 class AppRouter {
   static final GoRouter _router = GoRouter(
     initialLocation: RouteConstants.splash,
     debugLogDiagnostics: true,
-    observers: [_AnalyticsRouteObserver()],
+    observers: [_AnalyticsRouteObserver(getIt<AnalyticsService>())],
     routes: [
       // Splash Route
       GoRoute(
@@ -232,21 +233,48 @@ class AppRouter {
 }
 
 class _AnalyticsRouteObserver extends NavigatorObserver {
+  final AnalyticsService _analytics;
+
+  _AnalyticsRouteObserver(this._analytics);
+
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    final name = route.settings.name ?? route.settings.toString();
-    AnalyticsService().logScreenView(screenName: name);
     super.didPush(route, previousRoute);
+    final name = route.settings.name ?? _getRouteName(route);
+    if (name.isNotEmpty) {
+      _analytics.logScreenView(screenName: name);
+    }
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    final name =
-        previousRoute?.settings.name ?? previousRoute?.settings.toString();
-    if (name != null) {
-      AnalyticsService().logScreenView(screenName: name);
-    }
     super.didPop(route, previousRoute);
+    if (previousRoute != null) {
+      final name = previousRoute.settings.name ?? _getRouteName(previousRoute);
+      if (name.isNotEmpty) {
+        _analytics.logScreenView(screenName: name);
+      }
+    }
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    if (newRoute != null) {
+      final name = newRoute.settings.name ?? _getRouteName(newRoute);
+      if (name.isNotEmpty) {
+        _analytics.logScreenView(screenName: name);
+      }
+    }
+  }
+
+  String _getRouteName(Route route) {
+    // Try to extract route name from route string
+    final routeStr = route.toString();
+    if (routeStr.contains('MaterialPageRoute')) {
+      return routeStr.split('(').first.replaceAll('MaterialPageRoute', '');
+    }
+    return routeStr;
   }
 }
 

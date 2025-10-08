@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../domain/entities/cart.dart';
 import '../../../domain/usecases/cart_usecases.dart';
+import '../../../core/services/analytics_service.dart';
 
 // Events
 abstract class CartEvent extends Equatable {
@@ -18,16 +19,30 @@ class AddToCart extends CartEvent {
   final int quantity;
   final String? variantId;
   final List<String>? optionIds;
+  final String? productName;
+  final double? price;
+  final String? category;
 
   const AddToCart({
     required this.productId,
     required this.quantity,
     this.variantId,
     this.optionIds,
+    this.productName,
+    this.price,
+    this.category,
   });
 
   @override
-  List<Object?> get props => [productId, quantity, variantId, optionIds];
+  List<Object?> get props => [
+    productId,
+    quantity,
+    variantId,
+    optionIds,
+    productName,
+    price,
+    category,
+  ];
 }
 
 class UpdateCartItem extends CartEvent {
@@ -132,6 +147,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   final ClearCartUseCase _clearCartUseCase;
   final ApplyCouponUseCase _applyCouponUseCase;
   final RemoveCouponUseCase _removeCouponUseCase;
+  final AnalyticsService _analytics;
 
   CartBloc({
     required GetCartUseCase getCartUseCase,
@@ -141,6 +157,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     required ClearCartUseCase clearCartUseCase,
     required ApplyCouponUseCase applyCouponUseCase,
     required RemoveCouponUseCase removeCouponUseCase,
+    required AnalyticsService analytics,
   }) : _getCartUseCase = getCartUseCase,
        _addToCartUseCase = addToCartUseCase,
        _updateCartItemUseCase = updateCartItemUseCase,
@@ -148,6 +165,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
        _clearCartUseCase = clearCartUseCase,
        _applyCouponUseCase = applyCouponUseCase,
        _removeCouponUseCase = removeCouponUseCase,
+       _analytics = analytics,
        super(CartInitial()) {
     on<LoadCart>(_onLoadCart);
     on<AddToCart>(_onAddToCart);
@@ -191,11 +209,24 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         variantId: event.variantId,
         optionIds: event.optionIds,
       );
+
+      // 📊 Analytics: Track add to cart
+      if (event.productName != null && event.price != null) {
+        await _analytics.logAddToCart(
+          productId: event.productId,
+          productName: event.productName!,
+          price: event.price!,
+          category: event.category,
+          quantity: event.quantity,
+        );
+      }
+
       emit(CartItemAdded(cartItem));
       // Reload cart to get updated totals
       add(LoadCart());
     } catch (e) {
       emit(CartError(e.toString()));
+      await _analytics.logError(error: e, reason: 'Add to cart failed');
     }
   }
 
@@ -222,11 +253,19 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   ) async {
     try {
       await _removeFromCartUseCase(event.itemId);
+
+      // 📊 Analytics: Track remove from cart
+      await _analytics.logCustomEvent(
+        eventName: 'remove_from_cart',
+        parameters: {'item_id': event.itemId},
+      );
+
       emit(CartItemRemoved(event.itemId));
       // Reload cart to get updated totals
       add(LoadCart());
     } catch (e) {
       emit(CartError(e.toString()));
+      await _analytics.logError(error: e, reason: 'Remove from cart failed');
     }
   }
 

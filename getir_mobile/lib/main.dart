@@ -82,9 +82,22 @@ void main() async {
     await SyncService().initialize();
     await ApiCacheService().initialize();
 
-    // 📊 PERFORMANCE MONITORING
+    // 📊 ANALYTICS & CRASH REPORTING
     AppStartupTracker().markAppStart();
-    await AnalyticsService().initialize();
+
+    // Initialize Firebase Crashlytics
+    final analytics = getIt<AnalyticsService>();
+    await analytics.setCrashlyticsEnabled(true);
+
+    // Set automatic crash reporting
+    FlutterError.onError = (errorDetails) {
+      analytics.logError(
+        error: errorDetails.exception,
+        stackTrace: errorDetails.stack,
+        reason: 'Flutter Framework Error',
+        fatal: true,
+      );
+    };
 
     // 🎉 All systems ready
     debugPrint('✅ All services initialized successfully');
