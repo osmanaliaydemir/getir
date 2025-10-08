@@ -27,31 +27,15 @@ void main() {
   late MockRegisterUseCase mockRegisterUseCase;
   late MockLogoutUseCase mockLogoutUseCase;
   late MockGetCurrentUserUseCase mockGetCurrentUserUseCase;
-  late MockAnalyticsService mockAnalyticsService;
 
   setUp(() {
     mockLoginUseCase = MockLoginUseCase();
     mockRegisterUseCase = MockRegisterUseCase();
     mockLogoutUseCase = MockLogoutUseCase();
     mockGetCurrentUserUseCase = MockGetCurrentUserUseCase();
-    mockAnalyticsService = MockAnalyticsService();
 
-    // Stub analytics methods to prevent errors
-    when(mockAnalyticsService.logLogin(method: anyNamed('method')))
-        .thenAnswer((_) async => {});
-    when(mockAnalyticsService.logSignUp(method: anyNamed('method')))
-        .thenAnswer((_) async => {});
-    when(mockAnalyticsService.logLogout()).thenAnswer((_) async => {});
-    when(mockAnalyticsService.setUserId(any)).thenAnswer((_) async => {});
-    when(
-      mockAnalyticsService.logError(
-        error: anyNamed('error'),
-        stackTrace: anyNamed('stackTrace'),
-        reason: anyNamed('reason'),
-        context: anyNamed('context'),
-        fatal: anyNamed('fatal'),
-      ),
-    ).thenAnswer((_) async => {});
+    // Create a simple mock analytics that does nothing
+    final mockAnalyticsService = _MockAnalyticsService();
 
     authBloc = AuthBloc(
       mockLoginUseCase,
@@ -183,4 +167,10 @@ void main() {
       );
     });
   });
+}
+
+// Simple mock implementation for AnalyticsService
+class _MockAnalyticsService implements AnalyticsService {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => Future.value();
 }
