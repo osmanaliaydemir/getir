@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:injectable/injectable.dart';
 import 'local_storage_service.dart';
 import 'network_service.dart';
 
@@ -7,7 +6,6 @@ import 'network_service.dart';
 ///
 /// Manages offline actions and syncs them when back online.
 /// Supports: Add to cart, remove from cart, favorites, ratings, etc.
-@lazySingleton
 class PendingActionsService {
   final LocalStorageService _localStorage;
   final NetworkService _networkService;

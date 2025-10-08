@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:injectable/injectable.dart';
 import 'network_service.dart';
 import 'sync_service.dart';
 import 'analytics_service.dart';
@@ -13,7 +12,6 @@ import 'analytics_service.dart';
 /// - Exponential backoff for retries
 /// - Connection quality monitoring
 /// - Analytics tracking for offline/online events
-@lazySingleton
 class ReconnectionStrategyService {
   final NetworkService _networkService;
   final SyncService _syncService;
@@ -191,7 +189,6 @@ class ReconnectionStrategyService {
 /// Connection Quality Monitor
 ///
 /// Monitors connection quality and provides insights
-@lazySingleton
 class ConnectionQualityMonitor {
   final NetworkService _networkService;
 

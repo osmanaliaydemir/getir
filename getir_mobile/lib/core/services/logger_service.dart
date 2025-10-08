@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:injectable/injectable.dart';
 import 'analytics_service.dart';
 import '../di/injection.dart';
 
@@ -25,7 +24,6 @@ enum LogLevel {
 /// - Production-safe logging (no sensitive data)
 /// - Log file rotation (optional)
 /// - Remote logging (via Firebase)
-@lazySingleton
 class LoggerService {
   final AnalyticsService _analytics;
 

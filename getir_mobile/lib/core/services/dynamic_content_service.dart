@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:injectable/injectable.dart';
 import 'package:dio/dio.dart';
 import 'local_storage_service.dart';
 import 'logger_service.dart';
@@ -13,7 +12,6 @@ import 'logger_service.dart';
 /// - Fallback to static translations
 /// - RTL support
 /// - Language-specific assets
-@lazySingleton
 class DynamicContentService {
   final Dio _dio;
   final LocalStorageService _localStorage;
@@ -273,7 +271,6 @@ class DynamicContentService {
 /// Language-specific Asset Service
 ///
 /// Loads language-specific images and assets
-@lazySingleton
 class LanguageAssetService {
   final LoggerService _logger;
 

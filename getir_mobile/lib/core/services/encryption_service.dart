@@ -3,23 +3,16 @@ import 'dart:typed_data';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
-import 'package:injectable/injectable.dart';
 import '../config/environment_config.dart';
 
 /// Encryption Service for sensitive data
 /// Uses flutter_secure_storage for token/password storage
 /// Uses AES encryption for additional sensitive data
-@lazySingleton
 class EncryptionService {
-
   // Secure storage instance
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
-    ),
-    iOptions: IOSOptions(
-      accessibility: KeychainAccessibility.first_unlock,
-    ),
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
   );
 
   // Storage keys

@@ -198,20 +198,21 @@ final result = await _authService.login(email, password);
 ✅ lib/presentation/bloc/working_hours/working_hours_bloc.dart
 ```
 
-### Can Be Deleted (Future Cleanup)
+### Deleted Files (Cleanup Complete)
 ```
-⏳ lib/domain/usecases/auth_usecases.dart
-⏳ lib/domain/usecases/cart_usecases.dart
-⏳ lib/domain/usecases/product_usecases.dart
-⏳ lib/domain/usecases/merchant_usecases.dart
-⏳ lib/domain/usecases/order_usecases.dart
-⏳ lib/domain/usecases/address_usecases.dart
-⏳ lib/domain/usecases/profile_usecases.dart
-⏳ lib/domain/usecases/notification_usecases.dart
-⏳ lib/domain/usecases/review_usecases.dart
-⏳ lib/domain/usecases/working_hours_usecases.dart
+✅ lib/domain/usecases/auth_usecases.dart - DELETED
+✅ lib/domain/usecases/cart_usecases.dart - DELETED
+✅ lib/domain/usecases/product_usecases.dart - DELETED
+✅ lib/domain/usecases/merchant_usecases.dart - DELETED
+✅ lib/domain/usecases/order_usecases.dart - DELETED
+✅ lib/domain/usecases/address_usecases.dart - DELETED
+✅ lib/domain/usecases/profile_usecases.dart - DELETED
+✅ lib/domain/usecases/notification_usecases.dart - DELETED
+✅ lib/domain/usecases/review_usecases.dart - DELETED
+✅ lib/domain/usecases/working_hours_usecases.dart - DELETED
+✅ lib/domain/usecases/ directory - DELETED
 
-Note: Keep them for now to avoid breaking existing references
+Total: ~1,097 lines of code removed
 ```
 
 ---

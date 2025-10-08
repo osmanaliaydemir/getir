@@ -1,10 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:injectable/injectable.dart';
 import 'auth_datasource.dart';
 import '../models/auth_models.dart';
 
-@LazySingleton(as: AuthDataSource)
 class AuthDataSourceImpl implements AuthDataSource {
   final Dio _dio;
   final SharedPreferences _prefs;
