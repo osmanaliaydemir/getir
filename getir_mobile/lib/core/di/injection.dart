@@ -182,9 +182,9 @@ void _registerBlocs() {
   // SearchBloc
   getIt.registerFactory(
     () => SearchBloc(
-      searchMerchantsUseCase: getIt(),
-      searchProductsUseCase: getIt(),
-      searchHistoryService: getIt(),
+      getIt<MerchantService>(),
+      getIt<ProductService>(),
+      getIt<SearchHistoryService>(),
     ),
   );
 
