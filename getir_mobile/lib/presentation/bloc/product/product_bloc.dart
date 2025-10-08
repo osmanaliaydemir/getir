@@ -2,7 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/product.dart';
-import '../../../domain/usecases/product_usecases.dart';
+import '../../../domain/services/product_service.dart';
 
 // Events
 abstract class ProductEvent extends Equatable {
@@ -119,24 +119,9 @@ class ProductError extends ProductState {
 
 // BLoC
 class ProductBloc extends Bloc<ProductEvent, ProductState> {
-  final GetProductsUseCase _getProductsUseCase;
-  final GetProductByIdUseCase _getProductByIdUseCase;
-  final GetProductsByMerchantUseCase _getProductsByMerchantUseCase;
-  final SearchProductsUseCase _searchProductsUseCase;
-  final GetCategoriesUseCase _getCategoriesUseCase;
+  final ProductService _productService;
 
-  ProductBloc({
-    required GetProductsUseCase getProductsUseCase,
-    required GetProductByIdUseCase getProductByIdUseCase,
-    required GetProductsByMerchantUseCase getProductsByMerchantUseCase,
-    required SearchProductsUseCase searchProductsUseCase,
-    required GetCategoriesUseCase getCategoriesUseCase,
-  }) : _getProductsUseCase = getProductsUseCase,
-       _getProductByIdUseCase = getProductByIdUseCase,
-       _getProductsByMerchantUseCase = getProductsByMerchantUseCase,
-       _searchProductsUseCase = searchProductsUseCase,
-       _getCategoriesUseCase = getCategoriesUseCase,
-       super(ProductInitial()) {
+  ProductBloc(this._productService) : super(ProductInitial()) {
     on<LoadProducts>(_onLoadProducts);
     on<LoadProductById>(_onLoadProductById);
     on<LoadProductsByMerchant>(_onLoadProductsByMerchant);
@@ -151,12 +136,11 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   ) async {
     emit(ProductLoading());
 
-    final result = await _getProductsUseCase(
+    final result = await _productService.getProducts(
       page: event.page,
       limit: event.limit,
       merchantId: event.merchantId,
       category: event.category,
-      search: event.search,
     );
 
     result.when(
@@ -174,7 +158,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   ) async {
     emit(ProductLoading());
 
-    final result = await _getProductByIdUseCase(event.id);
+    final result = await _productService.getProductById(event.id);
 
     result.when(
       success: (product) => emit(ProductLoaded(product)),
@@ -191,7 +175,9 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   ) async {
     emit(ProductLoading());
 
-    final result = await _getProductsByMerchantUseCase(event.merchantId);
+    final result = await _productService.getProductsByMerchant(
+      event.merchantId,
+    );
 
     result.when(
       success: (products) => emit(ProductsLoaded(products)),
@@ -208,7 +194,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   ) async {
     emit(ProductLoading());
 
-    final result = await _searchProductsUseCase(event.query);
+    final result = await _productService.searchProducts(event.query);
 
     result.when(
       success: (products) => emit(ProductsLoaded(products)),
@@ -225,7 +211,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   ) async {
     emit(ProductLoading());
 
-    final result = await _getProductsUseCase(category: event.category);
+    final result = await _productService.getProducts(category: event.category);
 
     result.when(
       success: (products) => emit(ProductsLoaded(products)),
@@ -240,7 +226,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     LoadCategories event,
     Emitter<ProductState> emit,
   ) async {
-    final result = await _getCategoriesUseCase();
+    final result = await _productService.getCategories();
 
     result.when(
       success: (categories) => emit(ProductCategoriesLoaded(categories)),

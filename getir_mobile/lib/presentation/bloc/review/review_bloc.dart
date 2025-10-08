@@ -1,22 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/errors/app_exceptions.dart';
-import '../../../domain/usecases/review_usecases.dart';
+import '../../../domain/services/review_service.dart';
 import 'review_event.dart';
 import 'review_state.dart';
 
 class ReviewBloc extends Bloc<ReviewEvent, ReviewState> {
-  final SubmitReviewUseCase _submitReviewUseCase;
-  final GetMerchantReviewsUseCase _getMerchantReviewsUseCase;
-  final MarkReviewAsHelpfulUseCase _markReviewAsHelpfulUseCase;
+  final ReviewService _reviewService;
 
-  ReviewBloc({
-    required SubmitReviewUseCase submitReviewUseCase,
-    required GetMerchantReviewsUseCase getMerchantReviewsUseCase,
-    required MarkReviewAsHelpfulUseCase markReviewAsHelpfulUseCase,
-  })  : _submitReviewUseCase = submitReviewUseCase,
-        _getMerchantReviewsUseCase = getMerchantReviewsUseCase,
-        _markReviewAsHelpfulUseCase = markReviewAsHelpfulUseCase,
-        super(ReviewInitial()) {
+  ReviewBloc(this._reviewService) : super(ReviewInitial()) {
     on<SubmitReview>(_onSubmitReview);
     on<LoadMerchantReviews>(_onLoadMerchantReviews);
     on<MarkReviewHelpful>(_onMarkReviewHelpful);
@@ -28,7 +19,7 @@ class ReviewBloc extends Bloc<ReviewEvent, ReviewState> {
   ) async {
     emit(ReviewLoading());
 
-    final result = await _submitReviewUseCase(event.request);
+    final result = await _reviewService.submitReview(event.request);
 
     result.when(
       success: (review) => emit(ReviewSubmitted(review)),
@@ -45,7 +36,7 @@ class ReviewBloc extends Bloc<ReviewEvent, ReviewState> {
   ) async {
     emit(ReviewLoading());
 
-    final result = await _getMerchantReviewsUseCase(
+    final result = await _reviewService.getMerchantReviews(
       event.merchantId,
       page: event.page,
     );
@@ -64,7 +55,7 @@ class ReviewBloc extends Bloc<ReviewEvent, ReviewState> {
     MarkReviewHelpful event,
     Emitter<ReviewState> emit,
   ) async {
-    final result = await _markReviewAsHelpfulUseCase(event.reviewId);
+    final result = await _reviewService.markReviewAsHelpful(event.reviewId);
 
     result.when(
       success: (_) => emit(ReviewMarkedHelpful(event.reviewId)),

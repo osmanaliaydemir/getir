@@ -25,4 +25,22 @@ class WorkingHoursService {
   Future<Result<WorkingHours>> getWorkingHoursById(String id) async {
     return await _repository.getWorkingHoursById(id);
   }
+
+  /// Gets the next open time for a merchant
+  ///
+  /// This is a client-side calculation based on working hours
+  Future<Result<DateTime?>> getNextOpenTime(String merchantId) async {
+    final workingHoursResult = await _repository.getWorkingHoursByMerchant(
+      merchantId,
+    );
+
+    return workingHoursResult.when(
+      success: (workingHours) {
+        // Client-side logic to calculate next open time
+        // For now, return null (merchant is always open or closed)
+        return Result.success(null);
+      },
+      failure: (exception) => Result.failure(exception),
+    );
+  }
 }

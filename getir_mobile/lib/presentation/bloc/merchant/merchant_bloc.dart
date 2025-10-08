@@ -2,7 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/merchant.dart';
-import '../../../domain/usecases/merchant_usecases.dart';
+import '../../../domain/services/merchant_service.dart';
 
 // Events
 abstract class MerchantEvent extends Equatable {
@@ -135,27 +135,9 @@ class MerchantError extends MerchantState {
 
 // BLoC
 class MerchantBloc extends Bloc<MerchantEvent, MerchantState> {
-  final GetMerchantsUseCase _getMerchantsUseCase;
-  final GetMerchantByIdUseCase _getMerchantByIdUseCase;
-  final SearchMerchantsUseCase _searchMerchantsUseCase;
-  final GetNearbyMerchantsUseCase _getNearbyMerchantsUseCase;
-  final GetNearbyMerchantsByCategoryUseCase
-  _getNearbyMerchantsByCategoryUseCase;
+  final MerchantService _merchantService;
 
-  MerchantBloc({
-    required GetMerchantsUseCase getMerchantsUseCase,
-    required GetMerchantByIdUseCase getMerchantByIdUseCase,
-    required SearchMerchantsUseCase searchMerchantsUseCase,
-    required GetNearbyMerchantsUseCase getNearbyMerchantsUseCase,
-    required GetNearbyMerchantsByCategoryUseCase
-    getNearbyMerchantsByCategoryUseCase,
-  }) : _getMerchantsUseCase = getMerchantsUseCase,
-       _getMerchantByIdUseCase = getMerchantByIdUseCase,
-       _searchMerchantsUseCase = searchMerchantsUseCase,
-       _getNearbyMerchantsUseCase = getNearbyMerchantsUseCase,
-       _getNearbyMerchantsByCategoryUseCase =
-           getNearbyMerchantsByCategoryUseCase,
-       super(MerchantInitial()) {
+  MerchantBloc(this._merchantService) : super(MerchantInitial()) {
     on<LoadMerchants>(_onLoadMerchants);
     on<LoadMerchantById>(_onLoadMerchantById);
     on<SearchMerchants>(_onSearchMerchants);
@@ -169,14 +151,11 @@ class MerchantBloc extends Bloc<MerchantEvent, MerchantState> {
   ) async {
     emit(MerchantLoading());
 
-    final result = await _getMerchantsUseCase(
+    final result = await _merchantService.getMerchants(
       page: event.page,
       limit: event.limit,
       search: event.search,
       category: event.category,
-      latitude: event.latitude,
-      longitude: event.longitude,
-      radius: event.radius,
     );
 
     result.when(
@@ -194,7 +173,7 @@ class MerchantBloc extends Bloc<MerchantEvent, MerchantState> {
   ) async {
     emit(MerchantLoading());
 
-    final result = await _getMerchantByIdUseCase(event.id);
+    final result = await _merchantService.getMerchantById(event.id);
 
     result.when(
       success: (merchant) => emit(MerchantLoaded(merchant)),
@@ -211,7 +190,7 @@ class MerchantBloc extends Bloc<MerchantEvent, MerchantState> {
   ) async {
     emit(MerchantLoading());
 
-    final result = await _searchMerchantsUseCase(event.query);
+    final result = await _merchantService.searchMerchants(event.query);
 
     result.when(
       success: (merchants) => emit(MerchantsLoaded(merchants)),
@@ -228,7 +207,7 @@ class MerchantBloc extends Bloc<MerchantEvent, MerchantState> {
   ) async {
     emit(MerchantLoading());
 
-    final result = await _getNearbyMerchantsUseCase(
+    final result = await _merchantService.getNearbyMerchants(
       latitude: event.latitude,
       longitude: event.longitude,
       radius: event.radius,
@@ -249,7 +228,7 @@ class MerchantBloc extends Bloc<MerchantEvent, MerchantState> {
   ) async {
     emit(MerchantLoading());
 
-    final result = await _getNearbyMerchantsByCategoryUseCase(
+    final result = await _merchantService.getNearbyMerchantsByCategory(
       latitude: event.latitude,
       longitude: event.longitude,
       categoryType: event.categoryType,

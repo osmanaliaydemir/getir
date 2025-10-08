@@ -1,23 +1,15 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/working_hours.dart';
-import '../../../domain/usecases/working_hours_usecases.dart';
+import '../../../domain/services/working_hours_service.dart';
 import 'working_hours_event.dart';
 import 'working_hours_state.dart';
 
 class WorkingHoursBloc extends Bloc<WorkingHoursEvent, WorkingHoursState> {
-  final GetWorkingHoursUseCase _getWorkingHoursUseCase;
-  final CheckIfMerchantOpenUseCase _checkIfMerchantOpenUseCase;
-  final GetNextOpenTimeUseCase _getNextOpenTimeUseCase;
+  final WorkingHoursService _workingHoursService;
 
-  WorkingHoursBloc({
-    required GetWorkingHoursUseCase getWorkingHoursUseCase,
-    required CheckIfMerchantOpenUseCase checkIfMerchantOpenUseCase,
-    required GetNextOpenTimeUseCase getNextOpenTimeUseCase,
-  })  : _getWorkingHoursUseCase = getWorkingHoursUseCase,
-        _checkIfMerchantOpenUseCase = checkIfMerchantOpenUseCase,
-        _getNextOpenTimeUseCase = getNextOpenTimeUseCase,
-        super(WorkingHoursInitial()) {
+  WorkingHoursBloc(this._workingHoursService) : super(WorkingHoursInitial()) {
     on<LoadWorkingHours>(_onLoadWorkingHours);
     on<CheckMerchantOpen>(_onCheckMerchantOpen);
     on<LoadNextOpenTime>(_onLoadNextOpenTime);
@@ -29,7 +21,7 @@ class WorkingHoursBloc extends Bloc<WorkingHoursEvent, WorkingHoursState> {
   ) async {
     emit(WorkingHoursLoading());
 
-    final result = await _getWorkingHoursUseCase(event.merchantId);
+    final result = await _workingHoursService.getWorkingHours(event.merchantId);
 
     result.when(
       success: (workingHours) {
@@ -44,11 +36,13 @@ class WorkingHoursBloc extends Bloc<WorkingHoursEvent, WorkingHoursState> {
             ? null
             : WorkingHoursHelper.getNextOpenTime(workingHours);
 
-        emit(WorkingHoursLoaded(
-          workingHours: WorkingHoursHelper.sortByDay(workingHours),
-          isOpen: isOpen,
-          nextOpenTime: nextOpenTime,
-        ));
+        emit(
+          WorkingHoursLoaded(
+            workingHours: WorkingHoursHelper.sortByDay(workingHours),
+            isOpen: isOpen,
+            nextOpenTime: nextOpenTime,
+          ),
+        );
       },
       failure: (exception) {
         final message = _getErrorMessage(exception);
@@ -63,7 +57,7 @@ class WorkingHoursBloc extends Bloc<WorkingHoursEvent, WorkingHoursState> {
   ) async {
     emit(WorkingHoursLoading());
 
-    final result = await _checkIfMerchantOpenUseCase(
+    final result = await _workingHoursService.checkIfMerchantOpen(
       event.merchantId,
       checkTime: event.checkTime,
     );
@@ -83,7 +77,7 @@ class WorkingHoursBloc extends Bloc<WorkingHoursEvent, WorkingHoursState> {
   ) async {
     emit(WorkingHoursLoading());
 
-    final result = await _getNextOpenTimeUseCase(event.merchantId);
+    final result = await _workingHoursService.getNextOpenTime(event.merchantId);
 
     result.when(
       success: (nextOpenTime) {
@@ -92,10 +86,14 @@ class WorkingHoursBloc extends Bloc<WorkingHoursEvent, WorkingHoursState> {
           return;
         }
 
-        emit(NextOpenTimeLoaded(
-          dayName: nextOpenTime.$1,
-          openTime: nextOpenTime.$2,
-        ));
+        // Format the datetime for display
+        final dayName = _getDayName(nextOpenTime.weekday);
+        final openTime = TimeOfDay(
+          hour: nextOpenTime.hour,
+          minute: nextOpenTime.minute,
+        );
+
+        emit(NextOpenTimeLoaded(dayName: dayName, openTime: openTime));
       },
       failure: (exception) {
         final message = _getErrorMessage(exception);
@@ -111,5 +109,18 @@ class WorkingHoursBloc extends Bloc<WorkingHoursEvent, WorkingHoursState> {
     }
     return 'An unexpected error occurred';
   }
-}
 
+  /// Helper to convert weekday number to Turkish day name
+  String _getDayName(int weekday) {
+    const days = [
+      'Pazartesi',
+      'Salı',
+      'Çarşamba',
+      'Perşembe',
+      'Cuma',
+      'Cumartesi',
+      'Pazar',
+    ];
+    return days[weekday - 1];
+  }
+}

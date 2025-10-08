@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/order.dart';
-import '../../../domain/usecases/order_usecases.dart';
+import '../../../domain/services/order_service.dart';
 import '../../../data/datasources/order_datasource.dart';
 import '../../../core/services/analytics_service.dart';
 
@@ -139,30 +139,10 @@ class OrderError extends OrderState {
 
 // BLoC
 class OrderBloc extends Bloc<OrderEvent, OrderState> {
-  final GetUserOrdersUseCase _getUserOrdersUseCase;
-  final GetOrderByIdUseCase _getOrderByIdUseCase;
-  final CreateOrderUseCase _createOrderUseCase;
-  final CancelOrderUseCase _cancelOrderUseCase;
-  final ProcessPaymentUseCase _processPaymentUseCase;
-  final GetPaymentStatusUseCase _getPaymentStatusUseCase;
+  final OrderService _orderService;
   final AnalyticsService _analytics;
 
-  OrderBloc({
-    required GetUserOrdersUseCase getUserOrdersUseCase,
-    required GetOrderByIdUseCase getOrderByIdUseCase,
-    required CreateOrderUseCase createOrderUseCase,
-    required CancelOrderUseCase cancelOrderUseCase,
-    required ProcessPaymentUseCase processPaymentUseCase,
-    required GetPaymentStatusUseCase getPaymentStatusUseCase,
-    required AnalyticsService analytics,
-  }) : _getUserOrdersUseCase = getUserOrdersUseCase,
-       _getOrderByIdUseCase = getOrderByIdUseCase,
-       _createOrderUseCase = createOrderUseCase,
-       _cancelOrderUseCase = cancelOrderUseCase,
-       _processPaymentUseCase = processPaymentUseCase,
-       _getPaymentStatusUseCase = getPaymentStatusUseCase,
-       _analytics = analytics,
-       super(OrderInitial()) {
+  OrderBloc(this._orderService, this._analytics) : super(OrderInitial()) {
     on<LoadUserOrders>(_onLoadUserOrders);
     on<LoadOrderById>(_onLoadOrderById);
     on<CreateOrder>(_onCreateOrder);
@@ -177,7 +157,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   ) async {
     emit(OrderLoading());
 
-    final result = await _getUserOrdersUseCase();
+    final result = await _orderService.getUserOrders();
 
     result.when(
       success: (orders) => emit(OrdersLoaded(orders)),
@@ -194,7 +174,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   ) async {
     emit(OrderLoading());
 
-    final result = await _getOrderByIdUseCase(event.orderId);
+    final result = await _orderService.getOrderById(event.orderId);
 
     result.when(
       success: (order) => emit(OrderLoaded(order)),
@@ -211,7 +191,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   ) async {
     emit(OrderLoading());
 
-    final result = await _createOrderUseCase(event.request);
+    final result = await _orderService.createOrder(event.request);
 
     result.when(
       success: (order) async {
@@ -252,7 +232,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   ) async {
     emit(OrderLoading());
 
-    final result = await _cancelOrderUseCase(event.orderId);
+    final result = await _orderService.cancelOrder(event.orderId);
 
     result.when(
       success: (order) async {
@@ -282,7 +262,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   ) async {
     emit(OrderLoading());
 
-    final result = await _processPaymentUseCase(event.request);
+    final result = await _orderService.processPayment(event.request);
 
     result.when(
       success: (paymentResult) async {
@@ -312,7 +292,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   ) async {
     emit(OrderLoading());
 
-    final result = await _getPaymentStatusUseCase(event.paymentId);
+    final result = await _orderService.getPaymentStatus(event.paymentId);
 
     result.when(
       success: (paymentResult) => emit(PaymentStatusLoaded(paymentResult)),

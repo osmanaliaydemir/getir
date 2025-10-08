@@ -153,26 +153,10 @@ void _registerBlocs() {
   );
 
   // MerchantBloc
-  getIt.registerFactory(
-    () => MerchantBloc(
-      getMerchantsUseCase: getIt(),
-      getMerchantByIdUseCase: getIt(),
-      searchMerchantsUseCase: getIt(),
-      getNearbyMerchantsUseCase: getIt(),
-      getNearbyMerchantsByCategoryUseCase: getIt(),
-    ),
-  );
+  getIt.registerFactory(() => MerchantBloc(getIt<MerchantService>()));
 
   // ProductBloc
-  getIt.registerFactory(
-    () => ProductBloc(
-      getProductsUseCase: getIt(),
-      getProductByIdUseCase: getIt(),
-      getProductsByMerchantUseCase: getIt(),
-      searchProductsUseCase: getIt(),
-      getCategoriesUseCase: getIt(),
-    ),
-  );
+  getIt.registerFactory(() => ProductBloc(getIt<ProductService>()));
 
   // CartBloc
   getIt.registerFactory(
@@ -180,44 +164,19 @@ void _registerBlocs() {
   );
 
   // AddressBloc
-  getIt.registerFactory(
-    () => AddressBloc(
-      getUserAddressesUseCase: getIt(),
-      getAddressByIdUseCase: getIt(),
-      createAddressUseCase: getIt(),
-      updateAddressUseCase: getIt(),
-      deleteAddressUseCase: getIt(),
-      setDefaultAddressUseCase: getIt(),
-    ),
-  );
+  getIt.registerFactory(() => AddressBloc(getIt<AddressService>()));
 
   // OrderBloc
   getIt.registerFactory(
-    () => OrderBloc(
-      getUserOrdersUseCase: getIt(),
-      getOrderByIdUseCase: getIt(),
-      createOrderUseCase: getIt(),
-      cancelOrderUseCase: getIt(),
-      processPaymentUseCase: getIt(),
-      getPaymentStatusUseCase: getIt(),
-      analytics: getIt(),
-    ),
+    () => OrderBloc(getIt<OrderService>(), getIt<AnalyticsService>()),
   );
 
   // ProfileBloc
-  getIt.registerFactory(
-    () => ProfileBloc(
-      getUserProfileUseCase: getIt(),
-      updateUserProfileUseCase: getIt(),
-    ),
-  );
+  getIt.registerFactory(() => ProfileBloc(getIt<ProfileService>()));
 
   // NotificationPreferencesBloc
   getIt.registerFactory(
-    () => NotificationPreferencesBloc(
-      getUseCase: getIt(),
-      updateUseCase: getIt(),
-    ),
+    () => NotificationPreferencesBloc(getIt<NotificationService>()),
   );
 
   // SearchBloc
@@ -232,23 +191,11 @@ void _registerBlocs() {
   // NotificationsFeedBloc
   getIt.registerFactory(() => NotificationsFeedBloc(repository: getIt()));
 
-  // WorkingHoursBloc
-  getIt.registerFactory(
-    () => WorkingHoursBloc(
-      getWorkingHoursUseCase: getIt(),
-      checkIfMerchantOpenUseCase: getIt(),
-      getNextOpenTimeUseCase: getIt(),
-    ),
-  );
-
   // ReviewBloc
-  getIt.registerFactory(
-    () => ReviewBloc(
-      submitReviewUseCase: getIt(),
-      getMerchantReviewsUseCase: getIt(),
-      markReviewAsHelpfulUseCase: getIt(),
-    ),
-  );
+  getIt.registerFactory(() => ReviewBloc(getIt<ReviewService>()));
+
+  // WorkingHoursBloc
+  getIt.registerFactory(() => WorkingHoursBloc(getIt<WorkingHoursService>()));
 }
 
 /// Create Dio instance with interceptors

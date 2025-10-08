@@ -2,7 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/address.dart';
-import '../../../domain/usecases/address_usecases.dart';
+import '../../../domain/services/address_service.dart';
 import '../../../data/datasources/address_datasource.dart';
 
 // Events
@@ -138,27 +138,9 @@ class AddressError extends AddressState {
 
 // BLoC
 class AddressBloc extends Bloc<AddressEvent, AddressState> {
-  final GetUserAddressesUseCase _getUserAddressesUseCase;
-  final GetAddressByIdUseCase _getAddressByIdUseCase;
-  final CreateAddressUseCase _createAddressUseCase;
-  final UpdateAddressUseCase _updateAddressUseCase;
-  final DeleteAddressUseCase _deleteAddressUseCase;
-  final SetDefaultAddressUseCase _setDefaultAddressUseCase;
+  final AddressService _addressService;
 
-  AddressBloc({
-    required GetUserAddressesUseCase getUserAddressesUseCase,
-    required GetAddressByIdUseCase getAddressByIdUseCase,
-    required CreateAddressUseCase createAddressUseCase,
-    required UpdateAddressUseCase updateAddressUseCase,
-    required DeleteAddressUseCase deleteAddressUseCase,
-    required SetDefaultAddressUseCase setDefaultAddressUseCase,
-  }) : _getUserAddressesUseCase = getUserAddressesUseCase,
-       _getAddressByIdUseCase = getAddressByIdUseCase,
-       _createAddressUseCase = createAddressUseCase,
-       _updateAddressUseCase = updateAddressUseCase,
-       _deleteAddressUseCase = deleteAddressUseCase,
-       _setDefaultAddressUseCase = setDefaultAddressUseCase,
-       super(AddressInitial()) {
+  AddressBloc(this._addressService) : super(AddressInitial()) {
     on<LoadUserAddresses>(_onLoadUserAddresses);
     on<LoadAddressById>(_onLoadAddressById);
     on<CreateAddress>(_onCreateAddress);
@@ -173,7 +155,7 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
   ) async {
     emit(AddressLoading());
 
-    final result = await _getUserAddressesUseCase();
+    final result = await _addressService.getUserAddresses();
 
     result.when(
       success: (addresses) => emit(AddressesLoaded(addresses)),
@@ -190,7 +172,7 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
   ) async {
     emit(AddressLoading());
 
-    final result = await _getAddressByIdUseCase(event.addressId);
+    final result = await _addressService.getAddressById(event.addressId);
 
     result.when(
       success: (address) => emit(AddressLoaded(address)),
@@ -207,7 +189,7 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
   ) async {
     emit(AddressLoading());
 
-    final result = await _createAddressUseCase(event.request);
+    final result = await _addressService.createAddress(event.request);
 
     result.when(
       success: (address) => emit(AddressCreated(address)),
@@ -224,7 +206,10 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
   ) async {
     emit(AddressLoading());
 
-    final result = await _updateAddressUseCase(event.addressId, event.request);
+    final result = await _addressService.updateAddress(
+      event.addressId,
+      event.request,
+    );
 
     result.when(
       success: (address) => emit(AddressUpdated(address)),
@@ -241,7 +226,7 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
   ) async {
     emit(AddressLoading());
 
-    final result = await _deleteAddressUseCase(event.addressId);
+    final result = await _addressService.deleteAddress(event.addressId);
 
     result.when(
       success: (_) => emit(AddressDeleted(event.addressId)),
@@ -258,7 +243,7 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
   ) async {
     emit(AddressLoading());
 
-    final result = await _setDefaultAddressUseCase(event.addressId);
+    final result = await _addressService.setDefaultAddress(event.addressId);
 
     result.when(
       success: (address) => emit(DefaultAddressSet(address)),

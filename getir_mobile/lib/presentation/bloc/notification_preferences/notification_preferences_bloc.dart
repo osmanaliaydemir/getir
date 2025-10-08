@@ -2,24 +2,21 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/notification_preferences.dart';
-import '../../../domain/usecases/notification_usecases.dart';
+import '../../../domain/services/notification_service.dart';
 
 part 'notification_preferences_event.dart';
 part 'notification_preferences_state.dart';
 
 class NotificationPreferencesBloc
     extends Bloc<NotificationPreferencesEvent, NotificationPreferencesState> {
-  final GetNotificationPreferencesUseCase getUseCase;
-  final UpdateNotificationPreferencesUseCase updateUseCase;
+  final NotificationService _notificationService;
 
-  NotificationPreferencesBloc({
-    required this.getUseCase,
-    required this.updateUseCase,
-  }) : super(NotificationPreferencesInitial()) {
+  NotificationPreferencesBloc(this._notificationService)
+    : super(NotificationPreferencesInitial()) {
     on<LoadNotificationPreferences>((event, emit) async {
       emit(NotificationPreferencesLoading());
 
-      final result = await getUseCase();
+      final result = await _notificationService.getPreferences();
 
       result.when(
         success: (prefs) => emit(NotificationPreferencesLoaded(prefs)),
@@ -31,7 +28,9 @@ class NotificationPreferencesBloc
     });
 
     on<UpdateNotificationPreferencesEvent>((event, emit) async {
-      final result = await updateUseCase(event.preferences);
+      final result = await _notificationService.updatePreferences(
+        event.preferences,
+      );
 
       result.when(
         success: (updated) => emit(NotificationPreferencesLoaded(updated)),
