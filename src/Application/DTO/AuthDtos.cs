@@ -35,3 +35,10 @@ public record UserProfileResponse(
     UserRole Role,
     bool IsEmailVerified,
     DateTime CreatedAt);
+
+public record ForgotPasswordRequest(
+    string Email);
+
+public record ResetPasswordRequest(
+    string Token,
+    string NewPassword);
