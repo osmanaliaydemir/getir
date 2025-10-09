@@ -32,6 +32,7 @@ public class AppDbContext : DbContext
     public DbSet<UserLoyaltyPoint> UserLoyaltyPoints { get; set; }
     public DbSet<LoyaltyPointTransaction> LoyaltyPointTransactions { get; set; }
     public DbSet<WorkingHours> WorkingHours { get; set; }
+    public DbSet<SpecialHoliday> SpecialHolidays { get; set; }
     public DbSet<DeliveryZone> DeliveryZones { get; set; }
     public DbSet<ProductOptionGroup> ProductOptionGroups { get; set; }
     public DbSet<ProductOption> ProductOptions { get; set; }
@@ -259,6 +260,43 @@ public class AppDbContext : DbContext
             
             entity.HasOne(e => e.Merchant)
                 .WithMany(m => m.WorkingHours)
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // SpecialHoliday configuration
+        modelBuilder.Entity<SpecialHoliday>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.StartDate).IsRequired();
+            entity.Property(e => e.EndDate).IsRequired();
+            entity.Property(e => e.IsClosed).IsRequired().HasDefaultValue(true);
+            
+            // Nullable TimeSpan conversion
+            entity.Property(e => e.SpecialOpenTime)
+                .HasConversion(
+                    v => v.HasValue ? v.Value.ToString(@"hh\:mm\:ss") : null,
+                    v => string.IsNullOrEmpty(v) ? (TimeSpan?)null : TimeSpan.Parse(v))
+                .HasColumnType("TIME");
+            
+            entity.Property(e => e.SpecialCloseTime)
+                .HasConversion(
+                    v => v.HasValue ? v.Value.ToString(@"hh\:mm\:ss") : null,
+                    v => string.IsNullOrEmpty(v) ? (TimeSpan?)null : TimeSpan.Parse(v))
+                .HasColumnType("TIME");
+            
+            entity.Property(e => e.IsRecurring).IsRequired().HasDefaultValue(false);
+            entity.Property(e => e.IsActive).IsRequired().HasDefaultValue(true);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.MerchantId);
+            entity.HasIndex(e => new { e.StartDate, e.EndDate });
+            entity.HasIndex(e => e.IsActive);
+            
+            entity.HasOne(e => e.Merchant)
+                .WithMany()
                 .HasForeignKey(e => e.MerchantId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
