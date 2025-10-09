@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'local_storage_service.dart';
 import 'network_service.dart';
+import 'logger_service.dart';
 
 /// Pending Actions Service
 ///
@@ -29,13 +30,9 @@ class PendingActionsService {
     if (_networkService.isOnline) {
       // If online, we might still want to queue for reliability
       // But typically you'd execute immediately
-      if (kDebugMode) {
-        debugPrint('📊 Action queued (online): $action');
-      }
+      logger.debug('Action queued (online)', tag: 'PendingActions', context: {'action': action});
     } else {
-      if (kDebugMode) {
-        debugPrint('📴 Action queued (offline): $action');
-      }
+      logger.debug('Action queued (offline)', tag: 'PendingActions', context: {'action': action});
     }
 
     await _localStorage.addToSyncQueue(action, data);

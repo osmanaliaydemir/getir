@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'network_service.dart';
 import 'sync_service.dart';
 import 'analytics_service.dart';
+import 'logger_service.dart';
 
 /// Reconnection Strategy Service
 ///
@@ -57,13 +58,14 @@ class ReconnectionStrategyService {
         ? DateTime.now().difference(_offlineSince!)
         : null;
 
-    if (kDebugMode) {
-      debugPrint('✅ Network reconnected!');
-      if (offlineDuration != null) {
-        debugPrint('   Offline duration: ${offlineDuration.inSeconds}s');
-      }
-      debugPrint('   Reconnect attempt: $_reconnectAttempts');
-    }
+    logger.info(
+      'Network reconnected',
+      tag: 'Reconnection',
+      context: {
+        'offlineDurationSec': offlineDuration?.inSeconds,
+        'reconnectAttempts': _reconnectAttempts,
+      },
+    );
 
     // Track analytics
     await _analytics.logCustomEvent(
@@ -92,9 +94,11 @@ class ReconnectionStrategyService {
   Future<void> _handleDisconnection() async {
     _offlineSince = DateTime.now();
 
-    if (kDebugMode) {
-      debugPrint('❌ Network disconnected at $_offlineSince');
-    }
+    logger.warning(
+      'Network disconnected',
+      tag: 'Reconnection',
+      context: {'offlineSince': _offlineSince?.toIso8601String()},
+    );
 
     // Track analytics
     await _analytics.logCustomEvent(
@@ -112,17 +116,21 @@ class ReconnectionStrategyService {
       final pendingCount = syncStatus['pendingActions'] as int? ?? 0;
 
       if (pendingCount > 0) {
-        if (kDebugMode) {
-          debugPrint('🔄 Syncing $pendingCount pending actions...');
-        }
+        logger.info(
+          'Syncing pending actions',
+          tag: 'Reconnection',
+          context: {'pendingCount': pendingCount},
+        );
 
         final startTime = DateTime.now();
         await _syncService.forceSyncNow();
         final syncDuration = DateTime.now().difference(startTime);
 
-        if (kDebugMode) {
-          debugPrint('✅ Sync completed in ${syncDuration.inSeconds}s');
-        }
+        logger.info(
+          'Sync completed',
+          tag: 'Reconnection',
+          context: {'syncDurationSec': syncDuration.inSeconds},
+        );
 
         // Track sync analytics
         await _analytics.logCustomEvent(
@@ -134,12 +142,12 @@ class ReconnectionStrategyService {
         );
       } else {
         if (kDebugMode) {
-          debugPrint('✅ No pending actions to sync');
+          logger.debug('No pending actions to sync', tag: 'Reconnection');
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('❌ Sync failed: $e');
+        logger.error('Sync failed', tag: 'Reconnection', error: e);
       }
 
       await _analytics.logError(error: e, reason: 'Reconnection sync failed');
@@ -149,7 +157,7 @@ class ReconnectionStrategyService {
   /// Force retry connection
   Future<void> retryConnection() async {
     if (kDebugMode) {
-      debugPrint('🔄 Manual reconnection retry...');
+      logger.info('Manual reconnection retry', tag: 'Reconnection');
     }
 
     await _networkService.initialize();

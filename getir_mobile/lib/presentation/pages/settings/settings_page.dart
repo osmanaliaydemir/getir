@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/navigation/app_navigation.dart';
-import '../../../core/providers/language_provider.dart';
-import '../../../core/providers/theme_provider.dart';
+import '../../../core/cubits/language/language_cubit.dart';
+import '../../../core/cubits/theme/theme_cubit.dart';
 import '../../bloc/auth/auth_bloc.dart';
 import '../../widgets/common/theme_switcher.dart';
 
@@ -181,8 +180,8 @@ class SettingsPage extends StatelessWidget {
   }
 
   Widget _buildLanguageTile(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
+    return BlocBuilder<LanguageCubit, LanguageState>(
+      builder: (context, state) {
         return Container(
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
@@ -204,7 +203,7 @@ class SettingsPage extends StatelessWidget {
               style: AppTypography.bodyLarge,
             ),
             subtitle: Text(
-              _getLanguageName(languageProvider.currentLanguageCode),
+              _getLanguageName(state.languageCode),
               style: AppTypography.bodySmall,
             ),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
@@ -241,14 +240,14 @@ class SettingsPage extends StatelessWidget {
             ListTile(
               title: const Text('Türkçe'),
               onTap: () {
-                context.read<LanguageProvider>().changeLanguageByCode('tr');
+                context.read<LanguageCubit>().changeLanguageByCode('tr');
                 Navigator.pop(context);
               },
             ),
             ListTile(
               title: const Text('English'),
               onTap: () {
-                context.read<LanguageProvider>().changeLanguageByCode('en');
+                context.read<LanguageCubit>().changeLanguageByCode('en');
                 Navigator.pop(context);
               },
             ),
@@ -259,8 +258,8 @@ class SettingsPage extends StatelessWidget {
   }
 
   Widget _buildThemeTile(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
+    return BlocBuilder<ThemeCubit, ThemeState>(
+      builder: (context, state) {
         return Container(
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
@@ -277,7 +276,7 @@ class SettingsPage extends StatelessWidget {
           ),
           child: ListTile(
             leading: Icon(
-              _getThemeIcon(themeProvider.themeMode),
+              _getThemeIcon(state.themeMode),
               color: AppColors.textSecondary,
             ),
             title: Text(
@@ -285,11 +284,11 @@ class SettingsPage extends StatelessWidget {
               style: AppTypography.bodyLarge,
             ),
             subtitle: Text(
-              themeProvider.themeModeString,
+              state.themeModeString,
               style: AppTypography.bodySmall,
             ),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () => ThemeSelectorBottomSheet.show(context),
+            onTap: () => showThemeSelector(context),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 8,

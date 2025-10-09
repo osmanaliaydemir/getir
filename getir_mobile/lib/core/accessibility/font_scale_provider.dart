@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/logger_service.dart';
 
 /// Provider for managing font size scale
 class FontScaleProvider extends ChangeNotifier {
@@ -30,7 +31,7 @@ class FontScaleProvider extends ChangeNotifier {
       _fontScale = _prefs.getDouble(_fontScaleKey) ?? _defaultScale;
       notifyListeners();
     } catch (e) {
-      debugPrint('Error loading font scale: $e');
+      logger.error('Error loading font scale', tag: 'FontScale', error: e);
     }
   }
 

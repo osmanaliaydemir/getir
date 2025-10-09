@@ -193,32 +193,37 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       optionIds: event.optionIds,
     );
 
-    result.when(
-      success: (cartItem) async {
-        // 📊 Analytics: Track add to cart
-        if (event.productName != null && event.price != null) {
-          await _analytics.logAddToCart(
-            productId: event.productId,
-            productName: event.productName!,
-            price: event.price!,
-            category: event.category,
-            quantity: event.quantity,
-          );
-        }
+    if (result.isSuccess) {
+      final cartItem = result.data!;
 
-        emit(CartItemAdded(cartItem));
-        // Reload cart to get updated totals
-        add(LoadCart());
-      },
-      failure: (exception) async {
-        final message = _getErrorMessage(exception);
-        emit(CartError(message));
-        await _analytics.logError(
-          error: exception,
-          reason: 'Add to cart failed',
+      // 📊 Analytics: Track add to cart
+      if (event.productName != null && event.price != null) {
+        await _analytics.logAddToCart(
+          productId: event.productId,
+          productName: event.productName!,
+          price: event.price!,
+          category: event.category,
+          quantity: event.quantity,
         );
-      },
-    );
+      }
+
+      emit(CartItemAdded(cartItem));
+
+      // Reload cart to get updated totals
+      if (!emit.isDone) {
+        final cartResult = await _cartService.getCart();
+        if (cartResult.isSuccess && !emit.isDone) {
+          emit(CartLoaded(cartResult.data!));
+        }
+      }
+    } else {
+      final message = _getErrorMessage(result.exception);
+      emit(CartError(message));
+      await _analytics.logError(
+        error: result.exception,
+        reason: 'Add to cart failed',
+      );
+    }
   }
 
   Future<void> _onUpdateCartItem(
@@ -230,17 +235,21 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       quantity: event.quantity,
     );
 
-    result.when(
-      success: (cartItem) {
-        emit(CartItemUpdated(cartItem));
-        // Reload cart to get updated totals
-        add(LoadCart());
-      },
-      failure: (exception) {
-        final message = _getErrorMessage(exception);
-        emit(CartError(message));
-      },
-    );
+    if (result.isSuccess) {
+      final cartItem = result.data!;
+      emit(CartItemUpdated(cartItem));
+
+      // Reload cart to get updated totals
+      if (!emit.isDone) {
+        final cartResult = await _cartService.getCart();
+        if (cartResult.isSuccess && !emit.isDone) {
+          emit(CartLoaded(cartResult.data!));
+        }
+      }
+    } else {
+      final message = _getErrorMessage(result.exception);
+      emit(CartError(message));
+    }
   }
 
   Future<void> _onRemoveFromCart(
@@ -249,43 +258,49 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   ) async {
     final result = await _cartService.removeFromCart(event.itemId);
 
-    result.when(
-      success: (_) async {
-        // 📊 Analytics: Track remove from cart
-        await _analytics.logCustomEvent(
-          eventName: 'remove_from_cart',
-          parameters: {'item_id': event.itemId},
-        );
+    if (result.isSuccess) {
+      // 📊 Analytics: Track remove from cart
+      await _analytics.logCustomEvent(
+        eventName: 'remove_from_cart',
+        parameters: {'item_id': event.itemId},
+      );
 
-        emit(CartItemRemoved(event.itemId));
-        // Reload cart to get updated totals
-        add(LoadCart());
-      },
-      failure: (exception) async {
-        final message = _getErrorMessage(exception);
-        emit(CartError(message));
-        await _analytics.logError(
-          error: exception,
-          reason: 'Remove from cart failed',
-        );
-      },
-    );
+      emit(CartItemRemoved(event.itemId));
+
+      // Reload cart to get updated totals
+      if (!emit.isDone) {
+        final cartResult = await _cartService.getCart();
+        if (cartResult.isSuccess && !emit.isDone) {
+          emit(CartLoaded(cartResult.data!));
+        }
+      }
+    } else {
+      final message = _getErrorMessage(result.exception);
+      emit(CartError(message));
+      await _analytics.logError(
+        error: result.exception,
+        reason: 'Remove from cart failed',
+      );
+    }
   }
 
   Future<void> _onClearCart(ClearCart event, Emitter<CartState> emit) async {
     final result = await _cartService.clearCart();
 
-    result.when(
-      success: (_) {
-        emit(CartCleared());
-        // Reload cart to get updated totals
-        add(LoadCart());
-      },
-      failure: (exception) {
-        final message = _getErrorMessage(exception);
-        emit(CartError(message));
-      },
-    );
+    if (result.isSuccess) {
+      emit(CartCleared());
+
+      // Reload cart to get updated totals
+      if (!emit.isDone) {
+        final cartResult = await _cartService.getCart();
+        if (cartResult.isSuccess && !emit.isDone) {
+          emit(CartLoaded(cartResult.data!));
+        }
+      }
+    } else {
+      final message = _getErrorMessage(result.exception);
+      emit(CartError(message));
+    }
   }
 
   Future<void> _onApplyCoupon(

@@ -1,3 +1,5 @@
+import 'package:equatable/equatable.dart';
+
 /// Represents a user in the system.
 ///
 /// This is a pure domain entity with no framework dependencies.
@@ -14,7 +16,7 @@
 ///   // ...
 /// );
 /// ```
-class UserEntity {
+class UserEntity extends Equatable {
   /// Unique identifier for the user
   final String id;
 
@@ -110,37 +112,19 @@ class UserEntity {
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is UserEntity &&
-        other.id == id &&
-        other.email == email &&
-        other.firstName == firstName &&
-        other.lastName == lastName &&
-        other.phoneNumber == phoneNumber &&
-        other.role == role &&
-        other.isEmailVerified == isEmailVerified &&
-        other.isActive == isActive &&
-        other.createdAt == createdAt &&
-        other.updatedAt == updatedAt &&
-        other.lastLoginAt == lastLoginAt;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-        email.hashCode ^
-        firstName.hashCode ^
-        lastName.hashCode ^
-        phoneNumber.hashCode ^
-        role.hashCode ^
-        isEmailVerified.hashCode ^
-        isActive.hashCode ^
-        createdAt.hashCode ^
-        updatedAt.hashCode ^
-        lastLoginAt.hashCode;
-  }
+  List<Object?> get props => [
+    id,
+    email,
+    firstName,
+    lastName,
+    phoneNumber,
+    role,
+    isEmailVerified,
+    isActive,
+    createdAt,
+    updatedAt,
+    lastLoginAt,
+  ];
 
   @override
   String toString() {

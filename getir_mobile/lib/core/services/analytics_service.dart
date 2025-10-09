@@ -42,9 +42,8 @@ class AnalyticsService {
     String? screenClass,
     Map<String, dynamic>? parameters,
   }) async {
-    if (kDebugMode) {
-      debugPrint('📊 Analytics: Screen View → $screenName');
-    }
+    // Screen view is already logged by Firebase Analytics
+    // No additional debug logging needed
 
     await _analytics.logScreenView(
       screenName: screenName,
@@ -286,9 +285,8 @@ class AnalyticsService {
     Map<String, dynamic>? context,
     bool fatal = false,
   }) async {
-    if (kDebugMode) {
-      debugPrint('🔴 Analytics: Error → $error');
-    }
+    // Error logging is already handled by logger service
+    // No additional debug logging needed
 
     // Log to Crashlytics
     await _crashlytics.recordError(
@@ -419,9 +417,8 @@ class AnalyticsService {
     String eventName, {
     Map<String, dynamic>? parameters,
   }) async {
-    if (kDebugMode) {
-      debugPrint('📊 Analytics: $eventName ${parameters ?? ""}');
-    }
+    // Custom events are already logged by Firebase Analytics
+    // No additional debug logging needed
 
     await _analytics.logEvent(
       name: eventName,

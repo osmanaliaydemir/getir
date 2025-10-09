@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:provider/provider.dart';
+
+import '../../bloc/auth/auth_bloc.dart';
+import '../../widgets/common/language_selector.dart';
+import '../../../core/cubits/language/language_cubit.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/navigation/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/localization/app_localizations.dart';
-import '../../../core/providers/language_provider.dart';
-import '../../bloc/auth/auth_bloc.dart';
-import '../../widgets/common/language_selector.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -46,8 +46,8 @@ class _RegisterPageState extends State<RegisterPage> {
           password: _passwordController.text,
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
-          phoneNumber: _phoneController.text.trim().isNotEmpty 
-              ? _phoneController.text.trim() 
+          phoneNumber: _phoneController.text.trim().isNotEmpty
+              ? _phoneController.text.trim()
               : null,
         ),
       );
@@ -61,7 +61,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -74,12 +74,14 @@ class _RegisterPageState extends State<RegisterPage> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: Consumer<LanguageProvider>(
-              builder: (context, languageProvider, child) {
+            child: BlocBuilder<LanguageCubit, LanguageState>(
+              builder: (context, state) {
                 return LanguageSelector(
-                  currentLanguage: languageProvider.currentLanguageCode,
+                  currentLanguage: state.languageCode,
                   onLanguageChanged: (languageCode) {
-                    languageProvider.changeLanguageByCode(languageCode);
+                    context.read<LanguageCubit>().changeLanguageByCode(
+                      languageCode,
+                    );
                   },
                 );
               },
@@ -126,7 +128,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // First Name Field
                   TextFormField(
                     controller: _firstNameController,
@@ -143,7 +145,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Last Name Field
                   TextFormField(
                     controller: _lastNameController,
@@ -160,7 +162,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Email Field
                   TextFormField(
                     controller: _emailController,
@@ -174,14 +176,16 @@ class _RegisterPageState extends State<RegisterPage> {
                       if (value == null || value.isEmpty) {
                         return l10n.emailRequired;
                       }
-                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                      if (!RegExp(
+                        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                      ).hasMatch(value)) {
                         return l10n.invalidEmail;
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Phone Field
                   TextFormField(
                     controller: _phoneController,
@@ -193,7 +197,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Password Field
                   TextFormField(
                     controller: _passwordController,
@@ -204,7 +208,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       prefixIcon: const Icon(Icons.lock_outlined),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                          _obscurePassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                         ),
                         onPressed: () {
                           setState(() {
@@ -224,7 +230,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Confirm Password Field
                   TextFormField(
                     controller: _confirmPasswordController,
@@ -235,7 +241,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       prefixIcon: const Icon(Icons.lock_outlined),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
+                          _obscureConfirmPassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                         ),
                         onPressed: () {
                           setState(() {
@@ -255,7 +263,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     },
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // Register Button
                   BlocBuilder<AuthBloc, AuthState>(
                     builder: (context, state) {
@@ -267,7 +275,9 @@ class _RegisterPageState extends State<RegisterPage> {
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppColors.white,
+                                  ),
                                 ),
                               )
                             : Text(l10n.register),
@@ -275,7 +285,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Login Link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,

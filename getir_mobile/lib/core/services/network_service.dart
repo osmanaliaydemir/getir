@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import '../constants/environment.dart';
+import 'logger_service.dart';
 
 class NetworkService {
   static final NetworkService _instance = NetworkService._internal();
@@ -42,10 +42,13 @@ class NetworkService {
     try {
       final connectivityResults = await _connectivity.checkConnectivity();
       await _updateConnectionStatus(connectivityResults);
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error checking connectivity: $e');
-      }
+    } catch (e, stackTrace) {
+      logger.error(
+        'Error checking connectivity',
+        tag: 'Network',
+        error: e,
+        stackTrace: stackTrace,
+      );
       _setOffline();
     }
   }
@@ -74,9 +77,10 @@ class NetworkService {
     // Notify listeners if status changed
     if (wasOnline != _isOnline) {
       _networkStatusController.add(_isOnline);
-      if (kDebugMode) {
-        print('Network status changed: ${_isOnline ? "Online" : "Offline"}');
-      }
+      logger.info(
+        'Network status changed: ${_isOnline ? "Online" : "Offline"}',
+        tag: 'Network',
+      );
     }
   }
 

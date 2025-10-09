@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../services/logger_service.dart';
 
 /// Memory Leak Prevention Utilities
 /// Helps prevent common memory leaks in Flutter apps
@@ -76,7 +77,10 @@ class MemoryLeakPrevention {
 
   /// Print memory usage info (debug only)
   static void printMemoryInfo() {
-    debugPrint('💾 Memory Leak Prevention: Active checks enabled');
+    logger.info(
+      'Memory Leak Prevention: Active checks enabled',
+      tag: 'MemoryLeak',
+    );
   }
 }
 
@@ -164,7 +168,11 @@ extension SafeAsyncExtension on BuildContext {
       await operation();
     } catch (e) {
       if (mounted) {
-        debugPrint('❌ Safe async operation failed: $e');
+        logger.error(
+          'Safe async operation failed',
+          tag: 'MemoryLeak',
+          error: e,
+        );
       }
     }
   }

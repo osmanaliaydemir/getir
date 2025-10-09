@@ -3,6 +3,7 @@ import 'package:getir_mobile/domain/entities/merchant.dart';
 import 'package:getir_mobile/domain/entities/product.dart';
 import 'package:getir_mobile/domain/entities/cart.dart';
 import 'package:getir_mobile/domain/entities/address.dart';
+import 'package:getir_mobile/domain/entities/order.dart';
 
 /// Mock data for testing
 /// Provides consistent test fixtures
@@ -117,8 +118,8 @@ class MockData {
     total: 0.0,
     couponCode: null,
     discountAmount: 0.0,
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
+    createdAt: now,
+    updatedAt: now,
   );
 
   static Cart get testCart => Cart(
@@ -130,8 +131,8 @@ class MockData {
     total: 39.98,
     couponCode: null,
     discountAmount: 0.0,
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
+    createdAt: now,
+    updatedAt: now,
   );
 
   static CartItem get testCartItem => CartItem(
@@ -148,7 +149,7 @@ class MockData {
     selectedOptionNames: [],
     merchantId: 'merchant-123',
     merchantName: 'Test Market',
-    addedAt: DateTime.now(),
+    addedAt: now,
   );
 
   // ==================== ADDRESS ====================
@@ -183,6 +184,56 @@ class MockData {
   static const String testAccessToken = 'test-access-token-123';
   static const String testRefreshToken = 'test-refresh-token-456';
   static const String testExpiredToken = 'expired-token-789';
+
+  // ==================== ORDER ====================
+
+  static Order get testOrder => Order(
+    id: 'order-123',
+    userId: 'test-user-123',
+    merchantId: 'merchant-123',
+    merchantName: 'Test Market',
+    merchantLogoUrl: 'https://via.placeholder.com/150',
+    deliveryAddressId: 'address-123',
+    deliveryAddress: 'Test Mahallesi, Test Sokak, No: 123, Kadıköy/İstanbul',
+    deliveryLatitude: 40.9923,
+    deliveryLongitude: 29.0287,
+    status: OrderStatus.pending,
+    paymentStatus: PaymentStatus.pending,
+    paymentMethod: PaymentMethod.card,
+    subtotal: 29.99,
+    deliveryFee: 9.99,
+    discountAmount: 0.0,
+    totalAmount: 39.98,
+    couponCode: null,
+    notes: 'Test sipariş notu',
+    estimatedDeliveryTime: DateTime(2025, 10, 7, 12, 30),
+    createdAt: DateTime(2025, 10, 7, 12, 0),
+    updatedAt: DateTime(2025, 10, 7, 12, 0),
+    items: [testOrderItem],
+    statusHistory: [testOrderStatusHistory],
+  );
+
+  static OrderItem get testOrderItem => const OrderItem(
+    id: 'order-item-123',
+    productId: 'product-123',
+    productName: 'Test Ürün',
+    productImageUrl: 'https://via.placeholder.com/200',
+    unitPrice: 29.99,
+    quantity: 1,
+    totalPrice: 29.99,
+    selectedVariantId: null,
+    selectedVariantName: null,
+    selectedOptionIds: [],
+    selectedOptionNames: [],
+  );
+
+  static OrderStatusHistory get testOrderStatusHistory => OrderStatusHistory(
+    id: 'status-history-123',
+    orderId: 'order-123',
+    status: OrderStatus.pending,
+    notes: 'Sipariş oluşturuldu',
+    timestamp: DateTime(2025, 10, 7, 12, 0),
+  );
 
   // ==================== TEST DATES ====================
 

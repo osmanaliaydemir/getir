@@ -193,37 +193,38 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
     final result = await _orderService.createOrder(event.request);
 
-    result.when(
-      success: (order) async {
-        // 📊 Analytics: Track order creation (purchase)
-        await _analytics.logPurchase(
-          orderId: order.id,
-          total: order.totalAmount,
-          currency: 'TRY',
-          items: order.items
-              .map(
-                (item) => AnalyticsEventItem(
-                  itemId: item.productId,
-                  itemName: item.productName,
-                  price: item.unitPrice,
-                  quantity: item.quantity,
-                ),
-              )
-              .toList(),
-          shipping: order.deliveryFee,
-        );
+    if (result.isSuccess) {
+      final order = result.data!;
 
+      // 📊 Analytics: Track order creation (purchase)
+      await _analytics.logPurchase(
+        orderId: order.id,
+        total: order.totalAmount,
+        currency: 'TRY',
+        items: order.items
+            .map(
+              (item) => AnalyticsEventItem(
+                itemId: item.productId,
+                itemName: item.productName,
+                price: item.unitPrice,
+                quantity: item.quantity,
+              ),
+            )
+            .toList(),
+        shipping: order.deliveryFee,
+      );
+
+      if (!emit.isDone) {
         emit(OrderCreated(order));
-      },
-      failure: (exception) async {
-        final message = _getErrorMessage(exception);
-        emit(OrderError(message));
-        await _analytics.logError(
-          error: exception,
-          reason: 'Order creation failed',
-        );
-      },
-    );
+      }
+    } else {
+      final message = _getErrorMessage(result.exception);
+      emit(OrderError(message));
+      await _analytics.logError(
+        error: result.exception,
+        reason: 'Order creation failed',
+      );
+    }
   }
 
   Future<void> _onCancelOrder(
@@ -234,26 +235,27 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
     final result = await _orderService.cancelOrder(event.orderId);
 
-    result.when(
-      success: (order) async {
-        // 📊 Analytics: Track order cancellation
-        await _analytics.logOrderCancelled(
-          orderId: order.id,
-          value: order.totalAmount,
-          reason: 'user_cancelled',
-        );
+    if (result.isSuccess) {
+      final order = result.data!;
 
+      // 📊 Analytics: Track order cancellation
+      await _analytics.logOrderCancelled(
+        orderId: order.id,
+        value: order.totalAmount,
+        reason: 'user_cancelled',
+      );
+
+      if (!emit.isDone) {
         emit(OrderCancelled(order));
-      },
-      failure: (exception) async {
-        final message = _getErrorMessage(exception);
-        emit(OrderError(message));
-        await _analytics.logError(
-          error: exception,
-          reason: 'Order cancellation failed',
-        );
-      },
-    );
+      }
+    } else {
+      final message = _getErrorMessage(result.exception);
+      emit(OrderError(message));
+      await _analytics.logError(
+        error: result.exception,
+        reason: 'Order cancellation failed',
+      );
+    }
   }
 
   Future<void> _onProcessPayment(
@@ -264,26 +266,27 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
     final result = await _orderService.processPayment(event.request);
 
-    result.when(
-      success: (paymentResult) async {
-        // 📊 Analytics: Track payment info added
-        await _analytics.logAddPaymentInfo(
-          paymentType: event.request.paymentMethod.value,
-          value: event.request.amount,
-          currency: 'TRY',
-        );
+    if (result.isSuccess) {
+      final paymentResult = result.data!;
 
+      // 📊 Analytics: Track payment info added
+      await _analytics.logAddPaymentInfo(
+        paymentType: event.request.paymentMethod.value,
+        value: event.request.amount,
+        currency: 'TRY',
+      );
+
+      if (!emit.isDone) {
         emit(PaymentProcessed(paymentResult));
-      },
-      failure: (exception) async {
-        final message = _getErrorMessage(exception);
-        emit(OrderError(message));
-        await _analytics.logError(
-          error: exception,
-          reason: 'Payment processing failed',
-        );
-      },
-    );
+      }
+    } else {
+      final message = _getErrorMessage(result.exception);
+      emit(OrderError(message));
+      await _analytics.logError(
+        error: result.exception,
+        reason: 'Payment processing failed',
+      );
+    }
   }
 
   Future<void> _onGetPaymentStatus(

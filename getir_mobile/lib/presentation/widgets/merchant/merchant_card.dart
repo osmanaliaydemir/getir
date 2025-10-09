@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/constants/app_dimensions.dart';
 import '../../../domain/entities/merchant.dart';
 import '../../../domain/entities/service_category_type.dart';
 import '../../pages/merchant/merchant_detail_page.dart';
@@ -23,16 +24,16 @@ class MerchantCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: AppDimensions.spacingL),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimensions.cardBorderRadius),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: Colors.grey.withOpacity(AppDimensions.shadowOpacity),
+            spreadRadius: AppDimensions.shadowSpreadRadius,
+            blurRadius: AppDimensions.shadowBlurRadius,
+            offset: const Offset(0, AppDimensions.shadowOffsetY),
           ),
         ],
       ),
@@ -48,14 +49,14 @@ class MerchantCard extends StatelessWidget {
                 ),
               );
             },
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppDimensions.cardBorderRadius),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppDimensions.spacingL),
               child: Row(
                 children: [
                   // Merchant logo
                   _buildLogo(),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: AppDimensions.spacingL),
                   // Merchant info
                   Expanded(child: _buildMerchantInfo(l10n)),
                   const Icon(

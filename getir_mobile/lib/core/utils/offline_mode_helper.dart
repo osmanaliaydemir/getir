@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/network_provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../cubits/network/network_cubit.dart';
 import '../widgets/offline_indicator_banner.dart';
+import '../services/logger_service.dart';
 
 /// Offline Mode Helper
 ///
@@ -41,12 +42,9 @@ class OfflineModeHelper {
     required String action,
     bool allowOffline = false,
   }) async {
-    final networkProvider = Provider.of<NetworkProvider>(
-      context,
-      listen: false,
-    );
+    final networkState = context.read<NetworkCubit>().state;
 
-    if (networkProvider.isOnline) {
+    if (networkState.isOnline) {
       return true;
     }
 
@@ -115,8 +113,6 @@ class OfflineIndicatorWrapper extends StatelessWidget {
 ///
 /// Mixin for pages that need offline mode handling
 mixin OfflineModeMixin<T extends StatefulWidget> on State<T> {
-  bool _wasOffline = false;
-
   @override
   void initState() {
     super.initState();
@@ -126,45 +122,36 @@ mixin OfflineModeMixin<T extends StatefulWidget> on State<T> {
   }
 
   void _setupOfflineListener() {
-    final networkProvider = Provider.of<NetworkProvider>(
-      context,
-      listen: false,
-    );
-    networkProvider.addListener(_handleNetworkChange);
-  }
-
-  void _handleNetworkChange() {
-    final networkProvider = Provider.of<NetworkProvider>(
-      context,
-      listen: false,
-    );
-
-    if (networkProvider.isOffline && !_wasOffline) {
-      onOffline();
-      _wasOffline = true;
-    } else if (networkProvider.isOnline && _wasOffline) {
-      onOnline();
-      _wasOffline = false;
-    }
+    // Subscribe to network state changes via BlocListener
+    // This should be handled in the parent widget using BlocListener<NetworkCubit>
+    // Example usage in parent widget:
+    // BlocListener<NetworkCubit, NetworkState>(
+    //   listener: (context, state) {
+    //     if (state.isOffline && !_wasOffline) {
+    //       onOffline();
+    //       _wasOffline = true;
+    //     } else if (state.isOnline && _wasOffline) {
+    //       onOnline();
+    //       _wasOffline = false;
+    //     }
+    //   },
+    //   child: YourWidget(),
+    // )
   }
 
   /// Override to handle offline event
   void onOffline() {
-    debugPrint('📴 Page went offline');
+    logger.debug('Page went offline', tag: 'OfflineMode');
   }
 
   /// Override to handle online event
   void onOnline() {
-    debugPrint('✅ Page went online');
+    logger.debug('Page went online', tag: 'OfflineMode');
   }
 
   @override
   void dispose() {
-    final networkProvider = Provider.of<NetworkProvider>(
-      context,
-      listen: false,
-    );
-    networkProvider.removeListener(_handleNetworkChange);
+    // No need to remove listener with BLoC pattern
     super.dispose();
   }
 }

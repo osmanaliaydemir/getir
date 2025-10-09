@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'app_exceptions.dart';
 import '../localization/app_localizations.dart';
 import '../services/global_keys_service.dart';
+import '../services/logger_service.dart';
 
 /// Centralized error handler for the application
 class ErrorHandler {
@@ -18,16 +18,14 @@ class ErrorHandler {
     String? context,
     Map<String, dynamic>? additionalData,
   }) {
-    if (kDebugMode) {
-      print('=== ERROR HANDLER ===');
-      print('Context: $context');
-      print('Error: $error');
-      print('Stack Trace: $stackTrace');
-      if (additionalData != null) {
-        print('Additional Data: $additionalData');
-      }
-      print('=====================');
-    }
+    // Log error with context
+    logger.error(
+      context ?? 'Unhandled error',
+      tag: 'ErrorHandler',
+      error: error,
+      stackTrace: stackTrace,
+      context: additionalData,
+    );
 
     // Log to crash reporting service (Firebase Crashlytics, etc.)
     _logToCrashReporting(error, stackTrace, context, additionalData);

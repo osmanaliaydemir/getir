@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import '../services/logger_service.dart';
 
 /// Image Cache Configuration
 /// Optimizes CachedNetworkImage performance and memory usage
@@ -111,7 +112,7 @@ class ImageCacheConfig {
         context,
       );
     } catch (e) {
-      debugPrint('⚠️  Failed to preload image: $e');
+      logger.error('Failed to preload image', tag: 'ImageCache', error: e);
     }
   }
 
@@ -119,9 +120,9 @@ class ImageCacheConfig {
   static Future<void> clearCache() async {
     try {
       await cacheManager.emptyCache();
-      debugPrint('🗑️  Image cache cleared');
+      logger.info('Image cache cleared', tag: 'ImageCache');
     } catch (e) {
-      debugPrint('❌ Failed to clear image cache: $e');
+      logger.error('Failed to clear image cache', tag: 'ImageCache', error: e);
     }
   }
 
@@ -132,7 +133,7 @@ class ImageCacheConfig {
       // Would need to iterate cache directory to get actual count/size
       return {'count': 0, 'size': 0, 'sizeMB': '0.00'};
     } catch (e) {
-      debugPrint('❌ Failed to get cache info: $e');
+      logger.error('Failed to get cache info', tag: 'ImageCache', error: e);
       return {'count': 0, 'size': 0, 'sizeMB': '0.00'};
     }
   }

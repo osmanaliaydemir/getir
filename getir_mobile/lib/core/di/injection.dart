@@ -9,6 +9,9 @@ import '../services/local_storage_service.dart';
 import '../services/encryption_service.dart';
 import '../services/search_history_service.dart';
 import '../services/analytics_service.dart';
+import '../services/logger_service.dart';
+import '../services/signalr_service.dart';
+import '../services/network_service.dart';
 import '../config/environment_config.dart';
 
 // Manual DI imports (temporary)
@@ -45,6 +48,12 @@ import '../../domain/services/profile_service.dart';
 import '../../domain/services/notification_service.dart';
 import '../../domain/services/working_hours_service.dart';
 import '../../domain/services/review_service.dart';
+
+// Cubits (Global State)
+import '../cubits/network/network_cubit.dart';
+import '../cubits/language/language_cubit.dart';
+import '../cubits/theme/theme_cubit.dart';
+import '../cubits/notification_badge/notification_badge_cubit.dart';
 
 // BLoCs
 import '../../presentation/bloc/auth/auth_bloc.dart';
@@ -86,14 +95,25 @@ Future<void> configureDependencies() async {
     ),
   );
 
+  // Register Logger service
+  getIt.registerLazySingleton(() => LoggerService(getIt<AnalyticsService>()));
+
+  // Register SignalR service (Singleton for shared hub connections)
+  getIt.registerLazySingleton(() => SignalRService(getIt<EncryptionService>()));
+
+  // Register Network service (needed before NetworkCubit)
+  final networkService = NetworkService();
+  getIt.registerSingleton<NetworkService>(networkService);
+
   // Register Dio
   final dio = _createDio(getIt<EncryptionService>());
   getIt.registerSingleton<Dio>(dio);
 
-  // Register all datasources, repositories, use cases, and BLoCs
+  // Register all datasources, repositories, use cases, BLoCs, and Cubits
   _registerDatasources();
   _registerRepositories();
   _registerServices();
+  _registerCubits(prefs, networkService);
   _registerBlocs();
   _registerOtherServices(prefs);
 }
@@ -144,6 +164,14 @@ void _registerServices() {
   getIt.registerFactory(() => NotificationService(getIt()));
   getIt.registerFactory(() => WorkingHoursService(getIt()));
   getIt.registerFactory(() => ReviewService(getIt()));
+}
+
+void _registerCubits(SharedPreferences prefs, NetworkService networkService) {
+  // Global state management Cubits (replaces Providers)
+  getIt.registerLazySingleton(() => NetworkCubit(networkService));
+  getIt.registerLazySingleton(() => LanguageCubit(prefs));
+  getIt.registerLazySingleton(() => ThemeCubit(prefs));
+  getIt.registerLazySingleton(() => NotificationBadgeCubit());
 }
 
 void _registerBlocs() {
@@ -246,9 +274,11 @@ class _LoggingInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     if (kDebugMode) {
-      debugPrint('➡️ ${options.method} ${options.uri}');
-      debugPrint('Headers: ${options.headers}');
-      if (options.data != null) debugPrint('Body: ${options.data}');
+      logger.debug('${options.method} ${options.uri}', tag: 'HTTP');
+      logger.debug('Headers: ${options.headers}', tag: 'HTTP');
+      if (options.data != null) {
+        logger.debug('Body: ${options.data}', tag: 'HTTP');
+      }
     }
     super.onRequest(options, handler);
   }
@@ -256,7 +286,10 @@ class _LoggingInterceptor extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     if (kDebugMode) {
-      debugPrint('✅ ${response.statusCode} ${response.requestOptions.uri}');
+      logger.debug(
+        '${response.statusCode} ${response.requestOptions.uri}',
+        tag: 'HTTP',
+      );
     }
     super.onResponse(response, handler);
   }
@@ -264,7 +297,11 @@ class _LoggingInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (kDebugMode) {
-      debugPrint('❌ ${err.type} ${err.requestOptions.uri}');
+      logger.error(
+        '${err.type} ${err.requestOptions.uri}',
+        tag: 'HTTP',
+        error: err,
+      );
     }
     super.onError(err, handler);
   }

@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'local_storage_service.dart';
 import '../errors/app_exceptions.dart';
+import 'logger_service.dart';
 
 /// Advanced API caching service with intelligent cache management
 class ApiCacheService {
@@ -22,9 +22,7 @@ class ApiCacheService {
     // Clean expired cache on startup
     await _localStorage.clearExpiredCache();
 
-    if (kDebugMode) {
-      print('API Cache Service initialized');
-    }
+    logger.info('API Cache Service initialized', tag: 'Cache');
   }
 
   /// Configure cache settings for different endpoints
@@ -98,9 +96,11 @@ class ApiCacheService {
         return null;
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting cached response: $e');
-      }
+      logger.debug(
+        'Error getting cached response',
+        tag: 'Cache',
+        context: {'error': e.toString()},
+      );
       return null;
     }
   }
@@ -125,9 +125,11 @@ class ApiCacheService {
         return null;
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting cached by key: $e');
-      }
+      logger.debug(
+        'Error getting cached by key',
+        tag: 'Cache',
+        context: {'error': e.toString()},
+      );
       return null;
     }
   }
@@ -149,13 +151,13 @@ class ApiCacheService {
 
       await _localStorage.cacheApiResponse(endpoint, data, expiry: duration);
 
-      if (kDebugMode) {
-        print('Cached response for $endpoint (${duration.inMinutes}min)');
-      }
+      logger.logCacheOperation(operation: 'write', key: endpoint, hit: false);
     } catch (e) {
-      if (kDebugMode) {
-        print('Error caching response: $e');
-      }
+      logger.debug(
+        'Error caching response',
+        tag: 'Cache',
+        context: {'error': e.toString()},
+      );
     }
   }
 
@@ -173,13 +175,13 @@ class ApiCacheService {
       final duration = customDuration ?? config.duration;
       await _enforceCacheSizeLimit(cacheKey, config);
       await _localStorage.putCacheByKey(cacheKey, data, expiry: duration);
-      if (kDebugMode) {
-        print('Cached response for key=$cacheKey (${duration.inMinutes}min)');
-      }
+      logger.logCacheOperation(operation: 'write', key: cacheKey, hit: false);
     } catch (e) {
-      if (kDebugMode) {
-        print('Error caching by key: $e');
-      }
+      logger.debug(
+        'Error caching by key',
+        tag: 'Cache',
+        context: {'error': e.toString()},
+      );
     }
   }
 
@@ -239,9 +241,7 @@ class ApiCacheService {
         );
         final cached = await _getCachedByKey(fallbackKey, endpoint);
         if (cached != null) {
-          if (kDebugMode) {
-            print('Using cached data due to network error');
-          }
+          logger.debug('Using cached data due to network error', tag: 'Cache');
           return cached;
         }
       }
@@ -255,9 +255,7 @@ class ApiCacheService {
       );
       final cached = await _getCachedByKey(fallbackKey, endpoint);
       if (cached != null) {
-        if (kDebugMode) {
-          print('Using cached data as fallback');
-        }
+        logger.debug('Using cached data as fallback', tag: 'Cache');
         return cached;
       }
 
@@ -305,9 +303,11 @@ class ApiCacheService {
     try {
       await _localStorage.removeCachedItem(endpoint);
     } catch (e) {
-      if (kDebugMode) {
-        print('Error removing cached response: $e');
-      }
+      logger.debug(
+        'Error removing cached response',
+        tag: 'Cache',
+        context: {'error': e.toString()},
+      );
     }
   }
 
@@ -330,9 +330,7 @@ class ApiCacheService {
   void _updateCacheAccess(String endpoint) {
     // This would be implemented with a more sophisticated LRU system
     // For now, we'll just log the access
-    if (kDebugMode) {
-      print('Cache accessed: $endpoint');
-    }
+    logger.logCacheOperation(operation: 'access', key: endpoint, hit: true);
   }
 
   /// Enforce cache size limits
@@ -447,13 +445,17 @@ class ApiCacheService {
     for (final endpoint in importantEndpoints) {
       try {
         await getWithCache(endpoint);
-        if (kDebugMode) {
-          print('Preloaded: $endpoint');
-        }
+        logger.debug(
+          'Preloaded endpoint',
+          tag: 'Cache',
+          context: {'endpoint': endpoint},
+        );
       } catch (e) {
-        if (kDebugMode) {
-          print('Failed to preload $endpoint: $e');
-        }
+        logger.debug(
+          'Failed to preload endpoint',
+          tag: 'Cache',
+          context: {'endpoint': endpoint, 'error': e.toString()},
+        );
       }
     }
   }

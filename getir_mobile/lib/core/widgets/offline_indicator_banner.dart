@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/network_provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../cubits/network/network_cubit.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
@@ -17,15 +17,15 @@ class OfflineIndicatorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<NetworkProvider>(
-      builder: (context, networkProvider, child) {
-        if (networkProvider.isOnline) {
+    return BlocBuilder<NetworkCubit, NetworkState>(
+      builder: (context, state) {
+        if (state.isOnline) {
           return const SizedBox.shrink();
         }
 
         return AnimatedSlide(
           duration: const Duration(milliseconds: 300),
-          offset: networkProvider.isOffline ? Offset.zero : const Offset(0, -1),
+          offset: state.isOffline ? Offset.zero : const Offset(0, -1),
           curve: Curves.easeInOut,
           child: Container(
             width: double.infinity,
@@ -67,7 +67,7 @@ class OfflineIndicatorBanner extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (networkProvider.isRetrying)
+                  if (state.isRetrying)
                     const SizedBox(
                       width: 20,
                       height: 20,
@@ -80,7 +80,8 @@ class OfflineIndicatorBanner extends StatelessWidget {
                     )
                   else
                     TextButton(
-                      onPressed: () => networkProvider.retryConnection(),
+                      onPressed: () =>
+                          context.read<NetworkCubit>().retryConnection(),
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.white,
                         padding: const EdgeInsets.symmetric(
@@ -112,9 +113,9 @@ class ConnectionStatusIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<NetworkProvider>(
-      builder: (context, networkProvider, child) {
-        if (networkProvider.isOnline) {
+    return BlocBuilder<NetworkCubit, NetworkState>(
+      builder: (context, state) {
+        if (state.isOnline) {
           return const SizedBox.shrink();
         }
 
@@ -176,10 +177,7 @@ class OfflineModeSnackbar {
                 label: 'Retry',
                 textColor: AppColors.white,
                 onPressed: () {
-                  Provider.of<NetworkProvider>(
-                    context,
-                    listen: false,
-                  ).retryConnection();
+                  context.read<NetworkCubit>().retryConnection();
                 },
               )
             : null,

@@ -57,8 +57,8 @@ class AuthService {
   /// ```dart
   /// final result = await authService.login('user@example.com', 'password123');
   /// result.when(
-  ///   success: (user) => print('Logged in: ${user.email}'),
-  ///   failure: (error) => print('Error: ${error.message}'),
+  ///   success: (user) => logger.info('Logged in: ${user.email}', tag: 'Auth'),
+  ///   failure: (error) => logger.error('Login failed', tag: 'Auth', error: error),
   /// );
   /// ```
   Future<Result<UserEntity>> login(String email, String password) async {

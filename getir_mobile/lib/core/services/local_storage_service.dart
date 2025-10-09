@@ -1,6 +1,6 @@
 import 'package:hive/hive.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter/foundation.dart';
+import 'logger_service.dart';
 
 class LocalStorageService {
   late Box<Map> _cacheBox;
@@ -20,13 +20,14 @@ class LocalStorageService {
       // Open sync queue box for offline actions
       _queueBox = await Hive.openBox<List>('sync_queue');
 
-      if (kDebugMode) {
-        print('Local storage initialized successfully');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Local storage initialization failed: $e');
-      }
+      logger.info('Local storage initialized successfully', tag: 'Storage');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Local storage initialization failed',
+        tag: 'Storage',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
@@ -46,9 +47,11 @@ class LocalStorageService {
       };
       await _cacheBox.put(cacheKey, cacheData);
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to cache API response: $e');
-      }
+      logger.debug(
+        'Failed to cache API response',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
     }
   }
 
@@ -66,9 +69,11 @@ class LocalStorageService {
       };
       await _cacheBox.put(cacheKey, cacheData);
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to cache (by key) API response: $e');
-      }
+      logger.debug(
+        'Failed to cache (by key) API response',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
     }
   }
 
@@ -94,9 +99,11 @@ class LocalStorageService {
 
       return Map<String, dynamic>.from(cached['data'] as Map);
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to get cached API response: $e');
-      }
+      logger.debug(
+        'Failed to get cached API response',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
       return null;
     }
   }
@@ -108,9 +115,11 @@ class LocalStorageService {
       if (cached == null) return null;
       return Map<String, dynamic>.from(cached['data'] as Map);
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to get cached (by key) API response: $e');
-      }
+      logger.debug(
+        'Failed to get cached (by key) API response',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
       return null;
     }
   }
@@ -122,9 +131,11 @@ class LocalStorageService {
       if (cached == null) return null;
       return Map<String, dynamic>.from(cached);
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to get raw cache by key: $e');
-      }
+      logger.debug(
+        'Failed to get raw cache by key',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
       return null;
     }
   }
@@ -151,9 +162,11 @@ class LocalStorageService {
         await _cacheBox.delete(key);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to clear expired cache: $e');
-      }
+      logger.debug(
+        'Failed to clear expired cache',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
     }
   }
 
@@ -166,9 +179,11 @@ class LocalStorageService {
         await _userBox.put(key, value);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to store user data: $e');
-      }
+      logger.debug(
+        'Failed to store user data',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
     }
   }
 
@@ -182,9 +197,11 @@ class LocalStorageService {
       }
       return _userBox.get(key);
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to get user data: $e');
-      }
+      logger.debug(
+        'Failed to get user data',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
       return null;
     }
   }
@@ -197,9 +214,11 @@ class LocalStorageService {
       }
       return _userBox.get(key);
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to get user data async: $e');
-      }
+      logger.debug(
+        'Failed to get user data async',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
       return null;
     }
   }
@@ -213,9 +232,11 @@ class LocalStorageService {
         await _userBox.delete(key);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to remove user data: $e');
-      }
+      logger.debug(
+        'Failed to remove user data',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
     }
   }
 
@@ -225,9 +246,11 @@ class LocalStorageService {
       await _userBox.clear();
       await _secure.deleteAll();
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to clear user data: $e');
-      }
+      logger.debug(
+        'Failed to clear user data',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
     }
   }
 
@@ -247,9 +270,11 @@ class LocalStorageService {
       queue.add(queueItem);
       await _queueBox.put('pending_actions', queue);
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to add to sync queue: $e');
-      }
+      logger.debug(
+        'Failed to add to sync queue',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
     }
   }
 
@@ -263,9 +288,11 @@ class LocalStorageService {
           .map((item) => Map<String, dynamic>.from(item as Map))
           .toList();
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to get sync queue: $e');
-      }
+      logger.debug(
+        'Failed to get sync queue',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
       return [];
     }
   }
@@ -281,9 +308,11 @@ class LocalStorageService {
         await _queueBox.put('pending_actions', queue);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to remove from sync queue: $e');
-      }
+      logger.debug(
+        'Failed to remove from sync queue',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
     }
   }
 
@@ -299,9 +328,11 @@ class LocalStorageService {
         await _queueBox.put('pending_actions', queue);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to update sync queue retry count: $e');
-      }
+      logger.debug(
+        'Failed to update sync queue retry count',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
     }
   }
 
@@ -310,9 +341,11 @@ class LocalStorageService {
     try {
       await _queueBox.put('pending_actions', <dynamic>[]);
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to clear sync queue: $e');
-      }
+      logger.debug(
+        'Failed to clear sync queue',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
     }
   }
 
@@ -341,9 +374,11 @@ class LocalStorageService {
     try {
       await _cacheBox.clear();
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to clear all cache: $e');
-      }
+      logger.debug(
+        'Failed to clear all cache',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
     }
   }
 
@@ -352,9 +387,11 @@ class LocalStorageService {
     try {
       await _cacheBox.delete(cacheKey);
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to remove cached item: $e');
-      }
+      logger.debug(
+        'Failed to remove cached item',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
     }
   }
 
@@ -382,9 +419,11 @@ class LocalStorageService {
         await _cacheBox.delete(entries[i].key);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to trim cache: $e');
-      }
+      logger.debug(
+        'Failed to trim cache',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
     }
   }
 
@@ -395,9 +434,11 @@ class LocalStorageService {
       await _userBox.close();
       await _queueBox.close();
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to close storage boxes: $e');
-      }
+      logger.debug(
+        'Failed to close storage boxes',
+        tag: 'Storage',
+        context: {'error': e.toString()},
+      );
     }
   }
 }

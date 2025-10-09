@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:crypto/crypto.dart';
-import 'package:flutter/foundation.dart';
 import '../config/environment_config.dart';
+import 'logger_service.dart';
 
 /// Encryption Service for sensitive data
 /// Uses flutter_secure_storage for token/password storage
@@ -30,12 +30,17 @@ class EncryptionService {
       if (existingKey == null) {
         final newKey = _generateEncryptionKey();
         await _secureStorage.write(key: _encryptionKeyKey, value: newKey);
-        debugPrint('🔐 Encryption: Generated new encryption key');
+        logger.info('Generated new encryption key', tag: 'Encryption');
       } else {
-        debugPrint('🔐 Encryption: Using existing encryption key');
+        logger.info('Using existing encryption key', tag: 'Encryption');
       }
-    } catch (e) {
-      debugPrint('❌ Encryption: Initialization failed: $e');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Encryption initialization failed',
+        tag: 'Encryption',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -43,9 +48,16 @@ class EncryptionService {
   Future<void> saveAccessToken(String token) async {
     try {
       await _secureStorage.write(key: _accessTokenKey, value: token);
-      debugPrint('🔐 Saved access token securely');
-    } catch (e) {
-      debugPrint('❌ Failed to save access token: $e');
+      logger.logSensitiveOperation(
+        operation: 'save_access_token',
+        success: true,
+      );
+    } catch (e, stackTrace) {
+      logger.logSensitiveOperation(
+        operation: 'save_access_token',
+        success: false,
+        error: e,
+      );
       rethrow;
     }
   }
@@ -55,7 +67,11 @@ class EncryptionService {
     try {
       return await _secureStorage.read(key: _accessTokenKey);
     } catch (e) {
-      debugPrint('❌ Failed to read access token: $e');
+      logger.logSensitiveOperation(
+        operation: 'read_access_token',
+        success: false,
+        error: e,
+      );
       return null;
     }
   }
@@ -64,9 +80,16 @@ class EncryptionService {
   Future<void> saveRefreshToken(String token) async {
     try {
       await _secureStorage.write(key: _refreshTokenKey, value: token);
-      debugPrint('🔐 Saved refresh token securely');
-    } catch (e) {
-      debugPrint('❌ Failed to save refresh token: $e');
+      logger.logSensitiveOperation(
+        operation: 'save_refresh_token',
+        success: true,
+      );
+    } catch (e, stackTrace) {
+      logger.logSensitiveOperation(
+        operation: 'save_refresh_token',
+        success: false,
+        error: e,
+      );
       rethrow;
     }
   }
@@ -76,7 +99,11 @@ class EncryptionService {
     try {
       return await _secureStorage.read(key: _refreshTokenKey);
     } catch (e) {
-      debugPrint('❌ Failed to read refresh token: $e');
+      logger.logSensitiveOperation(
+        operation: 'read_refresh_token',
+        success: false,
+        error: e,
+      );
       return null;
     }
   }
@@ -89,9 +116,16 @@ class EncryptionService {
     try {
       await _secureStorage.write(key: _userIdKey, value: userId);
       await _secureStorage.write(key: _userEmailKey, value: email);
-      debugPrint('🔐 Saved user credentials securely');
-    } catch (e) {
-      debugPrint('❌ Failed to save user credentials: $e');
+      logger.logSensitiveOperation(
+        operation: 'save_user_credentials',
+        success: true,
+      );
+    } catch (e, stackTrace) {
+      logger.logSensitiveOperation(
+        operation: 'save_user_credentials',
+        success: false,
+        error: e,
+      );
       rethrow;
     }
   }
@@ -101,7 +135,11 @@ class EncryptionService {
     try {
       return await _secureStorage.read(key: _userIdKey);
     } catch (e) {
-      debugPrint('❌ Failed to read user ID: $e');
+      logger.logSensitiveOperation(
+        operation: 'read_user_id',
+        success: false,
+        error: e,
+      );
       return null;
     }
   }
@@ -111,7 +149,11 @@ class EncryptionService {
     try {
       return await _secureStorage.read(key: _userEmailKey);
     } catch (e) {
-      debugPrint('❌ Failed to read user email: $e');
+      logger.logSensitiveOperation(
+        operation: 'read_user_email',
+        success: false,
+        error: e,
+      );
       return null;
     }
   }
@@ -121,9 +163,14 @@ class EncryptionService {
     try {
       final encrypted = _encrypt(data);
       await _secureStorage.write(key: key, value: encrypted);
-      debugPrint('🔐 Saved encrypted data: $key');
-    } catch (e) {
-      debugPrint('❌ Failed to save encrypted data: $e');
+      logger.debug('Saved encrypted data', tag: 'Encryption');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to save encrypted data',
+        tag: 'Encryption',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
@@ -135,7 +182,11 @@ class EncryptionService {
       if (encrypted == null) return null;
       return _decrypt(encrypted);
     } catch (e) {
-      debugPrint('❌ Failed to read encrypted data: $e');
+      logger.debug(
+        'Failed to read encrypted data',
+        tag: 'Encryption',
+        context: {'error': e.toString()},
+      );
       return null;
     }
   }
@@ -144,9 +195,13 @@ class EncryptionService {
   Future<void> delete(String key) async {
     try {
       await _secureStorage.delete(key: key);
-      debugPrint('🗑️  Deleted secure data: $key');
+      logger.debug('Deleted secure data', tag: 'Encryption');
     } catch (e) {
-      debugPrint('❌ Failed to delete data: $e');
+      logger.debug(
+        'Failed to delete data',
+        tag: 'Encryption',
+        context: {'error': e.toString()},
+      );
     }
   }
 
@@ -154,9 +209,13 @@ class EncryptionService {
   Future<void> clearAll() async {
     try {
       await _secureStorage.deleteAll();
-      debugPrint('🗑️  Cleared all secure storage');
+      logger.info('Cleared all secure storage', tag: 'Encryption');
     } catch (e) {
-      debugPrint('❌ Failed to clear secure storage: $e');
+      logger.error(
+        'Failed to clear secure storage',
+        tag: 'Encryption',
+        error: e,
+      );
     }
   }
 
@@ -196,7 +255,7 @@ class EncryptionService {
 
       return base64.encode(encrypted);
     } catch (e) {
-      debugPrint('❌ Encryption failed: $e');
+      logger.error('Encryption failed', tag: 'Encryption', error: e);
       return data; // Fallback to unencrypted
     }
   }
@@ -214,7 +273,7 @@ class EncryptionService {
 
       return utf8.decode(decrypted);
     } catch (e) {
-      debugPrint('❌ Decryption failed: $e');
+      logger.error('Decryption failed', tag: 'Encryption', error: e);
       return encryptedData; // Fallback to encrypted
     }
   }

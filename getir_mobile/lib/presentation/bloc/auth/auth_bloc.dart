@@ -154,19 +154,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     final result = await _authService.login(event.email, event.password);
 
-    result.when(
+    await result.when(
       success: (user) async {
         // 📊 Analytics: Track login
         await _analytics.logLogin(method: 'email');
         await _analytics.setUserId(user.id);
 
-        emit(AuthAuthenticated(user));
+        if (!emit.isDone) {
+          emit(AuthAuthenticated(user));
+        }
         // ✅ Cart merge logic moved to UI layer (login_page.dart)
       },
       failure: (exception) async {
         final message = _getErrorMessage(exception);
-        emit(AuthError(message));
         await _analytics.logError(error: exception, reason: 'Login failed');
+        if (!emit.isDone) {
+          emit(AuthError(message));
+        }
       },
     );
   }
@@ -185,21 +189,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       phoneNumber: event.phoneNumber ?? '',
     );
 
-    result.when(
+    await result.when(
       success: (user) async {
         // 📊 Analytics: Track sign up
         await _analytics.logSignUp(method: 'email');
         await _analytics.setUserId(user.id);
 
-        emit(AuthAuthenticated(user));
+        if (!emit.isDone) {
+          emit(AuthAuthenticated(user));
+        }
       },
       failure: (exception) async {
         final message = _getErrorMessage(exception);
-        emit(AuthError(message));
         await _analytics.logError(
           error: exception,
           reason: 'Registration failed',
         );
+        if (!emit.isDone) {
+          emit(AuthError(message));
+        }
       },
     );
   }
@@ -212,22 +220,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     final result = await _authService.logout();
 
-    result.when(
+    await result.when(
       success: (_) async {
         // 📊 Analytics: Track logout
         await _analytics.logLogout();
         await _analytics.setUserId(null);
 
-        emit(AuthUnauthenticated());
+        if (!emit.isDone) {
+          emit(AuthUnauthenticated());
+        }
       },
       failure: (exception) async {
         // Even if logout fails, clear local state
         await _analytics.logLogout();
         await _analytics.setUserId(null);
 
-        // Logout failed but still show unauthenticated
-        emit(AuthUnauthenticated());
         await _analytics.logError(error: exception, reason: 'Logout failed');
+
+        // Logout failed but still show unauthenticated
+        if (!emit.isDone) {
+          emit(AuthUnauthenticated());
+        }
       },
     );
   }
@@ -236,13 +249,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthRefreshTokenRequested event,
     Emitter<AuthState> emit,
   ) async {
+    emit(AuthLoading());
+
     final result = await _authService.refreshToken();
 
     result.when(
-      success: (user) => emit(AuthAuthenticated(user)),
+      success: (user) {
+        if (!emit.isDone) {
+          emit(AuthAuthenticated(user));
+        }
+      },
       failure: (exception) {
         final message = _getErrorMessage(exception);
-        emit(AuthError(message));
+        if (!emit.isDone) {
+          emit(AuthError(message));
+        }
       },
     );
   }
@@ -299,19 +320,33 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     final authResult = await _authService.checkAuthentication();
 
-    authResult.when(
+    await authResult.when(
       success: (isAuthenticated) async {
         if (isAuthenticated) {
           final userResult = await _authService.getCurrentUser();
           userResult.when(
-            success: (user) => emit(AuthAuthenticated(user)),
-            failure: (_) => emit(AuthUnauthenticated()),
+            success: (user) {
+              if (!emit.isDone) {
+                emit(AuthAuthenticated(user));
+              }
+            },
+            failure: (_) {
+              if (!emit.isDone) {
+                emit(AuthUnauthenticated());
+              }
+            },
           );
         } else {
+          if (!emit.isDone) {
+            emit(AuthUnauthenticated());
+          }
+        }
+      },
+      failure: (_) {
+        if (!emit.isDone) {
           emit(AuthUnauthenticated());
         }
       },
-      failure: (_) => emit(AuthUnauthenticated()),
     );
   }
 

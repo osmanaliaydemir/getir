@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'local_storage_service.dart';
 import 'network_service.dart';
+import 'logger_service.dart';
 
 class SyncService {
   static final SyncService _instance = SyncService._internal();
@@ -15,7 +15,9 @@ class SyncService {
   bool _isSyncing = false;
   final int _maxRetries = 3;
   // ignore: unused_field
-  final Duration _retryDelay = const Duration(seconds: 5); // Reserved for retry logic
+  final Duration _retryDelay = const Duration(
+    seconds: 5,
+  ); // Reserved for retry logic
 
   // Getters
   bool get isSyncing => _isSyncing;
@@ -53,9 +55,11 @@ class SyncService {
         if (retryCount >= _maxRetries) {
           // Remove item after max retries
           await _localStorage.removeFromSyncQueue(i);
-          if (kDebugMode) {
-            print('Removed item from sync queue after max retries: $action');
-          }
+          logger.warning(
+            'Removed item from sync queue after max retries',
+            tag: 'Sync',
+            context: {'action': action},
+          );
           continue;
         }
 
@@ -65,31 +69,42 @@ class SyncService {
           if (success) {
             // Remove successful item from queue
             await _localStorage.removeFromSyncQueue(i);
-            if (kDebugMode) {
-              print('Successfully synced action: $action');
-            }
+            logger.debug(
+              'Successfully synced action',
+              tag: 'Sync',
+              context: {'action': action},
+            );
           } else {
             // Increment retry count
             await _localStorage.updateSyncQueueRetryCount(i, retryCount + 1);
-            if (kDebugMode) {
-              print('Failed to sync action, retry count: ${retryCount + 1}');
-            }
+            logger.debug(
+              'Failed to sync action, retry count: ${retryCount + 1}',
+              tag: 'Sync',
+              context: {'action': action},
+            );
           }
-        } catch (e) {
+        } catch (e, stackTrace) {
           // Increment retry count on error
           await _localStorage.updateSyncQueueRetryCount(i, retryCount + 1);
-          if (kDebugMode) {
-            print('Error syncing action $action: $e');
-          }
+          logger.error(
+            'Error syncing action',
+            tag: 'Sync',
+            error: e,
+            stackTrace: stackTrace,
+            context: {'action': action},
+          );
         }
 
         // Add delay between sync attempts
         await Future.delayed(const Duration(milliseconds: 500));
       }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error in sync process: $e');
-      }
+    } catch (e, stackTrace) {
+      logger.error(
+        'Error in sync process',
+        tag: 'Sync',
+        error: e,
+        stackTrace: stackTrace,
+      );
     } finally {
       _isSyncing = false;
     }
@@ -114,15 +129,21 @@ class SyncService {
         case 'update_notification_preferences':
           return await _syncUpdateNotificationPreferences(data);
         default:
-          if (kDebugMode) {
-            print('Unknown sync action: $action');
-          }
+          logger.warning(
+            'Unknown sync action',
+            tag: 'Sync',
+            context: {'action': action},
+          );
           return false;
       }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error executing sync action $action: $e');
-      }
+    } catch (e, stackTrace) {
+      logger.error(
+        'Error executing sync action',
+        tag: 'Sync',
+        error: e,
+        stackTrace: stackTrace,
+        context: {'action': action},
+      );
       return false;
     }
   }

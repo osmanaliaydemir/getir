@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:signalr_core/signalr_core.dart';
 import '../config/environment_config.dart';
 import 'encryption_service.dart';
+import 'logger_service.dart';
 
 /// SignalR Connection State
 enum SignalRConnectionState {
@@ -87,8 +87,9 @@ class SignalRService {
     try {
       final accessToken = await _encryptionService.getAccessToken();
       if (accessToken == null) {
-        debugPrint(
-          '⚠️  No access token found, skipping OrderHub initialization',
+        logger.warning(
+          'No access token found, skipping OrderHub initialization',
+          tag: 'SignalR',
         );
         return;
       }
@@ -101,7 +102,7 @@ class SignalRService {
             HttpConnectionOptions(
               accessTokenFactory: () async => accessToken,
               logging: EnvironmentConfig.debugMode
-                  ? (level, message) => debugPrint('OrderHub: $message')
+                  ? (level, message) => logger.debug(message, tag: 'OrderHub')
                   : null,
             ),
           )
@@ -120,9 +121,14 @@ class SignalRService {
       await _orderHubConnection!.start();
       _orderHubState = SignalRConnectionState.connected;
       _orderHubStateController.add(_orderHubState);
-      debugPrint('✅ OrderHub connected successfully');
-    } catch (e) {
-      debugPrint('❌ OrderHub connection failed: $e');
+      logger.info('OrderHub connected successfully', tag: 'SignalR');
+    } catch (e, stackTrace) {
+      logger.error(
+        'OrderHub connection failed',
+        tag: 'SignalR',
+        error: e,
+        stackTrace: stackTrace,
+      );
       _orderHubState = SignalRConnectionState.failed;
       _orderHubStateController.add(_orderHubState);
     }
@@ -149,7 +155,8 @@ class SignalRService {
             HttpConnectionOptions(
               accessTokenFactory: () async => accessToken,
               logging: EnvironmentConfig.debugMode
-                  ? (level, message) => debugPrint('TrackingHub: $message')
+                  ? (level, message) =>
+                        logger.debug(message, tag: 'TrackingHub')
                   : null,
             ),
           )
@@ -166,9 +173,14 @@ class SignalRService {
       await _trackingHubConnection!.start();
       _trackingHubState = SignalRConnectionState.connected;
       _trackingHubStateController.add(_trackingHubState);
-      debugPrint('✅ TrackingHub connected successfully');
-    } catch (e) {
-      debugPrint('❌ TrackingHub connection failed: $e');
+      logger.info('TrackingHub connected successfully', tag: 'SignalR');
+    } catch (e, stackTrace) {
+      logger.error(
+        'TrackingHub connection failed',
+        tag: 'SignalR',
+        error: e,
+        stackTrace: stackTrace,
+      );
       _trackingHubState = SignalRConnectionState.failed;
       _trackingHubStateController.add(_trackingHubState);
     }
@@ -195,7 +207,8 @@ class SignalRService {
             HttpConnectionOptions(
               accessTokenFactory: () async => accessToken,
               logging: EnvironmentConfig.debugMode
-                  ? (level, message) => debugPrint('NotificationHub: $message')
+                  ? (level, message) =>
+                        logger.debug(message, tag: 'NotificationHub')
                   : null,
             ),
           )
@@ -216,9 +229,14 @@ class SignalRService {
       await _notificationHubConnection!.start();
       _notificationHubState = SignalRConnectionState.connected;
       _notificationHubStateController.add(_notificationHubState);
-      debugPrint('✅ NotificationHub connected successfully');
-    } catch (e) {
-      debugPrint('❌ NotificationHub connection failed: $e');
+      logger.info('NotificationHub connected successfully', tag: 'SignalR');
+    } catch (e, stackTrace) {
+      logger.error(
+        'NotificationHub connection failed',
+        tag: 'SignalR',
+        error: e,
+        stackTrace: stackTrace,
+      );
       _notificationHubState = SignalRConnectionState.failed;
       _notificationHubStateController.add(_notificationHubState);
     }
@@ -233,9 +251,19 @@ class SignalRService {
 
     try {
       await _orderHubConnection?.invoke('SubscribeToOrder', args: [orderId]);
-      debugPrint('📡 Subscribed to order: $orderId');
-    } catch (e) {
-      debugPrint('❌ Failed to subscribe to order: $e');
+      logger.debug(
+        'Subscribed to order',
+        tag: 'SignalR',
+        context: {'orderId': orderId},
+      );
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to subscribe to order',
+        tag: 'SignalR',
+        error: e,
+        stackTrace: stackTrace,
+        context: {'orderId': orderId},
+      );
     }
   }
 
@@ -251,9 +279,19 @@ class SignalRService {
         'JoinOrderTrackingGroup',
         args: [orderId],
       );
-      debugPrint('📡 Joined order tracking group: $orderId');
-    } catch (e) {
-      debugPrint('❌ Failed to join tracking group: $e');
+      logger.debug(
+        'Joined order tracking group',
+        tag: 'SignalR',
+        context: {'orderId': orderId},
+      );
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to join tracking group',
+        tag: 'SignalR',
+        error: e,
+        stackTrace: stackTrace,
+        context: {'orderId': orderId},
+      );
     }
   }
 
@@ -264,9 +302,19 @@ class SignalRService {
         'RequestTrackingData',
         args: [orderId],
       );
-      debugPrint('📡 Requested tracking data for order: $orderId');
-    } catch (e) {
-      debugPrint('❌ Failed to request tracking data: $e');
+      logger.debug(
+        'Requested tracking data',
+        tag: 'SignalR',
+        context: {'orderId': orderId},
+      );
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to request tracking data',
+        tag: 'SignalR',
+        error: e,
+        stackTrace: stackTrace,
+        context: {'orderId': orderId},
+      );
     }
   }
 
@@ -277,9 +325,19 @@ class SignalRService {
         'UnsubscribeFromOrder',
         args: [orderId],
       );
-      debugPrint('📡 Unsubscribed from order: $orderId');
-    } catch (e) {
-      debugPrint('❌ Failed to unsubscribe from order: $e');
+      logger.debug(
+        'Unsubscribed from order',
+        tag: 'SignalR',
+        context: {'orderId': orderId},
+      );
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to unsubscribe from order',
+        tag: 'SignalR',
+        error: e,
+        stackTrace: stackTrace,
+        context: {'orderId': orderId},
+      );
     }
   }
 
@@ -290,9 +348,19 @@ class SignalRService {
         'LeaveOrderTrackingGroup',
         args: [orderId],
       );
-      debugPrint('📡 Left order tracking group: $orderId');
-    } catch (e) {
-      debugPrint('❌ Failed to leave tracking group: $e');
+      logger.debug(
+        'Left order tracking group',
+        tag: 'SignalR',
+        context: {'orderId': orderId},
+      );
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to leave tracking group',
+        tag: 'SignalR',
+        error: e,
+        stackTrace: stackTrace,
+        context: {'orderId': orderId},
+      );
     }
   }
 
@@ -303,9 +371,19 @@ class SignalRService {
         'MarkNotificationAsRead',
         args: [notificationId],
       );
-      debugPrint('📡 Marked notification as read: $notificationId');
-    } catch (e) {
-      debugPrint('❌ Failed to mark notification as read: $e');
+      logger.debug(
+        'Marked notification as read',
+        tag: 'SignalR',
+        context: {'notificationId': notificationId},
+      );
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to mark notification as read',
+        tag: 'SignalR',
+        error: e,
+        stackTrace: stackTrace,
+        context: {'notificationId': notificationId},
+      );
     }
   }
 
@@ -317,9 +395,18 @@ class SignalRService {
       final data = arguments[0] as Map<String, dynamic>;
       final update = OrderStatusUpdate.fromJson(data);
       _orderStatusController.add(update);
-      debugPrint('📬 Order status updated: ${update.orderId}');
-    } catch (e) {
-      debugPrint('❌ Failed to parse order status update: $e');
+      logger.debug(
+        'Order status updated',
+        tag: 'SignalR',
+        context: {'orderId': update.orderId},
+      );
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to parse order status update',
+        tag: 'SignalR',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -327,10 +414,14 @@ class SignalRService {
     if (arguments == null || arguments.isEmpty) return;
 
     try {
-      final data = arguments[0] as Map<String, dynamic>;
-      debugPrint('📬 Order tracking info received: $data');
-    } catch (e) {
-      debugPrint('❌ Failed to parse order tracking info: $e');
+      logger.debug('Order tracking info received', tag: 'SignalR');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to parse order tracking info',
+        tag: 'SignalR',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -341,9 +432,18 @@ class SignalRService {
       final data = arguments[0] as Map<String, dynamic>;
       final tracking = TrackingData.fromJson(data);
       _trackingDataController.add(tracking);
-      debugPrint('📬 Tracking data received: ${tracking.orderId}');
-    } catch (e) {
-      debugPrint('❌ Failed to parse tracking data: $e');
+      logger.debug(
+        'Tracking data received',
+        tag: 'SignalR',
+        context: {'orderId': tracking.orderId},
+      );
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to parse tracking data',
+        tag: 'SignalR',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -354,11 +454,21 @@ class SignalRService {
       final data = arguments[0] as Map<String, dynamic>;
       final location = LocationUpdate.fromJson(data);
       _locationUpdateController.add(location);
-      debugPrint(
-        '📍 Location updated: ${location.latitude}, ${location.longitude}',
+      logger.debug(
+        'Location updated',
+        tag: 'SignalR',
+        context: {
+          'latitude': location.latitude,
+          'longitude': location.longitude,
+        },
       );
-    } catch (e) {
-      debugPrint('❌ Failed to parse location update: $e');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to parse location update',
+        tag: 'SignalR',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -369,14 +479,23 @@ class SignalRService {
       final data = arguments[0] as Map<String, dynamic>;
       final tracking = TrackingData.fromJson(data);
       _trackingDataController.add(tracking);
-      debugPrint('📬 Status updated: ${tracking.status}');
-    } catch (e) {
-      debugPrint('❌ Failed to parse status update: $e');
+      logger.debug(
+        'Status updated',
+        tag: 'SignalR',
+        context: {'status': tracking.status},
+      );
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to parse status update',
+        tag: 'SignalR',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
   void _handleTrackingNotFound(List<Object?>? arguments) {
-    debugPrint('⚠️  Tracking not found for order');
+    logger.warning('Tracking not found for order', tag: 'SignalR');
   }
 
   void _handleNotification(List<Object?>? arguments) {
@@ -386,9 +505,18 @@ class SignalRService {
       final data = arguments[0] as Map<String, dynamic>;
       final notification = RealtimeNotification.fromJson(data);
       _notificationController.add(notification);
-      debugPrint('🔔 Notification received: ${notification.message}');
-    } catch (e) {
-      debugPrint('❌ Failed to parse notification: $e');
+      logger.debug(
+        'Notification received',
+        tag: 'SignalR',
+        context: {'message': notification.message},
+      );
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to parse notification',
+        tag: 'SignalR',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -396,9 +524,14 @@ class SignalRService {
     if (arguments == null || arguments.isEmpty) return;
 
     try {
-      debugPrint('📬 User notifications received');
-    } catch (e) {
-      debugPrint('❌ Failed to parse user notifications: $e');
+      logger.debug('User notifications received', tag: 'SignalR');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to parse user notifications',
+        tag: 'SignalR',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -406,9 +539,14 @@ class SignalRService {
     if (arguments == null || arguments.isEmpty) return;
 
     try {
-      debugPrint('✅ Notification marked as read');
-    } catch (e) {
-      debugPrint('❌ Failed to handle notification read: $e');
+      logger.debug('Notification marked as read', tag: 'SignalR');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to handle notification read',
+        tag: 'SignalR',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -426,7 +564,7 @@ class SignalRService {
     _trackingHubStateController.add(_trackingHubState);
     _notificationHubStateController.add(_notificationHubState);
 
-    debugPrint('🔌 All SignalR hubs disconnected');
+    logger.info('All SignalR hubs disconnected', tag: 'SignalR');
   }
 
   /// Dispose service

@@ -36,7 +36,9 @@ class LoggerService {
   void setMinimumLevel(LogLevel level) {
     _minimumLevel = level;
     if (kDebugMode) {
-      debugPrint('📊 Logger: Minimum level set to ${level.emoji}');
+      // Using direct print for logger's own debug output
+      // ignore: avoid_print
+      print('📊 Logger: Minimum level set to ${level.emoji}');
     }
   }
 
@@ -132,18 +134,23 @@ class LoggerService {
 
     // Print to console (debug only)
     if (kDebugMode) {
-      debugPrint(logMessage);
+      // Using direct print for logger's own output
+      // ignore: avoid_print
+      print(logMessage);
 
       if (error != null) {
-        debugPrint('   Error: $error');
+        // ignore: avoid_print
+        print('   Error: $error');
       }
 
       if (stackTrace != null) {
-        debugPrint('   StackTrace:\n$stackTrace');
+        // ignore: avoid_print
+        print('   StackTrace:\n$stackTrace');
       }
 
       if (context != null && context.isNotEmpty) {
-        debugPrint('   Context: $context');
+        // ignore: avoid_print
+        print('   Context: $context');
       }
     }
 

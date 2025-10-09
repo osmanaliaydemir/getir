@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
-import '../../../core/providers/language_provider.dart';
+import '../../../core/constants/app_dimensions.dart';
+import '../../../core/cubits/language/language_cubit.dart';
 import '../../../domain/entities/service_category_type.dart';
 import '../../widgets/common/language_selector.dart';
 import '../../widgets/merchant/merchant_card.dart';
@@ -13,6 +13,7 @@ import '../../widgets/merchant/merchant_card_skeleton.dart';
 import '../../../core/widgets/error_state_widget.dart';
 import '../../bloc/merchant/merchant_bloc.dart';
 import '../merchant/category_merchants_page.dart';
+import '../../../core/services/logger_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -57,12 +58,29 @@ class _HomePageState extends State<HomePage> {
         LoadNearbyMerchants(
           latitude: position.latitude,
           longitude: position.longitude,
-          radius: 5.0,
+          radius: AppDimensions.nearbyMerchantRadiusKm,
         ),
       );
-    } catch (e) {
-      // Handle error
-      print('Error getting location: $e');
+    } catch (e, stackTrace) {
+      // Log error
+      logger.error(
+        'Failed to get location',
+        tag: 'HomePage',
+        error: e,
+        stackTrace: stackTrace,
+      );
+
+      // Show user-friendly error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Konum alınamadı. Lütfen konum izinlerini kontrol edin.',
+            ),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -77,12 +95,14 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         actions: [
-          Consumer<LanguageProvider>(
-            builder: (context, languageProvider, child) {
+          BlocBuilder<LanguageCubit, LanguageState>(
+            builder: (context, state) {
               return LanguageSelector(
-                currentLanguage: languageProvider.currentLanguageCode,
+                currentLanguage: state.languageCode,
                 onLanguageChanged: (languageCode) {
-                  languageProvider.changeLanguageByCode(languageCode);
+                  context.read<LanguageCubit>().changeLanguageByCode(
+                    languageCode,
+                  );
                 },
               );
             },
@@ -91,23 +111,25 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppDimensions.spacingL),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Location Header
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppDimensions.spacingL),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(
+                  AppDimensions.cardBorderRadius,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    color: Colors.grey.withOpacity(AppDimensions.shadowOpacity),
+                    spreadRadius: AppDimensions.shadowSpreadRadius,
+                    blurRadius: AppDimensions.shadowBlurRadius,
+                    offset: const Offset(0, AppDimensions.shadowOffsetY),
                   ),
                 ],
               ),
@@ -116,9 +138,9 @@ class _HomePageState extends State<HomePage> {
                   const Icon(
                     Icons.location_on,
                     color: AppColors.primary,
-                    size: 24,
+                    size: AppDimensions.iconM,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppDimensions.spacingM),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,9 +214,9 @@ class _HomePageState extends State<HomePage> {
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 4,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+              crossAxisCount: AppDimensions.categoriesGridCount,
+              crossAxisSpacing: AppDimensions.spacingL,
+              mainAxisSpacing: AppDimensions.spacingL,
               children: [
                 _buildCategoryItem(
                   context: context,
@@ -276,23 +298,29 @@ class _HomePageState extends State<HomePage> {
 
             // Popular Products List
             SizedBox(
-              height: 200,
+              height: AppDimensions.popularProductsHeight,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: 5,
                 itemBuilder: (context, index) {
                   return Container(
-                    width: 150,
-                    margin: const EdgeInsets.only(right: 16),
+                    width: AppDimensions.productCardWidth,
+                    margin: const EdgeInsets.only(
+                      right: AppDimensions.spacingL,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.cardBorderRadius,
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
+                          color: Colors.grey.withOpacity(
+                            AppDimensions.shadowOpacity,
+                          ),
+                          spreadRadius: AppDimensions.shadowSpreadRadius,
+                          blurRadius: AppDimensions.shadowBlurRadius,
+                          offset: const Offset(0, AppDimensions.shadowOffsetY),
                         ),
                       ],
                     ),
@@ -306,13 +334,17 @@ class _HomePageState extends State<HomePage> {
                             decoration: BoxDecoration(
                               color: Colors.grey[200],
                               borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(12),
-                                topRight: Radius.circular(12),
+                                topLeft: Radius.circular(
+                                  AppDimensions.cardBorderRadius,
+                                ),
+                                topRight: Radius.circular(
+                                  AppDimensions.cardBorderRadius,
+                                ),
                               ),
                             ),
                             child: const Icon(
                               Icons.image,
-                              size: 50,
+                              size: AppDimensions.iconXl,
                               color: Colors.grey,
                             ),
                           ),
@@ -320,7 +352,9 @@ class _HomePageState extends State<HomePage> {
                         Expanded(
                           flex: 2,
                           child: Padding(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(
+                              AppDimensions.spacingM,
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -332,7 +366,7 @@ class _HomePageState extends State<HomePage> {
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: AppDimensions.spacingXs),
                                 Text(
                                   '₺${(index + 1) * 10}.00',
                                   style: AppTypography.bodyMedium.copyWith(

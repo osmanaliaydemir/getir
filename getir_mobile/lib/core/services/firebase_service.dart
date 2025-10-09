@@ -8,6 +8,7 @@ import 'dart:convert';
 import '../../core/navigation/app_router.dart';
 import '../../core/constants/route_constants.dart';
 import '../di/injection.dart';
+import 'logger_service.dart';
 
 class FirebaseService {
   static final FirebaseService _instance = FirebaseService._internal();
@@ -33,13 +34,14 @@ class FirebaseService {
       // Configure FCM
       await _configureFCM();
 
-      if (kDebugMode) {
-        print('Firebase initialized successfully');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Firebase initialization failed: $e');
-      }
+      logger.info('Firebase initialized successfully', tag: 'Firebase');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Firebase initialization failed',
+        tag: 'Firebase',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
@@ -81,9 +83,10 @@ class FirebaseService {
       sound: true,
     );
 
-    if (kDebugMode) {
-      print('FCM Permission status: ${settings.authorizationStatus}');
-    }
+    logger.debug(
+      'FCM permission status: ${settings.authorizationStatus}',
+      tag: 'FCM',
+    );
 
     // Request local notification permission
     await Permission.notification.request();
@@ -93,18 +96,14 @@ class FirebaseService {
   static Future<void> _configureFCM() async {
     // Get FCM token
     final token = await messaging.getToken();
-    if (kDebugMode) {
-      print('FCM Token: $token');
-    }
+    logger.debug('FCM token obtained', tag: 'FCM');
     if (token != null) {
       await _sendTokenToServer(token);
     }
 
     // Handle token refresh
     messaging.onTokenRefresh.listen((newToken) async {
-      if (kDebugMode) {
-        print('FCM Token refreshed: $newToken');
-      }
+      logger.debug('FCM token refreshed', tag: 'FCM');
       await _sendTokenToServer(newToken);
     });
 
@@ -130,21 +129,23 @@ class FirebaseService {
       // Get Dio from DI instead of ApiClient singleton
       final dio = getIt<Dio>();
       await dio.post('/api/v1/notifications/token', data: {'token': token});
-      if (kDebugMode) {
-        print('FCM Token sent to server: $token');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Failed to send FCM token to server: $e');
-      }
+      logger.debug('FCM token sent to server', tag: 'FCM');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to send FCM token to server',
+        tag: 'FCM',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
   // Handle foreground messages
   static Future<void> _handleForegroundMessage(RemoteMessage message) async {
-    if (kDebugMode) {
-      print('Received foreground message: ${message.messageId}');
-    }
+    logger.debug(
+      'Received foreground message: ${message.messageId}',
+      tag: 'FCM',
+    );
 
     // Show local notification for foreground messages
     await _showLocalNotification(message);
@@ -152,9 +153,7 @@ class FirebaseService {
 
   // Handle notification tap
   static Future<void> _handleNotificationTap(RemoteMessage message) async {
-    if (kDebugMode) {
-      print('Notification tapped: ${message.messageId}');
-    }
+    logger.debug('Notification tapped: ${message.messageId}', tag: 'FCM');
 
     final data = message.data;
     try {
@@ -180,9 +179,7 @@ class FirebaseService {
           break;
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Notification tap routing failed: $e');
-      }
+      logger.error('Notification tap routing failed', tag: 'FCM', error: e);
       // Safe fallback
       AppRouter.router.go(RouteConstants.notifications);
     }
@@ -225,9 +222,7 @@ class FirebaseService {
 
   // Handle notification tap (local)
   static void _onNotificationTapped(NotificationResponse response) {
-    if (kDebugMode) {
-      print('Local notification tapped: ${response.payload}');
-    }
+    logger.debug('Local notification tapped: ${response.payload}', tag: 'FCM');
     try {
       final payload = response.payload;
       if (payload == null || payload.isEmpty) {
@@ -256,9 +251,11 @@ class FirebaseService {
           break;
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to route on local notification tap: $e');
-      }
+      logger.error(
+        'Failed to route on local notification tap',
+        tag: 'FCM',
+        error: e,
+      );
       AppRouter.router.go(RouteConstants.notifications);
     }
   }
@@ -267,13 +264,14 @@ class FirebaseService {
   static Future<void> subscribeToTopic(String topic) async {
     try {
       await messaging.subscribeToTopic(topic);
-      if (kDebugMode) {
-        print('Subscribed to topic: $topic');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Failed to subscribe to topic $topic: $e');
-      }
+      logger.debug('Subscribed to topic: $topic', tag: 'FCM');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to subscribe to topic $topic',
+        tag: 'FCM',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -281,13 +279,14 @@ class FirebaseService {
   static Future<void> unsubscribeFromTopic(String topic) async {
     try {
       await messaging.unsubscribeFromTopic(topic);
-      if (kDebugMode) {
-        print('Unsubscribed from topic: $topic');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Failed to unsubscribe from topic $topic: $e');
-      }
+      logger.debug('Unsubscribed from topic: $topic', tag: 'FCM');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to unsubscribe from topic $topic',
+        tag: 'FCM',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -296,9 +295,7 @@ class FirebaseService {
     try {
       return await messaging.getToken();
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to get FCM token: $e');
-      }
+      logger.error('Failed to get FCM token', tag: 'FCM', error: e);
       return null;
     }
   }
@@ -318,7 +315,12 @@ class FirebaseService {
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
+  // Background handler - minimal logging
   if (kDebugMode) {
-    print('Handling background message: ${message.messageId}');
+    logger.debug(
+      'Handling background message',
+      tag: 'FCM',
+      context: {'messageId': message.messageId},
+    );
   }
 }

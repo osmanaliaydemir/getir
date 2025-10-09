@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'logger_service.dart';
 import 'dart:async';
 
 /// Performance monitoring service for tracking app performance metrics
@@ -30,7 +31,7 @@ class PerformanceService {
   void _log(String name, Object value) {
     if (kDebugMode) {
       // Replace with real analytics SDK when ready
-      print('[Analytics] $name: $value');
+      logger.debug('$name: $value', tag: 'Performance');
     }
   }
 
@@ -215,7 +216,10 @@ class AppStartupTracker {
       );
 
       if (kDebugMode) {
-        print('App startup time: ${startupTime.inMilliseconds}ms');
+        logger.info(
+          'App startup time: ${startupTime.inMilliseconds}ms',
+          tag: 'Performance',
+        );
       }
     }
   }
