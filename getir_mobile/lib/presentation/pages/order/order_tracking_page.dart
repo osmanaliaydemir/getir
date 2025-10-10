@@ -4,6 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/services/signalr_service.dart';
+import '../../../core/di/injection.dart';
 
 /// Real-time Order Tracking Page
 /// Displays live courier location and order status updates
@@ -17,7 +18,7 @@ class OrderTrackingPage extends StatefulWidget {
 }
 
 class _OrderTrackingPageState extends State<OrderTrackingPage> {
-  final SignalRService _signalRService = SignalRService();
+  late final SignalRService _signalRService;
   GoogleMapController? _mapController;
 
   // Tracking data
@@ -32,6 +33,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
   @override
   void initState() {
     super.initState();
+    _signalRService = getIt<SignalRService>();
     _initializeTracking();
   }
 

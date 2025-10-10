@@ -1,4 +1,5 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../services/logger_service.dart';
 
 /// Environment configuration for the app
 /// Supports dev, staging, and production environments
@@ -23,19 +24,25 @@ class EnvironmentConfig {
   static Future<void> initialize({String environment = dev}) async {
     _currentEnvironment = environment;
 
-    try {
-      // Load .env file based on environment
-      final envFile = environment == prod
-          ? '.env.prod'
-          : environment == staging
-          ? '.env.staging'
-          : '.env.dev';
+    // Load .env file based on environment
+    final envFile = environment == prod
+        ? '.env.prod'
+        : environment == staging
+        ? '.env.staging'
+        : '.env.dev';
 
+    try {
       await dotenv.load(fileName: envFile);
     } catch (e) {
       // If .env file not found, use default values
-      print('⚠️  Warning: .env file not found, using default values');
-      print('   Create a .env.dev file in the root directory');
+      logger.warning(
+        '.env file not found, using default values',
+        tag: 'EnvConfig',
+        context: {
+          'envFile': envFile,
+          'instruction': 'Create a .env.dev file in the root directory',
+        },
+      );
     }
   }
 
@@ -98,12 +105,12 @@ class EnvironmentConfig {
   static String _getDefaultApiBaseUrl() {
     switch (_currentEnvironment) {
       case prod:
-        return 'https://api.getir.com';
+        return 'http://ajilgo.runasp.net';
       case staging:
-        return 'https://staging-api.getir.com';
+        return 'http://ajilgo.runasp.net';
       case dev:
       default:
-        return 'http://localhost:5000';
+        return 'http://ajilgo.runasp.net'; // Backend URL
     }
   }
 
@@ -111,12 +118,17 @@ class EnvironmentConfig {
   static void printConfig() {
     if (!debugMode) return;
 
-    print('🔧 Environment Configuration:');
-    print('   Environment: $_currentEnvironment');
-    print('   API Base URL: $apiBaseUrl');
-    print('   API Timeout: ${apiTimeout}ms');
-    print('   SSL Pinning: $enableSslPinning');
-    print('   Debug Mode: $debugMode');
-    print('   Google Maps: ${googleMapsApiKey.substring(0, 10)}...');
+    logger.info(
+      'Environment Configuration',
+      tag: 'EnvConfig',
+      context: {
+        'environment': _currentEnvironment,
+        'apiBaseUrl': apiBaseUrl,
+        'apiTimeout': '${apiTimeout}ms',
+        'sslPinning': enableSslPinning,
+        'debugMode': debugMode,
+        'googleMaps': '${googleMapsApiKey.substring(0, 10)}...',
+      },
+    );
   }
 }

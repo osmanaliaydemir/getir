@@ -15,7 +15,7 @@ class NotificationPreferencesDataSourceImpl
 
   @override
   Future<NotificationPreferences> getPreferences() async {
-    final response = await _dio.get('/api/v1/notifications/preferences');
+    final response = await _dio.get('/api/v1/Notification/preferences');
     final data = response.data['data'] ?? response.data;
     return NotificationPreferences.fromJson(data as Map<String, dynamic>);
   }
@@ -25,7 +25,7 @@ class NotificationPreferencesDataSourceImpl
     NotificationPreferences preferences,
   ) async {
     final response = await _dio.put(
-      '/api/v1/notifications/preferences',
+      '/api/v1/Notification/preferences',
       data: preferences.toJson(),
     );
     final data = response.data['data'] ?? response.data;

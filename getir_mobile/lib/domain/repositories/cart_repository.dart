@@ -1,19 +1,20 @@
+import '../../core/errors/result.dart';
 import '../entities/cart.dart';
 
 abstract class CartRepository {
-  Future<Cart> getCart();
-  Future<CartItem> addToCart({
+  Future<Result<Cart>> getCart();
+  Future<Result<CartItem>> addToCart({
     required String productId,
     required int quantity,
     String? variantId,
     List<String>? optionIds,
   });
-  Future<CartItem> updateCartItem({
+  Future<Result<CartItem>> updateCartItem({
     required String itemId,
     required int quantity,
   });
-  Future<void> removeFromCart(String itemId);
-  Future<void> clearCart();
-  Future<Cart> applyCoupon(String couponCode);
-  Future<Cart> removeCoupon();
+  Future<Result<void>> removeFromCart(String itemId);
+  Future<Result<void>> clearCart();
+  Future<Result<Cart>> applyCoupon(String couponCode);
+  Future<Result<Cart>> removeCoupon();
 }

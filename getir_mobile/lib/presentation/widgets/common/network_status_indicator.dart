@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/cubits/network/network_cubit.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
-import '../../../core/providers/network_provider.dart';
 
 class NetworkStatusIndicator extends StatelessWidget {
   const NetworkStatusIndicator({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<NetworkProvider>(
-      builder: (context, networkProvider, child) {
-        if (networkProvider.isOnline) {
+    return BlocBuilder<NetworkCubit, NetworkState>(
+      builder: (context, state) {
+        if (state.isOnline) {
           return const SizedBox.shrink();
         }
 
@@ -42,7 +42,7 @@ class NetworkStatusIndicator extends StatelessWidget {
                   ),
                 ),
               ),
-              if (networkProvider.isRetrying)
+              if (state.isRetrying)
                 const SizedBox(
                   width: 16,
                   height: 16,
@@ -53,7 +53,7 @@ class NetworkStatusIndicator extends StatelessWidget {
                 )
               else
                 GestureDetector(
-                  onTap: () => networkProvider.retryConnection(),
+                  onTap: () => context.read<NetworkCubit>().retryConnection(),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,

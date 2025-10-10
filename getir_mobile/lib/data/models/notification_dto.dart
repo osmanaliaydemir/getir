@@ -61,4 +61,17 @@ class AppNotificationDto {
       data: data,
     );
   }
+  
+  /// Convert from Domain Entity (for API requests)
+  factory AppNotificationDto.fromDomain(AppNotification notification) {
+    return AppNotificationDto(
+      id: notification.id,
+      title: notification.title,
+      body: notification.body,
+      type: notification.type,
+      createdAt: notification.createdAt,
+      isRead: notification.isRead,
+      data: notification.data,
+    );
+  }
 }

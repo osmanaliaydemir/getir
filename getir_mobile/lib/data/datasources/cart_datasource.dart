@@ -27,7 +27,7 @@ class CartDataSourceImpl implements CartDataSource {
   @override
   Future<Cart> getCart() async {
     try {
-      final response = await _dio.get('/api/v1/cart');
+      final response = await _dio.get('/api/v1/Cart');
       return _cartFromJson(response.data);
     } catch (e) {
       throw Exception('Failed to fetch cart: $e');
@@ -43,7 +43,7 @@ class CartDataSourceImpl implements CartDataSource {
   }) async {
     try {
       final response = await _dio.post(
-        '/api/v1/cart/items',
+        '/api/v1/Cart/items',
         data: {
           'productId': productId,
           'quantity': quantity,
@@ -64,7 +64,7 @@ class CartDataSourceImpl implements CartDataSource {
   }) async {
     try {
       final response = await _dio.put(
-        '/api/v1/cart/items/$itemId',
+        '/api/v1/Cart/items/$itemId',
         data: {'quantity': quantity},
       );
       return _cartItemFromJson(response.data);
@@ -76,7 +76,7 @@ class CartDataSourceImpl implements CartDataSource {
   @override
   Future<void> removeFromCart(String itemId) async {
     try {
-      await _dio.delete('/api/v1/cart/items/$itemId');
+      await _dio.delete('/api/v1/Cart/items/$itemId');
     } catch (e) {
       throw Exception('Failed to remove from cart: $e');
     }
@@ -85,7 +85,7 @@ class CartDataSourceImpl implements CartDataSource {
   @override
   Future<void> clearCart() async {
     try {
-      await _dio.delete('/api/v1/cart/clear');
+      await _dio.delete('/api/v1/Cart/clear');
     } catch (e) {
       throw Exception('Failed to clear cart: $e');
     }
@@ -95,7 +95,7 @@ class CartDataSourceImpl implements CartDataSource {
   Future<Cart> applyCoupon(String couponCode) async {
     try {
       final response = await _dio.post(
-        '/api/v1/coupons/apply',
+        '/api/v1/Coupon/apply',
         data: {'couponCode': couponCode},
       );
       return _cartFromJson(response.data);
@@ -107,7 +107,7 @@ class CartDataSourceImpl implements CartDataSource {
   @override
   Future<Cart> removeCoupon() async {
     try {
-      final response = await _dio.delete('/api/v1/coupons/remove');
+      final response = await _dio.delete('/api/v1/Coupon/remove');
       return _cartFromJson(response.data);
     } catch (e) {
       throw Exception('Failed to remove coupon: $e');
@@ -118,7 +118,8 @@ class CartDataSourceImpl implements CartDataSource {
     return Cart(
       id: json['id']?.toString() ?? '',
       userId: json['userId']?.toString() ?? '',
-      items: (json['items'] as List<dynamic>?)
+      items:
+          (json['items'] as List<dynamic>?)
               ?.map((item) => _cartItemFromJson(item))
               .toList() ??
           [],
@@ -127,8 +128,12 @@ class CartDataSourceImpl implements CartDataSource {
       total: (json['total'] ?? 0.0).toDouble(),
       couponCode: json['couponCode'],
       discountAmount: json['discountAmount']?.toDouble(),
-      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(
+        json['createdAt'] ?? DateTime.now().toIso8601String(),
+      ),
+      updatedAt: DateTime.parse(
+        json['updatedAt'] ?? DateTime.now().toIso8601String(),
+      ),
     );
   }
 
@@ -147,7 +152,9 @@ class CartDataSourceImpl implements CartDataSource {
       selectedOptionNames: List<String>.from(json['selectedOptionNames'] ?? []),
       merchantId: json['merchantId']?.toString() ?? '',
       merchantName: json['merchantName'] ?? '',
-      addedAt: DateTime.parse(json['addedAt'] ?? DateTime.now().toIso8601String()),
+      addedAt: DateTime.parse(
+        json['addedAt'] ?? DateTime.now().toIso8601String(),
+      ),
     );
   }
 }

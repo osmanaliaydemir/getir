@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:provider/provider.dart';
+
+import '../../bloc/auth/auth_bloc.dart';
+import '../../bloc/cart/cart_bloc.dart';
+import '../../widgets/common/language_selector.dart';
+import '../../../core/cubits/language/language_cubit.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/navigation/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/localization/app_localizations.dart';
-import '../../../core/providers/language_provider.dart';
-import '../../bloc/auth/auth_bloc.dart';
-import '../../widgets/common/language_selector.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -54,6 +55,8 @@ class _LoginPageState extends State<LoginPage> {
         child: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthAuthenticated) {
+              // ✅ Trigger cart merge after successful login
+              context.read<CartBloc>().add(MergeLocalCartAfterLogin());
               AppNavigation.goToHome(context);
             } else if (state is AuthError) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -76,12 +79,14 @@ class _LoginPageState extends State<LoginPage> {
                   // Language Selector
                   Align(
                     alignment: Alignment.centerRight,
-                    child: Consumer<LanguageProvider>(
-                      builder: (context, languageProvider, child) {
+                    child: BlocBuilder<LanguageCubit, LanguageState>(
+                      builder: (context, state) {
                         return LanguageSelector(
-                          currentLanguage: languageProvider.currentLanguageCode,
+                          currentLanguage: state.languageCode,
                           onLanguageChanged: (languageCode) {
-                            languageProvider.changeLanguageByCode(languageCode);
+                            context.read<LanguageCubit>().changeLanguageByCode(
+                              languageCode,
+                            );
                           },
                         );
                       },

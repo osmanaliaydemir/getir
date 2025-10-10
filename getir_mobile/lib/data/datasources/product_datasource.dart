@@ -30,17 +30,14 @@ class ProductDataSourceImpl implements ProductDataSource {
     String? search,
   }) async {
     try {
-      final queryParams = <String, dynamic>{
-        'page': page,
-        'limit': limit,
-      };
+      final queryParams = <String, dynamic>{'page': page, 'limit': limit};
 
       if (merchantId != null) queryParams['merchantId'] = merchantId;
       if (category != null) queryParams['category'] = category;
       if (search != null) queryParams['search'] = search;
 
       final response = await _dio.get(
-        '/api/v1/products',
+        '/api/v1/Product',
         queryParameters: queryParams,
       );
 
@@ -54,7 +51,7 @@ class ProductDataSourceImpl implements ProductDataSource {
   @override
   Future<Product> getProductById(String id) async {
     try {
-      final response = await _dio.get('/api/v1/products/$id');
+      final response = await _dio.get('/api/v1/Product/$id');
       return _productFromJson(response.data);
     } catch (e) {
       throw Exception('Failed to fetch product: $e');
@@ -64,7 +61,7 @@ class ProductDataSourceImpl implements ProductDataSource {
   @override
   Future<List<Product>> getProductsByMerchant(String merchantId) async {
     try {
-      final response = await _dio.get('/api/v1/products/merchant/$merchantId');
+      final response = await _dio.get('/api/v1/Product/merchant/$merchantId');
       final List<dynamic> data = response.data['data'] ?? response.data;
       return data.map((json) => _productFromJson(json)).toList();
     } catch (e) {
@@ -76,17 +73,13 @@ class ProductDataSourceImpl implements ProductDataSource {
   Future<List<Product>> searchProducts(String query) async {
     try {
       final response = await _dio.get(
-        '/api/v1/search/products',
-        queryParameters: {
-          'query': query,
-          'pageNumber': 1,
-          'pageSize': 20,
-        },
+        '/api/v1/Search/products',
+        queryParameters: {'query': query, 'pageNumber': 1, 'pageSize': 20},
       );
 
       final data = response.data['data'];
       if (data == null) return [];
-      
+
       final List<dynamic> items = data['items'] ?? data;
       return items.map((json) => _productFromJson(json)).toList();
     } catch (e) {
@@ -97,7 +90,7 @@ class ProductDataSourceImpl implements ProductDataSource {
   @override
   Future<List<String>> getCategories() async {
     try {
-      final response = await _dio.get('/api/v1/products/categories');
+      final response = await _dio.get('/api/v1/Product/categories');
       final List<dynamic> data = response.data['data'] ?? response.data;
       return data.map((category) => category.toString()).toList();
     } catch (e) {
@@ -117,11 +110,13 @@ class ProductDataSourceImpl implements ProductDataSource {
       merchantName: json['merchantName'] ?? '',
       isAvailable: json['isAvailable'] ?? false,
       stockQuantity: json['stockQuantity'] ?? 0,
-      variants: (json['variants'] as List<dynamic>?)
+      variants:
+          (json['variants'] as List<dynamic>?)
               ?.map((v) => _productVariantFromJson(v))
               .toList() ??
           [],
-      options: (json['options'] as List<dynamic>?)
+      options:
+          (json['options'] as List<dynamic>?)
               ?.map((o) => _productOptionFromJson(o))
               .toList() ??
           [],
@@ -153,7 +148,8 @@ class ProductDataSourceImpl implements ProductDataSource {
       name: json['name'] ?? '',
       type: json['type'] ?? 'single',
       isRequired: json['isRequired'] ?? false,
-      values: (json['values'] as List<dynamic>?)
+      values:
+          (json['values'] as List<dynamic>?)
               ?.map((v) => _productOptionValueFromJson(v))
               .toList() ??
           [],

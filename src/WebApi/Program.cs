@@ -28,6 +28,7 @@ using Getir.Application.Services.Reviews;
 using Getir.Application.Services.Search;
 using Getir.Application.Services.ServiceCategories;
 using Getir.Application.Services.WorkingHours;
+using Getir.Application.Services.SpecialHolidays;
 using Getir.Application.Services.DeliveryOptimization;
 using Getir.Application.Services.AuditLogging;
 using Getir.Application.Services.Internationalization;
@@ -56,19 +57,22 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // ============= DATABASE =============
-builder.Services.AddDbContext<AppDbContext>(options =>
+// Skip DbContext registration in Testing environment (handled by test setup)
+if (!builder.Environment.IsEnvironment("Testing"))
 {
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions =>
-        {
-            sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 3, // Retry sayısını azalttık
-                maxRetryDelay: TimeSpan.FromSeconds(10), // Retry delay'i azalttık
-                errorNumbersToAdd: null);
-            
-            // Connection pooling optimization
-            sqlOptions.CommandTimeout(ApplicationConstants.DatabaseCommandTimeoutSeconds);
+    builder.Services.AddDbContext<AppDbContext>(options =>
+    {
+        options.UseSqlServer(
+            builder.Configuration.GetConnectionString("DefaultConnection"),
+            sqlOptions =>
+            {
+                sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 3, // Retry sayısını azalttık
+                    maxRetryDelay: TimeSpan.FromSeconds(10), // Retry delay'i azalttık
+                    errorNumbersToAdd: null);
+                
+                // Connection pooling optimization
+                sqlOptions.CommandTimeout(ApplicationConstants.DatabaseCommandTimeoutSeconds);
         });
 
     // Query optimization
@@ -80,7 +84,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         options.EnableDetailedErrors();
         options.EnableSensitiveDataLogging();
     }
-});
+    });
+}
 
 // ============= DEPENDENCY INJECTION =============
 // Infrastructure
@@ -94,6 +99,7 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasherService>();
 builder.Services.AddScoped<ILoggingService, LoggingService>();
 builder.Services.AddScoped<ICacheService, MemoryCacheService>();
 builder.Services.AddScoped<IBackgroundTaskService, BackgroundTaskService>();
+builder.Services.AddScoped<IEmailService, Getir.Infrastructure.Services.Notifications.EmailService>();
 
 // Memory Cache
 builder.Services.AddMemoryCache();
@@ -135,6 +141,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ICourierService, CourierService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IWorkingHoursService, WorkingHoursService>();
+builder.Services.AddScoped<ISpecialHolidayService, SpecialHolidayService>();
 builder.Services.AddScoped<IDeliveryZoneService, DeliveryZoneService>();
 builder.Services.AddScoped<IMerchantDashboardService, MerchantDashboardService>();
 builder.Services.AddScoped<IMerchantOnboardingService, MerchantOnboardingService>();
@@ -203,6 +210,7 @@ builder.Services.AddMetricsConfiguration();
 
 // FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+builder.Services.AddValidatorsFromAssemblyContaining<Getir.Application.Validators.CreateSpecialHolidayRequestValidator>();
 
 // SignalR
 builder.Services.AddSignalR(options =>
@@ -236,7 +244,13 @@ app.UseSerilogRequestLogging();
 
 // ============= MIDDLEWARE =============
 app.UseMiddleware<ValidationMiddleware>();
-app.UseMiddleware<SecurityAuditMiddleware>();
+
+// Skip SecurityAuditMiddleware in Testing environment (requires Session)
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    app.UseMiddleware<SecurityAuditMiddleware>();
+}
+
 app.UseMiddleware<RateLimitMiddleware>();
 
 // Rate limiting

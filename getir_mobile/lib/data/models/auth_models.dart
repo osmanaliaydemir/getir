@@ -197,7 +197,7 @@ class UserModel {
   }
   
   // Convert to Domain Entity
-  UserEntity toEntity() {
+  UserEntity toDomain() {
     return UserEntity(
       id: id,
       email: email,
@@ -214,7 +214,7 @@ class UserModel {
   }
   
   // Convert from Domain Entity
-  factory UserModel.fromEntity(UserEntity entity) {
+  factory UserModel.fromDomain(UserEntity entity) {
     return UserModel(
       id: entity.id,
       email: entity.email,

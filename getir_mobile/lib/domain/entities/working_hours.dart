@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import '../../core/services/logger_service.dart';
 
 /// Merchant çalışma saatleri entity
 /// Her gün için ayrı bir WorkingHours kaydı olur
@@ -130,7 +131,11 @@ class WorkingHoursHelper {
         return TimeOfDay(hour: hour, minute: minute);
       }
     } catch (e) {
-      debugPrint('Error parsing TimeSpan: $timeSpan, error: $e');
+      logger.warning(
+        'Error parsing TimeSpan',
+        tag: 'WorkingHours',
+        context: {'timeSpan': timeSpan, 'error': e.toString()},
+      );
     }
     return null;
   }

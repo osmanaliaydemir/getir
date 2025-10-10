@@ -20,6 +20,7 @@ public class AuthServiceTests
     private readonly Mock<IBackgroundTaskService> _backgroundTaskServiceMock;
     private readonly Mock<IJwtTokenService> _jwtTokenServiceMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
+    private readonly Mock<IEmailService> _emailServiceMock;
     private readonly AuthService _authService;
 
     public AuthServiceTests()
@@ -31,6 +32,7 @@ public class AuthServiceTests
         _backgroundTaskServiceMock = new Mock<IBackgroundTaskService>();
         _jwtTokenServiceMock = new Mock<IJwtTokenService>();
         _passwordHasherMock = new Mock<IPasswordHasher>();
+        _emailServiceMock = new Mock<IEmailService>();
         
         _authService = new AuthService(
             _unitOfWorkMock.Object,
@@ -39,7 +41,8 @@ public class AuthServiceTests
             _cacheServiceMock.Object,
             _backgroundTaskServiceMock.Object,
             _jwtTokenServiceMock.Object,
-            _passwordHasherMock.Object);
+            _passwordHasherMock.Object,
+            _emailServiceMock.Object);
     }
 
     [Fact]

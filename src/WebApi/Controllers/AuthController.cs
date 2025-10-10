@@ -98,4 +98,44 @@ public class AuthController : BaseController
         var result = await _authService.LogoutAsync(userId, ct);
         return ToActionResult(result);
     }
+
+    /// <summary>
+    /// Request password reset (sends 6-digit code via email)
+    /// </summary>
+    /// <param name="request">Forgot password request</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Success response</returns>
+    [HttpPost("forgot-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ForgotPassword(
+        [FromBody] ForgotPasswordRequest request,
+        CancellationToken ct = default)
+    {
+        var validationResult = HandleValidationErrors();
+        if (validationResult != null) return validationResult;
+
+        var result = await _authService.ForgotPasswordAsync(request, ct);
+        return ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Reset password using code from email
+    /// </summary>
+    /// <param name="request">Reset password request</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Success response</returns>
+    [HttpPost("reset-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResetPassword(
+        [FromBody] ResetPasswordRequest request,
+        CancellationToken ct = default)
+    {
+        var validationResult = HandleValidationErrors();
+        if (validationResult != null) return validationResult;
+
+        var result = await _authService.ResetPasswordAsync(request, ct);
+        return ToActionResult(result);
+    }
 }

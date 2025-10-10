@@ -16,7 +16,7 @@ class NotificationsFeedDataSourceImpl implements NotificationsFeedDataSource {
     int pageSize = 20,
   }) async {
     final response = await _dio.get(
-      '/api/v1/notifications',
+      '/api/v1/Notification',
       queryParameters: {'page': page, 'pageSize': pageSize},
     );
     final data = response.data['data'] ?? response.data;
@@ -31,7 +31,7 @@ class NotificationsFeedDataSourceImpl implements NotificationsFeedDataSource {
   @override
   Future<void> markAsRead(String notificationId) async {
     await _dio.post(
-      '/api/v1/notifications/mark-as-read',
+      '/api/v1/Notification/mark-as-read',
       data: {
         'notificationIds': [notificationId],
       },

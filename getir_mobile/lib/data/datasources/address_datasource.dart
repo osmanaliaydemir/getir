@@ -5,7 +5,10 @@ abstract class IAddressDataSource {
   Future<List<UserAddress>> getUserAddresses();
   Future<UserAddress> getAddressById(String addressId);
   Future<UserAddress> createAddress(CreateAddressRequest request);
-  Future<UserAddress> updateAddress(String addressId, UpdateAddressRequest request);
+  Future<UserAddress> updateAddress(
+    String addressId,
+    UpdateAddressRequest request,
+  );
   Future<void> deleteAddress(String addressId);
   Future<UserAddress> setDefaultAddress(String addressId);
 }
@@ -18,8 +21,8 @@ class AddressDataSourceImpl implements IAddressDataSource {
   @override
   Future<List<UserAddress>> getUserAddresses() async {
     try {
-      final response = await _dio.get('/api/v1/user/addresses');
-      
+      final response = await _dio.get('/api/v1/User/addresses');
+
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data['data'] ?? response.data;
         return data.map((json) => UserAddress.fromJson(json)).toList();
@@ -36,8 +39,8 @@ class AddressDataSourceImpl implements IAddressDataSource {
   @override
   Future<UserAddress> getAddressById(String addressId) async {
     try {
-      final response = await _dio.get('/api/v1/user/addresses/$addressId');
-      
+      final response = await _dio.get('/api/v1/User/addresses/$addressId');
+
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
         return UserAddress.fromJson(data);
@@ -55,10 +58,10 @@ class AddressDataSourceImpl implements IAddressDataSource {
   Future<UserAddress> createAddress(CreateAddressRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/user/addresses',
+        '/api/v1/User/addresses',
         data: request.toJson(),
       );
-      
+
       if (response.statusCode == 201 || response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
         return UserAddress.fromJson(data);
@@ -73,13 +76,16 @@ class AddressDataSourceImpl implements IAddressDataSource {
   }
 
   @override
-  Future<UserAddress> updateAddress(String addressId, UpdateAddressRequest request) async {
+  Future<UserAddress> updateAddress(
+    String addressId,
+    UpdateAddressRequest request,
+  ) async {
     try {
       final response = await _dio.put(
-        '/api/v1/user/addresses/$addressId',
+        '/api/v1/User/addresses/$addressId',
         data: request.toJson(),
       );
-      
+
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
         return UserAddress.fromJson(data);
@@ -96,8 +102,8 @@ class AddressDataSourceImpl implements IAddressDataSource {
   @override
   Future<void> deleteAddress(String addressId) async {
     try {
-      final response = await _dio.delete('/api/v1/user/addresses/$addressId');
-      
+      final response = await _dio.delete('/api/v1/User/addresses/$addressId');
+
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw Exception('Failed to delete address: ${response.statusCode}');
       }
@@ -111,13 +117,17 @@ class AddressDataSourceImpl implements IAddressDataSource {
   @override
   Future<UserAddress> setDefaultAddress(String addressId) async {
     try {
-      final response = await _dio.put('/api/v1/user/addresses/$addressId/set-default');
-      
+      final response = await _dio.put(
+        '/api/v1/User/addresses/$addressId/set-default',
+      );
+
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
         return UserAddress.fromJson(data);
       } else {
-        throw Exception('Failed to set default address: ${response.statusCode}');
+        throw Exception(
+          'Failed to set default address: ${response.statusCode}',
+        );
       }
     } on DioException catch (e) {
       throw _handleDioError(e);
@@ -131,7 +141,9 @@ class AddressDataSourceImpl implements IAddressDataSource {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        return Exception('Bağlantı zaman aşımı. Lütfen internet bağlantınızı kontrol edin.');
+        return Exception(
+          'Bağlantı zaman aşımı. Lütfen internet bağlantınızı kontrol edin.',
+        );
       case DioExceptionType.badResponse:
         final statusCode = e.response?.statusCode;
         final message = e.response?.data?['message'] ?? 'Sunucu hatası';
@@ -139,7 +151,9 @@ class AddressDataSourceImpl implements IAddressDataSource {
       case DioExceptionType.cancel:
         return Exception('İstek iptal edildi');
       case DioExceptionType.connectionError:
-        return Exception('Bağlantı hatası. Lütfen internet bağlantınızı kontrol edin.');
+        return Exception(
+          'Bağlantı hatası. Lütfen internet bağlantınızı kontrol edin.',
+        );
       default:
         return Exception('Beklenmeyen hata: ${e.message}');
     }
@@ -214,7 +228,7 @@ class UpdateAddressRequest {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};
-    
+
     if (title != null) data['title'] = title;
     if (fullAddress != null) data['fullAddress'] = fullAddress;
     if (buildingNumber != null) data['buildingNumber'] = buildingNumber;
@@ -225,7 +239,7 @@ class UpdateAddressRequest {
     if (longitude != null) data['longitude'] = longitude;
     if (type != null) data['type'] = type!.value;
     if (isDefault != null) data['isDefault'] = isDefault;
-    
+
     return data;
   }
 }

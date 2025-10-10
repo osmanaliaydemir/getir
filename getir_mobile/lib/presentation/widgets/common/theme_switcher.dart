@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../core/providers/theme_provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/cubits/theme/theme_cubit.dart';
 import '../../../core/theme/app_typography.dart';
 
 class ThemeSwitcher extends StatelessWidget {
@@ -10,28 +10,28 @@ class ThemeSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
+    return BlocBuilder<ThemeCubit, ThemeState>(
+      builder: (context, state) {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildThemeOption(
               context: context,
-              themeProvider: themeProvider,
+              state: state,
               mode: ThemeMode.light,
               icon: Icons.light_mode,
               label: 'Açık Tema',
             ),
             _buildThemeOption(
               context: context,
-              themeProvider: themeProvider,
+              state: state,
               mode: ThemeMode.dark,
               icon: Icons.dark_mode,
               label: 'Koyu Tema',
             ),
             _buildThemeOption(
               context: context,
-              themeProvider: themeProvider,
+              state: state,
               mode: ThemeMode.system,
               icon: Icons.brightness_auto,
               label: 'Sistem Teması',
@@ -44,43 +44,38 @@ class ThemeSwitcher extends StatelessWidget {
 
   Widget _buildThemeOption({
     required BuildContext context,
-    required ThemeProvider themeProvider,
+    required ThemeState state,
     required ThemeMode mode,
     required IconData icon,
     required String label,
   }) {
-    final isSelected = themeProvider.themeMode == mode;
+    final isSelected = state.themeMode == mode;
     final theme = Theme.of(context);
 
     return RadioListTile<ThemeMode>(
       value: mode,
-      groupValue: themeProvider.themeMode,
+      groupValue: state.themeMode,
       onChanged: (ThemeMode? value) {
         if (value != null) {
-          themeProvider.setThemeMode(value);
+          context.read<ThemeCubit>().setThemeMode(value);
         }
       },
       title: Row(
         children: [
-          Icon(
-            icon,
-            color: isSelected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: 12),
-          Text(
-            label,
-            style: AppTypography.bodyMedium.copyWith(
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              color: isSelected
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurface,
+          Icon(icon, size: 24),
+          if (showLabel) ...[
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: AppTypography.bodyMedium.copyWith(
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
             ),
-          ),
+          ],
         ],
       ),
       activeColor: theme.colorScheme.primary,
+      dense: true,
     );
   }
 }
@@ -91,17 +86,17 @@ class ThemeToggleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
+    return BlocBuilder<ThemeCubit, ThemeState>(
+      builder: (context, state) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
         return IconButton(
           icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
           onPressed: () {
             if (isDark) {
-              themeProvider.setLightMode();
+              context.read<ThemeCubit>().setLightMode();
             } else {
-              themeProvider.setDarkMode();
+              context.read<ThemeCubit>().setDarkMode();
             }
           },
           tooltip: isDark ? 'Açık Temaya Geç' : 'Koyu Temaya Geç',
@@ -112,63 +107,27 @@ class ThemeToggleButton extends StatelessWidget {
 }
 
 /// Theme selector bottom sheet
-class ThemeSelectorBottomSheet extends StatelessWidget {
-  const ThemeSelectorBottomSheet({super.key});
-
-  static Future<void> show(BuildContext context) {
-    return showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => const ThemeSelectorBottomSheet(),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20),
+void showThemeSelector(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (context) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle bar
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Title
+        children: const [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Icon(Icons.palette, color: theme.colorScheme.primary),
-                const SizedBox(width: 12),
-                Text(
-                  'Tema Seçimi',
-                  style: AppTypography.headlineSmall.copyWith(
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ],
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'Tema Seçin',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
-          const SizedBox(height: 16),
-
-          // Theme options
-          const ThemeSwitcher(showLabel: true),
-
-          const SizedBox(height: 8),
+          ThemeSwitcher(),
         ],
       ),
-    );
-  }
+    ),
+  );
 }

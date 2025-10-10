@@ -1,7 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/cart.dart';
-import '../../../domain/usecases/cart_usecases.dart';
+import '../../../domain/services/cart_service.dart';
+import '../../../core/services/analytics_service.dart';
 
 // Events
 abstract class CartEvent extends Equatable {
@@ -18,16 +20,30 @@ class AddToCart extends CartEvent {
   final int quantity;
   final String? variantId;
   final List<String>? optionIds;
+  final String? productName;
+  final double? price;
+  final String? category;
 
   const AddToCart({
     required this.productId,
     required this.quantity,
     this.variantId,
     this.optionIds,
+    this.productName,
+    this.price,
+    this.category,
   });
 
   @override
-  List<Object?> get props => [productId, quantity, variantId, optionIds];
+  List<Object?> get props => [
+    productId,
+    quantity,
+    variantId,
+    optionIds,
+    productName,
+    price,
+    category,
+  ];
 }
 
 class UpdateCartItem extends CartEvent {
@@ -125,30 +141,10 @@ class CartError extends CartState {
 
 // BLoC
 class CartBloc extends Bloc<CartEvent, CartState> {
-  final GetCartUseCase _getCartUseCase;
-  final AddToCartUseCase _addToCartUseCase;
-  final UpdateCartItemUseCase _updateCartItemUseCase;
-  final RemoveFromCartUseCase _removeFromCartUseCase;
-  final ClearCartUseCase _clearCartUseCase;
-  final ApplyCouponUseCase _applyCouponUseCase;
-  final RemoveCouponUseCase _removeCouponUseCase;
+  final CartService _cartService;
+  final AnalyticsService _analytics;
 
-  CartBloc({
-    required GetCartUseCase getCartUseCase,
-    required AddToCartUseCase addToCartUseCase,
-    required UpdateCartItemUseCase updateCartItemUseCase,
-    required RemoveFromCartUseCase removeFromCartUseCase,
-    required ClearCartUseCase clearCartUseCase,
-    required ApplyCouponUseCase applyCouponUseCase,
-    required RemoveCouponUseCase removeCouponUseCase,
-  }) : _getCartUseCase = getCartUseCase,
-       _addToCartUseCase = addToCartUseCase,
-       _updateCartItemUseCase = updateCartItemUseCase,
-       _removeFromCartUseCase = removeFromCartUseCase,
-       _clearCartUseCase = clearCartUseCase,
-       _applyCouponUseCase = applyCouponUseCase,
-       _removeCouponUseCase = removeCouponUseCase,
-       super(CartInitial()) {
+  CartBloc(this._cartService, this._analytics) : super(CartInitial()) {
     on<LoadCart>(_onLoadCart);
     on<AddToCart>(_onAddToCart);
     on<UpdateCartItem>(_onUpdateCartItem);
@@ -161,41 +157,72 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
   Future<void> _onLoadCart(LoadCart event, Emitter<CartState> emit) async {
     emit(CartLoading());
-    try {
-      final cart = await _getCartUseCase();
-      emit(CartLoaded(cart));
-    } catch (e) {
-      emit(CartError(e.toString()));
-    }
+
+    final result = await _cartService.getCart();
+
+    result.when(
+      success: (cart) => emit(CartLoaded(cart)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(CartError(message));
+      },
+    );
   }
 
   Future<void> _onMergeLocalCartAfterLogin(
     MergeLocalCartAfterLogin event,
     Emitter<CartState> emit,
   ) async {
-    try {
-      // Strategy: backend is source of truth; trigger server to merge local items if any
-      // Simplest approach: just reload server cart after login
-      final cart = await _getCartUseCase();
-      emit(CartLoaded(cart));
-    } catch (e) {
-      emit(CartError(e.toString()));
-    }
+    // Strategy: backend is source of truth
+    final result = await _cartService.getCart();
+
+    result.when(
+      success: (cart) => emit(CartLoaded(cart)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(CartError(message));
+      },
+    );
   }
 
   Future<void> _onAddToCart(AddToCart event, Emitter<CartState> emit) async {
-    try {
-      final cartItem = await _addToCartUseCase(
-        productId: event.productId,
-        quantity: event.quantity,
-        variantId: event.variantId,
-        optionIds: event.optionIds,
-      );
+    final result = await _cartService.addToCart(
+      productId: event.productId,
+      quantity: event.quantity,
+      variantId: event.variantId,
+      optionIds: event.optionIds,
+    );
+
+    if (result.isSuccess) {
+      final cartItem = result.data!;
+
+      // 📊 Analytics: Track add to cart
+      if (event.productName != null && event.price != null) {
+        await _analytics.logAddToCart(
+          productId: event.productId,
+          productName: event.productName!,
+          price: event.price!,
+          category: event.category,
+          quantity: event.quantity,
+        );
+      }
+
       emit(CartItemAdded(cartItem));
+
       // Reload cart to get updated totals
-      add(LoadCart());
-    } catch (e) {
-      emit(CartError(e.toString()));
+      if (!emit.isDone) {
+        final cartResult = await _cartService.getCart();
+        if (cartResult.isSuccess && !emit.isDone) {
+          emit(CartLoaded(cartResult.data!));
+        }
+      }
+    } else {
+      final message = _getErrorMessage(result.exception);
+      emit(CartError(message));
+      await _analytics.logError(
+        error: result.exception,
+        reason: 'Add to cart failed',
+      );
     }
   }
 
@@ -203,16 +230,25 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     UpdateCartItem event,
     Emitter<CartState> emit,
   ) async {
-    try {
-      final cartItem = await _updateCartItemUseCase(
-        itemId: event.itemId,
-        quantity: event.quantity,
-      );
+    final result = await _cartService.updateCartItem(
+      cartItemId: event.itemId,
+      quantity: event.quantity,
+    );
+
+    if (result.isSuccess) {
+      final cartItem = result.data!;
       emit(CartItemUpdated(cartItem));
+
       // Reload cart to get updated totals
-      add(LoadCart());
-    } catch (e) {
-      emit(CartError(e.toString()));
+      if (!emit.isDone) {
+        final cartResult = await _cartService.getCart();
+        if (cartResult.isSuccess && !emit.isDone) {
+          emit(CartLoaded(cartResult.data!));
+        }
+      }
+    } else {
+      final message = _getErrorMessage(result.exception);
+      emit(CartError(message));
     }
   }
 
@@ -220,24 +256,50 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     RemoveFromCart event,
     Emitter<CartState> emit,
   ) async {
-    try {
-      await _removeFromCartUseCase(event.itemId);
+    final result = await _cartService.removeFromCart(event.itemId);
+
+    if (result.isSuccess) {
+      // 📊 Analytics: Track remove from cart
+      await _analytics.logCustomEvent(
+        eventName: 'remove_from_cart',
+        parameters: {'item_id': event.itemId},
+      );
+
       emit(CartItemRemoved(event.itemId));
+
       // Reload cart to get updated totals
-      add(LoadCart());
-    } catch (e) {
-      emit(CartError(e.toString()));
+      if (!emit.isDone) {
+        final cartResult = await _cartService.getCart();
+        if (cartResult.isSuccess && !emit.isDone) {
+          emit(CartLoaded(cartResult.data!));
+        }
+      }
+    } else {
+      final message = _getErrorMessage(result.exception);
+      emit(CartError(message));
+      await _analytics.logError(
+        error: result.exception,
+        reason: 'Remove from cart failed',
+      );
     }
   }
 
   Future<void> _onClearCart(ClearCart event, Emitter<CartState> emit) async {
-    try {
-      await _clearCartUseCase();
+    final result = await _cartService.clearCart();
+
+    if (result.isSuccess) {
       emit(CartCleared());
+
       // Reload cart to get updated totals
-      add(LoadCart());
-    } catch (e) {
-      emit(CartError(e.toString()));
+      if (!emit.isDone) {
+        final cartResult = await _cartService.getCart();
+        if (cartResult.isSuccess && !emit.isDone) {
+          emit(CartLoaded(cartResult.data!));
+        }
+      }
+    } else {
+      final message = _getErrorMessage(result.exception);
+      emit(CartError(message));
     }
   }
 
@@ -245,23 +307,37 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     ApplyCoupon event,
     Emitter<CartState> emit,
   ) async {
-    try {
-      final cart = await _applyCouponUseCase(event.couponCode);
-      emit(CartLoaded(cart));
-    } catch (e) {
-      emit(CartError(e.toString()));
-    }
+    final result = await _cartService.applyCoupon(event.couponCode);
+
+    result.when(
+      success: (cart) => emit(CartLoaded(cart)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(CartError(message));
+      },
+    );
   }
 
   Future<void> _onRemoveCoupon(
     RemoveCoupon event,
     Emitter<CartState> emit,
   ) async {
-    try {
-      final cart = await _removeCouponUseCase();
-      emit(CartLoaded(cart));
-    } catch (e) {
-      emit(CartError(e.toString()));
+    final result = await _cartService.removeCoupon();
+
+    result.when(
+      success: (cart) => emit(CartLoaded(cart)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(CartError(message));
+      },
+    );
+  }
+
+  /// Extract user-friendly error message from exception
+  String _getErrorMessage(Exception exception) {
+    if (exception is AppException) {
+      return exception.message;
     }
+    return 'An unexpected error occurred';
   }
 }

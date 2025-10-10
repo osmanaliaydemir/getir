@@ -18,11 +18,8 @@ class OrderDataSourceImpl implements IOrderDataSource {
   @override
   Future<Order> createOrder(CreateOrderRequest request) async {
     try {
-      final response = await _dio.post(
-        '/api/v1/orders',
-        data: request.toJson(),
-      );
-      
+      final response = await _dio.post('/api/v1/Order', data: request.toJson());
+
       if (response.statusCode == 201 || response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
         return Order.fromJson(data);
@@ -39,8 +36,8 @@ class OrderDataSourceImpl implements IOrderDataSource {
   @override
   Future<List<Order>> getUserOrders() async {
     try {
-      final response = await _dio.get('/api/v1/orders');
-      
+      final response = await _dio.get('/api/v1/Order');
+
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data['data'] ?? response.data;
         return data.map((json) => Order.fromJson(json)).toList();
@@ -57,8 +54,8 @@ class OrderDataSourceImpl implements IOrderDataSource {
   @override
   Future<Order> getOrderById(String orderId) async {
     try {
-      final response = await _dio.get('/api/v1/orders/$orderId');
-      
+      final response = await _dio.get('/api/v1/Order/$orderId');
+
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
         return Order.fromJson(data);
@@ -75,8 +72,8 @@ class OrderDataSourceImpl implements IOrderDataSource {
   @override
   Future<Order> cancelOrder(String orderId) async {
     try {
-      final response = await _dio.put('/api/v1/orders/$orderId/cancel');
-      
+      final response = await _dio.put('/api/v1/Order/$orderId/cancel');
+
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
         return Order.fromJson(data);
@@ -94,10 +91,10 @@ class OrderDataSourceImpl implements IOrderDataSource {
   Future<PaymentResult> processPayment(CreatePaymentRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/payments',
+        '/api/v1/Payment',
         data: request.toJson(),
       );
-      
+
       if (response.statusCode == 201 || response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
         return PaymentResult.fromJson(data);
@@ -114,8 +111,8 @@ class OrderDataSourceImpl implements IOrderDataSource {
   @override
   Future<PaymentResult> getPaymentStatus(String paymentId) async {
     try {
-      final response = await _dio.get('/api/v1/payments/$paymentId');
-      
+      final response = await _dio.get('/api/v1/Payment/$paymentId');
+
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
         return PaymentResult.fromJson(data);
@@ -134,7 +131,9 @@ class OrderDataSourceImpl implements IOrderDataSource {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        return Exception('Bağlantı zaman aşımı. Lütfen internet bağlantınızı kontrol edin.');
+        return Exception(
+          'Bağlantı zaman aşımı. Lütfen internet bağlantınızı kontrol edin.',
+        );
       case DioExceptionType.badResponse:
         final statusCode = e.response?.statusCode;
         final message = e.response?.data?['message'] ?? 'Sunucu hatası';
@@ -142,7 +141,9 @@ class OrderDataSourceImpl implements IOrderDataSource {
       case DioExceptionType.cancel:
         return Exception('İstek iptal edildi');
       case DioExceptionType.connectionError:
-        return Exception('Bağlantı hatası. Lütfen internet bağlantınızı kontrol edin.');
+        return Exception(
+          'Bağlantı hatası. Lütfen internet bağlantınızı kontrol edin.',
+        );
       default:
         return Exception('Beklenmeyen hata: ${e.message}');
     }

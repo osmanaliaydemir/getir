@@ -125,4 +125,28 @@ class MerchantDto {
       isPickupAvailable: isPickupAvailable,
     );
   }
+  
+  /// Convert from Domain Entity (for API requests)
+  factory MerchantDto.fromDomain(Merchant merchant) {
+    return MerchantDto(
+      id: merchant.id,
+      name: merchant.name,
+      description: merchant.description,
+      logoUrl: merchant.logoUrl,
+      coverImageUrl: merchant.coverImageUrl,
+      rating: merchant.rating,
+      reviewCount: merchant.reviewCount,
+      deliveryFee: merchant.deliveryFee,
+      estimatedDeliveryTime: merchant.estimatedDeliveryTime,
+      distance: merchant.distance,
+      isOpen: merchant.isOpen,
+      address: merchant.address,
+      phoneNumber: merchant.phoneNumber,
+      categories: merchant.categories,
+      workingHours: merchant.workingHours,
+      minimumOrderAmount: merchant.minimumOrderAmount,
+      isDeliveryAvailable: merchant.isDeliveryAvailable,
+      isPickupAvailable: merchant.isPickupAvailable,
+    );
+  }
 }

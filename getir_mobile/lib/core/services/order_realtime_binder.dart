@@ -3,6 +3,8 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import '../../presentation/bloc/order/order_bloc.dart';
 import 'signalr_service.dart';
+import '../di/injection.dart';
+import 'logger_service.dart';
 
 /// Order Realtime Binder
 /// Binds SignalR order status updates to OrderBloc
@@ -20,7 +22,7 @@ class OrderRealtimeBinder {
     if (_started) return;
     _started = true;
 
-    final signalR = SignalRService();
+    final signalR = getIt<SignalRService>();
 
     // Initialize SignalR connections
     await signalR.initialize();
@@ -33,19 +35,32 @@ class OrderRealtimeBinder {
       try {
         // Reload order when status changes
         context.read<OrderBloc>().add(LoadOrderById(orderId));
-        debugPrint('📬 Order status updated: $orderId → ${update.status}');
-      } catch (_) {
-        // no-op if bloc not in tree
+        logger.debug(
+          'Order status updated via SignalR',
+          tag: 'RealtimeBinder',
+          context: {'orderId': orderId, 'status': update.status},
+        );
+      } catch (e, stackTrace) {
+        logger.error(
+          'Failed to update order in BLoC',
+          tag: 'RealtimeBinder',
+          error: e,
+          stackTrace: stackTrace,
+        );
       }
     });
 
     // Listen to tracking data updates
     _trackingSubscription = signalR.trackingDataStream.listen((tracking) {
-      debugPrint('📍 Tracking data updated: ${tracking.orderId}');
+      logger.debug(
+        'Tracking data updated via SignalR',
+        tag: 'RealtimeBinder',
+        context: {'orderId': tracking.orderId},
+      );
       // Additional tracking logic can be added here
     });
 
-    debugPrint('✅ OrderRealtimeBinder started');
+    logger.info('OrderRealtimeBinder started', tag: 'RealtimeBinder');
   }
 
   /// Stop listening to updates
@@ -53,7 +68,7 @@ class OrderRealtimeBinder {
     _subscription?.cancel();
     _trackingSubscription?.cancel();
     _started = false;
-    debugPrint('🛑 OrderRealtimeBinder stopped');
+    logger.info('OrderRealtimeBinder stopped', tag: 'RealtimeBinder');
   }
 
   /// Check if binder is active

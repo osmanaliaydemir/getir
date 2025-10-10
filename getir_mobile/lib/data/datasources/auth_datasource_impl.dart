@@ -5,20 +5,17 @@ import '../models/auth_models.dart';
 
 class AuthDataSourceImpl implements AuthDataSource {
   final Dio _dio;
-  SharedPreferences? _prefs;
+  final SharedPreferences _prefs;
 
-  AuthDataSourceImpl({Dio? dio}) : _dio = dio ?? Dio();
+  AuthDataSourceImpl(this._dio, this._prefs);
 
-  Future<SharedPreferences> get prefs async {
-    _prefs ??= await SharedPreferences.getInstance();
-    return _prefs!;
-  }
+  SharedPreferences get prefs => _prefs;
 
   @override
   Future<AuthResponse> login(LoginRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/auth/login',
+        '/api/v1/Auth/login',
         data: request.toJson(),
       );
 
@@ -49,7 +46,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<AuthResponse> register(RegisterRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/auth/register',
+        '/api/v1/Auth/register',
         data: request.toJson(),
       );
 
@@ -80,7 +77,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<void> logout() async {
     try {
       // Backend'e logout isteği gönder
-      await _dio.post('/api/v1/auth/logout');
+      await _dio.post('/api/v1/Auth/logout');
 
       // Local token'ları temizle
       await clearTokens();
@@ -105,7 +102,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<RefreshTokenResponse> refreshToken(RefreshTokenRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/auth/refresh',
+        '/api/v1/Auth/refresh',
         data: request.toJson(),
       );
 
@@ -139,7 +136,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<void> forgotPassword(ForgotPasswordRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/auth/forgot-password',
+        '/api/v1/Auth/forgot-password',
         data: request.toJson(),
       );
 
@@ -157,7 +154,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<void> resetPassword(ResetPasswordRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/auth/reset-password',
+        '/api/v1/Auth/reset-password',
         data: request.toJson(),
       );
 
@@ -173,26 +170,22 @@ class AuthDataSourceImpl implements AuthDataSource {
 
   @override
   Future<String?> getAccessToken() async {
-    final prefs = await this.prefs;
     return prefs.getString('access_token');
   }
 
   @override
   Future<String?> getRefreshToken() async {
-    final prefs = await this.prefs;
     return prefs.getString('refresh_token');
   }
 
   @override
   Future<void> saveTokens(String accessToken, String refreshToken) async {
-    final prefs = await this.prefs;
     await prefs.setString('access_token', accessToken);
     await prefs.setString('refresh_token', refreshToken);
   }
 
   @override
   Future<void> clearTokens() async {
-    final prefs = await this.prefs;
     await prefs.remove('access_token');
     await prefs.remove('refresh_token');
   }
@@ -200,7 +193,6 @@ class AuthDataSourceImpl implements AuthDataSource {
   @override
   Future<UserModel?> getCurrentUser() async {
     try {
-      final prefs = await this.prefs;
       final userJson = prefs.getString('current_user');
 
       if (userJson != null && userJson.isNotEmpty) {
@@ -233,7 +225,6 @@ class AuthDataSourceImpl implements AuthDataSource {
   @override
   Future<void> saveCurrentUser(UserModel user) async {
     try {
-      final prefs = await this.prefs;
       // Simple serialization (pipe-separated values)
       final userString =
           '${user.id}|${user.email}|${user.firstName}|${user.lastName}|${user.phoneNumber ?? ''}|${user.role}|${user.isEmailVerified}';
@@ -246,7 +237,6 @@ class AuthDataSourceImpl implements AuthDataSource {
 
   @override
   Future<void> clearCurrentUser() async {
-    final prefs = await this.prefs;
     await prefs.remove('current_user');
   }
 
@@ -264,7 +254,6 @@ class AuthDataSourceImpl implements AuthDataSource {
     }
 
     // Token expiration kontrolü (SharedPreferences'tan)
-    final prefs = await this.prefs;
     final expiresAtString = prefs.getString('token_expires_at');
 
     if (expiresAtString != null) {
@@ -336,7 +325,6 @@ class AuthDataSourceImpl implements AuthDataSource {
 
   /// Token expiration'ı kaydet
   Future<void> _saveTokenExpiration(DateTime expiresAt) async {
-    final prefs = await this.prefs;
     await prefs.setString('token_expires_at', expiresAt.toIso8601String());
   }
 }

@@ -97,4 +97,24 @@ class UserAddressDto {
       updatedAt: updatedAt,
     );
   }
+  
+  /// Convert from Domain Entity (for API requests)
+  factory UserAddressDto.fromDomain(UserAddress address) {
+    return UserAddressDto(
+      id: address.id,
+      userId: address.userId,
+      title: address.title,
+      fullAddress: address.fullAddress,
+      buildingNumber: address.buildingNumber,
+      floor: address.floor,
+      apartment: address.apartment,
+      landmark: address.landmark,
+      latitude: address.latitude,
+      longitude: address.longitude,
+      type: address.type.value,
+      isDefault: address.isDefault,
+      createdAt: address.createdAt,
+      updatedAt: address.updatedAt,
+    );
+  }
 }
