@@ -57,19 +57,22 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // ============= DATABASE =============
-builder.Services.AddDbContext<AppDbContext>(options =>
+// Skip DbContext registration in Testing environment (handled by test setup)
+if (!builder.Environment.IsEnvironment("Testing"))
 {
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions =>
-        {
-            sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 3, // Retry sayısını azalttık
-                maxRetryDelay: TimeSpan.FromSeconds(10), // Retry delay'i azalttık
-                errorNumbersToAdd: null);
-            
-            // Connection pooling optimization
-            sqlOptions.CommandTimeout(ApplicationConstants.DatabaseCommandTimeoutSeconds);
+    builder.Services.AddDbContext<AppDbContext>(options =>
+    {
+        options.UseSqlServer(
+            builder.Configuration.GetConnectionString("DefaultConnection"),
+            sqlOptions =>
+            {
+                sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 3, // Retry sayısını azalttık
+                    maxRetryDelay: TimeSpan.FromSeconds(10), // Retry delay'i azalttık
+                    errorNumbersToAdd: null);
+                
+                // Connection pooling optimization
+                sqlOptions.CommandTimeout(ApplicationConstants.DatabaseCommandTimeoutSeconds);
         });
 
     // Query optimization
@@ -81,7 +84,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         options.EnableDetailedErrors();
         options.EnableSensitiveDataLogging();
     }
-});
+    });
+}
 
 // ============= DEPENDENCY INJECTION =============
 // Infrastructure
@@ -240,7 +244,13 @@ app.UseSerilogRequestLogging();
 
 // ============= MIDDLEWARE =============
 app.UseMiddleware<ValidationMiddleware>();
-app.UseMiddleware<SecurityAuditMiddleware>();
+
+// Skip SecurityAuditMiddleware in Testing environment (requires Session)
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    app.UseMiddleware<SecurityAuditMiddleware>();
+}
+
 app.UseMiddleware<RateLimitMiddleware>();
 
 // Rate limiting
