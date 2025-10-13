@@ -6,9 +6,12 @@
     var hasChildren = Model.Children.Any();
 }
 
-<div class="category-node level-@level">
+<div class="category-node level-@level" draggable="true" data-category-id="@Model.Category.Id" data-parent-id="@Model.Category.ParentCategoryId" data-display-order="@Model.Category.DisplayOrder">
     <div class="d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center flex-grow-1">
+            <span class="drag-handle" title="Sürükle">
+                <i class="fas fa-grip-vertical"></i>
+            </span>
             @if (hasChildren)
             {
                 <i class="fas fa-chevron-down category-toggle me-2" data-target="#children-@Model.Category.Id"></i>

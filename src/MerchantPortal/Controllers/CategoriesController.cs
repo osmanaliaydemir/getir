@@ -132,5 +132,54 @@ public class CategoriesController : Controller
 
         return RedirectToAction(nameof(Index));
     }
+
+    [HttpPost]
+    public async Task<IActionResult> UpdateOrder([FromBody] List<CategoryOrderUpdate> updates)
+    {
+        try
+        {
+            if (updates == null || !updates.Any())
+            {
+                return Json(new { success = false, message = "Güncelleme verisi bulunamadı" });
+            }
+
+            // Her kategori için DisplayOrder'ı güncelle
+            foreach (var update in updates)
+            {
+                var updateRequest = new UpdateCategoryRequest
+                {
+                    Name = string.Empty, // Bu değerler güncellenmeyecek, sadece order
+                    DisplayOrder = update.DisplayOrder
+                };
+
+                var category = await _categoryService.GetCategoryByIdAsync(update.CategoryId);
+                if (category != null)
+                {
+                    // Mevcut değerleri koru, sadece DisplayOrder değiştir
+                    updateRequest.Name = category.Name;
+                    updateRequest.Description = category.Description;
+                    updateRequest.ParentCategoryId = update.ParentCategoryId;
+                    updateRequest.IsActive = category.IsActive;
+                    updateRequest.ImageUrl = category.ImageUrl;
+
+                    await _categoryService.UpdateCategoryAsync(update.CategoryId, updateRequest);
+                }
+            }
+
+            return Json(new { success = true, message = "Sıralama başarıyla güncellendi" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating category order");
+            return Json(new { success = false, message = "Sıralama güncellenirken hata oluştu: " + ex.Message });
+        }
+    }
+}
+
+public class CategoryOrderUpdate
+{
+    public Guid CategoryId { get; set; }
+    public Guid? ParentCategoryId { get; set; }
+    public int DisplayOrder { get; set; }
 }
 
