@@ -1,0 +1,422 @@
+@{
+    ViewData["Title"] = "Bildirim Tercihleri";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard-modern.css" />
+    <style>
+        .settings-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            margin-bottom: 1.5rem;
+        }
+        
+        .settings-card h5 {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f3f4f6;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .settings-card h5 i {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem;
+            border-radius: 12px;
+            background: #f9fafb;
+            margin-bottom: 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .setting-item:hover {
+            background: #f3f4f6;
+            transform: translateX(5px);
+        }
+        
+        .setting-info h6 {
+            margin: 0;
+            font-weight: 600;
+            color: #111827;
+        }
+        
+        .setting-info small {
+            color: #6b7280;
+        }
+        
+        .form-switch .form-check-input {
+            width: 3rem;
+            height: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .form-switch .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+        
+        .time-picker-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .sound-test-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            transition: all 0.2s ease;
+        }
+        
+        .sound-test-btn:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+    </style>
+}
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4 fade-in">
+    <div>
+        <h2 class="mb-1">
+            <i class="fas fa-bell me-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+            Bildirim Tercihleri
+        </h2>
+        <p class="text-muted mb-0">Bildirim ayarlarınızı yönetin</p>
+    </div>
+    <button type="button" class="btn" style="background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%); color: white; border-radius: 10px;" onclick="saveAllPreferences()">
+        <i class="fas fa-save me-2"></i>Tümünü Kaydet
+    </button>
+</div>
+
+<!-- General Notifications -->
+<div class="settings-card fade-in" style="animation-delay: 0.1s;">
+    <h5>
+        <i class="fas fa-bell"></i>
+        Genel Bildirimler
+    </h5>
+    
+    <div class="setting-item">
+        <div class="setting-info">
+            <h6>Ses Bildirimleri</h6>
+            <small>Yeni sipariş ve durum değişikliklerinde ses çalsın</small>
+        </div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="soundEnabled" checked>
+        </div>
+    </div>
+    
+    <div class="setting-item">
+        <div class="setting-info">
+            <h6>Masaüstü Bildirimleri</h6>
+            <small>Browser push notifications (tarayıcı izni gerekir)</small>
+        </div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="desktopNotifications" checked>
+        </div>
+    </div>
+    
+    <div class="setting-item">
+        <div class="setting-info">
+            <h6>E-posta Bildirimleri</h6>
+            <small>Önemli olaylar için e-posta gönder</small>
+        </div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="emailNotifications">
+        </div>
+    </div>
+</div>
+
+<!-- Event-Specific Notifications -->
+<div class="settings-card fade-in" style="animation-delay: 0.2s;">
+    <h5>
+        <i class="fas fa-filter"></i>
+        Olay Bazlı Bildirimler
+    </h5>
+    
+    <div class="setting-item">
+        <div class="setting-info">
+            <h6><i class="fas fa-shopping-bag text-success me-2"></i>Yeni Sipariş</h6>
+            <small>Müşteriden yeni sipariş geldiğinde bildir</small>
+        </div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="newOrderNotifications" checked>
+        </div>
+    </div>
+    
+    <div class="setting-item">
+        <div class="setting-info">
+            <h6><i class="fas fa-sync text-info me-2"></i>Durum Değişiklikleri</h6>
+            <small>Sipariş durumu değiştiğinde bildir</small>
+        </div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="statusChangeNotifications" checked>
+        </div>
+    </div>
+    
+    <div class="setting-item">
+        <div class="setting-info">
+            <h6><i class="fas fa-times-circle text-danger me-2"></i>İptal Bildirimleri</h6>
+            <small>Sipariş iptal edildiğinde bildir</small>
+        </div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="cancellationNotifications" checked>
+        </div>
+    </div>
+</div>
+
+<!-- Sound Settings -->
+<div class="settings-card fade-in" style="animation-delay: 0.3s;">
+    <h5>
+        <i class="fas fa-volume-up"></i>
+        Ses Ayarları
+    </h5>
+    
+    <div class="setting-item">
+        <div class="setting-info flex-grow-1">
+            <h6>Bildirim Sesi</h6>
+            <small>Sipariş bildirimi için kullanılacak ses</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <select class="form-select" id="notificationSound" style="width: 200px;">
+                <option value="default">Varsayılan</option>
+                <option value="chime">Chime</option>
+                <option value="bell">Bell</option>
+                <option value="ding">Ding</option>
+                <option value="ping">Ping</option>
+            </select>
+            <button type="button" class="sound-test-btn" onclick="testNotificationSound()">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Do Not Disturb -->
+<div class="settings-card fade-in" style="animation-delay: 0.4s;">
+    <h5>
+        <i class="fas fa-moon"></i>
+        Rahatsız Etme Modu
+    </h5>
+    
+    <div class="setting-item">
+        <div class="setting-info">
+            <h6>Rahatsız Etme Modunu Etkinleştir</h6>
+            <small>Belirli saatler arasında bildirim alma</small>
+        </div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="doNotDisturbEnabled" onchange="toggleDNDTimeInputs()">
+        </div>
+    </div>
+    
+    <div id="dndTimeInputs" style="display: none;">
+        <div class="setting-item">
+            <div class="setting-info">
+                <h6>Başlangıç Saati</h6>
+                <small>Rahatsız etme başlangıç</small>
+            </div>
+            <input type="time" class="form-control" id="dndStartTime" value="22:00" style="width: 150px;">
+        </div>
+        
+        <div class="setting-item">
+            <div class="setting-info">
+                <h6>Bitiş Saati</h6>
+                <small>Rahatsız etme bitiş</small>
+            </div>
+            <input type="time" class="form-control" id="dndEndTime" value="08:00" style="width: 150px;">
+        </div>
+    </div>
+</div>
+
+<!-- Desktop Notification Permission -->
+<div class="settings-card fade-in" style="animation-delay: 0.5s;">
+    <h5>
+        <i class="fas fa-desktop"></i>
+        Masaüstü Bildirimleri
+    </h5>
+    
+    <div class="alert alert-info">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Tarayıcı İzni:</strong>
+                <span id="permissionStatus">Kontrol ediliyor...</span>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" id="requestPermissionBtn" style="display: none;" onclick="requestDesktopPermission()">
+                <i class="fas fa-bell"></i> İzin Ver
+            </button>
+        </div>
+    </div>
+    
+    <div class="setting-item">
+        <div class="setting-info">
+            <h6>Test Bildirimi Gönder</h6>
+            <small>Masaüstü bildirimini test edin</small>
+        </div>
+        <button type="button" class="btn btn-outline-primary" onclick="sendTestDesktopNotification()">
+            <i class="fas fa-paper-plane"></i> Test Et
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let preferences = {};
+        
+        $(document).ready(function() {
+            // Load saved preferences
+            loadPreferences();
+            
+            // Check desktop notification permission
+            checkDesktopNotificationPermission();
+        });
+        
+        function loadPreferences() {
+            // Load from localStorage
+            const saved = localStorage.getItem('notificationPreferences');
+            
+            if (saved) {
+                preferences = JSON.parse(saved);
+                
+                // Apply to UI
+                $('#soundEnabled').prop('checked', preferences.soundEnabled !== false);
+                $('#desktopNotifications').prop('checked', preferences.desktopNotifications !== false);
+                $('#emailNotifications').prop('checked', preferences.emailNotifications === true);
+                $('#newOrderNotifications').prop('checked', preferences.newOrderNotifications !== false);
+                $('#statusChangeNotifications').prop('checked', preferences.statusChangeNotifications !== false);
+                $('#cancellationNotifications').prop('checked', preferences.cancellationNotifications !== false);
+                $('#doNotDisturbEnabled').prop('checked', preferences.doNotDisturbEnabled === true);
+                $('#notificationSound').val(preferences.notificationSound || 'default');
+                
+                if (preferences.doNotDisturbEnabled) {
+                    $('#dndTimeInputs').show();
+                    if (preferences.doNotDisturbStart) {
+                        $('#dndStartTime').val(preferences.doNotDisturbStart);
+                    }
+                    if (preferences.doNotDisturbEnd) {
+                        $('#dndEndTime').val(preferences.doNotDisturbEnd);
+                    }
+                }
+            }
+        }
+        
+        function saveAllPreferences() {
+            preferences = {
+                soundEnabled: $('#soundEnabled').is(':checked'),
+                desktopNotifications: $('#desktopNotifications').is(':checked'),
+                emailNotifications: $('#emailNotifications').is(':checked'),
+                newOrderNotifications: $('#newOrderNotifications').is(':checked'),
+                statusChangeNotifications: $('#statusChangeNotifications').is(':checked'),
+                cancellationNotifications: $('#cancellationNotifications').is(':checked'),
+                doNotDisturbEnabled: $('#doNotDisturbEnabled').is(':checked'),
+                doNotDisturbStart: $('#dndStartTime').val(),
+                doNotDisturbEnd: $('#dndEndTime').val(),
+                notificationSound: $('#notificationSound').val()
+            };
+            
+            // Save to localStorage
+            localStorage.setItem('notificationPreferences', JSON.stringify(preferences));
+            
+            // Update signalr-helper.js settings
+            if (window.notificationSettings) {
+                window.notificationSettings = preferences;
+            }
+            
+            // Show success message
+            showSuccessToast('Bildirim tercihleri kaydedildi!');
+        }
+        
+        function toggleDNDTimeInputs() {
+            const enabled = $('#doNotDisturbEnabled').is(':checked');
+            $('#dndTimeInputs').toggle(enabled);
+        }
+        
+        function checkDesktopNotificationPermission() {
+            if (!("Notification" in window)) {
+                $('#permissionStatus').text('Desteklenmiyor').addClass('text-danger');
+                return;
+            }
+            
+            const permission = Notification.permission;
+            
+            if (permission === "granted") {
+                $('#permissionStatus').text('✅ İzin verildi').addClass('text-success');
+                $('#requestPermissionBtn').hide();
+            } else if (permission === "denied") {
+                $('#permissionStatus').text('❌ İzin reddedildi (Tarayıcı ayarlarından açın)').addClass('text-danger');
+                $('#requestPermissionBtn').hide();
+            } else {
+                $('#permissionStatus').text('⚠️ İzin verilmedi').addClass('text-warning');
+                $('#requestPermissionBtn').show();
+            }
+        }
+        
+        function requestDesktopPermission() {
+            if (!("Notification" in window)) {
+                alert("Tarayıcınız desktop notifications desteklemiyor");
+                return;
+            }
+            
+            Notification.requestPermission().then(function(permission) {
+                checkDesktopNotificationPermission();
+                
+                if (permission === "granted") {
+                    sendTestDesktopNotification();
+                }
+            });
+        }
+        
+        function sendTestDesktopNotification() {
+            if (Notification.permission !== "granted") {
+                alert("Lütfen önce bildirim iznini verin");
+                return;
+            }
+            
+            new Notification("Getir Merchant Portal", {
+                body: "Test bildirimi - Bildirimler doğru çalışıyor! ✅",
+                icon: "/favicon.ico",
+                badge: "/favicon.ico"
+            });
+        }
+        
+        function testNotificationSound() {
+            const sound = $('#notificationSound').val();
+            
+            // Play notification sound
+            if (window.playNotificationSound) {
+                window.playNotificationSound();
+                showSuccessToast('Ses testi oynatıldı!');
+            } else {
+                // Fallback - play default sound
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTUIGWi77eiaUBELUKnn77ZrJAU7k9n0zn4yBSh+zPDdkj0JFmG668OoWRQLR6Hh8bllHgU2jdvyxXopBSuBzvLZiDQJGmi77OicUREMUqvn8LlwKgU8lNr0zoE1BSqAze/ejEAKFGK76MOqXBUMSKPh8rdtIwU5jtzyxn0sBSuBzvLZhzUIGWi67OidUREMU6zn8LpxLAU9ldr0z4I2BSqBzvDfkUILFWK76cSsXhYNSKPi8rhuJAU6j93yxn4tBSuBzvLZhjUIGWi67OieUhENU63o8LpyLQU+ltr004I3BSuCzvDgk0QMFWO76sWtXxYOSaTi8rluJQU7kN7zyH8uBSyCzvLZhTUIGWi67OifUxENU63o8btzLgU/l9v01II4BiyDz/HhlUUNFmS868WuYBcPSqXj8rpwJgU8kd/zyIAvBSyCzvLZhDQIGWi67OigVBIOVK7p8bx0LwVAmd301YM5BiyDz/HilkYOFmW868avYRgQS6Xk87tyKAU9kt/zyYEvBSyCzvLZgzMIGWi77OihVRIPVK/p8r11MAVBmtz01oQ6BiyDz/HjmEcPF2a968exYhkRTKbl9LxzKQU+k+DzyoIwBSyCzvLZgjMIGWi77OiiVhIPVbDq8751MQVCm9301oQ7BiyDz/HkmEgPF2e968eyYxkRTKfm9Lx0KgU/lOH0y4IxBSyCzvLZgTIIGWi77OijVxIPVbHq8r52MgVDnN7012M8BiyDz/HlmUkQGGe+68ezZBoSTKjm9b11KwVAleH0zIMxBSyCzvLagjEHGGe77OikWBMQVrLr8r53MwVEnN/22GQ9Bi2Ez/Lnmk');
+                audio.play();
+            }
+        }
+        
+        function showSuccessToast(message) {
+            const toast = $(`
+                <div class="alert alert-success alert-dismissible fade show position-fixed" 
+                     style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                    <i class="fas fa-check-circle me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `);
+            
+            $('body').append(toast);
+            setTimeout(() => toast.fadeOut(() => toast.remove()), 3000);
+        }
+    </script>
+}
+

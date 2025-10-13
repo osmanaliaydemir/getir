@@ -170,6 +170,9 @@
                 <a href="@Url.Action("Index", "Payments")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Payments" ? "active" : "")">
                     <i class="fas fa-money-bill-wave"></i> Ödemeler
                 </a>
+                <a href="@Url.Action("Notifications", "Settings")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Settings" ? "active" : "")">
+                    <i class="fas fa-bell"></i> Bildirimler
+                </a>
                 <a href="@Url.Action("Settings", "Merchant")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Merchant" ? "active" : "")">
                     <i class="fas fa-cog"></i> Ayarlar
                 </a>

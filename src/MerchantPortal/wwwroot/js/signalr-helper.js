@@ -140,11 +140,94 @@ function getToastIcon(type) {
 // Play notification sound
 function playNotificationSound() {
     try {
+        // Check if sound is enabled
+        const preferences = getNotificationPreferences();
+        if (!preferences.soundEnabled) {
+            console.log('Sound is disabled in preferences');
+            return;
+        }
+        
         const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS96+iVSw0QTqXh8LNkGwU7k9r0z3krBSl+zPDckT8IFl621utpVRIKRZ/g8L5rIAUrl87y2Ik2CBhkvevnlUsNEE6l4fCzZBsEO5Pa9c54LAUpdszw3JI/CBZftdbvalUSCkWf4PC+ayAFKpbO8tiJNggYZL3r55VLDRBOpOHws2QbBDuT2vXOeCwFKHXM8NySPggWX7XW62pVEgpFn+Dwvm');
         audio.volume = 0.3;
         audio.play().catch(err => console.log('Sound play failed:', err));
     } catch (err) {
         console.log('Notification sound error:', err);
+    }
+}
+
+// Get notification preferences from localStorage
+function getNotificationPreferences() {
+    const saved = localStorage.getItem('notificationPreferences');
+    if (saved) {
+        return JSON.parse(saved);
+    }
+    
+    // Default preferences
+    return {
+        soundEnabled: true,
+        desktopNotifications: true,
+        emailNotifications: false,
+        newOrderNotifications: true,
+        statusChangeNotifications: true,
+        cancellationNotifications: true,
+        doNotDisturbEnabled: false,
+        notificationSound: 'default'
+    };
+}
+
+// Check if currently in Do Not Disturb period
+function isInDoNotDisturbPeriod() {
+    const preferences = getNotificationPreferences();
+    
+    if (!preferences.doNotDisturbEnabled) {
+        return false;
+    }
+    
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    
+    if (preferences.doNotDisturbStart && preferences.doNotDisturbEnd) {
+        const [startHour, startMin] = preferences.doNotDisturbStart.split(':');
+        const [endHour, endMin] = preferences.doNotDisturbEnd.split(':');
+        
+        const startMinutes = parseInt(startHour) * 60 + parseInt(startMin);
+        const endMinutes = parseInt(endHour) * 60 + parseInt(endMin);
+        
+        // Handle overnight periods (e.g., 22:00 - 08:00)
+        if (startMinutes > endMinutes) {
+            return currentTime >= startMinutes || currentTime <= endMinutes;
+        } else {
+            return currentTime >= startMinutes && currentTime <= endMinutes;
+        }
+    }
+    
+    return false;
+}
+
+// Send desktop notification
+function sendDesktopNotification(title, body, icon = '/favicon.ico') {
+    const preferences = getNotificationPreferences();
+    
+    if (!preferences.desktopNotifications) {
+        return;
+    }
+    
+    if (isInDoNotDisturbPeriod()) {
+        console.log('In Do Not Disturb period, skipping notification');
+        return;
+    }
+    
+    if (!("Notification" in window)) {
+        console.log('Desktop notifications not supported');
+        return;
+    }
+    
+    if (Notification.permission === "granted") {
+        new Notification(title, {
+            body: body,
+            icon: icon,
+            badge: icon
+        });
     }
 }
 
