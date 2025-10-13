@@ -11,8 +11,25 @@ public class ReadOnlyRepository<T> : IReadOnlyRepository<T> where T : class
 
     public ReadOnlyRepository(AppDbContext context)
     {
-        _context = context;
-        _dbSet = context.Set<T>();
+        _context = context ?? throw new ArgumentNullException(nameof(context), "AppDbContext cannot be null in ReadOnlyRepository");
+        
+        try
+        {
+            _dbSet = _context.Set<T>();
+            
+            if (_dbSet == null)
+            {
+                throw new InvalidOperationException($"DbSet<{typeof(T).Name}> is null. Entity may not be configured in AppDbContext.");
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to create DbSet<{typeof(T).Name}>. " +
+                $"Inner exception: {ex.Message}. " +
+                $"Check that: 1) Database connection is valid, 2) Entity is configured in OnModelCreating, 3) Migrations are applied.", 
+                ex);
+        }
     }
 
     public virtual async Task<bool> AnyAsync(

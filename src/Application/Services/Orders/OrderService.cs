@@ -12,6 +12,7 @@ namespace Getir.Application.Services.Orders;
 public class OrderService : BaseService, IOrderService
 {
     private readonly ISignalRService? _signalRService;
+    private readonly ISignalROrderSender? _signalROrderSender;
     private readonly IBackgroundTaskService _backgroundTaskService;
     private readonly IPaymentService _paymentService;
 
@@ -22,10 +23,12 @@ public class OrderService : BaseService, IOrderService
         ICacheService cacheService,
         IBackgroundTaskService backgroundTaskService,
         IPaymentService paymentService,
-        ISignalRService? signalRService = null) 
+        ISignalRService? signalRService = null,
+        ISignalROrderSender? signalROrderSender = null) 
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _signalRService = signalRService;
+        _signalROrderSender = signalROrderSender;
         _backgroundTaskService = backgroundTaskService;
         _paymentService = paymentService;
     }
@@ -60,6 +63,16 @@ public class OrderService : BaseService, IOrderService
             {
                 await _unitOfWork.RollbackAsync(cancellationToken);
                 return ServiceResult.Failure<OrderResponse>("Merchant not found or inactive", ErrorCodes.MERCHANT_NOT_FOUND);
+            }
+
+            // User kontrolü
+            var user = await _unitOfWork.ReadRepository<User>()
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken: cancellationToken);
+
+            if (user == null)
+            {
+                await _unitOfWork.RollbackAsync(cancellationToken);
+                return ServiceResult.Failure<OrderResponse>("User not found", ErrorCodes.UNAUTHORIZED);
             }
 
             // Ürünleri kontrol et ve fiyatları hesapla
@@ -277,6 +290,22 @@ public class OrderService : BaseService, IOrderService
                     "Order Created",
                     $"Your order {order.OrderNumber} has been placed successfully. Estimated delivery: {order.EstimatedDeliveryTime:HH:mm}",
                     "Order");
+            }
+
+            // Send new order notification to merchant via SignalR
+            if (_signalROrderSender != null)
+            {
+                await _signalROrderSender.SendNewOrderToMerchantAsync(
+                    merchant.Id,
+                    new
+                    {
+                        orderId = order.Id,
+                        orderNumber = order.OrderNumber,
+                        customerName = $"{user.FirstName} {user.LastName}",
+                        totalAmount = order.Total,
+                        createdAt = order.CreatedAt,
+                        status = order.Status.ToStringValue()
+                    });
             }
 
             // Log successful order creation
@@ -598,6 +627,16 @@ public class OrderService : BaseService, IOrderService
                 $"Your order {order.OrderNumber} has been confirmed by {order.Merchant.Name}!");
         }
 
+        // Send status change notification to merchant
+        if (_signalROrderSender != null)
+        {
+            await _signalROrderSender.SendOrderStatusChangedToMerchantAsync(
+                order.MerchantId,
+                order.Id,
+                order.OrderNumber,
+                order.Status.ToStringValue());
+        }
+
         var response = new OrderResponse(
             order.Id,
             order.OrderNumber,
@@ -677,6 +716,16 @@ public class OrderService : BaseService, IOrderService
                 $"Your order {order.OrderNumber} has been rejected by {order.Merchant.Name}. Reason: {order.CancellationReason}");
         }
 
+        // Send cancellation notification to merchant
+        if (_signalROrderSender != null)
+        {
+            await _signalROrderSender.SendOrderCancelledToMerchantAsync(
+                order.MerchantId,
+                order.Id,
+                order.OrderNumber,
+                order.CancellationReason);
+        }
+
         return ServiceResult.Success();
     }
 
@@ -723,6 +772,16 @@ public class OrderService : BaseService, IOrderService
                 $"Your order {order.OrderNumber} is now being prepared by {order.Merchant.Name}!");
         }
 
+        // Send status change notification to merchant
+        if (_signalROrderSender != null)
+        {
+            await _signalROrderSender.SendOrderStatusChangedToMerchantAsync(
+                order.MerchantId,
+                order.Id,
+                order.OrderNumber,
+                order.Status.ToStringValue());
+        }
+
         return ServiceResult.Success();
     }
 
@@ -767,6 +826,16 @@ public class OrderService : BaseService, IOrderService
                 order.UserId,
                 order.Status.ToStringValue(),
                 $"Your order {order.OrderNumber} is ready for pickup from {order.Merchant.Name}!");
+        }
+
+        // Send status change notification to merchant
+        if (_signalROrderSender != null)
+        {
+            await _signalROrderSender.SendOrderStatusChangedToMerchantAsync(
+                order.MerchantId,
+                order.Id,
+                order.OrderNumber,
+                order.Status.ToStringValue());
         }
 
         return ServiceResult.Success();
@@ -817,6 +886,16 @@ public class OrderService : BaseService, IOrderService
                 order.UserId,
                 order.Status.ToStringValue(),
                 $"Your order {order.OrderNumber} has been cancelled by {order.Merchant.Name}. Reason: {reason}");
+        }
+
+        // Send cancellation notification to merchant
+        if (_signalROrderSender != null)
+        {
+            await _signalROrderSender.SendOrderCancelledToMerchantAsync(
+                order.MerchantId,
+                order.Id,
+                order.OrderNumber,
+                reason);
         }
 
         return ServiceResult.Success();

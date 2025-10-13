@@ -209,6 +209,7 @@ public class PaymentController : BaseController
     /// <returns>Cash summary</returns>
     [HttpGet("merchant/summary")]
     [Authorize]
+    [Authorize(Roles = "MerchantOwner,Admin")]
     [ProducesResponseType(typeof(MerchantCashSummaryResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -218,8 +219,17 @@ public class PaymentController : BaseController
         [FromQuery] DateTime? endDate = null,
         CancellationToken ct = default)
     {
-        // TODO: Get merchant ID from user claims or merchant ownership
-        var merchantId = Guid.NewGuid(); // Temporary - should get from user claims
+        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
+        if (unauthorizedResult != null) return unauthorizedResult;
+
+        // Get merchant by userId (must use IMerchantService or similar)
+        // For now, get merchantId from query parameter as workaround
+        var merchantIdStr = HttpContext.Request.Query["merchantId"].ToString();
+        if (string.IsNullOrEmpty(merchantIdStr) || !Guid.TryParse(merchantIdStr, out var merchantId))
+        {
+            return BadRequest("MerchantId required");
+        }
+
         var result = await _paymentService.GetMerchantCashSummaryAsync(merchantId, startDate, endDate, ct);
         return ToActionResult(result);
     }
@@ -232,6 +242,7 @@ public class PaymentController : BaseController
     /// <returns>Paged settlements</returns>
     [HttpGet("merchant/settlements")]
     [Authorize]
+    [Authorize(Roles = "MerchantOwner,Admin")]
     [ProducesResponseType(typeof(PagedResult<SettlementResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -240,8 +251,15 @@ public class PaymentController : BaseController
         [FromQuery] PaginationQuery query,
         CancellationToken ct = default)
     {
-        // TODO: Get merchant ID from user claims or merchant ownership
-        var merchantId = Guid.NewGuid(); // Temporary - should get from user claims
+        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
+        if (unauthorizedResult != null) return unauthorizedResult;
+
+        var merchantIdStr = HttpContext.Request.Query["merchantId"].ToString();
+        if (string.IsNullOrEmpty(merchantIdStr) || !Guid.TryParse(merchantIdStr, out var merchantId))
+        {
+            return BadRequest("MerchantId required");
+        }
+
         var result = await _paymentService.GetMerchantSettlementsAsync(merchantId, query, ct);
         return ToActionResult(result);
     }

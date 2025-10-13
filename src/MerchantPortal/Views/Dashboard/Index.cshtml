@@ -1,0 +1,357 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    var dashboard = ViewBag.Dashboard as MerchantDashboardResponse;
+    var recentOrders = ViewBag.RecentOrders as List<RecentOrderResponse> ?? new List<RecentOrderResponse>();
+    var topProducts = ViewBag.TopProducts as List<TopProductResponse> ?? new List<TopProductResponse>();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard-modern.css" />
+}
+
+<!-- Welcome Banner -->
+<div class="quick-stats-banner fade-in mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h2><i class="fas fa-store me-2"></i>Hoş Geldiniz, @User.Identity?.Name!</h2>
+            <p class="mb-0">Bugün @(dashboard?.TodayOrders ?? 0) sipariş aldınız ve ₺@(dashboard?.TodayRevenue.ToString("N2") ?? "0") gelir elde ettiniz.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <div class="d-flex align-items-center justify-content-md-end gap-2">
+                <i class="fas fa-clock fa-2x opacity-75"></i>
+                <div>
+                    <div class="small opacity-75">Son Güncelleme</div>
+                    <div id="lastUpdate" class="fw-bold">@DateTime.Now.ToString("HH:mm")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modern Stat Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card-gradient primary fade-in" style="animation-delay: 0.1s;">
+            <div class="gradient-bg"></div>
+            <div class="stat-icon-modern primary">
+                <i class="fas fa-lira-sign"></i>
+            </div>
+            <div class="stat-label">Bugünkü Ciro</div>
+            <div class="stat-value">₺@(dashboard?.TodayRevenue.ToString("N2") ?? "0")</div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>@(dashboard?.TodayOrders ?? 0) sipariş</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card-gradient warning fade-in" style="animation-delay: 0.2s;">
+            <div class="gradient-bg"></div>
+            <div class="stat-icon-modern warning">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-label">Bekleyen Siparişler</div>
+            <div class="stat-value">@(dashboard?.PendingOrders ?? 0)</div>
+            <div class="stat-change @(dashboard?.PendingOrders > 0 ? "negative" : "neutral")">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>İşlem bekliyor</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card-gradient success fade-in" style="animation-delay: 0.3s;">
+            <div class="gradient-bg"></div>
+            <div class="stat-icon-modern success">
+                <i class="fas fa-box"></i>
+            </div>
+            <div class="stat-label">Aktif Ürünler</div>
+            <div class="stat-value">@(dashboard?.ActiveProducts ?? 0)</div>
+            <div class="stat-change positive">
+                <i class="fas fa-check-circle"></i>
+                <span>Satışta</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="stat-card-gradient info fade-in" style="animation-delay: 0.4s;">
+            <div class="gradient-bg"></div>
+            <div class="stat-icon-modern info">
+                <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-label">Değerlendirme</div>
+            <div class="stat-value">@(dashboard?.AverageRating?.ToString("N1") ?? "0.0")</div>
+            <div class="stat-change neutral">
+                <i class="fas fa-users"></i>
+                <span>@(dashboard?.TotalReviews ?? 0) yorum</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="performance-card fade-in" style="animation-delay: 0.5s;">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <i class="fas fa-chart-line"></i>
+                    Haftalık Performans
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <div class="metric-row">
+                        <div>
+                            <div class="metric-label">Ciro</div>
+                            <div class="metric-value text-primary">₺@(dashboard?.WeekRevenue.ToString("N2") ?? "0")</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="metric-row">
+                        <div>
+                            <div class="metric-label">Sipariş</div>
+                            <div class="metric-value text-success">@(dashboard?.WeekOrders ?? 0)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="performance-card fade-in" style="animation-delay: 0.6s;">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <i class="fas fa-calendar-alt"></i>
+                    Aylık Performans
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <div class="metric-row">
+                        <div>
+                            <div class="metric-label">Ciro</div>
+                            <div class="metric-value text-primary">₺@(dashboard?.MonthRevenue.ToString("N2") ?? "0")</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="metric-row">
+                        <div>
+                            <div class="metric-label">Sipariş</div>
+                            <div class="metric-value text-success">@(dashboard?.MonthOrders ?? 0)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders & Top Products -->
+<div class="row g-4">
+    <!-- Recent Orders -->
+    <div class="col-lg-7">
+        <div class="chart-container-modern fade-in" style="animation-delay: 0.7s;">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <i class="fas fa-shopping-bag"></i>
+                    Son Siparişler
+                </div>
+                <a href="/Orders" class="btn btn-sm btn-outline-primary">
+                    Tümünü Gör <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+            
+            @if (recentOrders.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-modern table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>SİPARİŞ NO</th>
+                                <th>MÜŞTERİ</th>
+                                <th>TUTAR</th>
+                                <th>DURUM</th>
+                                <th>ZAMAN</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in recentOrders.Take(5))
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="fw-bold text-primary">#@order.OrderNumber</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-gradient-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 0.875rem;">
+                                                @(order.CustomerName?.Substring(0, 1).ToUpper() ?? "?")
+                                            </div>
+                                            <span>@order.CustomerName</span>
+                                        </div>
+                                    </td>
+                                    <td class="fw-bold">₺@order.TotalAmount.ToString("N2")</td>
+                                    <td>
+                                        @{
+                                            var badgeClass = order.Status switch
+                                            {
+                                                "Pending" => "warning",
+                                                "Confirmed" => "info",
+                                                "Preparing" => "primary",
+                                                "Ready" => "success",
+                                                "Delivered" => "success",
+                                                "Cancelled" => "danger",
+                                                _ => "secondary"
+                                            };
+
+                                            var statusText = order.Status switch
+                                            {
+                                                "Pending" => "Bekliyor",
+                                                "Confirmed" => "Onaylandı",
+                                                "Preparing" => "Hazırlanıyor",
+                                                "Ready" => "Hazır",
+                                                "Delivered" => "Teslim Edildi",
+                                                "Cancelled" => "İptal",
+                                                _ => order.Status
+                                            };
+                                        }
+                                        <span class="badge-modern @badgeClass">
+                                            <i class="fas fa-circle" style="font-size: 0.5rem;"></i>
+                                            @statusText
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            <i class="far fa-clock me-1"></i>
+                                            @order.CreatedAt.ToString("dd MMM, HH:mm")
+                                        </small>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Henüz sipariş yok</p>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <!-- Top Products -->
+    <div class="col-lg-5">
+        <div class="chart-container-modern fade-in" style="animation-delay: 0.8s;">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <i class="fas fa-fire"></i>
+                    En Çok Satanlar
+                </div>
+                <a href="/Products" class="btn btn-sm btn-outline-primary">
+                    Tümünü Gör <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+            
+            @if (topProducts.Any())
+            {
+                <div class="d-flex flex-column gap-3">
+                    @for (var i = 0; i < Math.Min(5, topProducts.Count); i++)
+                    {
+                        var product = topProducts[i];
+                        var medalColor = i switch
+                        {
+                            0 => "text-warning",
+                            1 => "text-secondary",
+                            2 => "text-danger",
+                            _ => "text-muted"
+                        };
+                        
+                        <div class="product-card-mini">
+                            <div class="position-relative">
+                                <img src="@(product.ImageUrl ?? "/images/product-placeholder.png")" 
+                                     alt="@product.Name" 
+                                     class="product-img-mini"
+                                     onerror="this.src='/images/product-placeholder.png'">
+                                <div class="position-absolute top-0 start-0 @medalColor" style="margin: -8px 0 0 -8px; font-size: 1.5rem;">
+                                    <i class="fas fa-medal"></i>
+                                </div>
+                            </div>
+                            <div class="product-info">
+                                <div class="product-name">@product.Name</div>
+                                <div class="product-sales">
+                                    <i class="fas fa-shopping-cart me-1"></i>
+                                    <span class="fw-bold">@product.OrderCount</span> satış
+                                    <span class="text-muted mx-2">•</span>
+                                    <span class="text-success fw-bold">₺@product.TotalRevenue.ToString("N2")</span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-success fw-bold">₺@product.TotalRevenue.ToString("N2")</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Henüz satış yok</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@latest/dist/browser/signalr.min.js"></script>
+    <script src="~/js/signalr-helper.js"></script>
+    <script>
+        // Initialize SignalR connection
+        initializeSignalR('@Url.Content("~/")');
+        
+        // Update last update time
+        function updateLastUpdateTime() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        setInterval(updateLastUpdateTime, 1000);
+        
+        // Listen for new orders
+        if (window.signalRConnection) {
+            window.signalRConnection.on("NewOrderReceived", function (data) {
+                console.log('New order received:', data);
+                
+                // Show notification
+                showToast('success', 'Yeni Sipariş!', 
+                    `#${data.orderNumber} - ${data.customerName} - ₺${data.totalAmount.toFixed(2)}`);
+                
+                // Play sound
+                playNotificationSound();
+                
+                // Flash browser tab
+                flashBrowserTab();
+                
+                // Refresh dashboard after 2 seconds
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            });
+            
+            window.signalRConnection.on("OrderStatusChanged", function (data) {
+                console.log('Order status changed:', data);
+                showToast('info', 'Sipariş Güncellendi', 
+                    `#${data.orderNumber} - ${data.status}`);
+            });
+        }
+    </script>
+}

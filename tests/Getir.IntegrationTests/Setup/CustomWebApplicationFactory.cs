@@ -58,19 +58,19 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
             });
 
             // Add mock email configuration via Options pattern
-            services.AddSingleton<Microsoft.Extensions.Options.IOptions<Application.DTO.EmailConfiguration>>(
-                new Microsoft.Extensions.Options.OptionsWrapper<Application.DTO.EmailConfiguration>(
-                    new Application.DTO.EmailConfiguration(
-                        "smtp.test.com",
-                        587,
-                        true,
-                        "test@test.com",
-                        "testpassword",
-                        "test@test.com",
-                        "Test System"
-                    )
-                )
-            );
+            //services.AddSingleton<Microsoft.Extensions.Options.IOptions<Application.DTO.EmailConfiguration>>(
+            //    new Microsoft.Extensions.Options.OptionsWrapper<Application.DTO.EmailConfiguration>(
+            //        new Application.DTO.EmailConfiguration(
+            //            "smtp.test.com",
+            //            587,
+            //            true,
+            //            "test@test.com",
+            //            "testpassword",
+            //            "test@test.com",
+            //            "Test System"
+            //        )
+            //    )
+            //);
 
             // Build and seed
             var sp = services.BuildServiceProvider();

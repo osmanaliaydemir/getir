@@ -1,0 +1,208 @@
+@model Getir.MerchantPortal.Models.MerchantCashSummaryResponse
+@{
+    ViewData["Title"] = "Ödeme Geçmişi";
+    var startDate = ViewBag.StartDate as DateTime?;
+    var endDate = ViewBag.EndDate as DateTime?;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-history"></i> Ödeme Geçmişi</h3>
+    <a href="@Url.Action("Index")" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Geri
+    </a>
+</div>
+
+<!-- Date Filter -->
+<div class="stat-card mb-4">
+    <form method="get" asp-action="History" class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label">Başlangıç Tarihi</label>
+            <input type="date" name="startDate" class="form-control" value="@startDate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Bitiş Tarihi</label>
+            <input type="date" name="endDate" class="form-control" value="@endDate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-getir w-100">
+                <i class="fas fa-filter"></i> Filtrele
+            </button>
+        </div>
+    </form>
+</div>
+
+@if (Model != null)
+{
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h6 class="text-muted mb-2">Toplam Gelir</h6>
+                <h3 class="mb-0 text-success">₺@Model.TotalAmount.ToString("N2")</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h6 class="text-muted mb-2">Komisyon</h6>
+                <h3 class="mb-0 text-danger">₺@Model.TotalCommission.ToString("N2")</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h6 class="text-muted mb-2">Net Gelir</h6>
+                <h3 class="mb-0 text-primary">₺@Model.NetAmount.ToString("N2")</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h6 class="text-muted mb-2">Sipariş Sayısı</h6>
+                <h3 class="mb-0">@Model.TotalOrders</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment List -->
+    <div class="stat-card">
+        <h5 class="mb-3">Ödeme Detayları</h5>
+        @if (Model.Payments.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Sipariş No</th>
+                            <th>Ödeme Yöntemi</th>
+                            <th>Tutar</th>
+                            <th>Durum</th>
+                            <th>Kurye</th>
+                            <th>İşlem Tarihi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var payment in Model.Payments.OrderByDescending(p => p.CreatedAt))
+                        {
+                            <tr>
+                                <td>@payment.CreatedAt.ToString("dd MMM HH:mm")</td>
+                                <td><strong>#@payment.OrderNumber</strong></td>
+                                <td>
+                                    <span class="badge @GetPaymentMethodBadge(payment.PaymentMethod)">
+                                        @GetPaymentMethodName(payment.PaymentMethod)
+                                    </span>
+                                </td>
+                                <td><strong>₺@payment.Amount.ToString("N2")</strong></td>
+                                <td>
+                                    <span class="badge bg-@GetStatusBadge(payment.Status)">
+                                        @GetStatusName(payment.Status)
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(payment.CollectedByCourierName))
+                                    {
+                                        <small>@payment.CollectedByCourierName</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (payment.CompletedAt.HasValue)
+                                    {
+                                        <small>@payment.CompletedAt.Value.ToString("dd MMM HH:mm")</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Bekliyor</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Toplam:</strong></td>
+                            <td><strong>₺@Model.TotalAmount.ToString("N2")</strong></td>
+                            <td colspan="3"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">Bu tarih aralığında ödeme bulunmuyor</h5>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="stat-card">
+        <div class="text-center py-5">
+            <i class="fas fa-exclamation-circle fa-4x text-warning mb-3"></i>
+            <h5 class="text-muted">Ödeme bilgileri yüklenemedi</h5>
+            <p class="text-muted">Lütfen daha sonra tekrar deneyin</p>
+        </div>
+    </div>
+}
+
+@functions {
+    string GetPaymentMethodName(string method)
+    {
+        return method switch
+        {
+            "Cash" => "Nakit",
+            "CreditCard" => "Kredi Kartı",
+            "VodafonePay" => "Vodafone Pay",
+            "BankTransfer" => "Havale",
+            "BkmExpress" => "BKM",
+            "Papara" => "Papara",
+            "QrCode" => "QR",
+            _ => method
+        };
+    }
+
+    string GetPaymentMethodBadge(string method)
+    {
+        return method switch
+        {
+            "Cash" => "bg-success",
+            "CreditCard" => "bg-primary",
+            "VodafonePay" => "bg-danger",
+            "BankTransfer" => "bg-info",
+            _ => "bg-secondary"
+        };
+    }
+
+    string GetStatusName(string status)
+    {
+        return status switch
+        {
+            "Pending" => "Bekliyor",
+            "Completed" => "Tamamlandı",
+            "Failed" => "Başarısız",
+            "Cancelled" => "İptal",
+            "Refunded" => "İade",
+            "Processing" => "İşleniyor",
+            _ => status
+        };
+    }
+
+    string GetStatusBadge(string status)
+    {
+        return status switch
+        {
+            "Completed" => "success",
+            "Pending" => "warning",
+            "Processing" => "info",
+            "Failed" => "danger",
+            "Cancelled" => "secondary",
+            "Refunded" => "warning",
+            _ => "secondary"
+        };
+    }
+}
+

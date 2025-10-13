@@ -11,8 +11,8 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 
     public GenericRepository(AppDbContext context)
     {
-        _context = context;
-        _dbSet = context.Set<T>();
+        _context = context ?? throw new ArgumentNullException(nameof(context), "AppDbContext cannot be null in GenericRepository");
+        _dbSet = _context.Set<T>();
     }
 
     public virtual async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

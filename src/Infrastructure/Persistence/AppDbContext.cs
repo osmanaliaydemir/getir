@@ -274,18 +274,14 @@ public class AppDbContext : DbContext
             entity.Property(e => e.EndDate).IsRequired();
             entity.Property(e => e.IsClosed).IsRequired().HasDefaultValue(true);
             
-            // Nullable TimeSpan conversion
+            // Nullable TimeSpan - EF Core 9 native support
             entity.Property(e => e.SpecialOpenTime)
-                .HasConversion(
-                    v => v.HasValue ? v.Value.ToString(@"hh\:mm\:ss") : null,
-                    v => string.IsNullOrEmpty(v) ? (TimeSpan?)null : TimeSpan.Parse(v))
-                .HasColumnType("TIME");
+                .HasColumnType("TIME")
+                .IsRequired(false);
             
             entity.Property(e => e.SpecialCloseTime)
-                .HasConversion(
-                    v => v.HasValue ? v.Value.ToString(@"hh\:mm\:ss") : null,
-                    v => string.IsNullOrEmpty(v) ? (TimeSpan?)null : TimeSpan.Parse(v))
-                .HasColumnType("TIME");
+                .HasColumnType("TIME")
+                .IsRequired(false);
             
             entity.Property(e => e.IsRecurring).IsRequired().HasDefaultValue(false);
             entity.Property(e => e.IsActive).IsRequired().HasDefaultValue(true);

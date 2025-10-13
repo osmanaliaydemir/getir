@@ -1,0 +1,140 @@
+@model Getir.MerchantPortal.Models.PagedResult<Getir.MerchantPortal.Models.SettlementResponse>
+@{
+    ViewData["Title"] = "Ödemelerim (Settlement)";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-file-invoice-dollar"></i> Ödeme Transferleri</h3>
+    <a href="@Url.Action("Index")" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Geri
+    </a>
+</div>
+
+<div class="alert alert-info">
+    <i class="fas fa-info-circle"></i>
+    <strong>Settlement Nedir?</strong> Getir, ödemelerinizi belirli aralıklarla banka hesabınıza transfer eder. 
+    Bu sayfada transfer geçmişinizi ve bekleyen ödemelerinizi görebilirsiniz.
+</div>
+
+<div class="stat-card">
+    @if (Model != null && Model.Items.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Settlement Tarihi</th>
+                        <th>Dönem</th>
+                        <th>Toplam Gelir</th>
+                        <th>Komisyon</th>
+                        <th>Net Tutar</th>
+                        <th>Durum</th>
+                        <th>İşlem Tarihi</th>
+                        <th>Referans</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var settlement in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@settlement.SettlementDate.ToString("dd MMM yyyy")</strong>
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    @settlement.CreatedAt.ToString("MMM yyyy")
+                                </small>
+                            </td>
+                            <td>₺@settlement.TotalAmount.ToString("N2")</td>
+                            <td class="text-danger">-₺@settlement.Commission.ToString("N2")</td>
+                            <td><strong class="text-success">₺@settlement.NetAmount.ToString("N2")</strong></td>
+                            <td>
+                                <span class="badge bg-@GetSettlementStatusBadge(settlement.Status)">
+                                    @GetSettlementStatusName(settlement.Status)
+                                </span>
+                            </td>
+                            <td>
+                                @if (settlement.CompletedAt.HasValue)
+                                {
+                                    <small>@settlement.CompletedAt.Value.ToString("dd MMM HH:mm")</small>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(settlement.BankTransferReference))
+                                {
+                                    <code>@settlement.BankTransferReference</code>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <td colspan="2" class="text-end"><strong>Toplam:</strong></td>
+                        <td><strong>₺@Model.Items.Sum(s => s.TotalAmount).ToString("N2")</strong></td>
+                        <td class="text-danger"><strong>-₺@Model.Items.Sum(s => s.Commission).ToString("N2")</strong></td>
+                        <td><strong class="text-success">₺@Model.Items.Sum(s => s.NetAmount).ToString("N2")</strong></td>
+                        <td colspan="3"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Page ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Settlements", new { page = i })">@i</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-file-invoice fa-4x text-muted mb-3"></i>
+            <h5 class="text-muted">Henüz settlement bulunmuyor</h5>
+            <p class="text-muted">İlk ödemenizi aldığınızda settlement işlemi başlayacaktır</p>
+        </div>
+    }
+</div>
+
+@functions {
+    string GetSettlementStatusName(string status)
+    {
+        return status switch
+        {
+            "Pending" => "Bekliyor",
+            "Processing" => "İşleniyor",
+            "Completed" => "Tamamlandı",
+            "Failed" => "Başarısız",
+            _ => status
+        };
+    }
+
+    string GetSettlementStatusBadge(string status)
+    {
+        return status switch
+        {
+            "Completed" => "success",
+            "Pending" => "warning",
+            "Processing" => "info",
+            "Failed" => "danger",
+            _ => "secondary"
+        };
+    }
+}
+

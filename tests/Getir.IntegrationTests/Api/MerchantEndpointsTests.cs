@@ -258,10 +258,17 @@ public class MerchantEndpointsTests : IClassFixture<CustomWebApplicationFactory<
             "Updated Merchant Name",
             "Updated description",
             "Updated Address",
+            40.9897m, // Latitude
+            29.0254m, // Longitude
             "+905559999999",
             "updated@merchant.com",
-            50.0m,
-            10.0m);
+            50.0m, // MinimumOrderAmount
+            10.0m, // DeliveryFee
+            30, // AverageDeliveryTime
+            true, // IsActive
+            false, // IsBusy
+            null, // LogoUrl
+            null); // CoverImageUrl
 
         // Act
         var response = await client.PutAsJsonAsync($"/api/v1/merchant/{merchantId}", updateRequest);
@@ -286,10 +293,17 @@ public class MerchantEndpointsTests : IClassFixture<CustomWebApplicationFactory<
             "Updated Merchant",
             "Description",
             "Test Address",
+            40.9897m,
+            29.0254m,
             "+905551234567",
             "test@merchant.com",
             50.0m,
-            10.0m);
+            10.0m,
+            30,
+            true,
+            false,
+            null,
+            null);
 
         // Act
         var response = await client.PutAsJsonAsync($"/api/v1/merchant/{Guid.NewGuid()}", updateRequest);
@@ -306,10 +320,17 @@ public class MerchantEndpointsTests : IClassFixture<CustomWebApplicationFactory<
             "Updated Merchant",
             "Description",
             "Test Address",
+            40.9897m,
+            29.0254m,
             "+905551234567",
             "test@merchant.com",
             50.0m,
-            10.0m);
+            10.0m,
+            30,
+            true,
+            false,
+            null,
+            null);
 
         // Act
         var response = await _client.PutAsJsonAsync($"/api/v1/merchant/{Guid.NewGuid()}", updateRequest);

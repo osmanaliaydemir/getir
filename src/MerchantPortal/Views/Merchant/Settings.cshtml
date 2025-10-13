@@ -1,0 +1,279 @@
+@{
+    ViewData["Title"] = "Ayarlar";
+    var merchantId = ViewBag.MerchantId as Guid?;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-cog"></i> Mağaza Ayarları</h3>
+    <a href="@Url.Action("Edit", new { id = merchantId })" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Profile Dön
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <!-- Quick Actions -->
+        <div class="stat-card mb-3">
+            <h5 class="mb-4">Hızlı İşlemler</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <a href="@Url.Action("Edit", new { id = merchantId })" class="quick-action-card">
+                        <div class="quick-action-icon" style="background: #e3f2fd;">
+                            <i class="fas fa-store" style="color: #2196F3;"></i>
+                        </div>
+                        <div class="quick-action-content">
+                            <h6>Profil Bilgileri</h6>
+                            <small class="text-muted">İsim, adres, iletişim bilgileri</small>
+                        </div>
+                        <i class="fas fa-chevron-right text-muted"></i>
+                    </a>
+                </div>
+
+                <div class="col-md-6">
+                    <a href="@Url.Action("WorkingHours")" class="quick-action-card">
+                        <div class="quick-action-icon" style="background: #fff3e0;">
+                            <i class="fas fa-clock" style="color: #FF9800;"></i>
+                        </div>
+                        <div class="quick-action-content">
+                            <h6>Çalışma Saatleri</h6>
+                            <small class="text-muted">Haftalık çalışma takvimi</small>
+                        </div>
+                        <i class="fas fa-chevron-right text-muted"></i>
+                    </a>
+                </div>
+
+                <div class="col-md-6">
+                    <a href="@Url.Action("Index", "Categories")" class="quick-action-card">
+                        <div class="quick-action-icon" style="background: #f3e5f5;">
+                            <i class="fas fa-tags" style="color: #9C27B0;"></i>
+                        </div>
+                        <div class="quick-action-content">
+                            <h6>Kategoriler</h6>
+                            <small class="text-muted">Ürün kategorilerini yönet</small>
+                        </div>
+                        <i class="fas fa-chevron-right text-muted"></i>
+                    </a>
+                </div>
+
+                <div class="col-md-6">
+                    <a href="@Url.Action("Index", "Products")" class="quick-action-card">
+                        <div class="quick-action-icon" style="background: #e8f5e9;">
+                            <i class="fas fa-box" style="color: #4CAF50;"></i>
+                        </div>
+                        <div class="quick-action-content">
+                            <h6>Ürünler</h6>
+                            <small class="text-muted">Ürün listesi ve stok yönetimi</small>
+                        </div>
+                        <i class="fas fa-chevron-right text-muted"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="stat-card mb-3">
+            <h5 class="mb-4">
+                <i class="fas fa-bell"></i> Bildirim Tercihleri
+            </h5>
+            <div class="notification-setting mb-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="notif-new-order" checked />
+                    <label class="form-check-label" for="notif-new-order">
+                        <strong>Yeni Sipariş Bildirimleri</strong>
+                        <br><small class="text-muted">Yeni sipariş geldiğinde bildirim al</small>
+                    </label>
+                </div>
+            </div>
+
+            <div class="notification-setting mb-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="notif-sound" checked />
+                    <label class="form-check-label" for="notif-sound">
+                        <strong>Bildirim Sesi</strong>
+                        <br><small class="text-muted">Bildirimler sesli olsun</small>
+                    </label>
+                </div>
+            </div>
+
+            <div class="notification-setting mb-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="notif-email" />
+                    <label class="form-check-label" for="notif-email">
+                        <strong>E-posta Bildirimleri</strong>
+                        <br><small class="text-muted">Önemli olaylar için e-posta gönder</small>
+                    </label>
+                </div>
+            </div>
+
+            <div class="notification-setting">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="notif-sms" />
+                    <label class="form-check-label" for="notif-sms">
+                        <strong>SMS Bildirimleri</strong>
+                        <br><small class="text-muted">Kritik durumlar için SMS gönder</small>
+                    </label>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle"></i>
+                <small>Bildirim tercihleri tarayıcınızda saklanır. Her cihazda ayrı ayarlanması gerekir.</small>
+            </div>
+        </div>
+
+        <!-- Advanced Settings -->
+        <div class="stat-card">
+            <h5 class="mb-4">
+                <i class="fas fa-sliders-h"></i> Gelişmiş Ayarlar
+            </h5>
+
+            <div class="mb-3">
+                <label class="form-label">Dil Tercihi</label>
+                <select class="form-select">
+                    <option value="tr" selected>Türkçe</option>
+                    <option value="en">English</option>
+                    <option value="ar">العربية</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Tema</label>
+                <select class="form-select">
+                    <option value="light" selected>Açık Tema</option>
+                    <option value="dark">Koyu Tema</option>
+                    <option value="auto">Otomatik (Sistem)</option>
+                </select>
+                <small class="form-text text-muted">Yakında aktif olacak</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Account Information -->
+        <div class="stat-card mb-3">
+            <h6 class="mb-3">
+                <i class="fas fa-user-circle"></i> Hesap Bilgileri
+            </h6>
+            <div class="mb-2">
+                <small class="text-muted">Kullanıcı Adı</small>
+                <div><strong>@Context.Session.GetString("UserName")</strong></div>
+            </div>
+            <div class="mb-2">
+                <small class="text-muted">E-posta</small>
+                <div><strong>@Context.Session.GetString("UserEmail")</strong></div>
+            </div>
+            <hr />
+            <button class="btn btn-outline-danger btn-sm w-100" disabled>
+                <i class="fas fa-key"></i> Şifre Değiştir
+            </button>
+            <small class="form-text text-muted mt-2 d-block">Yakında aktif olacak</small>
+        </div>
+
+        <!-- System Information -->
+        <div class="stat-card mb-3">
+            <h6 class="mb-3">
+                <i class="fas fa-info-circle"></i> Sistem Bilgisi
+            </h6>
+            <div class="mb-2">
+                <small class="text-muted">Portal Versiyonu</small>
+                <div><strong>v1.0.0</strong></div>
+            </div>
+            <div class="mb-2">
+                <small class="text-muted">Son Güncelleme</small>
+                <div><strong>13 Ekim 2025</strong></div>
+            </div>
+            <div class="mb-2">
+                <small class="text-muted">Durum</small>
+                <div>
+                    <span class="badge bg-success">
+                        <i class="fas fa-circle"></i> Çevrimiçi
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help & Support -->
+        <div class="stat-card">
+            <h6 class="mb-3">
+                <i class="fas fa-question-circle"></i> Yardım & Destek
+            </h6>
+            <a href="#" class="btn btn-outline-primary btn-sm w-100 mb-2">
+                <i class="fas fa-book"></i> Kullanım Kılavuzu
+            </a>
+            <a href="#" class="btn btn-outline-primary btn-sm w-100 mb-2">
+                <i class="fas fa-headset"></i> Destek Talebi
+            </a>
+            <a href="#" class="btn btn-outline-primary btn-sm w-100">
+                <i class="fas fa="fas fa-comments"></i> Geri Bildirim
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .quick-action-card {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        background: white;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.2s;
+    }
+    
+    .quick-action-card:hover {
+        border-color: var(--getir-purple);
+        box-shadow: 0 4px 12px rgba(93, 62, 188, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .quick-action-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+    
+    .quick-action-content {
+        flex: 1;
+    }
+    
+    .quick-action-content h6 {
+        margin-bottom: 0.25rem;
+    }
+    
+    .notification-setting {
+        padding: 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background: #fafafa;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        // Save notification preferences to localStorage
+        document.querySelectorAll('[id^="notif-"]').forEach(checkbox => {
+            const key = 'merchant_' + checkbox.id;
+            
+            // Load saved preference
+            const saved = localStorage.getItem(key);
+            if (saved !== null) {
+                checkbox.checked = saved === 'true';
+            }
+            
+            // Save on change
+            checkbox.addEventListener('change', function() {
+                localStorage.setItem(key, this.checked);
+                showToast('Bildirim tercihleri kaydedildi', 'success');
+            });
+        });
+    </script>
+}
+

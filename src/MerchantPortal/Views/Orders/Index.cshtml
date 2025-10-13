@@ -1,0 +1,380 @@
+@model Getir.MerchantPortal.Models.PagedResult<Getir.MerchantPortal.Models.OrderResponse>
+@{
+    ViewData["Title"] = "Siparişler";
+    var currentStatus = ViewBag.CurrentStatus as string;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard-modern.css" />
+    <style>
+        .status-tab {
+            background: white;
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            text-decoration: none;
+            color: #6b7280;
+        }
+        
+        .status-tab:hover {
+            border-color: #e5e7eb;
+            color: #111827;
+        }
+        
+        .status-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+        }
+        
+        .order-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 4px solid transparent;
+        }
+        
+        .order-card:hover {
+            transform: translateX(8px);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+        }
+        
+        .order-card.pending {
+            border-left-color: #fbbf24;
+        }
+        
+        .order-card.confirmed {
+            border-left-color: #3b82f6;
+        }
+        
+        .order-card.preparing {
+            border-left-color: #8b5cf6;
+        }
+        
+        .order-card.ready {
+            border-left-color: #10b981;
+        }
+        
+        .order-card.delivered {
+            border-left-color: #059669;
+        }
+        
+        .order-card.cancelled {
+            border-left-color: #ef4444;
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f3f4f6;
+        }
+        
+        .order-number {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .order-time {
+            font-size: 0.875rem;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .customer-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .customer-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.125rem;
+        }
+        
+        .customer-details h6 {
+            margin: 0;
+            font-weight: 600;
+            color: #111827;
+        }
+        
+        .customer-details small {
+            color: #6b7280;
+        }
+        
+        .order-amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #10b981;
+        }
+        
+        .order-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid #f3f4f6;
+        }
+        
+        .stats-card-mini {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .stats-card-mini .value {
+            font-size: 2rem;
+            font-weight: 700;
+            display: block;
+        }
+        
+        .stats-card-mini .label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            display: block;
+        }
+    </style>
+}
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4 fade-in">
+    <div>
+        <h2 class="mb-1"><i class="fas fa-shopping-cart me-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>Siparişlerim</h2>
+        <p class="text-muted mb-0">Tüm siparişlerinizi yönetin ve takip edin</p>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row g-3 mb-4 fade-in" style="animation-delay: 0.1s;">
+    <div class="col-md-3">
+        <div class="stats-card-mini">
+            <span class="value" style="color: #fbbf24;">@(Model?.Items?.Count(o => o.Status == "Pending") ?? 0)</span>
+            <span class="label">Bekleyen</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card-mini">
+            <span class="value" style="color: #8b5cf6;">@(Model?.Items?.Count(o => o.Status == "Preparing") ?? 0)</span>
+            <span class="label">Hazırlanıyor</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card-mini">
+            <span class="value" style="color: #10b981;">@(Model?.Items?.Count(o => o.Status == "Ready") ?? 0)</span>
+            <span class="label">Hazır</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card-mini">
+            <span class="value" style="color: #059669;">@(Model?.Items?.Count(o => o.Status == "Delivered") ?? 0)</span>
+            <span class="label">Teslim Edildi</span>
+        </div>
+    </div>
+</div>
+
+<!-- Status Tabs -->
+<div class="d-flex gap-2 mb-4 flex-wrap fade-in" style="animation-delay: 0.2s;">
+    <a href="@Url.Action("Index")" class="status-tab @(string.IsNullOrEmpty(currentStatus) ? "active" : "")">
+        <i class="fas fa-list me-2"></i>Tümü
+    </a>
+    <a href="@Url.Action("Index", new { status = "Pending" })" class="status-tab @(currentStatus == "Pending" ? "active" : "")">
+        <i class="fas fa-clock me-2"></i>Bekleyen
+    </a>
+    <a href="@Url.Action("Index", new { status = "Confirmed" })" class="status-tab @(currentStatus == "Confirmed" ? "active" : "")">
+        <i class="fas fa-check me-2"></i>Onaylandı
+    </a>
+    <a href="@Url.Action("Index", new { status = "Preparing" })" class="status-tab @(currentStatus == "Preparing" ? "active" : "")">
+        <i class="fas fa-utensils me-2"></i>Hazırlanıyor
+    </a>
+    <a href="@Url.Action("Index", new { status = "Ready" })" class="status-tab @(currentStatus == "Ready" ? "active" : "")">
+        <i class="fas fa-check-circle me-2"></i>Hazır
+    </a>
+    <a href="@Url.Action("Index", new { status = "Delivered" })" class="status-tab @(currentStatus == "Delivered" ? "active" : "")">
+        <i class="fas fa-truck me-2"></i>Teslim Edildi
+    </a>
+    <a href="@Url.Action("Index", new { status = "Cancelled" })" class="status-tab @(currentStatus == "Cancelled" ? "active" : "")">
+        <i class="fas fa-times me-2"></i>İptal
+    </a>
+</div>
+
+<!-- Orders List -->
+@if (Model != null && Model.Items.Any())
+{
+    var delay = 0.3;
+    foreach (var order in Model.Items)
+    {
+        delay += 0.05;
+        var statusClass = order.Status.ToLower();
+        var badgeClass = order.Status switch
+        {
+            "Pending" => "warning",
+            "Confirmed" => "info",
+            "Preparing" => "primary",
+            "Ready" => "success",
+            "Delivered" => "success",
+            "Cancelled" => "danger",
+            _ => "secondary"
+        };
+
+        var statusText = order.Status switch
+        {
+            "Pending" => "Bekliyor",
+            "Confirmed" => "Onaylandı",
+            "Preparing" => "Hazırlanıyor",
+            "Ready" => "Hazır",
+            "Delivered" => "Teslim Edildi",
+            "Cancelled" => "İptal",
+            _ => order.Status
+        };
+        
+        <div class="order-card @statusClass mb-3 fade-in" style="animation-delay: @(delay)s;">
+            <div class="order-header">
+                <div>
+                    <div class="order-number">#@order.OrderNumber</div>
+                    <div class="order-time">
+                        <i class="far fa-clock"></i>
+                        @order.CreatedAt.ToString("dd MMM yyyy, HH:mm")
+                    </div>
+                </div>
+                <span class="badge-modern @badgeClass">
+                    <i class="fas fa-circle" style="font-size: 0.5rem;"></i>
+                    @statusText
+                </span>
+            </div>
+            
+            <div class="customer-info">
+                <div class="customer-avatar">
+                    @(order.CustomerName.Substring(0, 1).ToUpper())
+                </div>
+                <div class="customer-details flex-grow-1">
+                    <h6>@order.CustomerName</h6>
+                    <small>
+                        <i class="fas fa-phone me-1"></i>@order.CustomerPhone
+                    </small>
+                </div>
+                <div class="text-end">
+                    <div class="order-amount">₺@order.TotalAmount.ToString("N2")</div>
+                    <small class="text-muted">@order.Status</small>
+                </div>
+            </div>
+            
+            <div class="mb-2">
+                <div class="d-flex align-items-start gap-2">
+                    <i class="fas fa-map-marker-alt mt-1 text-muted"></i>
+                    <small class="text-muted">@order.DeliveryAddress</small>
+                </div>
+            </div>
+            
+            <div class="order-footer">
+                <div class="d-flex gap-2">
+                    <small class="badge bg-light text-dark">
+                        <i class="fas fa-calendar me-1"></i>
+                        @order.CreatedAt.ToString("HH:mm")
+                    </small>
+                    @if (order.Notes != null && !string.IsNullOrEmpty(order.Notes))
+                    {
+                        <small class="badge" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #831843;">
+                            <i class="fas fa-sticky-note me-1"></i>
+                            Not Var
+                        </small>
+                    }
+                </div>
+                <a href="@Url.Action("Details", new { id = order.Id })" class="btn btn-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px;">
+                    <i class="fas fa-eye me-1"></i> Detay
+                </a>
+            </div>
+        </div>
+    }
+
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <div class="d-flex justify-content-center mt-4 fade-in" style="animation-delay: 0.5s;">
+            <nav>
+                <ul class="pagination pagination-lg">
+                    <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="?page=@(Model.Page - 1)&status=@currentStatus" style="border-radius: 10px 0 0 10px;">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    
+                    @for (var i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Page ? "active" : "")">
+                            <a class="page-link" href="?page=@i&status=@currentStatus">@i</a>
+                        </li>
+                    }
+                    
+                    <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="?page=@(Model.Page + 1)&status=@currentStatus" style="border-radius: 0 10px 10px 0;">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+}
+else
+{
+    <div class="text-center py-5 fade-in">
+        <div class="chart-container-modern" style="max-width: 500px; margin: 0 auto;">
+            <i class="fas fa-shopping-cart fa-5x text-muted mb-4"></i>
+            <h4 class="mb-3">@(string.IsNullOrEmpty(currentStatus) ? "Henüz Sipariş Yok" : $"{currentStatus} Sipariş Bulunamadı")</h4>
+            <p class="text-muted">@(string.IsNullOrEmpty(currentStatus) ? "İlk siparişiniz geldiğinde burada görünecek." : "Farklı bir filtre seçerek tekrar deneyin.")</p>
+        </div>
+    </div>
+}
+
+@functions {
+    string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Pending" => "warning",
+            "Confirmed" => "info",
+            "Preparing" => "primary",
+            "Ready" => "success",
+            "Delivered" => "success",
+            "Cancelled" => "danger",
+            _ => "secondary"
+        };
+    }
+
+    string GetStatusText(string status)
+    {
+        return status switch
+        {
+            "Pending" => "Bekliyor",
+            "Confirmed" => "Onaylandı",
+            "Preparing" => "Hazırlanıyor",
+            "Ready" => "Hazır",
+            "Delivered" => "Teslim Edildi",
+            "Cancelled" => "İptal",
+            _ => status
+        };
+    }
+}

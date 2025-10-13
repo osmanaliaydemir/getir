@@ -130,16 +130,12 @@ public class AuthService : BaseService, IAuthService
         LoginRequest request,
         CancellationToken cancellationToken = default)
     {
-        return await ExecuteWithPerformanceTracking(
-            async () => await LoginInternalAsync(request, cancellationToken),
-            "UserLogin",
-            new { Email = request.Email },
+        return await ExecuteWithPerformanceTracking( async () => await LoginInternalAsync(request, cancellationToken),
+            "UserLogin", new { Email = request.Email },
             cancellationToken);
     }
 
-    private async Task<Result<AuthResponse>> LoginInternalAsync(
-        LoginRequest request,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<AuthResponse>> LoginInternalAsync(LoginRequest request,CancellationToken cancellationToken = default)
     {
         try
         {

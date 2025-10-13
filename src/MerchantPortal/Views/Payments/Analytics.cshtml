@@ -1,0 +1,273 @@
+@model Getir.MerchantPortal.Models.PaymentStatisticsResponse
+@{
+    ViewData["Title"] = "Gelir Analizi";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-chart-pie"></i> Gelir Analizi</h3>
+    <div class="btn-group">
+        <button class="btn btn-outline-success" onclick="exportToExcel()">
+            <i class="fas fa-file-excel"></i> Excel İndir
+        </button>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Geri
+        </a>
+    </div>
+</div>
+
+@if (Model != null)
+{
+    <!-- Revenue Overview -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h5 class="mb-4">
+                    <i class="fas fa-chart-line text-success"></i> Gelir Trendi
+                </h5>
+                <canvas id="revenueTrendChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h5 class="mb-4">
+                    <i class="fas fa-chart-pie text-primary"></i> Ödeme Yöntemi Dağılımı
+                </h5>
+                <canvas id="paymentMethodChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <h6 class="text-muted mb-3">Günlük Performans</h6>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Gelir:</span>
+                    <strong class="text-success">₺@Model.TodayRevenue.ToString("N2")</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Ödeme Sayısı:</span>
+                    <strong>@Model.TodayPayments</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Ortalama Sipariş:</span>
+                    <strong>₺@((Model.TodayPayments > 0 ? Model.TodayRevenue / Model.TodayPayments : 0).ToString("N2"))</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card">
+                <h6 class="text-muted mb-3">Haftalık Performans</h6>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Gelir:</span>
+                    <strong class="text-success">₺@Model.WeekRevenue.ToString("N2")</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Ödeme Sayısı:</span>
+                    <strong>@Model.WeekPayments</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Ortalama Sipariş:</span>
+                    <strong>₺@((Model.WeekPayments > 0 ? Model.WeekRevenue / Model.WeekPayments : 0).ToString("N2"))</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card">
+                <h6 class="text-muted mb-3">Aylık Performans</h6>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Gelir:</span>
+                    <strong class="text-success">₺@Model.MonthRevenue.ToString("N2")</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Ödeme Sayısı:</span>
+                    <strong>@Model.MonthPayments</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Ortalama Sipariş:</span>
+                    <strong>₺@((Model.MonthPayments > 0 ? Model.MonthRevenue / Model.MonthPayments : 0).ToString("N2"))</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Commission & Settlement -->
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h5 class="mb-4">
+                    <i class="fas fa-percent text-warning"></i> Komisyon Detayı
+                </h5>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Toplam Gelir:</span>
+                        <strong>₺@Model.MonthRevenue.ToString("N2")</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Getir Komisyonu:</span>
+                        <strong class="text-danger">-₺@Model.TotalCommission.ToString("N2")</strong>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between">
+                        <strong>Net Gelir:</strong>
+                        <h5 class="mb-0 text-success">₺@((Model.MonthRevenue - Model.TotalCommission).ToString("N2"))</h5>
+                    </div>
+                </div>
+                <div class="progress mb-2" style="height: 30px;">
+                    <div class="progress-bar bg-success" style="width: @((Model.MonthRevenue > 0 ? (Model.MonthRevenue - Model.TotalCommission) / Model.MonthRevenue * 100 : 0).ToString("F1"))%">
+                        Net: %@((Model.MonthRevenue > 0 ? (Model.MonthRevenue - Model.TotalCommission) / Model.MonthRevenue * 100 : 0).ToString("F1"))
+                    </div>
+                    <div class="progress-bar bg-danger" style="width: @((Model.MonthRevenue > 0 ? Model.TotalCommission / Model.MonthRevenue * 100 : 0).ToString("F1"))%">
+                        Komisyon: %@((Model.MonthRevenue > 0 ? Model.TotalCommission / Model.MonthRevenue * 100 : 0).ToString("F1"))
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h5 class="mb-4">
+                    <i class="fas fa-university text-info"></i> Settlement Durumu
+                </h5>
+                <div class="alert alert-warning">
+                    <h4 class="mb-2">₺@Model.PendingSettlement.ToString("N2")</h4>
+                    <small>Bekleyen Settlement Tutarı</small>
+                </div>
+                <p class="small text-muted">
+                    <i class="fas fa-clock"></i>
+                    Ödemeleriniz genellikle haftalık olarak banka hesabınıza transfer edilir. 
+                    Transfer işlemleri için <a href="@Url.Action("Settlements")">Settlement Raporları</a> sayfasını kontrol edin.
+                </p>
+                <a href="@Url.Action("Settlements")" class="btn btn-primary w-100">
+                    <i class="fas fa-list"></i> Settlement Geçmişini Görüntüle
+                </a>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="stat-card">
+        <div class="text-center py-5">
+            <i class="fas fa-chart-bar fa-4x text-muted mb-3"></i>
+            <h5 class="text-muted">İstatistik verileri yüklenemedi</h5>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Revenue Trend Chart
+        const revenueTrendCtx = document.getElementById('revenueTrendChart');
+        if (revenueTrendCtx) {
+            new Chart(revenueTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Bugün', 'Bu Hafta', 'Bu Ay'],
+                    datasets: [{
+                        label: 'Gelir (₺)',
+                        data: [@(Model?.TodayRevenue ?? 0), @(Model?.WeekRevenue ?? 0), @(Model?.MonthRevenue ?? 0)],
+                        borderColor: '#5D3EBC',
+                        backgroundColor: 'rgba(93, 62, 188, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '₺' + context.parsed.y.toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₺' + value.toLocaleString('tr-TR');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Payment Method Chart
+        const paymentMethodCtx = document.getElementById('paymentMethodChart');
+        if (paymentMethodCtx) {
+            const paymentMethods = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model?.PaymentMethodBreakdown?.Keys?.ToList() ?? new List<string>()));
+            const paymentAmounts = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model?.PaymentMethodBreakdown?.Values?.ToList() ?? new List<decimal>()));
+            
+            new Chart(paymentMethodCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: paymentMethods.map(m => getPaymentMethodName(m)),
+                    datasets: [{
+                        data: paymentAmounts,
+                        backgroundColor: [
+                            '#28a745', // Cash - Green
+                            '#2196F3', // Credit Card - Blue
+                            '#dc3545', // Vodafone - Red
+                            '#17a2b8', // Bank Transfer - Info
+                            '#ffc107', // BKM - Yellow
+                            '#9C27B0', // Papara - Purple
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return label + ': ₺' + value.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function getPaymentMethodName(method) {
+            const names = {
+                'Cash': 'Nakit',
+                'CreditCard': 'Kredi Kartı',
+                'VodafonePay': 'Vodafone Pay',
+                'BankTransfer': 'Havale',
+                'BkmExpress': 'BKM',
+                'Papara': 'Papara',
+                'QrCode': 'QR Code'
+            };
+            return names[method] || method;
+        }
+        
+        function exportToExcel() {
+            showToast('Excel export özelliği yakında eklenecek', 'info');
+        }
+    </script>
+}
+

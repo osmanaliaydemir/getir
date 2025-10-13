@@ -1,0 +1,205 @@
+@model List<Getir.MerchantPortal.Models.CategoryTreeNode>
+@{
+    ViewData["Title"] = "Kategoriler";
+    var allCategories = ViewBag.AllCategories as List<Getir.MerchantPortal.Models.ProductCategoryResponse> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-tags"></i> Kategoriler</h3>
+    <a href="@Url.Action("Create")" class="btn btn-getir">
+        <i class="fas fa-plus"></i> Yeni Kategori Ekle
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="stat-card">
+            <h5 class="mb-3">
+                <i class="fas fa-sitemap"></i> Kategori Ağacı
+            </h5>
+            
+            @if (Model != null && Model.Any())
+            {
+                <div class="category-tree">
+                    @foreach (var node in Model)
+                    {
+                        @await Html.PartialAsync("_CategoryTreeNode", node)
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">Henüz kategori eklemediniz</h5>
+                    <p class="text-muted">Ürünlerinizi organize etmek için kategori oluşturun</p>
+                    <a href="@Url.Action("Create")" class="btn btn-getir mt-3">
+                        <i class="fas fa-plus"></i> İlk Kategoriyi Ekle
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="stat-card">
+            <h5 class="mb-3">
+                <i class="fas fa-info-circle"></i> İstatistikler
+            </h5>
+            
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Toplam Kategori</span>
+                    <strong>@allCategories.Count</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Ana Kategoriler</span>
+                    <strong>@allCategories.Count(c => c.ParentCategoryId == null)</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Alt Kategoriler</span>
+                    <strong>@allCategories.Count(c => c.ParentCategoryId != null)</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Aktif Kategoriler</span>
+                    <strong>@allCategories.Count(c => c.IsActive)</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Toplam Ürün</span>
+                    <strong>@allCategories.Sum(c => c.ProductCount)</strong>
+                </div>
+            </div>
+            
+            <hr />
+            
+            <h6 class="mb-3">En Çok Ürünlü Kategoriler</h6>
+            @foreach (var category in allCategories.OrderByDescending(c => c.ProductCount).Take(5))
+            {
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <i class="fas fa-folder text-muted"></i>
+                        <span class="ms-2">@category.Name</span>
+                    </div>
+                    <span class="badge bg-primary">@category.ProductCount</span>
+                </div>
+            }
+        </div>
+        
+        <div class="stat-card mt-3">
+            <h6 class="mb-3">
+                <i class="fas fa-lightbulb"></i> İpuçları
+            </h6>
+            <ul class="small text-muted mb-0" style="list-style: none; padding-left: 0;">
+                <li class="mb-2">
+                    <i class="fas fa-check text-success"></i>
+                    Kategorileri mantıklı bir hiyerarşi ile düzenleyin
+                </li>
+                <li class="mb-2">
+                    <i class="fas fa-check text-success"></i>
+                    Her ürünü uygun kategoriye atayın
+                </li>
+                <li class="mb-2">
+                    <i class="fas fa-check text-success"></i>
+                    Kategori isimlerini kısa ve açık tutun
+                </li>
+                <li class="mb-2">
+                    <i class="fas fa-check text-success"></i>
+                    Kullanılmayan kategorileri silebilirsiniz
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+    .category-tree {
+        padding-left: 0;
+    }
+    
+    .category-node {
+        margin-bottom: 0.5rem;
+        padding: 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background: #fafafa;
+        transition: all 0.2s;
+    }
+    
+    .category-node:hover {
+        background: #f0f0f0;
+        border-color: var(--getir-purple);
+    }
+    
+    .category-node.level-0 {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-left: 4px solid var(--getir-purple);
+    }
+    
+    .category-node.level-1 {
+        margin-left: 2rem;
+        background: white;
+        border-left: 3px solid #6c757d;
+    }
+    
+    .category-node.level-2 {
+        margin-left: 4rem;
+        background: white;
+        border-left: 2px solid #adb5bd;
+    }
+    
+    .category-children {
+        margin-top: 0.5rem;
+    }
+    
+    .category-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-right: 1rem;
+    }
+    
+    .category-icon.level-0 {
+        background: var(--getir-purple);
+        color: white;
+    }
+    
+    .category-icon.level-1 {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .category-icon.level-2 {
+        background: #adb5bd;
+        color: white;
+    }
+    
+    .category-toggle {
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    
+    .category-toggle.collapsed {
+        transform: rotate(-90deg);
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Toggle category children
+            $('.category-toggle').click(function() {
+                const $toggle = $(this);
+                const targetId = $toggle.data('target');
+                const $target = $(targetId);
+                
+                $target.slideToggle(200);
+                $toggle.toggleClass('collapsed');
+            });
+        });
+    </script>
+}
+

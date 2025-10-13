@@ -59,6 +59,42 @@ public class SignalROrderSender : ISignalROrderSender
                 timestamp = DateTime.UtcNow
             });
     }
+
+    public async Task SendNewOrderToMerchantAsync(Guid merchantId, object orderData)
+    {
+        // Send to merchant group
+        await _hubContext.Clients
+            .Group($"merchant_{merchantId}")
+            .SendAsync("NewOrderReceived", orderData);
+    }
+
+    public async Task SendOrderStatusChangedToMerchantAsync(Guid merchantId, Guid orderId, string orderNumber, string status)
+    {
+        // Send to merchant group
+        await _hubContext.Clients
+            .Group($"merchant_{merchantId}")
+            .SendAsync("OrderStatusChanged", new
+            {
+                orderId,
+                orderNumber,
+                status,
+                timestamp = DateTime.UtcNow
+            });
+    }
+
+    public async Task SendOrderCancelledToMerchantAsync(Guid merchantId, Guid orderId, string orderNumber, string? reason)
+    {
+        // Send to merchant group
+        await _hubContext.Clients
+            .Group($"merchant_{merchantId}")
+            .SendAsync("OrderCancelled", new
+            {
+                orderId,
+                orderNumber,
+                reason,
+                timestamp = DateTime.UtcNow
+            });
+    }
 }
 
 public class SignalRCourierSender : ISignalRCourierSender

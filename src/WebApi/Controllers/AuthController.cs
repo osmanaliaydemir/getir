@@ -50,9 +50,7 @@ public class AuthController : BaseController
     [HttpPost("login")]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Login(
-        [FromBody] LoginRequest request,
-        CancellationToken ct = default)
+    public async Task<IActionResult> Login([FromBody] LoginRequest request,CancellationToken ct = default)
     {
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;

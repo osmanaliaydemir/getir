@@ -1,0 +1,371 @@
+@model Getir.MerchantPortal.Models.OrderDetailsResponse
+@{
+    ViewData["Title"] = "Sipariş Detayı";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-file-invoice"></i> Sipariş Detayı</h3>
+    <a href="@Url.Action("Index")" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Geri
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Order Summary -->
+    <div class="col-md-8">
+        <div class="stat-card mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h5 class="mb-1">Sipariş #@Model.OrderNumber</h5>
+                    <small class="text-muted">@Model.CreatedAt.ToString("dd MMMM yyyy, HH:mm")</small>
+                </div>
+                <span class="badge bg-@GetStatusBadgeClass(Model.Status) fs-6">
+                    @GetStatusText(Model.Status)
+                </span>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6 class="text-muted mb-2">Müşteri Bilgileri</h6>
+                    <p class="mb-1"><strong>@Model.CustomerName</strong></p>
+                    <p class="mb-1"><i class="fas fa-phone"></i> @Model.CustomerPhone</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-muted mb-2">Teslimat Adresi</h6>
+                    <p class="mb-0">
+                        <i class="fas fa-map-marker-alt"></i> @Model.DeliveryAddress
+                    </p>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Notes))
+            {
+                <div class="alert alert-info">
+                    <strong><i class="fas fa-sticky-note"></i> Not:</strong> @Model.Notes
+                </div>
+            }
+        </div>
+
+        <!-- Order Items -->
+        <div class="stat-card">
+            <h5 class="mb-3">Sipariş İçeriği</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Ürün</th>
+                            <th>Birim Fiyat</th>
+                            <th>Miktar</th>
+                            <th class="text-end">Toplam</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.OrderLines)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        @if (!string.IsNullOrEmpty(item.ProductImageUrl))
+                                        {
+                                            <img src="@item.ProductImageUrl" alt="@item.ProductName" class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                        }
+                                        else
+                                        {
+                                            <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                <i class="fas fa-box text-muted"></i>
+                                            </div>
+                                        }
+                                        <span>@item.ProductName</span>
+                                    </div>
+                                </td>
+                                <td>₺@item.UnitPrice.ToString("N2")</td>
+                                <td><strong>x @item.Quantity</strong></td>
+                                <td class="text-end"><strong>₺@item.TotalPrice.ToString("N2")</strong></td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Ara Toplam:</strong></td>
+                            <td class="text-end"><strong>₺@Model.SubTotal.ToString("N2")</strong></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end">Teslimat Ücreti:</td>
+                            <td class="text-end">₺@Model.DeliveryFee.ToString("N2")</td>
+                        </tr>
+                        <tr class="table-active">
+                            <td colspan="3" class="text-end"><strong>TOPLAM:</strong></td>
+                            <td class="text-end"><h5 class="mb-0">₺@Model.TotalAmount.ToString("N2")</h5></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Actions -->
+    <div class="col-md-4">
+        <div class="stat-card">
+            <h5 class="mb-3">Sipariş İşlemleri</h5>
+            
+            @if (Model.Status == "Pending")
+            {
+                <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post" class="mb-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="status" value="Confirmed" />
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-check"></i> Siparişi Onayla
+                    </button>
+                </form>
+
+                <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Bu siparişi iptal etmek istediğinize emin misiniz?');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="status" value="Cancelled" />
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="fas fa-times"></i> Siparişi İptal Et
+                    </button>
+                </form>
+            }
+            else if (Model.Status == "Confirmed")
+            {
+                <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="status" value="Preparing" />
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-hourglass-half"></i> Hazırlamaya Başla
+                    </button>
+                </form>
+            }
+            else if (Model.Status == "Preparing")
+            {
+                <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="status" value="Ready" />
+                    <button type="submit" class="btn btn-info w-100">
+                        <i class="fas fa-check-circle"></i> Hazır
+                    </button>
+                </form>
+            }
+            else if (Model.Status == "Ready")
+            {
+                <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="status" value="OnTheWay" />
+                    <button type="submit" class="btn btn-warning w-100">
+                        <i class="fas fa-shipping-fast"></i> Kuryeye Verildi
+                    </button>
+                </form>
+            }
+            else
+            {
+                <div class="alert alert-@(Model.Status == "Completed" || Model.Status == "Delivered" ? "success" : "secondary") mb-0">
+                    <i class="fas fa-info-circle"></i> 
+                    Sipariş durumu: <strong>@GetStatusText(Model.Status)</strong>
+                </div>
+            }
+
+            @if (Model.CompletedAt.HasValue)
+            {
+                <div class="mt-3 pt-3 border-top">
+                    <small class="text-muted">
+                        <i class="fas fa-clock"></i> Tamamlanma: <br>
+                        @Model.CompletedAt.Value.ToString("dd MMMM yyyy, HH:mm")
+                    </small>
+                </div>
+            }
+        </div>
+
+        <!-- Order Timeline -->
+        <div class="stat-card mt-3">
+            <h6 class="mb-3">Sipariş Takip</h6>
+            <div class="timeline">
+                <div class="timeline-item @(IsStatusReached(Model.Status, "Pending") ? "active" : "")">
+                    <i class="fas fa-circle"></i>
+                    <small>Sipariş Alındı</small>
+                </div>
+                <div class="timeline-item @(IsStatusReached(Model.Status, "Confirmed") ? "active" : "")">
+                    <i class="fas fa-circle"></i>
+                    <small>Onaylandı</small>
+                </div>
+                <div class="timeline-item @(IsStatusReached(Model.Status, "Preparing") ? "active" : "")">
+                    <i class="fas fa-circle"></i>
+                    <small>Hazırlanıyor</small>
+                </div>
+                <div class="timeline-item @(IsStatusReached(Model.Status, "Ready") ? "active" : "")">
+                    <i class="fas fa-circle"></i>
+                    <small>Hazır</small>
+                </div>
+                <div class="timeline-item @(IsStatusReached(Model.Status, "OnTheWay") ? "active" : "")">
+                    <i class="fas fa-circle"></i>
+                    <small>Yolda</small>
+                </div>
+                <div class="timeline-item @(Model.Status == "Completed" || Model.Status == "Delivered" ? "active" : "")">
+                    <i class="fas fa-circle"></i>
+                    <small>Teslim Edildi</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 6px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e0e0e0;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-bottom: 1rem;
+        color: #999;
+    }
+    
+    .timeline-item.active {
+        color: #5D3EBC;
+        font-weight: bold;
+    }
+    
+    .timeline-item i {
+        position: absolute;
+        left: -1.7rem;
+        font-size: 0.5rem;
+        top: 4px;
+    }
+    
+    .timeline-item.active i {
+        color: #5D3EBC;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        // SignalR for real-time order updates
+        const token = '@Context.Session.GetString("JwtToken")';
+        const orderId = '@Model.Id';
+        
+        let orderHubManager = null;
+        
+        $(document).ready(function() {
+            initializeOrderSignalR();
+        });
+        
+        async function initializeOrderSignalR() {
+            try {
+                orderHubManager = new SignalRManager('https://localhost:7001/hubs/orders', token);
+                await orderHubManager.connect();
+                
+                setupOrderStatusListeners();
+                
+                console.log('✅ Order SignalR connected');
+                
+            } catch (error) {
+                console.error('❌ Order SignalR error:', error);
+            }
+        }
+        
+        function setupOrderStatusListeners() {
+            if (!orderHubManager) return;
+            
+            // Order Status Changed
+            orderHubManager.on('OrderStatusChanged', function(data) {
+                if (data.orderId === orderId) {
+                    console.log('🔄 This order status changed:', data);
+                    
+                    showToast(`Sipariş durumu güncellendi: ${getStatusText(data.status)}`, 'success');
+                    
+                    // Reload page after 1 second to show updated status
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                }
+            });
+            
+            // Order Updated
+            orderHubManager.on('OrderUpdated', function(data) {
+                if (data.orderId === orderId) {
+                    console.log('📝 Order updated:', data);
+                    
+                    showToast('Sipariş bilgileri güncellendi', 'info');
+                    
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                }
+            });
+        }
+        
+        function getStatusText(status) {
+            const statusMap = {
+                'Pending': 'Bekliyor',
+                'Confirmed': 'Onaylandı',
+                'Preparing': 'Hazırlanıyor',
+                'Ready': 'Hazır',
+                'OnTheWay': 'Yolda',
+                'Delivered': 'Teslim Edildi',
+                'Completed': 'Tamamlandı',
+                'Cancelled': 'İptal'
+            };
+            return statusMap[status] || status;
+        }
+        
+        // Cleanup
+        $(window).on('beforeunload', function() {
+            if (orderHubManager) {
+                orderHubManager.disconnect();
+            }
+        });
+    </script>
+}
+
+@functions {
+    string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Pending" => "warning",
+            "Confirmed" => "info",
+            "Preparing" => "primary",
+            "Ready" => "success",
+            "OnTheWay" => "info",
+            "Delivered" => "success",
+            "Completed" => "success",
+            "Cancelled" => "danger",
+            _ => "secondary"
+        };
+    }
+
+    string GetStatusText(string status)
+    {
+        return status switch
+        {
+            "Pending" => "Bekliyor",
+            "Confirmed" => "Onaylandı",
+            "Preparing" => "Hazırlanıyor",
+            "Ready" => "Hazır",
+            "OnTheWay" => "Yolda",
+            "Delivered" => "Teslim Edildi",
+            "Completed" => "Tamamlandı",
+            "Cancelled" => "İptal",
+            _ => status
+        };
+    }
+
+    bool IsStatusReached(string currentStatus, string checkStatus)
+    {
+        var statusOrder = new[] { "Pending", "Confirmed", "Preparing", "Ready", "OnTheWay", "Delivered", "Completed" };
+        var currentIndex = Array.IndexOf(statusOrder, currentStatus);
+        var checkIndex = Array.IndexOf(statusOrder, checkStatus);
+        return currentIndex >= checkIndex && currentIndex >= 0 && checkIndex >= 0;
+    }
+}
+
