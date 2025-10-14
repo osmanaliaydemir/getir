@@ -13,6 +13,12 @@ public class WorkingHoursService : IWorkingHoursService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Çalışma saatlerini getirir.
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Çalışma saatleri</returns>
     public async Task<List<WorkingHoursResponse>?> GetWorkingHoursByMerchantAsync(Guid merchantId, CancellationToken ct = default)
     {
         try
@@ -30,6 +36,13 @@ public class WorkingHoursService : IWorkingHoursService
         }
     }
 
+    /// <summary>
+    /// Çalışma saatlerini bulk günceller.
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="workingHours">Çalışma saatleri</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Başarılı olup olmadığı</returns>
     public async Task<bool> BulkUpdateWorkingHoursAsync(Guid merchantId, List<UpdateWorkingHoursRequest> workingHours, CancellationToken ct = default)
     {
         try

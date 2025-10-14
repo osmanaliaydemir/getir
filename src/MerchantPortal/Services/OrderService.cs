@@ -13,6 +13,14 @@ public class OrderService : IOrderService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Siparişleri getirir.
+    /// </summary>
+    /// <param name="page">Sayfa numarası</param>
+    /// <param name="pageSize">Sayfa boyutu</param>
+    /// <param name="status">Sipariş durumu</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Siparişler</returns>
     public async Task<PagedResult<OrderResponse>?> GetOrdersAsync(int page = 1, int pageSize = 20, string? status = null, CancellationToken ct = default)
     {
         try
@@ -33,6 +41,12 @@ public class OrderService : IOrderService
         }
     }
 
+    /// <summary>
+    /// Sipariş detaylarını getirir.
+    /// </summary>
+    /// <param name="orderId">Sipariş ID</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Sipariş detayları</returns>
     public async Task<OrderDetailsResponse?> GetOrderDetailsAsync(Guid orderId, CancellationToken ct = default)
     {
         try
@@ -50,6 +64,13 @@ public class OrderService : IOrderService
         }
     }
 
+    /// <summary>
+    /// Sipariş durumunu günceller.
+    /// </summary>
+    /// <param name="orderId">Sipariş ID</param>
+    /// <param name="request">Sipariş durum güncelleme isteği</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Başarılı olup olmadığı</returns>
     public async Task<bool> UpdateOrderStatusAsync(Guid orderId, UpdateOrderStatusRequest request, CancellationToken ct = default)
     {
         try
@@ -68,6 +89,13 @@ public class OrderService : IOrderService
         }
     }
 
+    /// <summary>
+    /// Bekleyen siparişleri getirir.
+    /// </summary>
+    /// <param name="page">Sayfa numarası</param>
+    /// <param name="pageSize">Sayfa boyutu</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Bekleyen siparişler</returns>
     public async Task<PagedResult<OrderResponse>?> GetPendingOrdersAsync(int page = 1, int pageSize = 20, CancellationToken ct = default)
     {
         try

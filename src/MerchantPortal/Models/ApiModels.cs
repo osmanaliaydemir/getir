@@ -6,7 +6,6 @@ public class ApiResponse<T>
     public bool Success { get; set; }
     public T? Value { get; set; }
     public string? Error { get; set; }
-    public List<string>? Errors { get; set; }
 }
 
 public class PagedResult<T>
@@ -35,6 +34,7 @@ public class LoginResponse
     public Guid UserId { get; set; }
     public string Email { get; set; } = default!;
     public string FullName { get; set; } = default!;
+    public Guid? MerchantId { get; set; } 
     
     // Backward compatibility
     public string Token => AccessToken;
@@ -313,6 +313,35 @@ public class UpdateOrderStatusRequest
     public string? Notes { get; set; }
 }
 
+// Notification Preferences Models
+public class MerchantNotificationPreferencesDto
+{
+    public bool SoundEnabled { get; set; }
+    public bool DesktopNotifications { get; set; }
+    public bool EmailNotifications { get; set; }
+    public bool NewOrderNotifications { get; set; }
+    public bool StatusChangeNotifications { get; set; }
+    public bool CancellationNotifications { get; set; }
+    public bool DoNotDisturbEnabled { get; set; }
+    public string? DoNotDisturbStart { get; set; }
+    public string? DoNotDisturbEnd { get; set; }
+    public string NotificationSound { get; set; } = "default";
+}
+
+public class UpdateNotificationPreferencesDto
+{
+    public bool SoundEnabled { get; set; }
+    public bool DesktopNotifications { get; set; }
+    public bool EmailNotifications { get; set; }
+    public bool NewOrderNotifications { get; set; }
+    public bool StatusChangeNotifications { get; set; }
+    public bool CancellationNotifications { get; set; }
+    public bool DoNotDisturbEnabled { get; set; }
+    public string? DoNotDisturbStart { get; set; }
+    public string? DoNotDisturbEnd { get; set; }
+    public string NotificationSound { get; set; } = "default";
+}
+
 // Payment Models
 public class PaymentResponse
 {
@@ -376,5 +405,72 @@ public class PaymentStatisticsResponse
     public Dictionary<string, decimal> PaymentMethodBreakdown { get; set; } = new();
     public decimal PendingSettlement { get; set; }
     public decimal TotalCommission { get; set; }
+}
+
+// Stock Management Models
+public class StockAlertResponse
+{
+    public Guid Id { get; set; }
+    public Guid ProductId { get; set; }
+    public Guid? ProductVariantId { get; set; }
+    public string ProductName { get; set; } = default!;
+    public string? VariantName { get; set; }
+    public int CurrentStock { get; set; }
+    public int MinimumStock { get; set; }
+    public int MaximumStock { get; set; }
+    public string AlertType { get; set; } = default!; // LowStock, OutOfStock, Overstock
+    public string Message { get; set; } = default!;
+    public DateTime CreatedAt { get; set; }
+    public bool IsResolved { get; set; }
+    public DateTime? ResolvedAt { get; set; }
+}
+
+public class StockHistoryResponse
+{
+    public Guid Id { get; set; }
+    public Guid ProductId { get; set; }
+    public string ProductName { get; set; } = default!;
+    public int PreviousQuantity { get; set; }
+    public int NewQuantity { get; set; }
+    public int ChangeAmount { get; set; }
+    public string ChangeType { get; set; } = default!; // OrderReduction, ManualAdjustment, etc.
+    public string? Reason { get; set; }
+    public string? Notes { get; set; }
+    public string? ChangedByName { get; set; }
+    public DateTime ChangedAt { get; set; }
+    public string? OrderNumber { get; set; }
+}
+
+public class UpdateStockRequest
+{
+    public Guid ProductId { get; set; }
+    public Guid? ProductVariantId { get; set; }
+    public int NewStockQuantity { get; set; }
+    public string? Reason { get; set; }
+    public string? Notes { get; set; }
+}
+
+public class BulkUpdateStockRequest
+{
+    public List<UpdateStockRequest> StockUpdates { get; set; } = new();
+    public string? Reason { get; set; }
+}
+
+public class StockSummaryResponse
+{
+    public int TotalProducts { get; set; }
+    public int LowStockItems { get; set; }
+    public int OutOfStockItems { get; set; }
+    public int OverstockItems { get; set; }
+    public int ActiveAlerts { get; set; }
+    public decimal TotalValue { get; set; }
+}
+
+public class StockReportRequest
+{
+    public DateTime? FromDate { get; set; }
+    public DateTime? ToDate { get; set; }
+    public string ReportType { get; set; } = "CurrentStock";
+    public List<Guid>? ProductIds { get; set; }
 }
 

@@ -2,7 +2,9 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
+using Getir.Domain.Enums;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace Getir.Application.Services.Auth;
 
@@ -140,7 +142,9 @@ public class AuthService : BaseService, IAuthService
         try
         {
             var user = await _unitOfWork.ReadRepository<User>()
-                .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken: cancellationToken);
+                .FirstOrDefaultAsync(u => u.Email == request.Email, 
+                    include: "OwnedMerchants",  // Load OwnedMerchants for MerchantOwner role
+                    cancellationToken: cancellationToken);
 
             if (user == null)
             {
@@ -185,6 +189,38 @@ public class AuthService : BaseService, IAuthService
             // Log successful login
             _loggingService.LogUserAction(user.Id.ToString(), "UserLoggedIn", new { Email = user.Email, Role = user.Role.ToString() });
 
+            // Get MerchantId if user is MerchantOwner
+            Guid? merchantId = null;
+            if (user.Role > UserRole.Customer || user.Role > UserRole.Courier)
+            {
+                _logger.LogInformation("MerchantOwner login - UserId: {UserId}, OwnedMerchants count: {Count}", 
+                    user.Id, user.OwnedMerchants?.Count ?? 0);
+                
+                if (user.OwnedMerchants?.Any() == true)
+                {
+                    merchantId = user.OwnedMerchants.First().Id;
+                    _logger.LogInformation("MerchantId loaded from Include: {MerchantId}", merchantId);
+                }
+                else
+                {
+                    _logger.LogWarning("OwnedMerchants not loaded via Include. Querying directly...");
+                    
+                    // Fallback: Direct query for MerchantId
+                    var merchant = await _unitOfWork.ReadRepository<Merchant>()
+                        .FirstOrDefaultAsync(m => m.OwnerId == user.Id && m.IsActive, cancellationToken: cancellationToken);
+                    
+                    if (merchant != null)
+                    {
+                        merchantId = merchant.Id;
+                        _logger.LogInformation("MerchantId loaded from direct query: {MerchantId}", merchantId);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("No active Merchant found for MerchantOwner! UserId: {UserId}", user.Id);
+                    }
+                }
+            }
+
             return ServiceResult.Success(new AuthResponse(
                 accessToken,
                 refreshTokenValue,
@@ -192,7 +228,8 @@ public class AuthService : BaseService, IAuthService
                 user.Role,
                 user.Id,
                 user.Email,
-                $"{user.FirstName} {user.LastName}"
+                $"{user.FirstName} {user.LastName}",
+                merchantId
             ));
         }
         catch (Exception ex)
@@ -523,6 +560,106 @@ public class AuthService : BaseService, IAuthService
         {
             _loggingService.LogError("Error during password reset", ex, new { Token = request.Token });
             return ServiceResult.HandleException(ex, _logger, "ResetPassword");
+        }
+    }
+
+    public async Task<Result> ChangePasswordAsync(
+        Guid userId,
+        ChangePasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await ChangePasswordInternalAsync(userId, request, cancellationToken),
+            "ChangePassword",
+            new { UserId = userId },
+            cancellationToken);
+    }
+
+    private async Task<Result> ChangePasswordInternalAsync(
+        Guid userId,
+        ChangePasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Get user
+            var userRepo = _unitOfWork.Repository<User>();
+            var user = await userRepo.GetByIdAsync(userId, cancellationToken);
+            
+            if (user == null)
+            {
+                return ServiceResult.Failure("Kullanıcı bulunamadı", ErrorCodes.NOT_FOUND);
+            }
+
+            if (!user.IsActive)
+            {
+                return ServiceResult.Failure("Hesabınız devre dışı bırakılmış", ErrorCodes.AUTH_ACCOUNT_DEACTIVATED);
+            }
+
+            // Verify current password
+            if (!_passwordHasher.VerifyPassword(request.CurrentPassword, user.PasswordHash))
+            {
+                _loggingService.LogSecurityEvent("ChangePasswordFailedWrongPassword", user.Id.ToString(), new { UserId = userId });
+                return ServiceResult.Failure("Mevcut şifreniz hatalı", ErrorCodes.AUTH_INVALID_CREDENTIALS);
+            }
+
+            // Validate new password is different
+            if (_passwordHasher.VerifyPassword(request.NewPassword, user.PasswordHash))
+            {
+                return ServiceResult.Failure("Yeni şifre, mevcut şifrenizle aynı olamaz", ErrorCodes.VALIDATION_ERROR);
+            }
+
+            // Update password
+            user.PasswordHash = _passwordHasher.HashPassword(request.NewPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            userRepo.Update(user);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Invalidate all refresh tokens for security
+            var refreshTokenRepo = _unitOfWork.Repository<RefreshToken>();
+            var refreshTokens = await refreshTokenRepo.ListAsync(
+                filter: t => t.UserId == userId && !t.IsRevoked,
+                cancellationToken: cancellationToken);
+            
+            foreach (var token in refreshTokens)
+            {
+                token.RevokedAt = DateTime.UtcNow;
+                token.IsRevoked = true;
+                refreshTokenRepo.Update(token);
+            }
+            
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            _loggingService.LogBusinessEvent(
+                "PasswordChanged",
+                new { UserId = userId, Email = user.Email },
+                LogLevel.Information);
+
+            // Send confirmation email
+            await _emailService.SendHtmlEmailAsync(
+                user.Email,
+                "Şifreniz Değiştirildi",
+                $@"
+                <html>
+                <body>
+                    <h2>Şifre Değişikliği</h2>
+                    <p>Merhaba {user.FirstName},</p>
+                    <p>Hesabınızın şifresi başarıyla değiştirildi.</p>
+                    <p>Eğer bu işlemi siz yapmadıysanız, lütfen derhal bizimle iletişime geçin.</p>
+                    <p>Tarih: {DateTime.UtcNow:dd MMM yyyy HH:mm} UTC</p>
+                    <br/>
+                    <p>Getir Ekibi</p>
+                </body>
+                </html>", null, 
+                cancellationToken);
+
+            return ServiceResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _loggingService.LogError("Error during password change", ex, new { UserId = userId });
+            return ServiceResult.HandleException(ex, _logger, "ChangePassword");
         }
     }
 }

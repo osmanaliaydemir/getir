@@ -1,3 +1,4 @@
+using Getir.MerchantPortal.Middleware;
 using Getir.MerchantPortal.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
@@ -15,7 +16,9 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromHours(12);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() 
+        ? CookieSecurePolicy.None 
+        : CookieSecurePolicy.Always;
 });
 
 // Authentication
@@ -29,11 +32,16 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
         options.Cookie.Name = "GetirMerchantAuth";
         options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() 
+            ? CookieSecurePolicy.None 
+            : CookieSecurePolicy.Always;
     });
 
 // HttpContext
 builder.Services.AddHttpContextAccessor();
+
+// Register AuthTokenHandler
+builder.Services.AddTransient<AuthTokenHandler>();
 
 // HttpClient for API calls
 builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
@@ -42,6 +50,7 @@ builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
     client.Timeout = TimeSpan.FromSeconds(30);
 })
+.AddHttpMessageHandler<AuthTokenHandler>() // Auto-inject JWT token from session
 .ConfigurePrimaryHttpMessageHandler(() =>
 {
     var handler = new HttpClientHandler();
@@ -64,7 +73,9 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IWorkingHoursService, WorkingHoursService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IStockService, StockService>();
 builder.Services.AddSingleton<ISignalRService, SignalRService>();
+builder.Services.AddScoped<ISettingsService, SettingsService>();
 
 // Settings
 builder.Services.AddSingleton(apiSettings);
@@ -85,10 +96,11 @@ app.UseRouting();
 
 app.UseSession();
 app.UseAuthentication();
+app.UseSessionValidation(); // Validate session/cookie consistency
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Dashboard}/{action=Index}/{id?}");
+    pattern: "{controller=Auth}/{action=Login}/{id?}");
 
 app.Run();

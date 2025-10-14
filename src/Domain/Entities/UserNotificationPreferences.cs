@@ -28,7 +28,17 @@ public class UserNotificationPreferences
     public bool PushMerchantUpdates { get; set; } = true;
     public bool PushSecurityAlerts { get; set; } = true;
     
-    // Time preferences
+    // Merchant Portal - Sound & Desktop Notifications (NEW)
+    public bool SoundEnabled { get; set; } = true;
+    public bool DesktopNotifications { get; set; } = true;
+    public string NotificationSound { get; set; } = "default"; // default, chime, bell, ding, ping
+    
+    // Merchant Portal - Event-specific Notifications (NEW)
+    public bool NewOrderNotifications { get; set; } = true;
+    public bool StatusChangeNotifications { get; set; } = true;
+    public bool CancellationNotifications { get; set; } = true;
+    
+    // Time preferences (Do Not Disturb)
     public TimeSpan? QuietStartTime { get; set; } // e.g., 22:00
     public TimeSpan? QuietEndTime { get; set; }   // e.g., 08:00
     public bool RespectQuietHours { get; set; } = true;

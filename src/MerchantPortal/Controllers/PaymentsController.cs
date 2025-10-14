@@ -10,9 +10,7 @@ public class PaymentsController : Controller
     private readonly IPaymentService _paymentService;
     private readonly ILogger<PaymentsController> _logger;
 
-    public PaymentsController(
-        IPaymentService paymentService,
-        ILogger<PaymentsController> logger)
+    public PaymentsController(IPaymentService paymentService, ILogger<PaymentsController> logger)
     {
         _paymentService = paymentService;
         _logger = logger;

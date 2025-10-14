@@ -11,14 +11,15 @@ public class CategoriesController : Controller
     private readonly ICategoryService _categoryService;
     private readonly ILogger<CategoriesController> _logger;
 
-    public CategoriesController(
-        ICategoryService categoryService,
-        ILogger<CategoriesController> logger)
+    public CategoriesController(ICategoryService categoryService, ILogger<CategoriesController> logger)
     {
         _categoryService = categoryService;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Kategori listesini gösterir.
+    /// </summary>
     public async Task<IActionResult> Index()
     {
         var categoryTree = await _categoryService.GetCategoryTreeAsync();
@@ -29,6 +30,9 @@ public class CategoriesController : Controller
         return View(categoryTree ?? new());
     }
 
+    /// <summary>
+    /// Yeni kategori oluşturmak için gösterilecek sayfa.
+    /// </summary>
     [HttpGet]
     public async Task<IActionResult> Create()
     {
@@ -38,6 +42,10 @@ public class CategoriesController : Controller
         return View();
     }
 
+    /// <summary>
+    /// Yeni kategori oluşturmak için gönderilen isteği işler.
+    /// </summary>
+    /// <param name="model">Kategori oluşturmak için gerekli bilgiler</param>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateCategoryRequest model)
@@ -63,6 +71,10 @@ public class CategoriesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    /// <summary>
+    /// Mevcut kategoriyi düzenlemek için gösterilecek sayfa.
+    /// </summary>
+    /// <param name="id">Düzenlenecek kategori ID'si</param>
     [HttpGet]
     public async Task<IActionResult> Edit(Guid id)
     {
@@ -90,6 +102,11 @@ public class CategoriesController : Controller
         return View(model);
     }
 
+    /// <summary>
+    /// Mevcut kategoriyi düzenlemek için gönderilen isteği işler.
+    /// </summary>
+    /// <param name="id">Düzenlenecek kategori ID'si</param>
+    /// <param name="model">Kategori düzenleme bilgileri</param>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, UpdateCategoryRequest model)
@@ -115,6 +132,10 @@ public class CategoriesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    /// <summary>
+    /// Mevcut kategoriyi silmek için gönderilen isteği işler.
+    /// </summary>
+    /// <param name="id">Silinecek kategori ID'si</param>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(Guid id)
@@ -133,6 +154,10 @@ public class CategoriesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    /// <summary>
+    /// Kategori sıralamasını güncellemek için gönderilen isteği işler.
+    /// </summary>
+    /// <param name="updates">Güncellenecek kategori sıralama bilgileri</param>
     [HttpPost]
     public async Task<IActionResult> UpdateOrder([FromBody] List<CategoryOrderUpdate> updates)
     {

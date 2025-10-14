@@ -13,6 +13,11 @@ public class MerchantService : IMerchantService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Mağazayı getirir.
+    /// </summary>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Mağaza</returns>
     public async Task<MerchantResponse?> GetMyMerchantAsync(CancellationToken ct = default)
     {
         try
@@ -30,6 +35,13 @@ public class MerchantService : IMerchantService
         }
     }
 
+    /// <summary>
+    /// Mağazayı günceller.
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID</param>
+    /// <param name="request">Mağaza güncelleme isteği</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Mağaza</returns>
     public async Task<MerchantResponse?> UpdateMerchantAsync(Guid merchantId, UpdateMerchantRequest request, CancellationToken ct = default)
     {
         try
@@ -48,6 +60,12 @@ public class MerchantService : IMerchantService
         }
     }
 
+    /// <summary>
+    /// Mağaza dashboard'ını getirir.
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Mağaza dashboard'ı</returns>
     public async Task<MerchantDashboardResponse?> GetDashboardAsync(Guid merchantId, CancellationToken ct = default)
     {
         try
@@ -65,6 +83,13 @@ public class MerchantService : IMerchantService
         }
     }
 
+    /// <summary>
+    /// Son siparişleri getirir.
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID</param>
+    /// <param name="limit">Limit</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Son siparişler</returns>
     public async Task<List<RecentOrderResponse>?> GetRecentOrdersAsync(Guid merchantId, int limit = 10, CancellationToken ct = default)
     {
         try
@@ -82,6 +107,13 @@ public class MerchantService : IMerchantService
         }
     }
 
+    /// <summary>
+    /// En çok satılan ürünleri getirir.
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID</param>
+    /// <param name="limit">Limit</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>En çok satılan ürünler</returns>
     public async Task<List<TopProductResponse>?> GetTopProductsAsync(Guid merchantId, int limit = 10, CancellationToken ct = default)
     {
         try

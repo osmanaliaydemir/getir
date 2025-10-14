@@ -22,20 +22,18 @@ public class AuthService : IAuthService
     {
         try
         {
-            // API direkt LoginResponse dönüyor (ApiResponse wrapper yok)
-            var response = await _apiClient.PostAsync<LoginResponse>(
-                "api/v1/auth/login",
-                request,
-                ct);
+            // WebAPI now returns ApiResponse wrapper (BaseController updated)
+            var apiResponse = await _apiClient.PostAsync<ApiResponse<LoginResponse>>("api/v1/auth/login", request, ct);
 
-            if (response != null)
+            if (apiResponse?.Success == true && apiResponse.Value != null)
             {
                 // Set auth token for future API calls
-                _apiClient.SetAuthToken(response.Token);
-                return response;
+                _apiClient.SetAuthToken(apiResponse.Value.Token);
+                return apiResponse.Value;
             }
 
-            _logger.LogWarning("Login failed for user {Email}", request.Email);
+            _logger.LogWarning("Login failed for user {Email}. Error: {Error}", 
+                request.Email, apiResponse?.Error ?? "Unknown error");
             return null;
         }
         catch (Exception ex)
@@ -49,6 +47,24 @@ public class AuthService : IAuthService
     {
         _apiClient.ClearAuthToken();
         return Task.CompletedTask;
+    }
+
+    public async Task<bool> ChangePasswordAsync(string currentPassword, string newPassword, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _apiClient.PostAsync<ApiResponse<object>>(
+                "api/v1/auth/change-password",
+                new { CurrentPassword = currentPassword, NewPassword = newPassword },
+                ct);
+
+            return response?.Success == true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error changing password");
+            return false;
+        }
     }
 }
 

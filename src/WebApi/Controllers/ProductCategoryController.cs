@@ -22,6 +22,22 @@ public class ProductCategoryController : BaseController
     }
 
     /// <summary>
+    /// Get merchant's categories (flat list)
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>List of categories</returns>
+    [HttpGet("merchant/{merchantId:guid}")]
+    [ProducesResponseType(typeof(List<ProductCategoryResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMerchantCategories(
+        [FromRoute] Guid merchantId,
+        CancellationToken ct = default)
+    {
+        var result = await _productCategoryService.GetMerchantCategoriesAsync(merchantId, ct);
+        return ToActionResult(result);
+    }
+
+    /// <summary>
     /// Get merchant's category tree
     /// </summary>
     /// <param name="merchantId">Merchant ID</param>

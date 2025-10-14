@@ -1,22 +1,21 @@
 // System namespaces
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
-
 // Third-party namespaces
 using AspNetCoreRateLimit;
 using FluentValidation;
-using Serilog;
-
 // Application namespaces
 using Getir.Application.Abstractions;
 using Getir.Application.Common;
+using Getir.Application.DTO;
 using Getir.Application.Services.Addresses;
+using Getir.Application.Services.AuditLogging;
 using Getir.Application.Services.Auth;
 using Getir.Application.Services.Campaigns;
 using Getir.Application.Services.Cart;
 using Getir.Application.Services.Coupons;
 using Getir.Application.Services.Couriers;
+using Getir.Application.Services.DeliveryOptimization;
 using Getir.Application.Services.DeliveryZones;
+using Getir.Application.Services.Internationalization;
 using Getir.Application.Services.Merchants;
 using Getir.Application.Services.Notifications;
 using Getir.Application.Services.Orders;
@@ -24,26 +23,25 @@ using Getir.Application.Services.Payments;
 using Getir.Application.Services.ProductCategories;
 using Getir.Application.Services.ProductOptions;
 using Getir.Application.Services.Products;
+using Getir.Application.Services.RateLimiting;
+using Getir.Application.Services.RealtimeTracking;
 using Getir.Application.Services.Reviews;
 using Getir.Application.Services.Search;
 using Getir.Application.Services.ServiceCategories;
-using Getir.Application.Services.WorkingHours;
 using Getir.Application.Services.SpecialHolidays;
-using Getir.Application.Services.DeliveryOptimization;
-using Getir.Application.Services.AuditLogging;
-using Getir.Application.Services.Internationalization;
-using Getir.Application.Services.RateLimiting;
-using Getir.Application.Services.RealtimeTracking;
-
+using Getir.Application.Services.Stock;
+using Getir.Application.Services.UserPreferences;
+using Getir.Application.Services.WorkingHours;
 // Infrastructure namespaces
 using Getir.Infrastructure.Persistence;
 using Getir.Infrastructure.Persistence.Repositories;
 using Getir.Infrastructure.Security;
-
 // WebApi namespaces
 using Getir.WebApi.Configuration;
 using Getir.WebApi.Middleware;
-using Getir.Application.DTO;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -138,6 +136,7 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<ICampaignService, CampaignService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IUserPreferencesService, UserPreferencesService>();
 builder.Services.AddScoped<ICourierService, CourierService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IWorkingHoursService, WorkingHoursService>();
@@ -175,6 +174,7 @@ builder.Services.AddScoped<IETAEstimationService, ETAEstimationService>();
 builder.Services.AddScoped<ITrackingNotificationService, TrackingNotificationService>();
 builder.Services.AddScoped<ITrackingSettingsService, TrackingSettingsService>();
 builder.Services.AddScoped<IRealtimeTrackingService, RealtimeTrackingService>();
+builder.Services.AddScoped<IStockManagementService, StockManagementService>();
 
 builder.Services.AddScoped<Getir.Application.Services.Admin.IAdminService, Getir.Application.Services.Admin.AdminService>();
 builder.Services.AddScoped<Getir.Application.Services.Payments.IPaymentService, Getir.Application.Services.Payments.PaymentService>();

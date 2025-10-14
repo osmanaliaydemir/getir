@@ -3,6 +3,10 @@
     var merchantId = ViewBag.MerchantId as Guid?;
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/modules/settings/settings.css" asp-append-version="true" />
+}
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3><i class="fas fa-cog"></i> Mağaza Ayarları</h3>
     <a href="@Url.Action("Edit", new { id = merchantId })" class="btn btn-secondary">
@@ -137,13 +141,17 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Tema</label>
-                <select class="form-select">
-                    <option value="light" selected>Açık Tema</option>
-                    <option value="dark">Koyu Tema</option>
-                    <option value="auto">Otomatik (Sistem)</option>
+                <label class="form-label">
+                    <i class="fas fa-palette me-2"></i>Tema
+                </label>
+                <select id="themeSelect" class="form-select">
+                    <option value="light">☀️ Açık Tema</option>
+                    <option value="dark">🌙 Koyu Tema</option>
+                    <option value="auto">🔄 Otomatik (Sistem)</option>
                 </select>
-                <small class="form-text text-muted">Yakında aktif olacak</small>
+                <small class="form-text text-muted">
+                    <i class="fas fa-info-circle me-1"></i>Tercih edilen tema kaydedilir ve tüm sayfalarda aktif olur
+                </small>
             </div>
         </div>
     </div>
@@ -163,10 +171,9 @@
                 <div><strong>@Context.Session.GetString("UserEmail")</strong></div>
             </div>
             <hr />
-            <button class="btn btn-outline-danger btn-sm w-100" disabled>
+            <button class="btn btn-outline-danger btn-sm w-100" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
                 <i class="fas fa-key"></i> Şifre Değiştir
             </button>
-            <small class="form-text text-muted mt-2 d-block">Yakında aktif olacak</small>
         </div>
 
         <!-- System Information -->
@@ -180,7 +187,7 @@
             </div>
             <div class="mb-2">
                 <small class="text-muted">Son Güncelleme</small>
-                <div><strong>13 Ekim 2025</strong></div>
+                <div><strong>14 Ekim 2025</strong></div>
             </div>
             <div class="mb-2">
                 <small class="text-muted">Durum</small>
@@ -204,76 +211,91 @@
                 <i class="fas fa-headset"></i> Destek Talebi
             </a>
             <a href="#" class="btn btn-outline-primary btn-sm w-100">
-                <i class="fas fa="fas fa-comments"></i> Geri Bildirim
+                <i class="fas fa-comments"></i> Geri Bildirim
             </a>
         </div>
     </div>
 </div>
 
-<style>
-    .quick-action-card {
-        display: flex;
-        align-items: center;
-        padding: 1rem;
-        border: 1px solid #e0e0e0;
-        border-radius: 10px;
-        background: white;
-        text-decoration: none;
-        color: inherit;
-        transition: all 0.2s;
-    }
-    
-    .quick-action-card:hover {
-        border-color: var(--getir-purple);
-        box-shadow: 0 4px 12px rgba(93, 62, 188, 0.1);
-        transform: translateY(-2px);
-    }
-    
-    .quick-action-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        margin-right: 1rem;
-    }
-    
-    .quick-action-content {
-        flex: 1;
-    }
-    
-    .quick-action-content h6 {
-        margin-bottom: 0.25rem;
-    }
-    
-    .notification-setting {
-        padding: 1rem;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        background: #fafafa;
-    }
-</style>
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 25px rgba(0,0,0,0.15);">
+            <div class="modal-header" style="background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%); color: white; border-radius: 16px 16px 0 0;">
+                <h5 class="modal-title" id="changePasswordModalLabel">
+                    <i class="fas fa-key me-2"></i>Şifre Değiştir
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <form id="changePasswordForm">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <small><strong>Güvenlik:</strong> Şifreniz en az 8 karakter olmalı ve büyük harf, küçük harf ve rakam içermelidir.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="currentPassword" class="form-label">
+                            <i class="fas fa-lock me-1"></i>Mevcut Şifre
+                        </label>
+                        <input type="password" class="form-control" id="currentPassword" required 
+                               style="border-radius: 10px; border: 2px solid #e0e0e0;" 
+                               placeholder="Mevcut şifrenizi girin">
+                        <div class="invalid-feedback">Lütfen mevcut şifrenizi girin</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">
+                            <i class="fas fa-lock me-1"></i>Yeni Şifre
+                        </label>
+                        <input type="password" class="form-control" id="newPassword" required 
+                               style="border-radius: 10px; border: 2px solid #e0e0e0;"
+                               placeholder="Yeni şifrenizi girin"
+                               minlength="8">
+                        <div class="invalid-feedback">Şifre en az 8 karakter olmalıdır</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">
+                            <i class="fas fa-lock me-1"></i>Yeni Şifre (Tekrar)
+                        </label>
+                        <input type="password" class="form-control" id="confirmPassword" required 
+                               style="border-radius: 10px; border: 2px solid #e0e0e0;"
+                               placeholder="Yeni şifrenizi tekrar girin"
+                               minlength="8">
+                        <div class="invalid-feedback">Şifreler eşleşmiyor</div>
+                    </div>
+
+                    <div id="passwordStrength" class="mb-3" style="display: none;">
+                        <small class="text-muted">Şifre Gücü:</small>
+                        <div class="progress" style="height: 5px; border-radius: 10px;">
+                            <div id="strengthBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <small id="strengthText" class="text-muted"></small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 2px solid #e5e7eb;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 10px;">
+                    İptal
+                </button>
+                <button type="button" id="savePasswordBtn" class="btn btn-danger" style="border-radius: 10px;">
+                    <span class="btn-text">
+                        <i class="fas fa-save me-2"></i>Şifreyi Değiştir
+                    </span>
+                    <span class="btn-loading" style="display: none;">
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Kaydediliyor...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
-    <script>
-        // Save notification preferences to localStorage
-        document.querySelectorAll('[id^="notif-"]').forEach(checkbox => {
-            const key = 'merchant_' + checkbox.id;
-            
-            // Load saved preference
-            const saved = localStorage.getItem(key);
-            if (saved !== null) {
-                checkbox.checked = saved === 'true';
-            }
-            
-            // Save on change
-            checkbox.addEventListener('change', function() {
-                localStorage.setItem(key, this.checked);
-                showToast('Bildirim tercihleri kaydedildi', 'success');
-            });
-        });
-    </script>
+    <script src="~/js/modules/settings/settings.js" asp-append-version="true"></script>
 }
 

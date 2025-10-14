@@ -68,6 +68,7 @@ public class AppDbContext : DbContext
     public DbSet<Language> Languages { get; set; }
     public DbSet<Translation> Translations { get; set; }
     public DbSet<UserLanguagePreference> UserLanguagePreferences { get; set; }
+    public DbSet<UserNotificationPreferences> UserNotificationPreferences { get; set; }
     
     // Rate Limiting entities
     public DbSet<RateLimitRule> RateLimitRules { get; set; }
@@ -103,6 +104,12 @@ public class AppDbContext : DbContext
             entity.Property(e => e.PhoneNumber).HasMaxLength(20);
             entity.Property(e => e.Role).IsRequired().HasConversion<int>().HasDefaultValue(Domain.Enums.UserRole.Customer);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            // Configure inverse navigation for UserNotificationPreferences
+            entity.HasOne(u => u.NotificationPreferences)
+                .WithOne(p => p.User)
+                .HasForeignKey<UserNotificationPreferences>(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // RefreshToken configuration
@@ -233,6 +240,8 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.ProductName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.VariantName).HasMaxLength(200);
+            entity.Property(e => e.ProductVariantId);
             entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
             entity.Property(e => e.TotalPrice).HasPrecision(18, 2);
 
@@ -245,6 +254,9 @@ public class AppDbContext : DbContext
                 .WithMany(p => p.OrderLines)
                 .HasForeignKey(e => e.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
+            
+            // Index for variant lookups
+            entity.HasIndex(e => e.ProductVariantId);
         });
 
         // WorkingHours configuration
@@ -1190,6 +1202,41 @@ public class AppDbContext : DbContext
                 .WithMany(l => l.UserLanguagePreferences)
                 .HasForeignKey(e => e.LanguageId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // UserNotificationPreferences Configuration
+        modelBuilder.Entity<UserNotificationPreferences>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            
+            // String properties
+            entity.Property(e => e.NotificationSound)
+                .IsRequired()
+                .HasMaxLength(50)
+                .HasDefaultValue("default");
+            
+            entity.Property(e => e.Language)
+                .IsRequired()
+                .HasMaxLength(10)
+                .HasDefaultValue("tr-TR");
+            
+            // TimeSpan properties - EF Core 9 native support
+            entity.Property(e => e.QuietStartTime)
+                .HasColumnType("TIME")
+                .IsRequired(false);
+            
+            entity.Property(e => e.QuietEndTime)
+                .HasColumnType("TIME")
+                .IsRequired(false);
+            
+            // Timestamps
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            // Indexes
+            entity.HasIndex(e => e.UserId).IsUnique(); // One preference per user
+            
+            // Note: Foreign key relationship is configured in User entity
         });
 
         // RateLimitRule Configuration

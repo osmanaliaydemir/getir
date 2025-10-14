@@ -12,13 +12,28 @@ namespace Getir.WebApi.Controllers;
 public abstract class BaseController : ControllerBase
 {
     /// <summary>
-    /// Converts Result<T> to IActionResult
+    /// Converts Result<T> to IActionResult with ApiResponse wrapper
     /// </summary>
     protected IActionResult ToActionResult<T>(Result<T> result)
     {
-        return result.Success 
-            ? Ok(result.Value) 
-            : BadRequest(result.Error);
+        if (result.Success)
+        {
+            return Ok(new 
+            { 
+                success = true,
+                value = result.Value,
+                error = (string?)null
+            });
+        }
+        else
+        {
+            return BadRequest(new 
+            { 
+                success = false,
+                value = default(T),
+                error = result.Error
+            });
+        }
     }
 
     /// <summary>

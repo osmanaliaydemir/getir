@@ -12,10 +12,7 @@ public class MerchantController : Controller
     private readonly IWorkingHoursService _workingHoursService;
     private readonly ILogger<MerchantController> _logger;
 
-    public MerchantController(
-        IMerchantService merchantService,
-        IWorkingHoursService workingHoursService,
-        ILogger<MerchantController> logger)
+    public MerchantController(IMerchantService merchantService, IWorkingHoursService workingHoursService, ILogger<MerchantController> logger)
     {
         _merchantService = merchantService;
         _workingHoursService = workingHoursService;

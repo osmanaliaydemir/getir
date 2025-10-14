@@ -208,123 +208,17 @@
     </div>
 </div>
 
-<style>
-    .timeline {
-        position: relative;
-        padding-left: 2rem;
-    }
-    
-    .timeline::before {
-        content: '';
-        position: absolute;
-        left: 6px;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background: #e0e0e0;
-    }
-    
-    .timeline-item {
-        position: relative;
-        padding-bottom: 1rem;
-        color: #999;
-    }
-    
-    .timeline-item.active {
-        color: #5D3EBC;
-        font-weight: bold;
-    }
-    
-    .timeline-item i {
-        position: absolute;
-        left: -1.7rem;
-        font-size: 0.5rem;
-        top: 4px;
-    }
-    
-    .timeline-item.active i {
-        color: #5D3EBC;
-    }
-</style>
+@section Styles {
+    <link rel="stylesheet" href="~/css/modules/orders/orders.css" asp-append-version="true" />
+}
 
 @section Scripts {
     <script>
-        // SignalR for real-time order updates
-        const token = '@Context.Session.GetString("JwtToken")';
-        const orderId = '@Model.Id';
-        
-        let orderHubManager = null;
-        
-        $(document).ready(function() {
-            initializeOrderSignalR();
-        });
-        
-        async function initializeOrderSignalR() {
-            try {
-                orderHubManager = new SignalRManager('https://localhost:7001/hubs/orders', token);
-                await orderHubManager.connect();
-                
-                setupOrderStatusListeners();
-                
-                console.log('✅ Order SignalR connected');
-                
-            } catch (error) {
-                console.error('❌ Order SignalR error:', error);
-            }
-        }
-        
-        function setupOrderStatusListeners() {
-            if (!orderHubManager) return;
-            
-            // Order Status Changed
-            orderHubManager.on('OrderStatusChanged', function(data) {
-                if (data.orderId === orderId) {
-                    console.log('🔄 This order status changed:', data);
-                    
-                    showToast(`Sipariş durumu güncellendi: ${getStatusText(data.status)}`, 'success');
-                    
-                    // Reload page after 1 second to show updated status
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000);
-                }
-            });
-            
-            // Order Updated
-            orderHubManager.on('OrderUpdated', function(data) {
-                if (data.orderId === orderId) {
-                    console.log('📝 Order updated:', data);
-                    
-                    showToast('Sipariş bilgileri güncellendi', 'info');
-                    
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000);
-                }
-            });
-        }
-        
-        function getStatusText(status) {
-            const statusMap = {
-                'Pending': 'Bekliyor',
-                'Confirmed': 'Onaylandı',
-                'Preparing': 'Hazırlanıyor',
-                'Ready': 'Hazır',
-                'OnTheWay': 'Yolda',
-                'Delivered': 'Teslim Edildi',
-                'Completed': 'Tamamlandı',
-                'Cancelled': 'İptal'
-            };
-            return statusMap[status] || status;
-        }
-        
-        // Cleanup
-        $(window).on('beforeunload', function() {
-            if (orderHubManager) {
-                orderHubManager.disconnect();
-            }
-        });
+        // Set order context for module
+        window.jwtToken = '@Context.Session.GetString("JwtToken")';
+        window.currentOrderId = '@Model.Id';
     </script>
+    <script src="~/js/modules/orders/orders.js" asp-append-version="true"></script>
 }
 
 @functions {

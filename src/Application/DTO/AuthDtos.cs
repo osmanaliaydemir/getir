@@ -24,7 +24,8 @@ public record AuthResponse(
     UserRole Role,
     Guid UserId,
     string Email,
-    string FullName);
+    string FullName,
+    Guid? MerchantId = null);
 
 public record UserProfileResponse(
     Guid Id,
@@ -41,4 +42,8 @@ public record ForgotPasswordRequest(
 
 public record ResetPasswordRequest(
     string Token,
+    string NewPassword);
+
+public record ChangePasswordRequest(
+    string CurrentPassword,
     string NewPassword);

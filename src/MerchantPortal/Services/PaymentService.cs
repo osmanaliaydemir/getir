@@ -13,6 +13,14 @@ public class PaymentService : IPaymentService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Nakit özeti getirir.
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Nakit özeti</returns>
     public async Task<MerchantCashSummaryResponse?> GetCashSummaryAsync(
         Guid merchantId, 
         DateTime? startDate = null, 
@@ -39,6 +47,14 @@ public class PaymentService : IPaymentService
         }
     }
 
+    /// <summary>
+    /// Ödemeleri getirir.
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID</param>
+    /// <param name="page">Sayfa numarası</param>
+    /// <param name="pageSize">Sayfa boyutu</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Ödemeler</returns>
     public async Task<PagedResult<SettlementResponse>?> GetSettlementsAsync(
         Guid merchantId, 
         int page = 1, 
@@ -58,6 +74,12 @@ public class PaymentService : IPaymentService
         }
     }
 
+    /// <summary>
+    /// Ödeme istatistiklerini getirir.
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Ödeme istatistikleri</returns>
     public async Task<PaymentStatisticsResponse?> GetPaymentStatisticsAsync(
         Guid merchantId, 
         CancellationToken ct = default)

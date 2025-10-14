@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/signalr-notifications.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/dashboard-modern.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dark-mode.css" asp-append-version="true" />
     @RenderSection("Styles", required: false)
     <style>
         :root {
@@ -186,6 +187,12 @@
                     <h5 class="mb-0">@ViewData["Title"]</h5>
                 </div>
                 <div class="user-menu">
+                    <!-- Theme Toggle -->
+                    <button type="button" id="themeToggleBtn" class="btn btn-sm btn-outline-secondary me-2" title="Tema Değiştir" onclick="ThemeManager.toggle()">
+                        <i class="fas fa-moon theme-toggle-icon moon"></i>
+                        <i class="fas fa-sun theme-toggle-icon sun" style="display:none;"></i>
+                    </button>
+                    
                     <span>@Context.Session.GetString("UserName")</span>
                     <div class="user-avatar">
                         @(Context.Session.GetString("UserName")?.Substring(0, 1).ToUpper())
@@ -227,6 +234,7 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@7.0.14/dist/browser/signalr.min.js"></script>
+    <script src="~/js/theme-manager.js" asp-append-version="true"></script>
     <script src="~/js/signalr-helper.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)

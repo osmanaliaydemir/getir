@@ -147,8 +147,26 @@ function playNotificationSound() {
             return;
         }
         
-        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS96+iVSw0QTqXh8LNkGwU7k9r0z3krBSl+zPDckT8IFl621utpVRIKRZ/g8L5rIAUrl87y2Ik2CBhkvevnlUsNEE6l4fCzZBsEO5Pa9c54LAUpdszw3JI/CBZftdbvalUSCkWf4PC+ayAFKpbO8tiJNggYZL3r55VLDRBOpOHws2QbBDuT2vXOeCwFKHXM8NySPggWX7XW62pVEgpFn+Dwvm');
-        audio.volume = 0.3;
+        // Check Do Not Disturb mode
+        if (isInDoNotDisturbPeriod()) {
+            console.log('Do Not Disturb mode is active');
+            return;
+        }
+        
+        // Sound file mapping
+        const soundFiles = {
+            'default': '/sounds/notify-default.wav',
+            'chime': '/sounds/notify-1.wav',
+            'bell': '/sounds/notify-2.wav',
+            'ding': '/sounds/notify-3.wav',
+            'ping': '/sounds/notify-4.wav'
+        };
+        
+        const selectedSound = preferences.notificationSound || 'default';
+        const soundFile = soundFiles[selectedSound] || soundFiles['default'];
+        
+        const audio = new Audio(soundFile);
+        audio.volume = 0.5;
         audio.play().catch(err => console.log('Sound play failed:', err));
     } catch (err) {
         console.log('Notification sound error:', err);

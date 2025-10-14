@@ -9,6 +9,13 @@ public class ApiClient : IApiClient
     private readonly HttpClient _httpClient;
     private readonly ILogger<ApiClient> _logger;
     private string? _authToken;
+    
+    // JSON serialization settings for consistent camelCase handling
+    private static readonly JsonSerializerSettings JsonSettings = new()
+    {
+        ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+        NullValueHandling = NullValueHandling.Ignore
+    };
 
     public ApiClient(HttpClient httpClient, ILogger<ApiClient> logger)
     {
@@ -27,6 +34,14 @@ public class ApiClient : IApiClient
         _authToken = null;
         _httpClient.DefaultRequestHeaders.Authorization = null;
     }
+    
+    /// <summary>
+    /// Deserialize JSON content with camelCase handling
+    /// </summary>
+    private T? DeserializeResponse<T>(string content)
+    {
+        return JsonConvert.DeserializeObject<T>(content, JsonSettings);
+    }
 
     public async Task<T?> GetAsync<T>(string endpoint, CancellationToken ct = default)
     {
@@ -36,12 +51,14 @@ public class ApiClient : IApiClient
             
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning("GET request to {Endpoint} failed with status {StatusCode}", endpoint, response.StatusCode);
+                var errorContent = await response.Content.ReadAsStringAsync(ct);
+                _logger.LogWarning("GET request to {Endpoint} failed with status {StatusCode}. Response: {Response}", 
+                    endpoint, response.StatusCode, errorContent);
                 return default;
             }
 
             var content = await response.Content.ReadAsStringAsync(ct);
-            return JsonConvert.DeserializeObject<T>(content);
+            return DeserializeResponse<T>(content);
         }
         catch (Exception ex)
         {
@@ -72,7 +89,7 @@ public class ApiClient : IApiClient
             }
 
             var responseContent = await response.Content.ReadAsStringAsync(ct);
-            return JsonConvert.DeserializeObject<T>(responseContent);
+            return DeserializeResponse<T>(responseContent);
         }
         catch (Exception ex)
         {
@@ -97,7 +114,7 @@ public class ApiClient : IApiClient
             }
 
             var responseContent = await response.Content.ReadAsStringAsync(ct);
-            return JsonConvert.DeserializeObject<T>(responseContent);
+            return DeserializeResponse<T>(responseContent);
         }
         catch (Exception ex)
         {
@@ -119,7 +136,7 @@ public class ApiClient : IApiClient
             }
 
             var content = await response.Content.ReadAsStringAsync(ct);
-            return JsonConvert.DeserializeObject<T>(content);
+            return DeserializeResponse<T>(content);
         }
         catch (Exception ex)
         {

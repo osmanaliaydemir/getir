@@ -14,16 +14,16 @@ public class AuthController : Controller
     private readonly IApiClient _apiClient;
     private readonly ILogger<AuthController> _logger;
 
-    public AuthController(
-        IAuthService authService,
-        IApiClient apiClient,
-        ILogger<AuthController> logger)
+    public AuthController(IAuthService authService, IApiClient apiClient, ILogger<AuthController> logger)
     {
         _authService = authService;
         _apiClient = apiClient;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Giriş ekranını gösterir. Eğer kullanıcı giriş yaptıysa Dashboard'a yönlendirir.
+    /// </summary>
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)
     {
@@ -36,6 +36,11 @@ public class AuthController : Controller
         return View();
     }
 
+    /// <summary>
+    /// Kullanıcı giriş isteğini işler. Başarılıysa oturum açar ve yönlendirir.
+    /// </summary>
+    /// <param name="model">Giriş isteği için gerekli bilgiler</param>
+    /// <param name="returnUrl">Başarılı girişten sonra yönlendirilecek adres (isteğe bağlı)</param>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginRequest model, string? returnUrl = null)
@@ -53,11 +58,19 @@ public class AuthController : Controller
             return View(model);
         }
 
-        // Store token in session
-        HttpContext.Session.SetString("JwtToken", result.Token);
-        HttpContext.Session.SetString("MerchantId", result.User.Id.ToString());
-        HttpContext.Session.SetString("UserName", result.User.FullName);
-        HttpContext.Session.SetString("UserEmail", result.User.Email);
+        // Validate result data before storing in session
+        if (string.IsNullOrEmpty(result.Token) || result.User == null)
+        {
+            _logger.LogError("Login succeeded but token or user data is null");
+            ModelState.AddModelError(string.Empty, "Giriş başarısız. Lütfen tekrar deneyin.");
+            return View(model);
+        }
+
+        // Store token in session (null-safe)
+        HttpContext.Session.SetString("JwtToken", result.Token ?? string.Empty);
+        HttpContext.Session.SetString("UserId", result.User.Id.ToString());
+        HttpContext.Session.SetString("UserName", result.User?.FullName ?? string.Empty);
+        HttpContext.Session.SetString("UserEmail", result.User?.Email ?? string.Empty);
 
         // Create claims
         var claims = new List<Claim>
@@ -84,6 +97,18 @@ public class AuthController : Controller
         // Set token for API client
         _apiClient.SetAuthToken(result.Token);
 
+        // Store MerchantId from login response (if available)
+        if (result.MerchantId.HasValue && result.MerchantId.Value != Guid.Empty)
+        {
+            HttpContext.Session.SetString("MerchantId", result.MerchantId.Value.ToString());
+            _logger.LogInformation("MerchantId from login: {MerchantId}", result.MerchantId.Value);
+        }
+        else
+        {
+            // Fallback: Try to get from API
+            await LoadMerchantIdToSession();
+        }
+
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
         {
             return Redirect(returnUrl);
@@ -92,6 +117,9 @@ public class AuthController : Controller
         return RedirectToAction("Index", "Dashboard");
     }
 
+    /// <summary>
+    /// Kullanıcı oturumunu kapatır.
+    /// </summary>
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -106,10 +134,43 @@ public class AuthController : Controller
         return RedirectToAction(nameof(Login));
     }
 
+    /// <summary>
+    /// Erişim iznin olmadığında gösterilecek sayfa.
+    /// </summary>
     [HttpGet]
     public IActionResult AccessDenied()
     {
         return View();
+    }
+
+    /// <summary>
+    /// Load MerchantId to session from API
+    /// </summary>
+    private async Task LoadMerchantIdToSession()
+    {
+        try
+        {
+            // Get merchant info from API (user must be MerchantOwner)
+            var apiResponse = await _apiClient.GetAsync<ApiResponse<MerchantResponse>>(
+                "api/v1/merchant/my-merchant");
+
+            if (apiResponse?.Success == true && apiResponse.Value != null)
+            {
+                HttpContext.Session.SetString("MerchantId", apiResponse.Value.Id.ToString());
+                _logger.LogInformation("MerchantId loaded to session: {MerchantId}", apiResponse.Value.Id);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to load MerchantId: {Error}", apiResponse?.Error ?? "No merchant found");
+                // Set a placeholder - will be handled by middleware/validation
+                HttpContext.Session.SetString("MerchantId", Guid.Empty.ToString());
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading MerchantId to session");
+            HttpContext.Session.SetString("MerchantId", Guid.Empty.ToString());
+        }
     }
 }
 

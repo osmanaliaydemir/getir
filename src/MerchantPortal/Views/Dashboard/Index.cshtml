@@ -3,6 +3,7 @@
     var dashboard = ViewBag.Dashboard as MerchantDashboardResponse;
     var recentOrders = ViewBag.RecentOrders as List<RecentOrderResponse> ?? new List<RecentOrderResponse>();
     var topProducts = ViewBag.TopProducts as List<TopProductResponse> ?? new List<TopProductResponse>();
+    var stockSummary = ViewBag.StockSummary as StockSummaryResponse;
 }
 
 @section Styles {
@@ -91,9 +92,9 @@
     </div>
 </div>
 
-<!-- Performance Cards -->
+<!-- Performance Cards & Stock Alerts -->
 <div class="row g-4 mb-4">
-    <div class="col-md-6">
+    <div class="col-md-6 col-lg-4">
         <div class="performance-card fade-in" style="animation-delay: 0.5s;">
             <div class="chart-header">
                 <div class="chart-title">
@@ -122,7 +123,7 @@
         </div>
     </div>
     
-    <div class="col-md-6">
+    <div class="col-md-6 col-lg-4">
         <div class="performance-card fade-in" style="animation-delay: 0.6s;">
             <div class="chart-header">
                 <div class="chart-title">
@@ -150,6 +151,66 @@
             </div>
         </div>
     </div>
+
+    <!-- Stock Alert Widget -->
+    <div class="col-md-12 col-lg-4">
+        <div class="performance-card fade-in" style="animation-delay: 0.7s;">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <i class="fas fa-boxes"></i>
+                    Stok Durumu
+                </div>
+                <a href="/Stock/Alerts" class="btn btn-sm btn-outline-primary">
+                    Detay <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+            
+            @if (stockSummary != null && stockSummary.ActiveAlerts > 0)
+            {
+                <div class="stock-alert-summary">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-danger">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            <strong>@stockSummary.ActiveAlerts</strong> aktif uyarı
+                        </span>
+                    </div>
+                    <div class="row g-2 mt-2">
+                        @if (stockSummary.LowStockItems > 0)
+                        {
+                            <div class="col-6">
+                                <div class="alert alert-warning mb-0 py-2 px-2 d-flex align-items-center">
+                                    <i class="fas fa-exclamation-circle me-2"></i>
+                                    <div>
+                                        <small class="d-block">Düşük Stok</small>
+                                        <strong>@stockSummary.LowStockItems</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        @if (stockSummary.OutOfStockItems > 0)
+                        {
+                            <div class="col-6">
+                                <div class="alert alert-danger mb-0 py-2 px-2 d-flex align-items-center">
+                                    <i class="fas fa-times-circle me-2"></i>
+                                    <div>
+                                        <small class="d-block">Tükendi</small>
+                                        <strong>@stockSummary.OutOfStockItems</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-3">
+                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                    <p class="text-muted mb-0 small">Stok seviyeleri normal</p>
+                </div>
+            }
+        </div>
+    </div>
 </div>
 
 <!-- Recent Orders & Top Products -->
@@ -162,7 +223,7 @@
                     <i class="fas fa-shopping-bag"></i>
                     Son Siparişler
                 </div>
-                <a href="/Orders" class="btn btn-sm btn-outline-primary">
+                <a href="/Orders/Index" class="btn btn-sm btn-outline-primary">
                     Tümünü Gör <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
@@ -255,7 +316,7 @@
                     <i class="fas fa-fire"></i>
                     En Çok Satanlar
                 </div>
-                <a href="/Products" class="btn btn-sm btn-outline-primary">
+                <a href="/Products/Index" class="btn btn-sm btn-outline-primary">
                     Tümünü Gör <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
@@ -317,41 +378,6 @@
     <script>
         // Initialize SignalR connection
         initializeSignalR('@Url.Content("~/")');
-        
-        // Update last update time
-        function updateLastUpdateTime() {
-            const now = new Date();
-            document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-        }
-        
-        setInterval(updateLastUpdateTime, 1000);
-        
-        // Listen for new orders
-        if (window.signalRConnection) {
-            window.signalRConnection.on("NewOrderReceived", function (data) {
-                console.log('New order received:', data);
-                
-                // Show notification
-                showToast('success', 'Yeni Sipariş!', 
-                    `#${data.orderNumber} - ${data.customerName} - ₺${data.totalAmount.toFixed(2)}`);
-                
-                // Play sound
-                playNotificationSound();
-                
-                // Flash browser tab
-                flashBrowserTab();
-                
-                // Refresh dashboard after 2 seconds
-                setTimeout(() => {
-                    window.location.reload();
-                }, 2000);
-            });
-            
-            window.signalRConnection.on("OrderStatusChanged", function (data) {
-                console.log('Order status changed:', data);
-                showToast('info', 'Sipariş Güncellendi', 
-                    `#${data.orderNumber} - ${data.status}`);
-            });
-        }
     </script>
+    <script src="~/js/modules/dashboard/dashboard.js" asp-append-version="true"></script>
 }
