@@ -76,10 +76,10 @@ public class AuthController : Controller
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, result.User.Id.ToString()),
-            new Claim(ClaimTypes.Name, result.User.FullName),
-            new Claim(ClaimTypes.Email, result.User.Email),
-            new Claim(ClaimTypes.Role, result.User.Role),
-            new Claim("JwtToken", result.Token)
+            new Claim(ClaimTypes.Name, result.User.FullName ?? string.Empty),
+            new Claim(ClaimTypes.Email, result.User.Email ?? string.Empty),
+            new Claim(ClaimTypes.Role, result.User.Role ?? string.Empty),
+            new Claim("JwtToken", result.Token ?? string.Empty)
         };
 
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -95,7 +95,10 @@ public class AuthController : Controller
             authProperties);
 
         // Set token for API client
-        _apiClient.SetAuthToken(result.Token);
+        if (!string.IsNullOrEmpty(result.Token))
+        {
+            _apiClient.SetAuthToken(result.Token);
+        }
 
         // Store MerchantId from login response (if available)
         if (result.MerchantId.HasValue && result.MerchantId.Value != Guid.Empty)
