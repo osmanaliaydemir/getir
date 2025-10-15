@@ -236,6 +236,62 @@ class AuthService {
     return await _repository.resetPassword(resetCode.trim(), newPassword);
   }
 
+  /// Changes the password for authenticated user.
+  ///
+  /// **Validation:**
+  /// - Current password must not be empty
+  /// - New password must be at least 6 characters
+  /// - New password must be different from current
+  ///
+  /// **Returns:**
+  /// - Success: void
+  /// - Failure: [ValidationException] on validation error
+  /// - Failure: [UnauthorizedException] if current password is wrong
+  /// - Failure: [NetworkException] on connection error
+  ///
+  /// **Example:**
+  /// ```dart
+  /// final result = await authService.changePassword('oldPass', 'newPass123');
+  /// result.when(
+  ///   success: (_) => showSuccess('Password changed successfully'),
+  ///   failure: (error) => showError(error.message),
+  /// );
+  /// ```
+  Future<Result<void>> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    // Validate inputs
+    if (currentPassword.trim().isEmpty || newPassword.trim().isEmpty) {
+      return Result.failure(
+        ValidationException(
+          message: 'Current and new password are required',
+        ),
+      );
+    }
+
+    if (newPassword.length < 6) {
+      return Result.failure(
+        ValidationException(
+          message: 'New password must be at least 6 characters',
+        ),
+      );
+    }
+
+    if (currentPassword == newPassword) {
+      return Result.failure(
+        ValidationException(
+          message: 'New password must be different from current password',
+        ),
+      );
+    }
+
+    return await _repository.changePassword(
+      currentPassword.trim(),
+      newPassword.trim(),
+    );
+  }
+
   // ============================================================================
   // USER INFO
   // ============================================================================

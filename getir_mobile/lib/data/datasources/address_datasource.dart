@@ -21,7 +21,7 @@ class AddressDataSourceImpl implements IAddressDataSource {
   @override
   Future<List<UserAddress>> getUserAddresses() async {
     try {
-      final response = await _dio.get('/api/v1/User/addresses');
+      final response = await _dio.get('/api/v1/user/addresses');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data['data'] ?? response.data;
@@ -39,7 +39,7 @@ class AddressDataSourceImpl implements IAddressDataSource {
   @override
   Future<UserAddress> getAddressById(String addressId) async {
     try {
-      final response = await _dio.get('/api/v1/User/addresses/$addressId');
+      final response = await _dio.get('/api/v1/user/addresses/$addressId');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -58,7 +58,7 @@ class AddressDataSourceImpl implements IAddressDataSource {
   Future<UserAddress> createAddress(CreateAddressRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/User/addresses',
+        '/api/v1/user/addresses',
         data: request.toJson(),
       );
 
@@ -82,7 +82,7 @@ class AddressDataSourceImpl implements IAddressDataSource {
   ) async {
     try {
       final response = await _dio.put(
-        '/api/v1/User/addresses/$addressId',
+        '/api/v1/user/addresses/$addressId',
         data: request.toJson(),
       );
 
@@ -102,7 +102,7 @@ class AddressDataSourceImpl implements IAddressDataSource {
   @override
   Future<void> deleteAddress(String addressId) async {
     try {
-      final response = await _dio.delete('/api/v1/User/addresses/$addressId');
+      final response = await _dio.delete('/api/v1/user/addresses/$addressId');
 
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw Exception('Failed to delete address: ${response.statusCode}');
@@ -118,7 +118,7 @@ class AddressDataSourceImpl implements IAddressDataSource {
   Future<UserAddress> setDefaultAddress(String addressId) async {
     try {
       final response = await _dio.put(
-        '/api/v1/User/addresses/$addressId/set-default',
+        '/api/v1/user/addresses/$addressId/set-default',
       );
 
       if (response.statusCode == 200) {

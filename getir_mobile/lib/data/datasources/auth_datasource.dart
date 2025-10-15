@@ -8,6 +8,7 @@ abstract class AuthDataSource {
   Future<RefreshTokenResponse> refreshToken(RefreshTokenRequest request);
   Future<void> forgotPassword(ForgotPasswordRequest request);
   Future<void> resetPassword(ResetPasswordRequest request);
+  Future<void> changePassword(ChangePasswordRequest request); // ✅ Backend sync
   
   // Local Data Source (Storage)
   Future<String?> getAccessToken();

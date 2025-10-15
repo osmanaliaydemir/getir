@@ -3,10 +3,10 @@ import '../services/encryption_service.dart';
 import '../services/logger_service.dart';
 
 /// Token Refresh Interceptor
-/// 
+///
 /// Automatically refreshes access token when API returns 401 Unauthorized.
 /// Prevents manual token refresh in every BLoC/Service.
-/// 
+///
 /// **How it works:**
 /// 1. API returns 401 Unauthorized
 /// 2. Interceptor catches the error
@@ -14,7 +14,7 @@ import '../services/logger_service.dart';
 /// 4. Saves new tokens
 /// 5. Retries original request with new token
 /// 6. If refresh fails (401), logs out user
-/// 
+///
 /// **Benefits:**
 /// - Seamless UX (user doesn't see auth errors)
 /// - No manual refresh in BLoCs
@@ -23,7 +23,7 @@ import '../services/logger_service.dart';
 class TokenRefreshInterceptor extends QueuedInterceptor {
   final Dio _dio;
   final EncryptionService _encryptionService;
-  
+
   bool _isRefreshing = false;
   final List<RequestOptions> _requestsQueue = [];
 
@@ -62,9 +62,12 @@ class TokenRefreshInterceptor extends QueuedInterceptor {
     try {
       // Get refresh token
       final refreshToken = await _encryptionService.getRefreshToken();
-      
+
       if (refreshToken == null || refreshToken.isEmpty) {
-        logger.warning('No refresh token found - Logging out', tag: 'TokenRefresh');
+        logger.warning(
+          'No refresh token found - Logging out',
+          tag: 'TokenRefresh',
+        );
         await _handleLogout();
         return super.onError(err, handler);
       }
@@ -167,10 +170,16 @@ class TokenRefreshInterceptor extends QueuedInterceptor {
   Future<void> _handleLogout() async {
     try {
       await _encryptionService.clearAll();
-      logger.info('User logged out due to invalid refresh token', tag: 'TokenRefresh');
+      logger.info(
+        'User logged out due to invalid refresh token',
+        tag: 'TokenRefresh',
+      );
     } catch (e) {
-      logger.error('Failed to clear tokens during logout', tag: 'TokenRefresh', error: e);
+      logger.error(
+        'Failed to clear tokens during logout',
+        tag: 'TokenRefresh',
+        error: e,
+      );
     }
   }
 }
-

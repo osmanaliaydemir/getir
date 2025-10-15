@@ -27,7 +27,7 @@ class CartDataSourceImpl implements CartDataSource {
   @override
   Future<Cart> getCart() async {
     try {
-      final response = await _dio.get('/api/v1/Cart');
+      final response = await _dio.get('/api/v1/cart');
       return _cartFromJson(response.data);
     } catch (e) {
       throw Exception('Failed to fetch cart: $e');
@@ -43,7 +43,7 @@ class CartDataSourceImpl implements CartDataSource {
   }) async {
     try {
       final response = await _dio.post(
-        '/api/v1/Cart/items',
+        '/api/v1/cart/items',
         data: {
           'productId': productId,
           'quantity': quantity,
@@ -64,7 +64,7 @@ class CartDataSourceImpl implements CartDataSource {
   }) async {
     try {
       final response = await _dio.put(
-        '/api/v1/Cart/items/$itemId',
+        '/api/v1/cart/items/$itemId',
         data: {'quantity': quantity},
       );
       return _cartItemFromJson(response.data);
@@ -76,7 +76,7 @@ class CartDataSourceImpl implements CartDataSource {
   @override
   Future<void> removeFromCart(String itemId) async {
     try {
-      await _dio.delete('/api/v1/Cart/items/$itemId');
+      await _dio.delete('/api/v1/cart/items/$itemId');
     } catch (e) {
       throw Exception('Failed to remove from cart: $e');
     }
@@ -85,7 +85,7 @@ class CartDataSourceImpl implements CartDataSource {
   @override
   Future<void> clearCart() async {
     try {
-      await _dio.delete('/api/v1/Cart/clear');
+      await _dio.delete('/api/v1/cart/clear');
     } catch (e) {
       throw Exception('Failed to clear cart: $e');
     }
@@ -95,7 +95,7 @@ class CartDataSourceImpl implements CartDataSource {
   Future<Cart> applyCoupon(String couponCode) async {
     try {
       final response = await _dio.post(
-        '/api/v1/Coupon/apply',
+        '/api/v1/coupon/apply',
         data: {'couponCode': couponCode},
       );
       return _cartFromJson(response.data);
@@ -107,7 +107,7 @@ class CartDataSourceImpl implements CartDataSource {
   @override
   Future<Cart> removeCoupon() async {
     try {
-      final response = await _dio.delete('/api/v1/Coupon/remove');
+      final response = await _dio.delete('/api/v1/coupon/remove');
       return _cartFromJson(response.data);
     } catch (e) {
       throw Exception('Failed to remove coupon: $e');

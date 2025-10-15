@@ -83,6 +83,19 @@ class AuthResetPasswordRequested extends AuthEvent {
   List<Object> get props => [email, token, newPassword];
 }
 
+class AuthChangePasswordRequested extends AuthEvent {
+  final String currentPassword;
+  final String newPassword;
+
+  const AuthChangePasswordRequested({
+    required this.currentPassword,
+    required this.newPassword,
+  });
+
+  @override
+  List<Object> get props => [currentPassword, newPassword];
+}
+
 class AuthCheckAuthenticationRequested extends AuthEvent {}
 
 class AuthCheckTokenValidityRequested extends AuthEvent {}
@@ -130,6 +143,8 @@ class AuthPasswordResetSent extends AuthState {
 
 class AuthPasswordResetSuccess extends AuthState {}
 
+class AuthPasswordChangeSuccess extends AuthState {}
+
 // BLoC
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthService _authService;
@@ -142,6 +157,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthRefreshTokenRequested>(_onRefreshTokenRequested);
     on<AuthForgotPasswordRequested>(_onForgotPasswordRequested);
     on<AuthResetPasswordRequested>(_onResetPasswordRequested);
+    on<AuthChangePasswordRequested>(_onChangePasswordRequested);
     on<AuthCheckAuthenticationRequested>(_onCheckAuthenticationRequested);
     on<AuthCheckTokenValidityRequested>(_onCheckTokenValidityRequested);
   }
@@ -302,6 +318,42 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       failure: (exception) {
         final message = _getErrorMessage(exception);
         emit(AuthError(message));
+      },
+    );
+  }
+
+  Future<void> _onChangePasswordRequested(
+    AuthChangePasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await _authService.changePassword(
+      event.currentPassword,
+      event.newPassword,
+    );
+
+    await result.when(
+      success: (_) async {
+        // 📊 Analytics: Track password change
+        await _analytics.logEvent(
+          name: 'password_changed',
+          parameters: {'method': 'in_app'},
+        );
+
+        if (!emit.isDone) {
+          emit(AuthPasswordChangeSuccess());
+        }
+      },
+      failure: (exception) async {
+        final message = _getErrorMessage(exception);
+        await _analytics.logError(
+          error: exception,
+          reason: 'Password change failed',
+        );
+        if (!emit.isDone) {
+          emit(AuthError(message));
+        }
       },
     );
   }

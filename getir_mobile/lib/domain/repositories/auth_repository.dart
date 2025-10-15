@@ -21,6 +21,7 @@ abstract class AuthRepository {
   // Password Management
   Future<Result<void>> forgotPassword(String email);
   Future<Result<void>> resetPassword(String token, String newPassword);
+  Future<Result<void>> changePassword(String currentPassword, String newPassword);
 
   // Token Management (local operations, rarely fail)
   Future<String?> getAccessToken();

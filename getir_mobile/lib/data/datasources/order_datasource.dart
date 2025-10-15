@@ -18,7 +18,7 @@ class OrderDataSourceImpl implements IOrderDataSource {
   @override
   Future<Order> createOrder(CreateOrderRequest request) async {
     try {
-      final response = await _dio.post('/api/v1/Order', data: request.toJson());
+      final response = await _dio.post('/api/v1/order', data: request.toJson());
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -36,7 +36,7 @@ class OrderDataSourceImpl implements IOrderDataSource {
   @override
   Future<List<Order>> getUserOrders() async {
     try {
-      final response = await _dio.get('/api/v1/Order');
+      final response = await _dio.get('/api/v1/order');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data['data'] ?? response.data;
@@ -54,7 +54,7 @@ class OrderDataSourceImpl implements IOrderDataSource {
   @override
   Future<Order> getOrderById(String orderId) async {
     try {
-      final response = await _dio.get('/api/v1/Order/$orderId');
+      final response = await _dio.get('/api/v1/order/$orderId');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -72,7 +72,7 @@ class OrderDataSourceImpl implements IOrderDataSource {
   @override
   Future<Order> cancelOrder(String orderId) async {
     try {
-      final response = await _dio.put('/api/v1/Order/$orderId/cancel');
+      final response = await _dio.put('/api/v1/order/$orderId/cancel');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -91,7 +91,7 @@ class OrderDataSourceImpl implements IOrderDataSource {
   Future<PaymentResult> processPayment(CreatePaymentRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/Payment',
+        '/api/v1/payment',
         data: request.toJson(),
       );
 
@@ -111,7 +111,7 @@ class OrderDataSourceImpl implements IOrderDataSource {
   @override
   Future<PaymentResult> getPaymentStatus(String paymentId) async {
     try {
-      final response = await _dio.get('/api/v1/Payment/$paymentId');
+      final response = await _dio.get('/api/v1/payment/$paymentId');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;

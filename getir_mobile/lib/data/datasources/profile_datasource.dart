@@ -17,7 +17,7 @@ class ProfileDataSourceImpl implements ProfileDataSource {
 
   @override
   Future<UserProfile> getUserProfile() async {
-    final response = await _dio.get('/api/v1/User/profile');
+    final response = await _dio.get('/api/v1/user/profile');
     final data = response.data['data'] ?? response.data;
     return UserProfile.fromJson(data as Map<String, dynamic>);
   }
@@ -30,7 +30,7 @@ class ProfileDataSourceImpl implements ProfileDataSource {
     String? avatarUrl,
   }) async {
     final response = await _dio.put(
-      '/api/v1/User/profile',
+      '/api/v1/user/profile',
       data: {
         'firstName': firstName,
         'lastName': lastName,

@@ -163,6 +163,30 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Result<void>> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    try {
+      final request = ChangePasswordRequest(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      await _dataSource.changePassword(request);
+
+      return Result.success(null);
+    } on DioException catch (e) {
+      return Result.failure(ExceptionFactory.fromDioError(e));
+    } on AppException catch (e) {
+      return Result.failure(e);
+    } catch (e) {
+      return Result.failure(
+        ApiException(message: 'Change password failed: ${e.toString()}'),
+      );
+    }
+  }
+
+  @override
   Future<String?> getAccessToken() async {
     try {
       return await _dataSource.getAccessToken();

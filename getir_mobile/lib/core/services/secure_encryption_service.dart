@@ -7,24 +7,24 @@ import '../config/environment_config.dart';
 import 'logger_service.dart';
 
 /// Secure Encryption Service with AES-256-GCM
-/// 
+///
 /// **Features:**
 /// - AES-256-GCM encryption (industry standard)
 /// - Secure key storage (Keychain/Keystore)
 /// - IV (Initialization Vector) for each encryption
 /// - HMAC for integrity verification
 /// - Key rotation support
-/// 
+///
 /// **Security Level:** Production-ready ✅
-/// 
+///
 /// **Usage:**
 /// ```dart
 /// final service = SecureEncryptionService();
 /// await service.initialize();
-/// 
+///
 /// // Encrypt
 /// final encrypted = await service.encryptData('sensitive data');
-/// 
+///
 /// // Decrypt
 /// final decrypted = await service.decryptData(encrypted);
 /// ```
@@ -49,7 +49,7 @@ class SecureEncryptionService {
     try {
       // Get or generate master encryption key
       final existingKey = await _secureStorage.read(key: _masterKeyKey);
-      
+
       if (existingKey == null) {
         // Generate new 256-bit key
         final newKey = encrypt.Key.fromSecureRandom(32);
@@ -77,12 +77,12 @@ class SecureEncryptionService {
   }
 
   /// Encrypt data with AES-256-GCM
-  /// 
+  ///
   /// **Security:**
   /// - Uses AES-256-GCM mode (authenticated encryption)
   /// - Random IV for each encryption (prevents pattern analysis)
   /// - IV prepended to ciphertext (standard practice)
-  /// 
+  ///
   /// **Returns:** Base64 encoded: IV + Ciphertext
   String encryptData(String plaintext) {
     if (_encryptionKey == null) {
@@ -92,7 +92,7 @@ class SecureEncryptionService {
     try {
       // Generate random IV (16 bytes for AES)
       final iv = encrypt.IV.fromSecureRandom(16);
-      
+
       // Create encrypter with AES-GCM
       final encrypter = encrypt.Encrypter(
         encrypt.AES(_encryptionKey!, mode: encrypt.AESMode.gcm),
@@ -102,10 +102,7 @@ class SecureEncryptionService {
       final encrypted = encrypter.encrypt(plaintext, iv: iv);
 
       // Combine IV + Ciphertext (standard format)
-      final combined = Uint8List.fromList([
-        ...iv.bytes,
-        ...encrypted.bytes,
-      ]);
+      final combined = Uint8List.fromList([...iv.bytes, ...encrypted.bytes]);
 
       // Return as Base64
       return base64.encode(combined);
@@ -121,7 +118,7 @@ class SecureEncryptionService {
   }
 
   /// Decrypt data with AES-256-GCM
-  /// 
+  ///
   /// **Input:** Base64 encoded: IV + Ciphertext
   /// **Returns:** Original plaintext
   String decryptData(String encryptedBase64) {
@@ -337,7 +334,7 @@ class SecureEncryptionService {
   }
 
   /// Rotate encryption key (for enhanced security)
-  /// 
+  ///
   /// **Note:** This will re-encrypt all stored data with new key
   /// Should be called periodically (e.g., every 90 days)
   Future<void> rotateEncryptionKey() async {
@@ -346,7 +343,7 @@ class SecureEncryptionService {
 
       // Generate new key
       final newKey = encrypt.Key.fromSecureRandom(32);
-      
+
       // Get all encrypted data
       final allData = await _secureStorage.readAll();
       final reEncryptedData = <String, String>{};
@@ -361,11 +358,11 @@ class SecureEncryptionService {
             // Decrypt with old key
             _encryptionKey = oldKey;
             final decrypted = decryptData(entry.value);
-            
+
             // Encrypt with new key
             _encryptionKey = newKey;
             final encrypted = encryptData(decrypted);
-            
+
             reEncryptedData[entry.key] = encrypted;
           } catch (e) {
             // Skip if decryption fails (might be plain text)
@@ -397,4 +394,3 @@ class SecureEncryptionService {
     }
   }
 }
-

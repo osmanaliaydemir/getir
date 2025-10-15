@@ -15,7 +15,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<AuthResponse> login(LoginRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/Auth/login',
+        '/api/v1/auth/login',
         data: request.toJson(),
       );
 
@@ -46,7 +46,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<AuthResponse> register(RegisterRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/Auth/register',
+        '/api/v1/auth/register',
         data: request.toJson(),
       );
 
@@ -77,7 +77,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<void> logout() async {
     try {
       // Backend'e logout isteği gönder
-      await _dio.post('/api/v1/Auth/logout');
+      await _dio.post('/api/v1/auth/logout');
 
       // Local token'ları temizle
       await clearTokens();
@@ -102,7 +102,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<RefreshTokenResponse> refreshToken(RefreshTokenRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/Auth/refresh',
+        '/api/v1/auth/refresh',
         data: request.toJson(),
       );
 
@@ -136,7 +136,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<void> forgotPassword(ForgotPasswordRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/Auth/forgot-password',
+        '/api/v1/auth/forgot-password',
         data: request.toJson(),
       );
 
@@ -154,7 +154,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<void> resetPassword(ResetPasswordRequest request) async {
     try {
       final response = await _dio.post(
-        '/api/v1/Auth/reset-password',
+        '/api/v1/auth/reset-password',
         data: request.toJson(),
       );
 
@@ -165,6 +165,24 @@ class AuthDataSourceImpl implements AuthDataSource {
       throw _handleDioError(e);
     } catch (e) {
       throw Exception('Unexpected error during reset password: $e');
+    }
+  }
+
+  @override
+  Future<void> changePassword(ChangePasswordRequest request) async {
+    try {
+      final response = await _dio.post(
+        '/api/v1/auth/change-password',
+        data: request.toJson(),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception('Change password failed: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    } catch (e) {
+      throw Exception('Unexpected error during change password: $e');
     }
   }
 

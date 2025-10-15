@@ -54,7 +54,7 @@ class MerchantDataSourceImpl implements MerchantDataSource {
       if (radius != null) queryParams['radius'] = radius;
 
       final response = await _dio.get(
-        '/api/v1/Merchant',
+        '/api/v1/merchant',
         queryParameters: queryParams,
       );
 
@@ -68,7 +68,7 @@ class MerchantDataSourceImpl implements MerchantDataSource {
   @override
   Future<Merchant> getMerchantById(String id) async {
     try {
-      final response = await _dio.get('/api/v1/Merchant/$id');
+      final response = await _dio.get('/api/v1/merchant/$id');
       return _merchantFromJson(response.data);
     } catch (e) {
       throw Exception('Failed to fetch merchant: $e');
@@ -79,7 +79,7 @@ class MerchantDataSourceImpl implements MerchantDataSource {
   Future<List<Merchant>> searchMerchants(String query) async {
     try {
       final response = await _dio.get(
-        '/api/v1/Search/merchants',
+        '/api/v1/search/merchants',
         queryParameters: {'query': query, 'pageNumber': 1, 'pageSize': 20},
       );
 
@@ -101,7 +101,7 @@ class MerchantDataSourceImpl implements MerchantDataSource {
   }) async {
     try {
       final response = await _dio.get(
-        '/api/v1/GeoLocation/merchants/nearby',
+        '/api/v1/geolocation/merchants/nearby',
         queryParameters: {
           'latitude': latitude,
           'longitude': longitude,
@@ -125,7 +125,7 @@ class MerchantDataSourceImpl implements MerchantDataSource {
   }) async {
     try {
       final response = await _dio.get(
-        '/api/v1/GeoLocation/merchants/nearby',
+        '/api/v1/geolocation/merchants/nearby',
         queryParameters: {
           'latitude': latitude,
           'longitude': longitude,
