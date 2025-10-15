@@ -1,11 +1,33 @@
 using Getir.MerchantPortal.Middleware;
 using Getir.MerchantPortal.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File(
+        path: "Logs/merchantportal-.log",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
+    )
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
 // Configuration
 var apiSettings = builder.Configuration.GetSection("ApiSettings").Get<ApiSettings>()!;
+
+// Data Protection (Cookie encryption için)
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "Keys")))
+    .SetApplicationName("GetirMerchantPortal");
 
 // Add services to the container
 builder.Services.AddControllersWithViews();
@@ -16,9 +38,8 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromHours(12);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
-    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() 
-        ? CookieSecurePolicy.None 
-        : CookieSecurePolicy.Always;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.None; // ✅ HTTP için None olmalı
+    options.Cookie.SameSite = SameSiteMode.Lax; // ✅ Cross-origin için Lax
 });
 
 // Authentication
@@ -32,9 +53,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
         options.Cookie.Name = "GetirMerchantAuth";
         options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() 
-            ? CookieSecurePolicy.None 
-            : CookieSecurePolicy.Always;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.None; // ✅ HTTP için None olmalı
+        options.Cookie.SameSite = SameSiteMode.Lax; // ✅ Cross-origin için Lax
     });
 
 // HttpContext
@@ -86,10 +106,10 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
+    // app.UseHsts(); // ✅ HTTP için HSTS kapalı
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection(); // ✅ HTTP için HTTPS redirect kapalı
 app.UseStaticFiles();
 
 app.UseRouting();
@@ -103,4 +123,17 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Auth}/{action=Login}/{id?}");
 
-app.Run();
+try
+{
+    Log.Information("Starting MerchantPortal application");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "MerchantPortal application failed to start");
+    throw;
+}
+finally
+{
+    Log.CloseAndFlush();
+}

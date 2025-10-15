@@ -112,11 +112,15 @@ public class AuthController : Controller
             await LoadMerchantIdToSession();
         }
 
+        _logger.LogInformation("Login successful, redirecting to Dashboard for user: {Email}", model.Email);
+
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
         {
+            _logger.LogInformation("Redirecting to returnUrl: {ReturnUrl}", returnUrl);
             return Redirect(returnUrl);
         }
 
+        _logger.LogInformation("Redirecting to Dashboard");
         return RedirectToAction("Index", "Dashboard");
     }
 
