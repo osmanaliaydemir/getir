@@ -4,19 +4,13 @@ import '../../domain/entities/user_entity.dart';
 class LoginRequest {
   final String email;
   final String password;
-  
-  const LoginRequest({
-    required this.email,
-    required this.password,
-  });
-  
+
+  const LoginRequest({required this.email, required this.password});
+
   Map<String, dynamic> toJson() {
-    return {
-      'email': email,
-      'password': password,
-    };
+    return {'email': email, 'password': password};
   }
-  
+
   factory LoginRequest.fromJson(Map<String, dynamic> json) {
     return LoginRequest(
       email: json['email'] as String,
@@ -32,7 +26,7 @@ class RegisterRequest {
   final String firstName;
   final String lastName;
   final String? phoneNumber;
-  
+
   const RegisterRequest({
     required this.email,
     required this.password,
@@ -40,7 +34,7 @@ class RegisterRequest {
     required this.lastName,
     this.phoneNumber,
   });
-  
+
   Map<String, dynamic> toJson() {
     return {
       'email': email,
@@ -50,7 +44,7 @@ class RegisterRequest {
       if (phoneNumber != null) 'phoneNumber': phoneNumber,
     };
   }
-  
+
   factory RegisterRequest.fromJson(Map<String, dynamic> json) {
     return RegisterRequest(
       email: json['email'] as String,
@@ -71,7 +65,8 @@ class AuthResponse {
   final String userId;
   final String email;
   final String fullName;
-  
+  final String? merchantId; // ✅ Backend sync - MerchantOwner için
+
   const AuthResponse({
     required this.accessToken,
     required this.refreshToken,
@@ -80,8 +75,9 @@ class AuthResponse {
     required this.userId,
     required this.email,
     required this.fullName,
+    this.merchantId,
   });
-  
+
   Map<String, dynamic> toJson() {
     return {
       'accessToken': accessToken,
@@ -91,9 +87,10 @@ class AuthResponse {
       'userId': userId,
       'email': email,
       'fullName': fullName,
+      if (merchantId != null) 'merchantId': merchantId,
     };
   }
-  
+
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
     return AuthResponse(
       accessToken: json['accessToken'] as String,
@@ -103,9 +100,10 @@ class AuthResponse {
       userId: json['userId'] as String,
       email: json['email'] as String,
       fullName: json['fullName'] as String,
+      merchantId: json['merchantId'] as String?,
     );
   }
-  
+
   // UserModel'e çevir (geriye dönük uyumluluk için)
   UserModel toUserModel() {
     final names = fullName.split(' ');
@@ -138,7 +136,7 @@ class UserModel {
   final DateTime createdAt;
   final DateTime? updatedAt;
   final DateTime? lastLoginAt;
-  
+
   const UserModel({
     required this.id,
     required this.email,
@@ -152,14 +150,14 @@ class UserModel {
     this.updatedAt,
     this.lastLoginAt,
   });
-  
+
   String get fullName => '$firstName $lastName';
-  
+
   bool get isCustomer => role == 'Customer';
   bool get isMerchant => role == 'Merchant';
   bool get isCourier => role == 'Courier';
   bool get isAdmin => role == 'Admin';
-  
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -175,7 +173,7 @@ class UserModel {
       if (lastLoginAt != null) 'lastLoginAt': lastLoginAt!.toIso8601String(),
     };
   }
-  
+
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'] as String,
@@ -187,15 +185,15 @@ class UserModel {
       isEmailVerified: json['isEmailVerified'] as bool,
       isActive: json['isActive'] as bool,
       createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: json['updatedAt'] != null 
-          ? DateTime.parse(json['updatedAt'] as String) 
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'] as String)
           : null,
-      lastLoginAt: json['lastLoginAt'] != null 
-          ? DateTime.parse(json['lastLoginAt'] as String) 
+      lastLoginAt: json['lastLoginAt'] != null
+          ? DateTime.parse(json['lastLoginAt'] as String)
           : null,
     );
   }
-  
+
   // Convert to Domain Entity
   UserEntity toDomain() {
     return UserEntity(
@@ -212,7 +210,7 @@ class UserModel {
       lastLoginAt: lastLoginAt,
     );
   }
-  
+
   // Convert from Domain Entity
   factory UserModel.fromDomain(UserEntity entity) {
     return UserModel(
@@ -234,21 +232,15 @@ class UserModel {
 // Token Refresh Request Model
 class RefreshTokenRequest {
   final String refreshToken;
-  
-  const RefreshTokenRequest({
-    required this.refreshToken,
-  });
-  
+
+  const RefreshTokenRequest({required this.refreshToken});
+
   Map<String, dynamic> toJson() {
-    return {
-      'refreshToken': refreshToken,
-    };
+    return {'refreshToken': refreshToken};
   }
-  
+
   factory RefreshTokenRequest.fromJson(Map<String, dynamic> json) {
-    return RefreshTokenRequest(
-      refreshToken: json['refreshToken'] as String,
-    );
+    return RefreshTokenRequest(refreshToken: json['refreshToken'] as String);
   }
 }
 
@@ -257,13 +249,13 @@ class RefreshTokenResponse {
   final String accessToken;
   final String refreshToken;
   final DateTime expiresAt;
-  
+
   const RefreshTokenResponse({
     required this.accessToken,
     required this.refreshToken,
     required this.expiresAt,
   });
-  
+
   Map<String, dynamic> toJson() {
     return {
       'accessToken': accessToken,
@@ -271,7 +263,7 @@ class RefreshTokenResponse {
       'expiresAt': expiresAt.toIso8601String(),
     };
   }
-  
+
   factory RefreshTokenResponse.fromJson(Map<String, dynamic> json) {
     return RefreshTokenResponse(
       accessToken: json['accessToken'] as String,
@@ -284,21 +276,15 @@ class RefreshTokenResponse {
 // Forgot Password Request Model
 class ForgotPasswordRequest {
   final String email;
-  
-  const ForgotPasswordRequest({
-    required this.email,
-  });
-  
+
+  const ForgotPasswordRequest({required this.email});
+
   Map<String, dynamic> toJson() {
-    return {
-      'email': email,
-    };
+    return {'email': email};
   }
-  
+
   factory ForgotPasswordRequest.fromJson(Map<String, dynamic> json) {
-    return ForgotPasswordRequest(
-      email: json['email'] as String,
-    );
+    return ForgotPasswordRequest(email: json['email'] as String);
   }
 }
 
@@ -306,19 +292,13 @@ class ForgotPasswordRequest {
 class ResetPasswordRequest {
   final String token;
   final String newPassword;
-  
-  const ResetPasswordRequest({
-    required this.token,
-    required this.newPassword,
-  });
-  
+
+  const ResetPasswordRequest({required this.token, required this.newPassword});
+
   Map<String, dynamic> toJson() {
-    return {
-      'token': token,
-      'newPassword': newPassword,
-    };
+    return {'token': token, 'newPassword': newPassword};
   }
-  
+
   factory ResetPasswordRequest.fromJson(Map<String, dynamic> json) {
     return ResetPasswordRequest(
       token: json['token'] as String,

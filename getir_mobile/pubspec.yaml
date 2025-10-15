@@ -80,6 +80,7 @@ dependencies:
   timeago: ^3.6.1
   flutter_dotenv: ^5.1.0
   crypto: ^3.0.3
+  encrypt: ^5.0.3
   
   # Localization
   flutter_localizations:

@@ -13,6 +13,7 @@ import '../services/logger_service.dart';
 import '../services/signalr_service.dart';
 import '../services/network_service.dart';
 import '../config/environment_config.dart';
+import '../interceptors/token_refresh_interceptor.dart';
 
 // Manual DI imports (temporary)
 import '../../data/datasources/merchant_datasource.dart';
@@ -241,9 +242,10 @@ Dio _createDio(EncryptionService encryption) {
     ),
   );
 
-  // Add interceptors
+  // Add interceptors (order matters!)
   dio.interceptors.addAll([
     _AuthInterceptor(encryption),
+    TokenRefreshInterceptor(dio, encryption), // ✅ Auto token refresh on 401
     _LoggingInterceptor(),
     _RetryInterceptor(dio: dio),
     _ResponseAdapterInterceptor(),
