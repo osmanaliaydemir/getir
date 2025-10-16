@@ -244,17 +244,13 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // ============= MIDDLEWARE PIPELINE =============
-// Order is important!
-app.UseMiddleware<RequestIdMiddleware>();
-app.UseMiddleware<ErrorHandlingMiddleware>();
+// Order is important! Exception handler MUST be first to catch all errors
+app.UseMiddleware<GlobalExceptionMiddleware>();  // 1. Global exception handler (ApiResponse format)
+app.UseMiddleware<RequestIdMiddleware>();        // 2. Request ID tracking
 
 app.UseSerilogRequestLogging();
 
-// ============= MIDDLEWARE =============
-// Global exception handler - should be first
-app.UseMiddleware<GlobalExceptionMiddleware>();
-
-app.UseMiddleware<ValidationMiddleware>();
+app.UseMiddleware<ValidationMiddleware>();       // 3. Validation (after logging)
 
 // Skip SecurityAuditMiddleware in Testing environment (requires Session)
 if (!app.Environment.IsEnvironment("Testing"))
