@@ -1,49 +1,20 @@
-// System namespaces
 // Third-party namespaces
 using AspNetCoreRateLimit;
 using FluentValidation;
+using Serilog;
+using Microsoft.EntityFrameworkCore;
+
 // Application namespaces
-using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
-using Getir.Application.Services.Addresses;
-using Getir.Application.Services.AuditLogging;
-using Getir.Application.Services.Auth;
-using Getir.Application.Services.Campaigns;
-using Getir.Application.Services.Cart;
-using Getir.Application.Services.Coupons;
-using Getir.Application.Services.Couriers;
-using Getir.Application.Services.DeliveryOptimization;
-using Getir.Application.Services.DeliveryZones;
-using Getir.Application.Services.Internationalization;
-using Getir.Application.Services.Merchants;
-using Getir.Application.Services.Notifications;
-using Getir.Application.Services.Orders;
-using Getir.Application.Services.Payments;
-using Getir.Application.Services.ProductCategories;
-using Getir.Application.Services.ProductOptions;
-using Getir.Application.Services.Products;
-using Getir.Application.Services.RateLimiting;
-using Getir.Application.Services.RealtimeTracking;
-using Getir.Application.Services.Reviews;
-using Getir.Application.Services.Search;
-using Getir.Application.Services.ServiceCategories;
-using Getir.Application.Services.SpecialHolidays;
-using Getir.Application.Services.Stock;
-using Getir.Application.Services.UserPreferences;
-using Getir.Application.Services.WorkingHours;
+
 // Infrastructure namespaces
 using Getir.Infrastructure.Persistence;
-using Getir.Infrastructure.Persistence.Repositories;
-using Getir.Infrastructure.Security;
-using Getir.Infrastructure.Services.Notifications;
 
 // WebApi namespaces
 using Getir.WebApi.Configuration;
+using Getir.WebApi.Extensions;
 using Getir.WebApi.Middleware;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
-using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -88,24 +59,14 @@ if (!builder.Environment.IsEnvironment("Testing"))
 }
 
 // ============= DEPENDENCY INJECTION =============
-// Infrastructure
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-builder.Services.AddScoped(typeof(IReadOnlyRepository<>), typeof(ReadOnlyRepository<>));
-builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
-builder.Services.AddScoped<IPasswordHasher, PasswordHasherService>();
+// Infrastructure Services (repositories, security, caching, file storage)
+builder.Services.AddInfrastructureServices();
 
-// Framework Adapters (Clean Architecture - keeps Application layer framework-agnostic)
-builder.Services.AddScoped<IFileUploadAdapter, Getir.Infrastructure.Adapters.AspNetCoreFileUploadAdapter>();
+// Application Services (business logic)
+builder.Services.AddApplicationServices();
 
-// Common Services
-builder.Services.AddScoped<ILoggingService, LoggingService>();
-builder.Services.AddScoped<ICacheService, MemoryCacheService>();
-builder.Services.AddScoped<IBackgroundTaskService, BackgroundTaskService>();
-builder.Services.AddScoped<IEmailService, Getir.Infrastructure.Services.Notifications.EmailService>();
-
-// Memory Cache
-builder.Services.AddMemoryCache();
+// SignalR Services (real-time communication)
+builder.Services.AddSignalRServices();
 
 // Application Insights (temporarily disabled)
 // builder.Services.AddApplicationInsightsConfiguration(builder.Configuration);
@@ -116,86 +77,6 @@ builder.Services.AddAntiforgery(options =>
     options.HeaderName = "X-CSRF-TOKEN";
     options.SuppressXFrameOptionsHeader = false;
 });
-
-// SignalR Services
-builder.Services.AddScoped<ISignalRService, Getir.Infrastructure.SignalR.SignalRService>();
-builder.Services.AddScoped<ISignalRNotificationSender>(sp => 
-    new Getir.Infrastructure.SignalR.SignalRNotificationSender(
-        sp.GetRequiredService<IHubContext<Getir.WebApi.Hubs.NotificationHub>>()));
-builder.Services.AddScoped<ISignalROrderSender>(sp => 
-    new Getir.Infrastructure.SignalR.SignalROrderSender(
-        sp.GetRequiredService<IHubContext<Getir.WebApi.Hubs.OrderHub>>()));
-builder.Services.AddScoped<ISignalRCourierSender>(sp => 
-    new Getir.Infrastructure.SignalR.SignalRCourierSender(
-        sp.GetRequiredService<IHubContext<Getir.WebApi.Hubs.CourierHub>>()));
-
-// Application Services
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IServiceCategoryService, ServiceCategoryService>();
-builder.Services.AddScoped<IProductCategoryService, ProductCategoryService>();
-builder.Services.AddScoped<IMerchantService, MerchantService>();
-builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<IOrderService, OrderService>();
-builder.Services.AddScoped<IUserAddressService, UserAddressService>();
-builder.Services.AddScoped<ICartService, CartService>();
-builder.Services.AddScoped<ICouponService, CouponService>();
-builder.Services.AddScoped<ICampaignService, CampaignService>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<INotificationPreferencesService, NotificationPreferencesService>();
-builder.Services.AddScoped<ISmsService, SmsService>();
-builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
-builder.Services.AddScoped<IUserPreferencesService, UserPreferencesService>();
-builder.Services.AddScoped<ICourierService, CourierService>();
-builder.Services.AddScoped<ISearchService, SearchService>();
-builder.Services.AddScoped<IWorkingHoursService, WorkingHoursService>();
-builder.Services.AddScoped<ISpecialHolidayService, SpecialHolidayService>();
-builder.Services.AddScoped<IDeliveryZoneService, DeliveryZoneService>();
-builder.Services.AddScoped<IMerchantDashboardService, MerchantDashboardService>();
-builder.Services.AddScoped<IMerchantOnboardingService, MerchantOnboardingService>();
-builder.Services.AddScoped<IProductOptionGroupService, ProductOptionGroupService>();
-builder.Services.AddScoped<IProductOptionService, ProductOptionService>();
-builder.Services.AddScoped<IReviewService, ReviewService>();
-
-// Delivery Optimization Services
-builder.Services.AddScoped<IDeliveryCapacityService, DeliveryCapacityService>();
-builder.Services.AddScoped<IRouteOptimizationService, RouteOptimizationService>();
-
-// Audit Logging Services
-builder.Services.AddScoped<IUserActivityLogService, UserActivityLogService>();
-builder.Services.AddScoped<ISystemChangeLogService, SystemChangeLogService>();
-builder.Services.AddScoped<ISecurityEventLogService, SecurityEventLogService>();
-builder.Services.AddScoped<ILogAnalysisService, LogAnalysisService>();
-
-// Internationalization Services
-builder.Services.AddScoped<ILanguageService, LanguageService>();
-builder.Services.AddScoped<ITranslationService, TranslationService>();
-builder.Services.AddScoped<IUserLanguageService, UserLanguageService>();
-
-// Rate Limiting Services
-builder.Services.AddScoped<IRateLimitService, RateLimitService>();
-builder.Services.AddScoped<IRateLimitConfigurationService, RateLimitConfigurationService>();
-builder.Services.AddScoped<IRateLimitMonitoringService, RateLimitMonitoringService>();
-
-// Realtime Tracking Services
-builder.Services.AddScoped<IOrderTrackingService, OrderTrackingService>();
-builder.Services.AddScoped<IETAEstimationService, ETAEstimationService>();
-builder.Services.AddScoped<ITrackingNotificationService, TrackingNotificationService>();
-builder.Services.AddScoped<ITrackingSettingsService, TrackingSettingsService>();
-builder.Services.AddScoped<IRealtimeTrackingService, RealtimeTrackingService>();
-builder.Services.AddScoped<IStockManagementService, StockManagementService>();
-
-builder.Services.AddScoped<Getir.Application.Services.Admin.IAdminService, Getir.Application.Services.Admin.AdminService>();
-builder.Services.AddScoped<Getir.Application.Services.Payments.IPaymentService, Getir.Application.Services.Payments.PaymentService>();
-builder.Services.AddScoped<Getir.Application.Services.GeoLocation.IGeoLocationService, Getir.Application.Services.GeoLocation.GeoLocationService>();
-
-// Cash Payment Security Services
-builder.Services.AddScoped<ICashPaymentSecurityService, CashPaymentSecurityService>();
-builder.Services.AddScoped<ICashPaymentAuditService, CashPaymentAuditService>();
-
-// File Upload Services
-builder.Services.AddScoped<IFileStorageService, Getir.Infrastructure.Services.FileStorage.SimpleFileStorageService>();
-builder.Services.AddScoped<Getir.Application.Services.FileUpload.IFileUploadIntegrationService, Getir.Application.Services.FileUpload.FileUploadIntegrationService>();
-builder.Services.AddScoped<ICdnService, Getir.Infrastructure.Services.Cdn.SimpleCdnService>();
 
 // File Upload Settings
 builder.Services.Configure<FileUploadSettings>(builder.Configuration.GetSection("FileUpload"));
