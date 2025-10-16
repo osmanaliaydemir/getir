@@ -102,10 +102,6 @@ void main() {
     blocTest<AddressBloc, AddressState>(
       'UpdateAddress emits [AddressLoading, AddressUpdated] when address updated',
       build: () {
-        final request = UpdateAddressRequest(
-          title: 'Updated Home',
-          fullAddress: 'Updated Address',
-        );
         when(
           mockService.updateAddress(any, any),
         ).thenAnswer((_) async => Result.success(MockData.testAddress));
@@ -114,7 +110,7 @@ void main() {
       act: (bloc) => bloc.add(
         UpdateAddress(
           'address-123',
-          UpdateAddressRequest(
+          const UpdateAddressRequest(
             title: 'Updated Home',
             fullAddress: 'Updated Address',
           ),
