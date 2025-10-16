@@ -1,3 +1,4 @@
+using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Application.Services.FileUpload;
@@ -15,10 +16,14 @@ namespace Getir.WebApi.Controllers;
 public class FileUploadController : BaseController
 {
     private readonly IFileUploadIntegrationService _fileUploadService;
+    private readonly IFileUploadAdapter _fileUploadAdapter;
 
-    public FileUploadController(IFileUploadIntegrationService fileUploadService)
+    public FileUploadController(
+        IFileUploadIntegrationService fileUploadService,
+        IFileUploadAdapter fileUploadAdapter)
     {
         _fileUploadService = fileUploadService;
+        _fileUploadAdapter = fileUploadAdapter;
     }
 
     #region Customer Endpoints
@@ -43,7 +48,10 @@ public class FileUploadController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        var result = await _fileUploadService.UploadFileAsync(file, userId, ct);
+        // Adapt IFormFile to framework-agnostic IUploadedFile
+        var uploadedFile = _fileUploadAdapter.Adapt(file);
+        
+        var result = await _fileUploadService.UploadFileAsync(uploadedFile, userId, ct);
         return ToActionResult(result);
     }
 
@@ -67,7 +75,10 @@ public class FileUploadController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        var result = await _fileUploadService.UploadMultipleFilesAsync(files, userId, ct);
+        // Adapt IFormFile[] to framework-agnostic IUploadedFile[]
+        var uploadedFiles = _fileUploadAdapter.AdaptMultiple(files);
+        
+        var result = await _fileUploadService.UploadMultipleFilesAsync(uploadedFiles, userId, ct);
         return ToActionResult(result);
     }
 
@@ -145,7 +156,10 @@ public class FileUploadController : BaseController
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
-        var result = await _fileUploadService.UploadMerchantFileAsync(file, userId, ct);
+        // Adapt IFormFile to framework-agnostic IUploadedFile
+        var uploadedFile = _fileUploadAdapter.Adapt(file);
+        
+        var result = await _fileUploadService.UploadMerchantFileAsync(uploadedFile, userId, ct);
         return ToActionResult(result);
     }
 

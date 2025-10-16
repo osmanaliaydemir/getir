@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- ASP.NET Core required for framework-specific adapters (IFormFile, SignalR, etc.) -->
+    <!-- This is OK in Infrastructure layer as it contains implementation details -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
       <PrivateAssets>all</PrivateAssets>

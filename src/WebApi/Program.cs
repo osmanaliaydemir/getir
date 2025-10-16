@@ -95,6 +95,9 @@ builder.Services.AddScoped(typeof(IReadOnlyRepository<>), typeof(ReadOnlyReposit
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasherService>();
 
+// Framework Adapters (Clean Architecture - keeps Application layer framework-agnostic)
+builder.Services.AddScoped<IFileUploadAdapter, Getir.Infrastructure.Adapters.AspNetCoreFileUploadAdapter>();
+
 // Common Services
 builder.Services.AddScoped<ILoggingService, LoggingService>();
 builder.Services.AddScoped<ICacheService, MemoryCacheService>();
