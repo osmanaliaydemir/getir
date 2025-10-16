@@ -10,7 +10,7 @@ import 'package:getir_mobile/domain/services/auth_service.dart';
 import '../../helpers/mock_data.dart';
 import 'auth_service_test.mocks.dart';
 
-@GenerateMocks([AuthRepository])
+@GenerateMocks([IAuthRepository])
 void main() {
   late AuthService service;
   late MockAuthRepository mockRepository;

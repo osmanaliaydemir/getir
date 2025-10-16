@@ -7,7 +7,7 @@ import 'package:getir_mobile/core/errors/result.dart';
 import 'package:getir_mobile/core/errors/app_exceptions.dart';
 import '../../helpers/mock_data.dart';
 
-@GenerateMocks([ProductRepository])
+@GenerateMocks([IProductRepository])
 import 'product_service_test.mocks.dart';
 
 void main() {

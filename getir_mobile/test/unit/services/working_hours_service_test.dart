@@ -12,7 +12,7 @@ import 'package:getir_mobile/domain/services/working_hours_service.dart';
 import '../../helpers/mock_data.dart';
 import 'working_hours_service_test.mocks.dart';
 
-@GenerateMocks([WorkingHoursRepository])
+@GenerateMocks([IWorkingHoursRepository])
 void main() {
   late WorkingHoursService service;
   late MockWorkingHoursRepository mockRepository;

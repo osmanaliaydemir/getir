@@ -10,7 +10,7 @@ import 'package:getir_mobile/domain/services/profile_service.dart';
 
 import 'profile_service_test.mocks.dart';
 
-@GenerateMocks([ProfileRepository])
+@GenerateMocks([IProfileRepository])
 void main() {
   late ProfileService service;
   late MockProfileRepository mockRepository;

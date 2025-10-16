@@ -10,7 +10,7 @@ import 'package:getir_mobile/domain/services/review_service.dart';
 
 import 'review_service_test.mocks.dart';
 
-@GenerateMocks([ReviewRepository])
+@GenerateMocks([IReviewRepository])
 void main() {
   late ReviewService service;
   late MockReviewRepository mockRepository;

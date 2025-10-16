@@ -10,7 +10,7 @@ import 'package:getir_mobile/domain/services/notification_service.dart';
 
 import 'notification_service_test.mocks.dart';
 
-@GenerateMocks([NotificationRepository])
+@GenerateMocks([INotificationRepository])
 void main() {
   late NotificationService service;
   late MockNotificationRepository mockRepository;
