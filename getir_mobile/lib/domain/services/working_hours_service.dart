@@ -7,7 +7,7 @@ import '../repositories/working_hours_repository.dart';
 /// Centralized service for merchant working hours operations.
 /// Replaces 4 separate UseCase classes.
 class WorkingHoursService {
-  final WorkingHoursRepository _repository;
+  final IWorkingHoursRepository _repository;
 
   const WorkingHoursService(this._repository);
 

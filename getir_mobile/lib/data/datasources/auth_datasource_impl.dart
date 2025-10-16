@@ -2,12 +2,18 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_datasource.dart';
 import '../models/auth_models.dart';
+import '../../core/services/secure_encryption_service.dart';
 
 class AuthDataSourceImpl implements AuthDataSource {
   final Dio _dio;
   final SharedPreferences _prefs;
+  final SecureEncryptionService _encryptionService;
 
-  AuthDataSourceImpl(this._dio, this._prefs);
+  AuthDataSourceImpl(
+    this._dio,
+    this._prefs, [
+    SecureEncryptionService? encryptionService,
+  ]) : _encryptionService = encryptionService ?? SecureEncryptionService();
 
   SharedPreferences get prefs => _prefs;
 
@@ -20,7 +26,9 @@ class AuthDataSourceImpl implements AuthDataSource {
       );
 
       if (response.statusCode == 200) {
-        final data = response.data['data'] ?? response.data;
+        // Backend returns: {success: true, value: {...}, error: null}
+        final data =
+            response.data['value'] ?? response.data['data'] ?? response.data;
         final authResponse = AuthResponse.fromJson(data);
 
         // Token'ları ve expiration'ı kaydet
@@ -51,7 +59,9 @@ class AuthDataSourceImpl implements AuthDataSource {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = response.data['data'] ?? response.data;
+        // Backend returns: {success: true, value: {...}, error: null}
+        final data =
+            response.data['value'] ?? response.data['data'] ?? response.data;
         final authResponse = AuthResponse.fromJson(data);
 
         // Token'ları ve expiration'ı kaydet
@@ -107,7 +117,9 @@ class AuthDataSourceImpl implements AuthDataSource {
       );
 
       if (response.statusCode == 200) {
-        final data = response.data['data'] ?? response.data;
+        // Backend returns: {success: true, value: {...}, error: null}
+        final data =
+            response.data['value'] ?? response.data['data'] ?? response.data;
         final refreshResponse = RefreshTokenResponse.fromJson(data);
 
         // Yeni token'ları kaydet
@@ -188,24 +200,38 @@ class AuthDataSourceImpl implements AuthDataSource {
 
   @override
   Future<String?> getAccessToken() async {
-    return prefs.getString('access_token');
+    // Try SecureEncryptionService first, fallback to SharedPreferences
+    final secureToken = await _encryptionService.getAccessToken();
+    return secureToken ?? prefs.getString('access_token');
   }
 
   @override
   Future<String?> getRefreshToken() async {
-    return prefs.getString('refresh_token');
+    // Try SecureEncryptionService first, fallback to SharedPreferences
+    final secureToken = await _encryptionService.getRefreshToken();
+    return secureToken ?? prefs.getString('refresh_token');
   }
 
   @override
   Future<void> saveTokens(String accessToken, String refreshToken) async {
+    // Use SecureEncryptionService for token storage
+    await _encryptionService.saveAccessToken(accessToken);
+    await _encryptionService.saveRefreshToken(refreshToken);
+
+    // Also save to SharedPreferences as fallback (deprecated but kept for compatibility)
     await prefs.setString('access_token', accessToken);
     await prefs.setString('refresh_token', refreshToken);
   }
 
   @override
   Future<void> clearTokens() async {
+    // Clear from SecureEncryptionService
+    await _encryptionService.clearAll();
+
+    // Also clear from SharedPreferences
     await prefs.remove('access_token');
     await prefs.remove('refresh_token');
+    await prefs.remove('token_expires_at');
   }
 
   @override

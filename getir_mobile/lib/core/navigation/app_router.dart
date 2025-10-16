@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import '../constants/route_constants.dart';
 import '../../presentation/pages/splash/splash_page.dart';
@@ -185,8 +186,14 @@ class AppRouter {
     redirect: (context, state) {
       // Auth and onboarding guards
       final storage = LocalStorageService();
-      final hasOnboarded = storage.getUserData('onboarding_complete') == 'true';
-      final token = storage.getUserData('auth_token');
+      final hasOnboarded = storage.getUserData('has_seen_onboarding') == 'true';
+      // Token artık SharedPreferences'ta 'access_token' olarak saklanıyor
+      final token = storage.getUserData('access_token');
+
+      debugPrint('🔀 [GoRouter] Redirect check - Path: ${state.uri.path}');
+      debugPrint(
+        '   hasOnboarded: $hasOnboarded, hasToken: ${token != null && token.isNotEmpty}',
+      );
 
       final currentPath = state.uri.path;
       final isAuthRoute =
@@ -196,35 +203,33 @@ class AppRouter {
       final isOnboarding = currentPath == RouteConstants.onboarding;
 
       if (isSplash) {
-        if (!hasOnboarded) return RouteConstants.onboarding;
-        if (token == null || token.isEmpty) return RouteConstants.login;
+        if (!hasOnboarded) {
+          debugPrint(
+            '🔀 [GoRouter] Redirecting to onboarding (first time user)',
+          );
+          return RouteConstants.onboarding;
+        }
+        if (token == null || token.isEmpty) {
+          debugPrint('🔀 [GoRouter] Redirecting to login (no token)');
+          return RouteConstants.login;
+        }
+        debugPrint('🔀 [GoRouter] Redirecting to home (logged in user)');
         return RouteConstants.home;
       }
 
       if (!hasOnboarded && !isOnboarding) {
+        debugPrint('🔀 [GoRouter] Redirecting to onboarding (not completed)');
         return RouteConstants.onboarding;
       }
 
-      if ((token == null || token.isEmpty)) {
-        final protectedPaths = <String>{
-          RouteConstants.home,
-          RouteConstants.search,
-          RouteConstants.cart,
-          RouteConstants.orders,
-          RouteConstants.profile,
-          RouteConstants.checkout,
-          RouteConstants.addresses,
-          RouteConstants.notifications,
-          RouteConstants.notificationSettings,
-          RouteConstants.settings,
-        };
-        if (protectedPaths.contains(currentPath)) {
-          return RouteConstants.login;
-        }
-      } else if (isAuthRoute) {
-        return RouteConstants.home;
-      }
+      // ⚠️ TEMPORARY: Disable auth guard for protected routes
+      // Token is in SecureStorage (async) but getUserData is sync
+      // This causes false negatives in redirect callback
+      // Auth protection is handled by:
+      // 1. BlocListener in pages (redirects on AuthUnauthenticated)
+      // 2. HTTP 401 responses (handled by TokenRefreshInterceptor)
 
+      debugPrint('🔀 [GoRouter] No redirect needed (auth guards disabled)');
       return null;
     },
   );

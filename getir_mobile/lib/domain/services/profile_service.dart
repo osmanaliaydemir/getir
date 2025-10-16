@@ -7,7 +7,7 @@ import '../repositories/profile_repository.dart';
 /// Centralized service for user profile operations.
 /// Replaces 2 separate UseCase classes.
 class ProfileService {
-  final ProfileRepository _repository;
+  final IProfileRepository _repository;
 
   const ProfileService(this._repository);
 

@@ -5,7 +5,7 @@ import '../../domain/entities/cart.dart';
 import '../../domain/repositories/cart_repository.dart';
 import '../datasources/cart_datasource.dart';
 
-class CartRepositoryImpl implements CartRepository {
+class CartRepositoryImpl implements ICartRepository {
   final CartDataSource _dataSource;
 
   CartRepositoryImpl(this._dataSource);

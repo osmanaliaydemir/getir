@@ -32,7 +32,7 @@ import '../repositories/auth_repository.dart';
 /// - checkAuthentication() - Verify auth status
 /// - checkTokenValidity() - Validate token expiry
 class AuthService {
-  final AuthRepository _repository;
+  final IAuthRepository _repository;
 
   const AuthService(this._repository);
 
@@ -264,9 +264,7 @@ class AuthService {
     // Validate inputs
     if (currentPassword.trim().isEmpty || newPassword.trim().isEmpty) {
       return Result.failure(
-        ValidationException(
-          message: 'Current and new password are required',
-        ),
+        ValidationException(message: 'Current and new password are required'),
       );
     }
 

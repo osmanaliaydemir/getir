@@ -2,11 +2,12 @@ import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_performance/firebase_performance.dart';
 import '../services/local_storage_service.dart';
-import '../services/encryption_service.dart';
+import '../services/secure_encryption_service.dart'; // ✅ Upgraded to AES-256
 import '../services/search_history_service.dart';
 import '../services/analytics_service.dart';
 import '../services/logger_service.dart';
@@ -15,7 +16,9 @@ import '../services/network_service.dart';
 import '../config/environment_config.dart';
 import '../interceptors/token_refresh_interceptor.dart';
 
-// Manual DI imports (temporary)
+// DataSources (interface + implementation in same files)
+import '../../data/datasources/auth_datasource.dart';
+import '../../data/datasources/auth_datasource_impl.dart';
 import '../../data/datasources/merchant_datasource.dart';
 import '../../data/datasources/product_datasource.dart';
 import '../../data/datasources/cart_datasource.dart';
@@ -26,6 +29,20 @@ import '../../data/datasources/notification_preferences_datasource.dart';
 import '../../data/datasources/notifications_feed_datasource.dart';
 import '../../data/datasources/working_hours_datasource.dart';
 import '../../data/datasources/review_datasource.dart';
+// Repository Interfaces (Domain) - Using I prefix
+import '../../domain/repositories/auth_repository.dart';
+import '../../domain/repositories/merchant_repository.dart';
+import '../../domain/repositories/product_repository.dart';
+import '../../domain/repositories/cart_repository.dart';
+import '../../domain/repositories/address_repository.dart';
+import '../../domain/repositories/order_repository.dart';
+import '../../domain/repositories/profile_repository.dart';
+import '../../domain/repositories/notification_repository.dart';
+import '../../domain/repositories/notifications_feed_repository.dart';
+import '../../domain/repositories/working_hours_repository.dart';
+import '../../domain/repositories/review_repository.dart';
+
+// Repository Implementations (Data)
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/merchant_repository_impl.dart';
 import '../../data/repositories/product_repository_impl.dart';
@@ -79,35 +96,57 @@ Future<void> configureDependencies() async {
   getIt.registerSingleton<SharedPreferences>(prefs);
 
   // Register core services
-  getIt.registerLazySingleton(() => EncryptionService());
+  getIt.registerLazySingleton(() => SecureEncryptionService()); // ✅ AES-256-GCM
   getIt.registerLazySingleton(() => LocalStorageService());
 
-  // Register Firebase services
-  getIt.registerLazySingleton(() => FirebaseAnalytics.instance);
-  getIt.registerLazySingleton(() => FirebaseCrashlytics.instance);
-  getIt.registerLazySingleton(() => FirebasePerformance.instance);
+  // Register Firebase services (must be before Analytics)
+  // ⚠️ TEMPORARY: Check if Firebase is initialized before registering services
+  bool firebaseInitialized = false;
+  try {
+    // Try to access Firebase - this will throw if not initialized
+    Firebase.app();
+    firebaseInitialized = true;
+    debugPrint('✅ [DI] Firebase detected, registering Firebase services');
+  } catch (e) {
+    debugPrint('⚠️ [DI] Firebase not initialized, using no-op services');
+  }
 
-  // Register Analytics service
-  getIt.registerLazySingleton(
-    () => AnalyticsService(
-      getIt<FirebaseAnalytics>(),
-      getIt<FirebaseCrashlytics>(),
-      getIt<FirebasePerformance>(),
-    ),
+  if (firebaseInitialized) {
+    getIt.registerLazySingleton(() => FirebaseAnalytics.instance);
+    getIt.registerLazySingleton(() => FirebaseCrashlytics.instance);
+    getIt.registerLazySingleton(() => FirebasePerformance.instance);
+
+    // Register Analytics service (must be before Logger)
+    getIt.registerLazySingleton(
+      () => AnalyticsService(
+        getIt<FirebaseAnalytics>(),
+        getIt<FirebaseCrashlytics>(),
+        getIt<FirebasePerformance>(),
+      ),
+    );
+  } else {
+    // Register no-op Analytics service
+    getIt.registerLazySingleton(
+      () => _NoOpAnalyticsService() as AnalyticsService,
+    );
+  }
+
+  // Register Logger service (CRITICAL: Must be before all other services!)
+  getIt.registerLazySingleton<LoggerService>(
+    () => LoggerService(getIt<AnalyticsService>()),
   );
 
-  // Register Logger service
-  getIt.registerLazySingleton(() => LoggerService(getIt<AnalyticsService>()));
-
   // Register SignalR service (Singleton for shared hub connections)
-  getIt.registerLazySingleton(() => SignalRService(getIt<EncryptionService>()));
+  getIt.registerLazySingleton(
+    () => SignalRService(getIt<SecureEncryptionService>()),
+  );
 
   // Register Network service (needed before NetworkCubit)
   final networkService = NetworkService();
   getIt.registerSingleton<NetworkService>(networkService);
 
   // Register Dio
-  final dio = _createDio(getIt<EncryptionService>());
+  final dio = _createDio(getIt<SecureEncryptionService>());
   getIt.registerSingleton<Dio>(dio);
 
   // Register all datasources, repositories, use cases, BLoCs, and Cubits
@@ -122,31 +161,73 @@ Future<void> configureDependencies() async {
 void _registerDatasources() {
   final dio = getIt<Dio>();
 
-  // Register all datasources
-  getIt.registerLazySingleton(() => MerchantDataSourceImpl(dio));
-  getIt.registerLazySingleton(() => ProductDataSourceImpl(dio));
-  getIt.registerLazySingleton(() => CartDataSourceImpl(dio));
-  getIt.registerLazySingleton(() => AddressDataSourceImpl(dio));
-  getIt.registerLazySingleton(() => OrderDataSourceImpl(dio));
-  getIt.registerLazySingleton(() => ProfileDataSourceImpl(dio));
-  getIt.registerLazySingleton(() => NotificationPreferencesDataSourceImpl(dio));
-  getIt.registerLazySingleton(() => NotificationsFeedDataSourceImpl(dio));
-  getIt.registerLazySingleton(() => WorkingHoursDataSourceImpl(dio: dio));
-  getIt.registerLazySingleton(() => ReviewDataSourceImpl(dio: dio));
+  // Register all datasources as interfaces (using concrete classes temporarily)
+  getIt.registerLazySingleton<AuthDataSource>(
+    () => AuthDataSourceImpl(dio, getIt(), getIt<SecureEncryptionService>()),
+  );
+  getIt.registerLazySingleton<MerchantDataSource>(
+    () => MerchantDataSourceImpl(dio),
+  );
+  getIt.registerLazySingleton<ProductDataSource>(
+    () => ProductDataSourceImpl(dio),
+  );
+  getIt.registerLazySingleton<CartDataSource>(() => CartDataSourceImpl(dio));
+  getIt.registerLazySingleton<IAddressDataSource>(
+    () => AddressDataSourceImpl(dio),
+  );
+  getIt.registerLazySingleton<IOrderDataSource>(() => OrderDataSourceImpl(dio));
+  getIt.registerLazySingleton<ProfileDataSource>(
+    () => ProfileDataSourceImpl(dio),
+  );
+  getIt.registerLazySingleton<NotificationPreferencesDataSource>(
+    () => NotificationPreferencesDataSourceImpl(dio),
+  );
+  getIt.registerLazySingleton<NotificationsFeedDataSource>(
+    () => NotificationsFeedDataSourceImpl(dio),
+  );
+  getIt.registerLazySingleton<WorkingHoursDataSource>(
+    () => WorkingHoursDataSourceImpl(dio: dio),
+  );
+  getIt.registerLazySingleton<ReviewDataSource>(
+    () => ReviewDataSourceImpl(dio: dio),
+  );
 }
 
 void _registerRepositories() {
-  getIt.registerLazySingleton(() => AuthRepositoryImpl(getIt()));
-  getIt.registerLazySingleton(() => MerchantRepositoryImpl(getIt()));
-  getIt.registerLazySingleton(() => ProductRepositoryImpl(getIt()));
-  getIt.registerLazySingleton(() => CartRepositoryImpl(getIt()));
-  getIt.registerLazySingleton(() => AddressRepositoryImpl(getIt()));
-  getIt.registerLazySingleton(() => OrderRepositoryImpl(getIt()));
-  getIt.registerLazySingleton(() => ProfileRepositoryImpl(getIt()));
-  getIt.registerLazySingleton(() => NotificationRepositoryImpl(getIt()));
-  getIt.registerLazySingleton(() => NotificationsFeedRepositoryImpl(getIt()));
-  getIt.registerLazySingleton(() => WorkingHoursRepositoryImpl(getIt()));
-  getIt.registerLazySingleton(() => ReviewRepositoryImpl(getIt()));
+  // Register repositories as interfaces (for proper DI)
+  getIt.registerLazySingleton<IAuthRepository>(
+    () => AuthRepositoryImpl(getIt()),
+  );
+  getIt.registerLazySingleton<IMerchantRepository>(
+    () => MerchantRepositoryImpl(getIt()),
+  );
+  getIt.registerLazySingleton<IProductRepository>(
+    () => ProductRepositoryImpl(getIt()),
+  );
+  getIt.registerLazySingleton<ICartRepository>(
+    () => CartRepositoryImpl(getIt()),
+  );
+  getIt.registerLazySingleton<IAddressRepository>(
+    () => AddressRepositoryImpl(getIt()),
+  );
+  getIt.registerLazySingleton<IOrderRepository>(
+    () => OrderRepositoryImpl(getIt()),
+  );
+  getIt.registerLazySingleton<IProfileRepository>(
+    () => ProfileRepositoryImpl(getIt()),
+  );
+  getIt.registerLazySingleton<INotificationRepository>(
+    () => NotificationRepositoryImpl(getIt()),
+  );
+  getIt.registerLazySingleton<INotificationsFeedRepository>(
+    () => NotificationsFeedRepositoryImpl(getIt()),
+  );
+  getIt.registerLazySingleton<IWorkingHoursRepository>(
+    () => WorkingHoursRepositoryImpl(getIt()),
+  );
+  getIt.registerLazySingleton<IReviewRepository>(
+    () => ReviewRepositoryImpl(getIt()),
+  );
 }
 
 void _registerOtherServices(SharedPreferences prefs) {
@@ -228,7 +309,7 @@ void _registerBlocs() {
 }
 
 /// Create Dio instance with interceptors
-Dio _createDio(EncryptionService encryption) {
+Dio _createDio(SecureEncryptionService encryption) {
   final dio = Dio(
     BaseOptions(
       baseUrl: EnvironmentConfig.apiBaseUrl,
@@ -255,20 +336,28 @@ Dio _createDio(EncryptionService encryption) {
 }
 
 class _AuthInterceptor extends Interceptor {
-  final EncryptionService _encryptionService;
+  final SecureEncryptionService _encryptionService;
 
   _AuthInterceptor(this._encryptionService);
 
   @override
-  void onRequest(
+  Future<void> onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
     final token = await _encryptionService.getAccessToken();
+    debugPrint(
+      '🔑 [AuthInterceptor] Token: ${token != null && token.isNotEmpty ? "${token.substring(0, token.length > 20 ? 20 : token.length)}..." : "NULL or EMPTY (length: ${token?.length ?? 0})"}',
+    );
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
+      debugPrint('✅ [AuthInterceptor] Authorization header added');
+    } else {
+      debugPrint(
+        '⚠️ [AuthInterceptor] No token found, request will be sent without auth',
+      );
     }
-    super.onRequest(options, handler);
+    handler.next(options);
   }
 }
 
@@ -357,4 +446,211 @@ class _ResponseAdapterInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     handler.next(err);
   }
+}
+
+/// No-op AnalyticsService when Firebase is not available
+/// This allows the app to run without Firebase for development
+class _NoOpAnalyticsService implements AnalyticsService {
+  @override
+  FirebaseAnalyticsObserver get observer {
+    throw UnimplementedError(
+      'FirebaseAnalyticsObserver not available without Firebase',
+    );
+  }
+
+  @override
+  Future<void> logScreenView({
+    required String screenName,
+    String? screenClass,
+    Map<String, dynamic>? parameters,
+  }) async {}
+
+  @override
+  Future<void> logButtonClick({
+    required String buttonName,
+    String? screenName,
+    Map<String, dynamic>? parameters,
+  }) async {}
+
+  @override
+  Future<void> logSearch({
+    required String searchTerm,
+    String? searchType,
+    int? resultCount,
+  }) async {}
+
+  @override
+  Future<void> logProductView({
+    required String productId,
+    required String productName,
+    String? category,
+    double? price,
+    String? currency,
+  }) async {}
+
+  @override
+  Future<void> logAddToCart({
+    required String productId,
+    required String productName,
+    required double price,
+    String? category,
+    int quantity = 1,
+    String? currency,
+  }) async {}
+
+  @override
+  Future<void> logRemoveFromCart({
+    required String productId,
+    required String productName,
+    required double price,
+    int quantity = 1,
+  }) async {}
+
+  @override
+  Future<void> logAddToFavorites({
+    required String itemId,
+    required String itemName,
+    String? itemType,
+  }) async {}
+
+  @override
+  Future<void> logBeginCheckout({
+    required double value,
+    required String currency,
+    List<AnalyticsEventItem>? items,
+    String? coupon,
+  }) async {}
+
+  @override
+  Future<void> logAddPaymentInfo({
+    required String paymentType,
+    required double value,
+    String? currency,
+  }) async {}
+
+  @override
+  Future<void> logPurchase({
+    required String orderId,
+    required double total,
+    required String currency,
+    List<AnalyticsEventItem>? items,
+    double? tax,
+    double? shipping,
+    String? coupon,
+  }) async {}
+
+  @override
+  Future<void> logOrderCancelled({
+    required String orderId,
+    required double value,
+    String? reason,
+  }) async {}
+
+  @override
+  Future<void> logLogin({String? method}) async {}
+
+  @override
+  Future<void> logSignUp({String? method}) async {}
+
+  @override
+  Future<void> logLogout() async {}
+
+  @override
+  Future<void> logError({
+    required dynamic error,
+    StackTrace? stackTrace,
+    String? reason,
+    Map<String, dynamic>? context,
+    bool fatal = false,
+  }) async {
+    debugPrint('❌ [Analytics-NoOp] Error: $error');
+  }
+
+  @override
+  Future<void> setErrorContext({
+    String? userId,
+    String? screenName,
+    Map<String, dynamic>? customKeys,
+  }) async {}
+
+  @override
+  Future<Trace> startTrace(String traceName) async {
+    return _NoOpTrace();
+  }
+
+  @override
+  Future<void> stopTrace(Trace trace) async {}
+
+  @override
+  Future<T> measurePerformance<T>({
+    required String traceName,
+    required Future<T> Function() operation,
+    Map<String, String>? attributes,
+  }) async {
+    return await operation();
+  }
+
+  @override
+  Future<void> setUserId(String? userId) async {}
+
+  @override
+  Future<void> setUserProperty({
+    required String name,
+    required String? value,
+  }) async {}
+
+  @override
+  Future<void> setUserDemographics({
+    int? age,
+    String? gender,
+    String? interests,
+  }) async {}
+
+  @override
+  Future<void> logCustomEvent({
+    required String eventName,
+    Map<String, dynamic>? parameters,
+  }) async {}
+
+  @override
+  Future<void> setAnalyticsEnabled(bool enabled) async {}
+
+  @override
+  Future<void> setCrashlyticsEnabled(bool enabled) async {}
+
+  @override
+  Future<void> resetAnalyticsData() async {}
+}
+
+/// No-op Trace implementation
+class _NoOpTrace implements Trace {
+  @override
+  Future<void> start() async {}
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  void putAttribute(String name, String value) {}
+
+  @override
+  void putMetric(String name, int value) {}
+
+  @override
+  void setMetric(String name, int value) {}
+
+  @override
+  void incrementMetric(String name, int value) {}
+
+  @override
+  int getMetric(String name) => 0;
+
+  @override
+  String getAttribute(String name) => '';
+
+  @override
+  Map<String, String> getAttributes() => {};
+
+  @override
+  void removeAttribute(String name) {}
 }

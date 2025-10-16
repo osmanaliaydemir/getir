@@ -1,7 +1,7 @@
 import '../../core/errors/result.dart';
 import '../entities/cart.dart';
 
-abstract class CartRepository {
+abstract class ICartRepository {
   Future<Result<Cart>> getCart();
   Future<Result<CartItem>> addToCart({
     required String productId,

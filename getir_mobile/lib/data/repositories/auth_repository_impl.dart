@@ -6,7 +6,7 @@ import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_datasource.dart';
 import '../models/auth_models.dart';
 
-class AuthRepositoryImpl implements AuthRepository {
+class AuthRepositoryImpl implements IAuthRepository {
   final AuthDataSource _dataSource;
 
   const AuthRepositoryImpl(this._dataSource);

@@ -7,7 +7,7 @@ import '../repositories/merchant_repository.dart';
 /// Centralized service for all merchant-related operations.
 /// Replaces 5 separate UseCase classes.
 class MerchantService {
-  final MerchantRepository _repository;
+  final IMerchantRepository _repository;
 
   const MerchantService(this._repository);
 

@@ -1,7 +1,7 @@
 import '../../core/errors/result.dart';
 import '../entities/user_profile.dart';
 
-abstract class ProfileRepository {
+abstract class IProfileRepository {
   Future<Result<UserProfile>> getUserProfile();
   Future<Result<UserProfile>> updateUserProfile({
     required String firstName,

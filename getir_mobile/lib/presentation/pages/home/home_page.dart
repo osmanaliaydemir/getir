@@ -298,7 +298,7 @@ class _HomePageState extends State<HomePage> {
 
             // Popular Products List
             SizedBox(
-              height: AppDimensions.popularProductsHeight,
+              height: 230, // Increased height to fix overflow
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: 5,
@@ -326,44 +326,45 @@ class _HomePageState extends State<HomePage> {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min, // Prevent overflow
                       children: [
-                        Expanded(
-                          flex: 3,
-                          child: Container(
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(
-                                  AppDimensions.cardBorderRadius,
-                                ),
-                                topRight: Radius.circular(
-                                  AppDimensions.cardBorderRadius,
-                                ),
+                        // Image section - fixed height
+                        Container(
+                          height: 120,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(
+                                AppDimensions.cardBorderRadius,
+                              ),
+                              topRight: Radius.circular(
+                                AppDimensions.cardBorderRadius,
                               ),
                             ),
-                            child: const Icon(
-                              Icons.image,
-                              size: AppDimensions.iconXl,
-                              color: Colors.grey,
-                            ),
+                          ),
+                          child: const Icon(
+                            Icons.image,
+                            size: AppDimensions.iconXl,
+                            color: Colors.grey,
                           ),
                         ),
+                        // Content section - flexible
                         Expanded(
-                          flex: 2,
                           child: Padding(
                             padding: const EdgeInsets.all(
                               AppDimensions.spacingM,
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
                                   'Ürün ${index + 1}',
                                   style: AppTypography.bodyMedium.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),
-                                  maxLines: 2,
+                                  maxLines: 1, // Reduced from 2 to 1
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: AppDimensions.spacingXs),
@@ -374,16 +375,17 @@ class _HomePageState extends State<HomePage> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const Spacer(),
+                                const SizedBox(height: AppDimensions.spacingS),
                                 SizedBox(
                                   width: double.infinity,
+                                  height: 32, // Fixed button height
                                   child: ElevatedButton(
                                     onPressed: () {},
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.primary,
                                       foregroundColor: Colors.white,
                                       padding: const EdgeInsets.symmetric(
-                                        vertical: 8,
+                                        vertical: 4, // Reduced padding
                                       ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(8),
@@ -391,7 +393,9 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                     child: Text(
                                       l10n.addToCart,
-                                      style: const TextStyle(fontSize: 12),
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                      ), // Reduced font size
                                     ),
                                   ),
                                 ),
@@ -417,78 +421,8 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 16),
 
-            // Merchants List
-            BlocBuilder<MerchantBloc, MerchantState>(
-              builder: (context, state) {
-                if (state is MerchantLoading) {
-                  return const MerchantListSkeleton(
-                    itemCount: 5,
-                    showCategoryBadge: true,
-                  );
-                }
-
-                if (state is MerchantError) {
-                  return ErrorStateWidget(
-                    errorType: _getErrorTypeFromMessage(state.message),
-                    customMessage: state.message,
-                    onRetry: _currentPosition != null
-                        ? () {
-                            context.read<MerchantBloc>().add(
-                              LoadNearbyMerchants(
-                                latitude: _currentPosition!.latitude,
-                                longitude: _currentPosition!.longitude,
-                                radius: 5.0,
-                              ),
-                            );
-                          }
-                        : null,
-                  );
-                }
-
-                if (state is MerchantsLoaded) {
-                  final merchants = state.merchants;
-
-                  if (merchants.isEmpty) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.store_outlined,
-                              size: 48,
-                              color: AppColors.textSecondary,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              l10n.noMerchantsFound,
-                              style: AppTypography.bodyMedium.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: merchants.length,
-                    itemBuilder: (context, index) {
-                      final merchant = merchants[index];
-                      return MerchantCard(
-                        merchant: merchant,
-                        showCategoryBadge: true, // Ana sayfada badge göster
-                      );
-                    },
-                  );
-                }
-
-                return const SizedBox.shrink();
-              },
-            ),
+            // Merchants List - TEMPORARY: Show mock data until API is ready
+            _buildMockMerchantsList(l10n),
 
             const SizedBox(height: 100), // Bottom padding for navigation
           ],
@@ -568,6 +502,164 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildMockMerchantsList(AppLocalizations l10n) {
+    // Mock merchants data until API is ready
+    final mockMerchants = [
+      {
+        'name': 'Migros Kadıköy',
+        'description': 'Taze ürünler, hızlı teslimat',
+        'rating': 4.5,
+        'deliveryFee': 3.50,
+        'estimatedDeliveryTime': 25,
+        'distance': 0.8,
+        'isOpen': true,
+        'category': 'Market',
+      },
+      {
+        'name': 'Burger King',
+        'description': 'Lezzetli hamburgerler',
+        'rating': 4.2,
+        'deliveryFee': 4.00,
+        'estimatedDeliveryTime': 35,
+        'distance': 1.2,
+        'isOpen': true,
+        'category': 'Restoran',
+      },
+      {
+        'name': 'Eczane Plus',
+        'description': 'İlaçlar ve sağlık ürünleri',
+        'rating': 4.7,
+        'deliveryFee': 2.50,
+        'estimatedDeliveryTime': 20,
+        'distance': 0.5,
+        'isOpen': true,
+        'category': 'Eczane',
+      },
+    ];
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: mockMerchants.length,
+      itemBuilder: (context, index) {
+        final merchant = mockMerchants[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Merchant logo placeholder
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.store, color: Colors.grey, size: 30),
+                ),
+                const SizedBox(width: 16),
+                // Merchant info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        merchant['name'] as String,
+                        style: AppTypography.bodyLarge.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        merchant['description'] as String,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.star, color: Colors.amber, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${merchant['rating']}',
+                            style: AppTypography.bodySmall.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Icon(
+                            Icons.access_time,
+                            color: AppColors.textSecondary,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${merchant['estimatedDeliveryTime']} dk',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                // Delivery info
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        merchant['category'] as String,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '₺${merchant['deliveryFee']}',
+                      style: AppTypography.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

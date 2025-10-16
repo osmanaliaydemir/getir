@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/logger_service.dart';
 
@@ -34,15 +35,11 @@ class EnvironmentConfig {
     try {
       await dotenv.load(fileName: envFile);
     } catch (e) {
-      // If .env file not found, use default values
-      logger.warning(
-        '.env file not found, using default values',
-        tag: 'EnvConfig',
-        context: {
-          'envFile': envFile,
-          'instruction': 'Create a .env.dev file in the root directory',
-        },
+      // If .env file not found, use default values (logger not available yet!)
+      debugPrint(
+        '⚠️ [EnvConfig] .env file not found ($envFile), using default values',
       );
+      debugPrint('💡 [EnvConfig] Create a .env.dev file in the root directory');
     }
   }
 
@@ -60,45 +57,74 @@ class EnvironmentConfig {
 
   /// Get API base URL
   static String get apiBaseUrl {
-    return dotenv.get(_apiBaseUrlKey, fallback: _getDefaultApiBaseUrl());
+    try {
+      return dotenv.get(_apiBaseUrlKey, fallback: _getDefaultApiBaseUrl());
+    } catch (e) {
+      return _getDefaultApiBaseUrl();
+    }
   }
 
   /// Get API timeout (milliseconds)
   static int get apiTimeout {
-    return int.tryParse(dotenv.get(_apiTimeoutKey, fallback: '30000')) ?? 30000;
+    try {
+      return int.tryParse(dotenv.get(_apiTimeoutKey, fallback: '30000')) ??
+          30000;
+    } catch (e) {
+      return 30000;
+    }
   }
 
   /// Get API key
   static String get apiKey {
-    return dotenv.get(_apiKeyKey, fallback: 'dev_api_key_12345');
+    try {
+      return dotenv.get(_apiKeyKey, fallback: 'dev_api_key_12345');
+    } catch (e) {
+      return 'dev_api_key_12345';
+    }
   }
 
   /// Get encryption key for sensitive data
   static String get encryptionKey {
-    return dotenv.get(
-      _encryptionKeyKey,
-      fallback: '32_char_encryption_key_for_dev_12345678',
-    );
+    try {
+      return dotenv.get(
+        _encryptionKeyKey,
+        fallback: '32_char_encryption_key_for_dev_12345678',
+      );
+    } catch (e) {
+      return '32_char_encryption_key_for_dev_12345678';
+    }
   }
 
   /// Check if SSL pinning is enabled
   static bool get enableSslPinning {
-    final value = dotenv.get(_enableSslPinningKey, fallback: 'false');
-    return value.toLowerCase() == 'true';
+    try {
+      final value = dotenv.get(_enableSslPinningKey, fallback: 'false');
+      return value.toLowerCase() == 'true';
+    } catch (e) {
+      return false;
+    }
   }
 
   /// Check if debug mode is enabled
   static bool get debugMode {
-    final value = dotenv.get(_debugModeKey, fallback: 'true');
-    return value.toLowerCase() == 'true';
+    try {
+      final value = dotenv.get(_debugModeKey, fallback: 'true');
+      return value.toLowerCase() == 'true';
+    } catch (e) {
+      return true; // Default to true for development
+    }
   }
 
   /// Get Google Maps API key
   static String get googleMapsApiKey {
-    return dotenv.get(
-      _googleMapsApiKeyKey,
-      fallback: 'your_google_maps_api_key',
-    );
+    try {
+      return dotenv.get(
+        _googleMapsApiKeyKey,
+        fallback: 'your_google_maps_api_key',
+      );
+    } catch (e) {
+      return 'your_google_maps_api_key';
+    }
   }
 
   /// Get default API base URL based on environment
@@ -116,19 +142,24 @@ class EnvironmentConfig {
 
   /// Print current configuration (debug only)
   static void printConfig() {
-    if (!debugMode) return;
+    try {
+      if (!debugMode) return;
 
-    logger.info(
-      'Environment Configuration',
-      tag: 'EnvConfig',
-      context: {
-        'environment': _currentEnvironment,
-        'apiBaseUrl': apiBaseUrl,
-        'apiTimeout': '${apiTimeout}ms',
-        'sslPinning': enableSslPinning,
-        'debugMode': debugMode,
-        'googleMaps': '${googleMapsApiKey.substring(0, 10)}...',
-      },
-    );
+      debugPrint('');
+      debugPrint('═══════════════════════════════════════════════');
+      debugPrint('📋 Environment Configuration');
+      debugPrint('═══════════════════════════════════════════════');
+      debugPrint('  Environment: $_currentEnvironment');
+      debugPrint('  API Base URL: $apiBaseUrl');
+      debugPrint('  API Timeout: ${apiTimeout}ms');
+      debugPrint('  SSL Pinning: $enableSslPinning');
+      debugPrint('  Debug Mode: $debugMode');
+      debugPrint('  Google Maps: ${googleMapsApiKey.substring(0, 10)}...');
+      debugPrint('═══════════════════════════════════════════════');
+      debugPrint('');
+    } catch (e) {
+      // If .env not loaded, skip printing config
+      debugPrint('⚠️ [EnvConfig] Cannot print config (likely .env not loaded)');
+    }
   }
 }

@@ -34,15 +34,15 @@ class FirebaseService {
       // Configure FCM
       await _configureFCM();
 
-      logger.info('Firebase initialized successfully', tag: 'Firebase');
+      debugPrint('✅ [Firebase] Firebase initialized successfully');
     } catch (e, stackTrace) {
-      logger.error(
-        'Firebase initialization failed',
-        tag: 'Firebase',
-        error: e,
-        stackTrace: stackTrace,
+      // ⚠️ TEMPORARY: Allow app to run without Firebase for development
+      debugPrint('⚠️ [Firebase] Firebase initialization failed: $e');
+      debugPrint('💡 [Firebase] App will continue without Firebase features');
+      debugPrint(
+        '📝 [Firebase] To fix: Add google-services.json to android/app/',
       );
-      rethrow;
+      // DON'T rethrow - allow app to continue without Firebase
     }
   }
 

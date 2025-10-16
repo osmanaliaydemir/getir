@@ -7,7 +7,7 @@ import '../repositories/product_repository.dart';
 /// Centralized service for all product-related operations.
 /// Replaces 5 separate UseCase classes.
 class ProductService {
-  final ProductRepository _repository;
+  final IProductRepository _repository;
 
   const ProductService(this._repository);
 

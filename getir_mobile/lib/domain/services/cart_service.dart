@@ -17,7 +17,7 @@ import '../repositories/cart_repository.dart';
 /// - applyCoupon() - Apply discount coupon
 /// - removeCoupon() - Remove discount coupon
 class CartService {
-  final CartRepository _repository;
+  final ICartRepository _repository;
 
   const CartService(this._repository);
 

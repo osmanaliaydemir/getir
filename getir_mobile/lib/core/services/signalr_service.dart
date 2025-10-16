@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:signalr_core/signalr_core.dart';
 import '../config/environment_config.dart';
-import 'encryption_service.dart';
+import 'secure_encryption_service.dart';
 import 'logger_service.dart';
 
 /// SignalR Connection State
@@ -16,7 +16,7 @@ enum SignalRConnectionState {
 /// SignalR Service for Real-time Communication
 /// Manages connections to OrderHub, RealtimeTrackingHub, NotificationHub
 class SignalRService {
-  final EncryptionService _encryptionService;
+  final SecureEncryptionService _encryptionService;
 
   SignalRService(this._encryptionService);
 

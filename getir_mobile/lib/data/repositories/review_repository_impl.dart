@@ -5,7 +5,7 @@ import '../../domain/entities/review.dart';
 import '../../domain/repositories/review_repository.dart';
 import '../datasources/review_datasource.dart';
 
-class ReviewRepositoryImpl implements ReviewRepository {
+class ReviewRepositoryImpl implements IReviewRepository {
   final ReviewDataSource _dataSource;
 
   ReviewRepositoryImpl(this._dataSource);

@@ -9,7 +9,7 @@ part 'notifications_feed_state.dart';
 
 class NotificationsFeedBloc
     extends Bloc<NotificationsFeedEvent, NotificationsFeedState> {
-  final NotificationsFeedRepository repository;
+  final INotificationsFeedRepository repository;
 
   NotificationsFeedBloc({required this.repository})
     : super(NotificationsFeedInitial()) {

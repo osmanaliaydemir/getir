@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import '../services/encryption_service.dart';
+import '../services/secure_encryption_service.dart';
 import '../services/logger_service.dart';
 
 /// Token Refresh Interceptor
@@ -22,7 +22,7 @@ import '../services/logger_service.dart';
 /// - Prevents token expiration issues
 class TokenRefreshInterceptor extends QueuedInterceptor {
   final Dio _dio;
-  final EncryptionService _encryptionService;
+  final SecureEncryptionService _encryptionService;
 
   bool _isRefreshing = false;
   final List<RequestOptions> _requestsQueue = [];

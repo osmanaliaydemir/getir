@@ -1,7 +1,7 @@
 import '../../core/errors/result.dart';
 import '../entities/product.dart';
 
-abstract class ProductRepository {
+abstract class IProductRepository {
   Future<Result<List<Product>>> getProducts({
     int page = 1,
     int limit = 20,

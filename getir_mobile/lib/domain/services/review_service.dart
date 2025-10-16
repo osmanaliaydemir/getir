@@ -7,7 +7,7 @@ import '../repositories/review_repository.dart';
 /// Centralized service for review operations.
 /// Replaces 3 separate UseCase classes.
 class ReviewService {
-  final ReviewRepository _repository;
+  final IReviewRepository _repository;
 
   const ReviewService(this._repository);
 

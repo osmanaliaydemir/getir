@@ -7,7 +7,7 @@ import '../repositories/notification_repository.dart';
 /// Centralized service for notification preferences.
 /// Replaces 2 separate UseCase classes.
 class NotificationService {
-  final NotificationRepository _repository;
+  final INotificationRepository _repository;
 
   const NotificationService(this._repository);
 

@@ -5,7 +5,7 @@ import '../../domain/entities/product.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../datasources/product_datasource.dart';
 
-class ProductRepositoryImpl implements ProductRepository {
+class ProductRepositoryImpl implements IProductRepository {
   final ProductDataSource _dataSource;
 
   ProductRepositoryImpl(this._dataSource);

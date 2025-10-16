@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/animations/loading_animations.dart';
+import '../../../core/constants/route_constants.dart';
+import '../../../core/services/local_storage_service.dart';
 
 /// Splash screen with Getir branding and animations
 class SplashPage extends StatefulWidget {
@@ -84,9 +87,24 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     // Wait a bit more for better UX
     await Future.delayed(const Duration(milliseconds: 500));
 
-    // Navigate to main app
+    // Check if user has seen onboarding
+    final storage = LocalStorageService();
+    final hasSeenOnboarding =
+        storage.getUserData('has_seen_onboarding') == 'true';
+    final hasToken = await storage.getUserDataAsync('access_token') != null;
+
+    // Navigate to appropriate screen
     if (mounted) {
-      Navigator.of(context).pushReplacementNamed('/');
+      if (hasToken) {
+        // User is logged in → Go to home
+        context.go(RouteConstants.home);
+      } else if (hasSeenOnboarding) {
+        // User has seen onboarding → Go to login
+        context.go(RouteConstants.login);
+      } else {
+        // First time user → Go to onboarding
+        context.go(RouteConstants.onboarding);
+      }
     }
   }
 
@@ -281,9 +299,16 @@ class _AnimatedSplashPageState extends State<AnimatedSplashPage>
     _controller.repeat(reverse: true);
 
     // Navigate after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 3), () async {
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/');
+        final storage = LocalStorageService();
+        final hasToken = await storage.getUserDataAsync('access_token') != null;
+
+        if (hasToken) {
+          context.go(RouteConstants.home);
+        } else {
+          context.go(RouteConstants.onboarding);
+        }
       }
     });
   }

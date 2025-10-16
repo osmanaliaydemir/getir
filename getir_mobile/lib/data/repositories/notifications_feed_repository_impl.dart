@@ -5,7 +5,7 @@ import '../../domain/entities/notification.dart';
 import '../../domain/repositories/notifications_feed_repository.dart';
 import '../datasources/notifications_feed_datasource.dart';
 
-class NotificationsFeedRepositoryImpl implements NotificationsFeedRepository {
+class NotificationsFeedRepositoryImpl implements INotificationsFeedRepository {
   final NotificationsFeedDataSource _ds;
 
   NotificationsFeedRepositoryImpl(this._ds);

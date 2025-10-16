@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
-import 'package:getir_mobile/core/services/encryption_service.dart';
+import 'package:getir_mobile/core/services/secure_encryption_service.dart';
 import 'package:getir_mobile/core/services/logger_service.dart';
 import 'package:get_it/get_it.dart';
 
@@ -8,7 +8,7 @@ import 'package:get_it/get_it.dart';
 import 'encryption_service_test.mocks.dart';
 
 void main() {
-  late EncryptionService service;
+  late SecureEncryptionService service;
   late MockLoggerService mockLogger;
   final getIt = GetIt.instance;
 
@@ -20,7 +20,7 @@ void main() {
       getIt.registerSingleton<LoggerService>(mockLogger);
     }
 
-    service = EncryptionService();
+    service = SecureEncryptionService();
   });
 
   tearDown() async {

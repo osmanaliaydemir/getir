@@ -3,6 +3,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'logger_service.dart';
 
 class LocalStorageService {
+  // Singleton pattern
+  static final LocalStorageService _instance = LocalStorageService._internal();
+  factory LocalStorageService() => _instance;
+  LocalStorageService._internal();
+
   late Box<Map> _cacheBox;
   late Box<String> _userBox;
   late Box<List> _queueBox;
@@ -176,6 +181,10 @@ class LocalStorageService {
       if (key.contains('token')) {
         await _secure.write(key: key, value: value);
       } else {
+        if (!Hive.isBoxOpen('user_data')) {
+          logger.debug('User data box not yet initialized', tag: 'Storage');
+          return;
+        }
         await _userBox.put(key, value);
       }
     } catch (e) {
@@ -195,6 +204,10 @@ class LocalStorageService {
         // Caller should prefer getUserDataAsync for secure keys
         return null;
       }
+      if (!Hive.isBoxOpen('user_data')) {
+        logger.debug('User data box not yet initialized', tag: 'Storage');
+        return null;
+      }
       return _userBox.get(key);
     } catch (e) {
       logger.debug(
@@ -211,6 +224,10 @@ class LocalStorageService {
     try {
       if (key.contains('token')) {
         return await _secure.read(key: key);
+      }
+      if (!Hive.isBoxOpen('user_data')) {
+        logger.debug('User data box not yet initialized', tag: 'Storage');
+        return null;
       }
       return _userBox.get(key);
     } catch (e) {
@@ -229,6 +246,10 @@ class LocalStorageService {
       if (key.contains('token')) {
         await _secure.delete(key: key);
       } else {
+        if (!Hive.isBoxOpen('user_data')) {
+          logger.debug('User data box not yet initialized', tag: 'Storage');
+          return;
+        }
         await _userBox.delete(key);
       }
     } catch (e) {
@@ -243,7 +264,9 @@ class LocalStorageService {
   // Clear all user data
   Future<void> clearUserData() async {
     try {
-      await _userBox.clear();
+      if (Hive.isBoxOpen('user_data')) {
+        await _userBox.clear();
+      }
       await _secure.deleteAll();
     } catch (e) {
       logger.debug(
@@ -257,6 +280,12 @@ class LocalStorageService {
   // Add action to sync queue
   Future<void> addToSyncQueue(String action, Map<String, dynamic> data) async {
     try {
+      // Check if _queueBox is initialized
+      if (!Hive.isBoxOpen('sync_queue')) {
+        logger.debug('Sync queue box not yet initialized', tag: 'Storage');
+        return;
+      }
+
       final queueItem = {
         'action': action,
         'data': data,
@@ -281,6 +310,12 @@ class LocalStorageService {
   // Get sync queue
   List<Map<String, dynamic>> getSyncQueue() {
     try {
+      // Check if _queueBox is initialized
+      if (!Hive.isBoxOpen('sync_queue')) {
+        logger.debug('Sync queue box not yet initialized', tag: 'Storage');
+        return [];
+      }
+
       final queue =
           _queueBox.get('pending_actions', defaultValue: <dynamic>[]) ??
           <dynamic>[];
@@ -356,16 +391,19 @@ class LocalStorageService {
 
   // Get cache size
   int getCacheSize() {
+    if (!Hive.isBoxOpen('cache')) return 0;
     return _cacheBox.length;
   }
 
   // Get user data size
   int getUserDataSize() {
+    if (!Hive.isBoxOpen('user_data')) return 0;
     return _userBox.length;
   }
 
   // Get sync queue size
   int getSyncQueueSize() {
+    if (!Hive.isBoxOpen('sync_queue')) return 0;
     return getSyncQueue().length;
   }
 

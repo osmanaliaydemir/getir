@@ -4,7 +4,7 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import '../config/environment_config.dart';
 import '../di/injection.dart';
-import '../services/encryption_service.dart';
+import '../services/secure_encryption_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/network_service.dart';
 import '../services/sync_service.dart';
@@ -34,12 +34,12 @@ class AppInitializer {
     String environment = EnvironmentConfig.dev,
   }) async {
     try {
-      logger.info('Starting app initialization', tag: 'AppInit');
+      debugPrint('🚀 [AppInit] Starting app initialization');
 
       // 🚀 PHASE 1: Parallel initialization - Independent services
       await _initializeParallelServices(environment);
 
-      // 🔧 PHASE 2: Dependency Injection setup
+      // 🔧 PHASE 2: Dependency Injection setup (MUST be before logger usage!)
       await _setupDependencyInjection();
 
       // 🎯 PHASE 3: Sequential initialization - Dependent services
@@ -50,19 +50,28 @@ class AppInitializer {
 
       logger.info('App initialization completed successfully', tag: 'AppInit');
     } catch (e, stackTrace) {
-      logger.fatal(
-        'App initialization failed',
-        tag: 'AppInit',
-        error: e,
-        stackTrace: stackTrace,
-      );
+      // Use debugPrint if logger not yet initialized
+      debugPrint('❌ [AppInit] FATAL: App initialization failed - $e');
+      debugPrint('StackTrace: $stackTrace');
+
+      // Try to log if logger is available
+      try {
+        logger.fatal(
+          'App initialization failed',
+          tag: 'AppInit',
+          error: e,
+          stackTrace: stackTrace,
+        );
+      } catch (_) {
+        // Logger not available yet, already printed above
+      }
       rethrow;
     }
   }
 
   /// Phase 1: Initialize independent services in parallel
   static Future<void> _initializeParallelServices(String environment) async {
-    logger.debug('Phase 1: Initializing parallel services', tag: 'AppInit');
+    debugPrint('📦 [AppInit] Phase 1: Initializing parallel services');
 
     await Future.wait([
       EnvironmentConfig.initialize(environment: environment),
@@ -75,21 +84,17 @@ class AppInitializer {
       EnvironmentConfig.printConfig();
     }
 
-    logger.debug(
-      'Phase 1 completed: Parallel services initialized',
-      tag: 'AppInit',
-    );
+    debugPrint('✅ [AppInit] Phase 1 completed: Parallel services initialized');
   }
 
   /// Phase 2: Setup dependency injection
   static Future<void> _setupDependencyInjection() async {
-    logger.debug('Phase 2: Setting up Dependency Injection', tag: 'AppInit');
+    debugPrint('🔧 [AppInit] Phase 2: Setting up Dependency Injection');
 
     await configureDependencies();
 
-    logger.debug(
-      'Phase 2 completed: Dependency Injection configured',
-      tag: 'AppInit',
+    debugPrint(
+      '✅ [AppInit] Phase 2 completed: DI configured, logger now available',
     );
   }
 
@@ -98,7 +103,7 @@ class AppInitializer {
     logger.debug('Phase 3: Initializing sequential services', tag: 'AppInit');
 
     // Core services (order matters due to dependencies)
-    await getIt<EncryptionService>().initialize();
+    await getIt<SecureEncryptionService>().initialize();
     await getIt<LocalStorageService>().initialize();
 
     // Security & Caching

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 // Core
@@ -123,11 +124,17 @@ class GetirApp extends StatelessWidget {
                 themeMode: themeState.themeMode,
                 locale: languageState.locale,
                 scaffoldMessengerKey: GlobalKeysService.scaffoldMessengerKey,
-                localizationsDelegates: [
-                  ...AppLocalizations.localizationsDelegates,
+                localizationsDelegates: const [
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
                   ...GeneratedLocalizations.localizationsDelegates,
                 ],
-                supportedLocales: GeneratedLocalizations.supportedLocales,
+                supportedLocales: const [
+                  Locale('en', 'US'),
+                  Locale('tr', 'TR'),
+                  Locale('ar', 'SA'),
+                ],
                 routerConfig: AppRouter.router,
                 builder: (context, child) {
                   // Mark first frame rendered

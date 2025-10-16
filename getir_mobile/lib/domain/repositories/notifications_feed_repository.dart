@@ -1,7 +1,7 @@
 import '../../core/errors/result.dart';
 import '../entities/notification.dart';
 
-abstract class NotificationsFeedRepository {
+abstract class INotificationsFeedRepository {
   Future<Result<List<AppNotification>>> getNotifications({
     int page,
     int pageSize,

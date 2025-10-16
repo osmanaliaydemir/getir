@@ -5,7 +5,7 @@ import '../../domain/entities/notification_preferences.dart';
 import '../../domain/repositories/notification_repository.dart';
 import '../datasources/notification_preferences_datasource.dart';
 
-class NotificationRepositoryImpl implements NotificationRepository {
+class NotificationRepositoryImpl implements INotificationRepository {
   final NotificationPreferencesDataSource _ds;
 
   NotificationRepositoryImpl(this._ds);

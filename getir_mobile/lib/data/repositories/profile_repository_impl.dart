@@ -5,7 +5,7 @@ import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_datasource.dart';
 
-class ProfileRepositoryImpl implements ProfileRepository {
+class ProfileRepositoryImpl implements IProfileRepository {
   final ProfileDataSource _dataSource;
 
   ProfileRepositoryImpl(this._dataSource);

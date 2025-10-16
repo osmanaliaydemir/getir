@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../bloc/auth/auth_bloc.dart';
@@ -6,9 +7,11 @@ import '../../bloc/cart/cart_bloc.dart';
 import '../../widgets/common/language_selector.dart';
 import '../../../core/cubits/language/language_cubit.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/constants/route_constants.dart';
 import '../../../core/navigation/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -54,11 +57,22 @@ class _LoginPageState extends State<LoginPage> {
       body: SafeArea(
         child: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
+            debugPrint(
+              '📡 [LoginPage] Received AuthBloc state: ${state.runtimeType}',
+            );
+
             if (state is AuthAuthenticated) {
+              debugPrint(
+                '🎉 [LoginPage] User authenticated, navigating to home...',
+              );
               // ✅ Trigger cart merge after successful login
               context.read<CartBloc>().add(MergeLocalCartAfterLogin());
-              AppNavigation.goToHome(context);
+
+              // Use context.go instead of AppNavigation helper
+              context.go(RouteConstants.home);
+              debugPrint('✅ [LoginPage] Navigated to home using context.go');
             } else if (state is AuthError) {
+              debugPrint('❌ [LoginPage] Auth error: ${state.message}');
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),

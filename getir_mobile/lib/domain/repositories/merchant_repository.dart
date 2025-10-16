@@ -1,7 +1,7 @@
 import '../../core/errors/result.dart';
 import '../entities/merchant.dart';
 
-abstract class MerchantRepository {
+abstract class IMerchantRepository {
   Future<Result<List<Merchant>>> getMerchants({
     int page = 1,
     int limit = 20,

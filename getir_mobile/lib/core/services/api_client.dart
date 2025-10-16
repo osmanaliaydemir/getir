@@ -5,7 +5,7 @@ import 'local_storage_service.dart';
 import '../config/environment_config.dart';
 import '../interceptors/ssl_pinning_interceptor.dart';
 import '../interceptors/cache_interceptor.dart';
-import 'encryption_service.dart';
+import 'secure_encryption_service.dart';
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
@@ -54,7 +54,7 @@ class ApiClient {
 
 class _AuthInterceptor extends Interceptor {
   final LocalStorageService storage;
-  final EncryptionService _encryptionService = EncryptionService();
+  final SecureEncryptionService _encryptionService = SecureEncryptionService();
 
   _AuthInterceptor(this.storage);
 

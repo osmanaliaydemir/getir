@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../core/navigation/app_router.dart';
+import 'package:flutter/foundation.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/constants/route_constants.dart';
+import '../../../core/services/local_storage_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 
@@ -17,13 +20,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final List<OnboardingItem> _onboardingItems = [
     OnboardingItem(
       title: 'Hızlı Teslimat',
-      description: 'İhtiyacın olan ürünleri dakikalar içinde kapına getiriyoruz.',
+      description:
+          'İhtiyacın olan ürünleri dakikalar içinde kapına getiriyoruz.',
       icon: Icons.local_shipping,
       color: AppColors.primary,
     ),
     OnboardingItem(
       title: 'Geniş Ürün Yelpazesi',
-      description: 'Market, yemek, su ve eczane ürünlerini tek yerden sipariş et.',
+      description:
+          'Market, yemek, su ve eczane ürünlerini tek yerden sipariş et.',
       icon: Icons.store,
       color: AppColors.secondary,
     ),
@@ -42,22 +47,42 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   void _nextPage() {
+    debugPrint(
+      '🔍 [Onboarding] Next button tapped, current page: $_currentPage',
+    );
     if (_currentPage < _onboardingItems.length - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
     } else {
+      debugPrint('🔍 [Onboarding] Last page, navigating to login');
       _goToLogin();
     }
   }
 
   void _skipOnboarding() {
+    debugPrint('🔍 [Onboarding] Skip button tapped');
     _goToLogin();
   }
 
-  void _goToLogin() {
-    AppNavigation.goToLogin(context);
+  void _goToLogin() async {
+    debugPrint('🔍 [Onboarding] Navigating to login page...');
+    try {
+      // Mark onboarding as seen
+      final storage = LocalStorageService();
+      await storage.storeUserData('has_seen_onboarding', 'true');
+      debugPrint('✅ [Onboarding] Onboarding marked as seen');
+
+      // Navigate to login using GoRouter
+      if (mounted) {
+        context.go(RouteConstants.login);
+        debugPrint('✅ [Onboarding] Navigation to login successful');
+      }
+    } catch (e, stackTrace) {
+      debugPrint('❌ [Onboarding] Navigation failed: $e');
+      debugPrint('StackTrace: $stackTrace');
+    }
   }
 
   @override
@@ -83,7 +108,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 ),
               ),
             ),
-            
+
             // PageView
             Expanded(
               child: PageView.builder(
@@ -100,7 +125,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 },
               ),
             ),
-            
+
             // Page Indicators
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -111,8 +136,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   width: _currentPage == index ? 24 : 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: _currentPage == index 
-                        ? AppColors.primary 
+                    color: _currentPage == index
+                        ? AppColors.primary
                         : AppColors.greyLight,
                     borderRadius: BorderRadius.circular(4),
                   ),
@@ -120,7 +145,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               ),
             ),
             const SizedBox(height: 32),
-            
+
             // Next/Get Started Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -129,8 +154,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 child: ElevatedButton(
                   onPressed: _nextPage,
                   child: Text(
-                    _currentPage == _onboardingItems.length - 1 
-                        ? 'Başlayalım' 
+                    _currentPage == _onboardingItems.length - 1
+                        ? 'Başlayalım'
                         : 'Devam Et',
                     style: AppTypography.buttonText,
                   ),
@@ -158,14 +183,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
               color: item.color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(60),
             ),
-            child: Icon(
-              item.icon,
-              size: 60,
-              color: item.color,
-            ),
+            child: Icon(item.icon, size: 60, color: item.color),
           ),
           const SizedBox(height: 48),
-          
+
           // Title
           Text(
             item.title,
@@ -176,7 +197,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          
+
           // Description
           Text(
             item.description,

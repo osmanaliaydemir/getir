@@ -93,15 +93,36 @@ class AuthResponse {
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
     return AuthResponse(
-      accessToken: json['accessToken'] as String,
-      refreshToken: json['refreshToken'] as String,
-      expiresAt: DateTime.parse(json['expiresAt'] as String),
-      role: json['role'] as String,
-      userId: json['userId'] as String,
-      email: json['email'] as String,
-      fullName: json['fullName'] as String,
+      accessToken: (json['accessToken'] ?? json['token'] ?? '') as String,
+      refreshToken: (json['refreshToken'] ?? '') as String,
+      expiresAt: json['expiresAt'] != null
+          ? DateTime.parse(json['expiresAt'] as String)
+          : DateTime.now().add(const Duration(hours: 1)),
+      role: json['role'] != null
+          ? (json['role'] is int
+                ? _mapRoleIdToString(json['role'] as int)
+                : json['role'] as String)
+          : 'Customer',
+      userId: (json['userId'] ?? json['id'] ?? '') as String,
+      email: (json['email'] ?? '') as String,
+      fullName: (json['fullName'] ?? json['userName'] ?? 'User') as String,
       merchantId: json['merchantId'] as String?,
     );
+  }
+
+  static String _mapRoleIdToString(int roleId) {
+    switch (roleId) {
+      case 0:
+        return 'Admin';
+      case 1:
+        return 'Customer';
+      case 2:
+        return 'Courier';
+      case 3:
+        return 'MerchantOwner';
+      default:
+        return 'Customer';
+    }
   }
 
   // UserModel'e çevir (geriye dönük uyumluluk için)
@@ -266,9 +287,11 @@ class RefreshTokenResponse {
 
   factory RefreshTokenResponse.fromJson(Map<String, dynamic> json) {
     return RefreshTokenResponse(
-      accessToken: json['accessToken'] as String,
-      refreshToken: json['refreshToken'] as String,
-      expiresAt: DateTime.parse(json['expiresAt'] as String),
+      accessToken: (json['accessToken'] ?? json['token'] ?? '') as String,
+      refreshToken: (json['refreshToken'] ?? '') as String,
+      expiresAt: json['expiresAt'] != null
+          ? DateTime.parse(json['expiresAt'] as String)
+          : DateTime.now().add(const Duration(hours: 1)),
     );
   }
 }

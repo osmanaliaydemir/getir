@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:crypto/crypto.dart';
@@ -164,12 +165,22 @@ class SecureEncryptionService {
   /// Save access token securely (Keychain/Keystore)
   Future<void> saveAccessToken(String token) async {
     try {
+      debugPrint('🔐 [Encryption] Saving access token (${token.length} chars)');
       await _secureStorage.write(key: _accessTokenKey, value: token);
+      debugPrint('✅ [Encryption] Access token saved successfully');
+
+      // Verify immediately
+      final savedToken = await _secureStorage.read(key: _accessTokenKey);
+      debugPrint(
+        '✅ [Encryption] Verification: ${savedToken != null ? "OK (${savedToken.length} chars)" : "FAILED - NULL"}',
+      );
+
       logger.logSensitiveOperation(
         operation: 'save_access_token',
         success: true,
       );
     } catch (e, stackTrace) {
+      debugPrint('❌ [Encryption] saveAccessToken ERROR: $e');
       logger.logSensitiveOperation(
         operation: 'save_access_token',
         success: false,
@@ -182,8 +193,13 @@ class SecureEncryptionService {
   /// Get access token
   Future<String?> getAccessToken() async {
     try {
-      return await _secureStorage.read(key: _accessTokenKey);
+      final token = await _secureStorage.read(key: _accessTokenKey);
+      debugPrint(
+        '🔓 [Encryption] getAccessToken: ${token != null ? "FOUND (${token.length} chars)" : "NULL"}',
+      );
+      return token;
     } catch (e) {
+      debugPrint('❌ [Encryption] getAccessToken ERROR: $e');
       logger.logSensitiveOperation(
         operation: 'read_access_token',
         success: false,

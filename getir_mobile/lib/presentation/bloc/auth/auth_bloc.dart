@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../core/errors/app_exceptions.dart';
@@ -172,16 +173,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     await result.when(
       success: (user) async {
+        debugPrint('🎉 [AuthBloc] Login SUCCESS - User: ${user.email}');
+
         // 📊 Analytics: Track login
         await _analytics.logLogin(method: 'email');
         await _analytics.setUserId(user.id);
 
+        debugPrint('✅ [AuthBloc] Emitting AuthAuthenticated state...');
         if (!emit.isDone) {
           emit(AuthAuthenticated(user));
+          debugPrint('✅ [AuthBloc] AuthAuthenticated state emitted!');
+        } else {
+          debugPrint(
+            '⚠️ [AuthBloc] Emit is done, cannot emit AuthAuthenticated',
+          );
         }
         // ✅ Cart merge logic moved to UI layer (login_page.dart)
       },
       failure: (exception) async {
+        debugPrint('❌ [AuthBloc] Login FAILED: $exception');
         final message = _getErrorMessage(exception);
         await _analytics.logError(error: exception, reason: 'Login failed');
         if (!emit.isDone) {
@@ -336,8 +346,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     await result.when(
       success: (_) async {
         // 📊 Analytics: Track password change
-        await _analytics.logEvent(
-          name: 'password_changed',
+        await _analytics.logCustomEvent(
+          eventName: 'password_changed',
           parameters: {'method': 'in_app'},
         );
 

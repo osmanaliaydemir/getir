@@ -5,7 +5,7 @@ import '../../domain/entities/merchant.dart';
 import '../../domain/repositories/merchant_repository.dart';
 import '../datasources/merchant_datasource.dart';
 
-class MerchantRepositoryImpl implements MerchantRepository {
+class MerchantRepositoryImpl implements IMerchantRepository {
   final MerchantDataSource _dataSource;
 
   MerchantRepositoryImpl(this._dataSource);

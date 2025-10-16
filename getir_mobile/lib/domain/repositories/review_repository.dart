@@ -1,7 +1,7 @@
 import '../../core/errors/result.dart';
 import '../entities/review.dart';
 
-abstract class ReviewRepository {
+abstract class IReviewRepository {
   Future<Result<Review>> submitReview(SubmitReviewRequest request);
   Future<Result<List<Review>>> getMerchantReviews(
     String merchantId, {

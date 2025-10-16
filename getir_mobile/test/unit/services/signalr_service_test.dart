@@ -3,21 +3,21 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:getir_mobile/core/services/signalr_service.dart';
-import 'package:getir_mobile/core/services/encryption_service.dart';
+import 'package:getir_mobile/core/services/secure_encryption_service.dart';
 import 'package:getir_mobile/core/services/logger_service.dart';
 import 'package:get_it/get_it.dart';
 
-@GenerateMocks([EncryptionService, LoggerService])
+@GenerateMocks([SecureEncryptionService, LoggerService])
 import 'signalr_service_test.mocks.dart';
 
 void main() {
   late SignalRService service;
-  late MockEncryptionService mockEncryption;
+  late MockSecureEncryptionService mockEncryption;
   late MockLoggerService mockLogger;
   final getIt = GetIt.instance;
 
   setUp(() {
-    mockEncryption = MockEncryptionService();
+    mockEncryption = MockSecureEncryptionService();
     mockLogger = MockLoggerService();
 
     // Register logger

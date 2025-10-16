@@ -5,7 +5,7 @@ import '../../domain/entities/working_hours.dart';
 import '../../domain/repositories/working_hours_repository.dart';
 import '../datasources/working_hours_datasource.dart';
 
-class WorkingHoursRepositoryImpl implements WorkingHoursRepository {
+class WorkingHoursRepositoryImpl implements IWorkingHoursRepository {
   final WorkingHoursDataSource _dataSource;
 
   WorkingHoursRepositoryImpl(this._dataSource);
