@@ -5,9 +5,11 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i3;
 
-import 'package:getir_mobile/core/services/encryption_service.dart' as _i2;
-import 'package:getir_mobile/core/services/logger_service.dart' as _i4;
+import 'package:getir_mobile/core/services/logger_service.dart' as _i5;
+import 'package:getir_mobile/core/services/secure_encryption_service.dart'
+    as _i2;
 import 'package:mockito/mockito.dart' as _i1;
+import 'package:mockito/src/dummies.dart' as _i4;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -22,11 +24,12 @@ import 'package:mockito/mockito.dart' as _i1;
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
 
-/// A class which mocks [EncryptionService].
+/// A class which mocks [SecureEncryptionService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockEncryptionService extends _i1.Mock implements _i2.EncryptionService {
-  MockEncryptionService() {
+class MockSecureEncryptionService extends _i1.Mock
+    implements _i2.SecureEncryptionService {
+  MockSecureEncryptionService() {
     _i1.throwOnMissingStub(this);
   }
 
@@ -39,6 +42,36 @@ class MockEncryptionService extends _i1.Mock implements _i2.EncryptionService {
         returnValue: _i3.Future<void>.value(),
         returnValueForMissingStub: _i3.Future<void>.value(),
       ) as _i3.Future<void>);
+
+  @override
+  String encryptData(String? plaintext) => (super.noSuchMethod(
+        Invocation.method(
+          #encryptData,
+          [plaintext],
+        ),
+        returnValue: _i4.dummyValue<String>(
+          this,
+          Invocation.method(
+            #encryptData,
+            [plaintext],
+          ),
+        ),
+      ) as String);
+
+  @override
+  String decryptData(String? encryptedBase64) => (super.noSuchMethod(
+        Invocation.method(
+          #decryptData,
+          [encryptedBase64],
+        ),
+        returnValue: _i4.dummyValue<String>(
+          this,
+          Invocation.method(
+            #decryptData,
+            [encryptedBase64],
+          ),
+        ),
+      ) as String);
 
   @override
   _i3.Future<void> saveAccessToken(String? token) => (super.noSuchMethod(
@@ -168,18 +201,28 @@ class MockEncryptionService extends _i1.Mock implements _i2.EncryptionService {
         ),
         returnValue: _i3.Future<bool>.value(false),
       ) as _i3.Future<bool>);
+
+  @override
+  _i3.Future<void> rotateEncryptionKey() => (super.noSuchMethod(
+        Invocation.method(
+          #rotateEncryptionKey,
+          [],
+        ),
+        returnValue: _i3.Future<void>.value(),
+        returnValueForMissingStub: _i3.Future<void>.value(),
+      ) as _i3.Future<void>);
 }
 
 /// A class which mocks [LoggerService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockLoggerService extends _i1.Mock implements _i4.LoggerService {
+class MockLoggerService extends _i1.Mock implements _i5.LoggerService {
   MockLoggerService() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  void setMinimumLevel(_i4.LogLevel? level) => super.noSuchMethod(
+  void setMinimumLevel(_i5.LogLevel? level) => super.noSuchMethod(
         Invocation.method(
           #setMinimumLevel,
           [level],

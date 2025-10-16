@@ -15,10 +15,10 @@ import 'working_hours_service_test.mocks.dart';
 @GenerateMocks([IWorkingHoursRepository])
 void main() {
   late WorkingHoursService service;
-  late MockWorkingHoursRepository mockRepository;
+  late MockIWorkingHoursRepository mockRepository;
 
   setUp(() {
-    mockRepository = MockWorkingHoursRepository();
+    mockRepository = MockIWorkingHoursRepository();
     service = WorkingHoursService(mockRepository);
   });
 

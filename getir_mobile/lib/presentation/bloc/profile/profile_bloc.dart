@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/user_profile.dart';
 import '../../../domain/services/profile_service.dart';
@@ -26,15 +28,20 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     });
 
     on<UpdateProfile>((event, emit) async {
+      emit(ProfileLoading());
+
       final result = await _profileService.updateUserProfile(
         firstName: event.firstName,
         lastName: event.lastName,
         phoneNumber: event.phoneNumber,
         avatarUrl: event.avatarUrl,
+        avatarImage: event.avatarImage != null
+            ? File(event.avatarImage!.path)
+            : null,
       );
 
       result.when(
-        success: (updated) => emit(ProfileLoaded(updated)),
+        success: (updated) => emit(ProfileUpdated(updated)),
         failure: (exception) {
           final message = _getErrorMessage(exception);
           emit(ProfileError(message));

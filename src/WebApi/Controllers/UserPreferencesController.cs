@@ -33,7 +33,7 @@ public class UserPreferencesController : BaseController
         if (unauthorizedResult != null) return unauthorizedResult;
 
         var result = await _userPreferencesService.GetOrCreateUserPreferencesAsync(userId, ct);
-        return ToActionResult(result);
+        return ToActionResult<UserNotificationPreferencesResponse>(result);
     }
 
     /// <summary>
@@ -65,7 +65,7 @@ public class UserPreferencesController : BaseController
         if (unauthorizedResult != null) return unauthorizedResult;
 
         var result = await _userPreferencesService.GetMerchantPreferencesAsync(userId, ct);
-        return ToActionResult(result);
+        return ToActionResult<MerchantNotificationPreferencesResponse>(result);
     }
 
     /// <summary>
@@ -114,7 +114,7 @@ public class UserPreferencesController : BaseController
         CancellationToken ct = default)
     {
         var result = await _userPreferencesService.GetUserPreferencesAsync(userId, ct);
-        return ToActionResult(result);
+        return ToActionResult<UserNotificationPreferencesResponse>(result);
     }
 
     /// <summary>

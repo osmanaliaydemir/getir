@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
@@ -12,6 +13,7 @@ class MainNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final currentRoute = GoRouterState.of(context).uri.toString();
 
     return Scaffold(
       body: child,
@@ -40,6 +42,7 @@ class MainNavigation extends StatelessWidget {
                   label: l10n.home,
                   route: '/home',
                   index: 0,
+                  isActive: currentRoute == '/home',
                 ),
                 _buildNavItem(
                   context: context,
@@ -48,6 +51,7 @@ class MainNavigation extends StatelessWidget {
                   label: l10n.search,
                   route: '/search',
                   index: 1,
+                  isActive: currentRoute == '/search',
                 ),
                 _buildNavItem(
                   context: context,
@@ -57,6 +61,7 @@ class MainNavigation extends StatelessWidget {
                   route: '/cart',
                   index: 2,
                   badgeCount: 0,
+                  isActive: currentRoute == '/cart',
                 ),
                 _buildNavItem(
                   context: context,
@@ -65,6 +70,7 @@ class MainNavigation extends StatelessWidget {
                   label: l10n.orders,
                   route: '/orders',
                   index: 3,
+                  isActive: currentRoute == '/orders',
                 ),
                 _buildNavItem(
                   context: context,
@@ -73,6 +79,7 @@ class MainNavigation extends StatelessWidget {
                   label: l10n.profile,
                   route: '/profile',
                   index: 4,
+                  isActive: currentRoute == '/profile',
                 ),
               ],
             ),
@@ -89,8 +96,13 @@ class MainNavigation extends StatelessWidget {
     required String label,
     required String route,
     required int index,
+    required bool isActive,
     int? badgeCount,
   }) {
+    final iconColor = isActive ? AppColors.primary : AppColors.textSecondary;
+    final textColor = isActive ? AppColors.primary : AppColors.textSecondary;
+    final displayIcon = isActive ? activeIcon : icon;
+
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -120,7 +132,7 @@ class MainNavigation extends StatelessWidget {
               // Icon with badge
               Stack(
                 children: [
-                  Icon(icon, color: AppColors.textSecondary, size: 24),
+                  Icon(displayIcon, color: iconColor, size: 24),
                   if (badgeCount != null && badgeCount > 0)
                     Positioned(
                       right: -2,
@@ -152,8 +164,8 @@ class MainNavigation extends StatelessWidget {
               Text(
                 label,
                 style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
+                  color: textColor,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                 ),
               ),
             ],

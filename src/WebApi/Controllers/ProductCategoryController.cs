@@ -34,7 +34,7 @@ public class ProductCategoryController : BaseController
         CancellationToken ct = default)
     {
         var result = await _productCategoryService.GetMerchantCategoriesAsync(merchantId, ct);
-        return ToActionResult(result);
+        return ToActionResult<List<ProductCategoryResponse>>(result);
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ public class ProductCategoryController : BaseController
         CancellationToken ct = default)
     {
         var result = await _productCategoryService.GetMerchantCategoryTreeAsync(merchantId, ct);
-        return ToActionResult(result);
+        return ToActionResult<List<ProductCategoryTreeResponse>>(result);
     }
 
     /// <summary>
@@ -67,7 +67,7 @@ public class ProductCategoryController : BaseController
         CancellationToken ct = default)
     {
         var result = await _productCategoryService.GetProductCategoryByIdAsync(id, ct);
-        return ToActionResult(result);
+        return ToActionResult<ProductCategoryResponse>(result);
     }
 
     /// <summary>

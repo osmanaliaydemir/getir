@@ -91,27 +91,27 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                   children: [
                     _buildSwitchTile(
                       title: l10n.orderUpdates,
-                      value: prefs.orderUpdates,
+                      value: prefs.pushOrderUpdates,
                       onChanged: (v) =>
-                          _update(context, prefs.copyWith(orderUpdates: v)),
+                          _update(context, prefs.copyWith(pushOrderUpdates: v)),
                     ),
                     _buildSwitchTile(
                       title: l10n.promotions,
-                      value: prefs.promotions,
+                      value: prefs.pushPromotions,
                       onChanged: (v) =>
-                          _update(context, prefs.copyWith(promotions: v)),
+                          _update(context, prefs.copyWith(pushPromotions: v)),
                     ),
                     _buildSwitchTile(
                       title: l10n.systemNotifications,
-                      value: prefs.system,
+                      value: prefs.pushEnabled,
                       onChanged: (v) =>
-                          _update(context, prefs.copyWith(system: v)),
+                          _update(context, prefs.copyWith(pushEnabled: v)),
                     ),
                     _buildSwitchTile(
                       title: l10n.marketing,
-                      value: prefs.marketing,
+                      value: prefs.emailPromotions,
                       onChanged: (v) =>
-                          _update(context, prefs.copyWith(marketing: v)),
+                          _update(context, prefs.copyWith(emailPromotions: v)),
                     ),
                   ],
                 );

@@ -13,10 +13,10 @@ import 'auth_service_test.mocks.dart';
 @GenerateMocks([IAuthRepository])
 void main() {
   late AuthService service;
-  late MockAuthRepository mockRepository;
+  late MockIAuthRepository mockRepository;
 
   setUp(() {
-    mockRepository = MockAuthRepository();
+    mockRepository = MockIAuthRepository();
     service = AuthService(mockRepository);
   });
 

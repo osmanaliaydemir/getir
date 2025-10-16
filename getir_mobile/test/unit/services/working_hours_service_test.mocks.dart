@@ -34,12 +34,12 @@ class _FakeResult_0<T> extends _i1.SmartFake implements _i2.Result<T> {
         );
 }
 
-/// A class which mocks [WorkingHoursRepository].
+/// A class which mocks [IWorkingHoursRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockWorkingHoursRepository extends _i1.Mock
-    implements _i3.WorkingHoursRepository {
-  MockWorkingHoursRepository() {
+class MockIWorkingHoursRepository extends _i1.Mock
+    implements _i3.IWorkingHoursRepository {
+  MockIWorkingHoursRepository() {
     _i1.throwOnMissingStub(this);
   }
 

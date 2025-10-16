@@ -12,10 +12,10 @@ import 'product_service_test.mocks.dart';
 
 void main() {
   late ProductService service;
-  late MockProductRepository mockRepository;
+  late MockIProductRepository mockRepository;
 
   setUp(() {
-    mockRepository = MockProductRepository();
+    mockRepository = MockIProductRepository();
     service = ProductService(mockRepository);
   });
 

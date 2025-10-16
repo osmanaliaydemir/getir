@@ -29,6 +29,9 @@ import '../../data/datasources/notification_preferences_datasource.dart';
 import '../../data/datasources/notifications_feed_datasource.dart';
 import '../../data/datasources/working_hours_datasource.dart';
 import '../../data/datasources/review_datasource.dart';
+import '../../data/datasources/favorites_datasource.dart';
+import '../../data/datasources/orders_datasource.dart';
+import '../../data/datasources/language_datasource.dart';
 // Repository Interfaces (Domain) - Using I prefix
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/merchant_repository.dart';
@@ -41,6 +44,10 @@ import '../../domain/repositories/notification_repository.dart';
 import '../../domain/repositories/notifications_feed_repository.dart';
 import '../../domain/repositories/working_hours_repository.dart';
 import '../../domain/repositories/review_repository.dart';
+import '../../domain/repositories/favorites_repository.dart';
+import '../../domain/repositories/orders_repository.dart';
+import '../../domain/repositories/language_repository.dart';
+import '../../domain/repositories/notification_preferences_repository.dart';
 
 // Repository Implementations (Data)
 import '../../data/repositories/auth_repository_impl.dart';
@@ -54,6 +61,10 @@ import '../../data/repositories/notification_repository_impl.dart';
 import '../../data/repositories/notifications_feed_repository_impl.dart';
 import '../../data/repositories/working_hours_repository_impl.dart';
 import '../../data/repositories/review_repository_impl.dart';
+import '../../data/repositories/favorites_repository_impl.dart';
+import '../../data/repositories/orders_repository_impl.dart';
+import '../../data/repositories/language_repository_impl.dart';
+import '../../data/repositories/notification_preferences_repository_impl.dart';
 
 // Services (replaces 49 Use Case classes)
 import '../../domain/services/auth_service.dart';
@@ -66,6 +77,10 @@ import '../../domain/services/profile_service.dart';
 import '../../domain/services/notification_service.dart';
 import '../../domain/services/working_hours_service.dart';
 import '../../domain/services/review_service.dart';
+import '../../domain/services/favorites_service.dart';
+import '../../domain/services/orders_service.dart';
+import '../../domain/services/language_service.dart';
+import '../../domain/services/notification_preferences_service.dart';
 
 // Cubits (Global State)
 import '../cubits/network/network_cubit.dart';
@@ -86,6 +101,9 @@ import '../../presentation/bloc/search/search_bloc.dart';
 import '../../presentation/bloc/notifications_feed/notifications_feed_bloc.dart';
 import '../../presentation/bloc/working_hours/working_hours_bloc.dart';
 import '../../presentation/bloc/review/review_bloc.dart';
+import '../../presentation/bloc/favorites/favorites_bloc.dart';
+import '../../presentation/bloc/orders/orders_bloc.dart';
+import '../../presentation/bloc/language/language_bloc.dart' as lang_bloc;
 
 final GetIt getIt = GetIt.instance;
 
@@ -191,6 +209,15 @@ void _registerDatasources() {
   getIt.registerLazySingleton<ReviewDataSource>(
     () => ReviewDataSourceImpl(dio: dio),
   );
+  getIt.registerLazySingleton<FavoritesDataSource>(
+    () => FavoritesDataSourceImpl(dio),
+  );
+  getIt.registerLazySingleton<OrdersDataSource>(
+    () => OrdersDataSourceImpl(dio),
+  );
+  getIt.registerLazySingleton<LanguageDataSource>(
+    () => LanguageDataSourceImpl(dio),
+  );
 }
 
 void _registerRepositories() {
@@ -228,6 +255,18 @@ void _registerRepositories() {
   getIt.registerLazySingleton<IReviewRepository>(
     () => ReviewRepositoryImpl(getIt()),
   );
+  getIt.registerLazySingleton<IFavoritesRepository>(
+    () => FavoritesRepositoryImpl(getIt()),
+  );
+  getIt.registerLazySingleton<IOrdersRepository>(
+    () => OrdersRepositoryImpl(getIt()),
+  );
+  getIt.registerLazySingleton<ILanguageRepository>(
+    () => LanguageRepositoryImpl(getIt()),
+  );
+  getIt.registerLazySingleton<INotificationPreferencesRepository>(
+    () => NotificationPreferencesRepositoryImpl(getIt()),
+  );
 }
 
 void _registerOtherServices(SharedPreferences prefs) {
@@ -246,6 +285,10 @@ void _registerServices() {
   getIt.registerFactory(() => NotificationService(getIt()));
   getIt.registerFactory(() => WorkingHoursService(getIt()));
   getIt.registerFactory(() => ReviewService(getIt()));
+  getIt.registerFactory(() => FavoritesService(getIt()));
+  getIt.registerFactory(() => OrdersService(getIt()));
+  getIt.registerFactory(() => LanguageService(getIt()));
+  getIt.registerFactory(() => NotificationPreferencesService(getIt()));
 }
 
 void _registerCubits(SharedPreferences prefs, NetworkService networkService) {
@@ -286,7 +329,7 @@ void _registerBlocs() {
 
   // NotificationPreferencesBloc
   getIt.registerFactory(
-    () => NotificationPreferencesBloc(getIt<NotificationService>()),
+    () => NotificationPreferencesBloc(getIt<NotificationPreferencesService>()),
   );
 
   // SearchBloc
@@ -306,6 +349,15 @@ void _registerBlocs() {
 
   // WorkingHoursBloc
   getIt.registerFactory(() => WorkingHoursBloc(getIt<WorkingHoursService>()));
+
+  // FavoritesBloc
+  getIt.registerFactory(() => FavoritesBloc(getIt<FavoritesService>()));
+
+  // OrdersBloc
+  getIt.registerFactory(() => OrdersBloc(getIt<OrdersService>()));
+
+  // LanguageBloc
+  getIt.registerFactory(() => lang_bloc.LanguageBloc(getIt<LanguageService>()));
 }
 
 /// Create Dio instance with interceptors

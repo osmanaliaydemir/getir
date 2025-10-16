@@ -47,3 +47,9 @@ public record ResetPasswordRequest(
 public record ChangePasswordRequest(
     string CurrentPassword,
     string NewPassword);
+
+public record UpdateUserProfileRequest(
+    string FirstName,
+    string LastName,
+    string? PhoneNumber,
+    string? AvatarUrl);

@@ -662,6 +662,102 @@ public class AuthService : BaseService, IAuthService
             return ServiceResult.HandleException(ex, _logger, "ChangePassword");
         }
     }
+
+    public async Task<Result<UserProfileResponse>> GetUserProfileAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetUserProfileInternalAsync(userId, cancellationToken),
+            "GetUserProfile",
+            new { UserId = userId },
+            cancellationToken);
+    }
+
+    private async Task<Result<UserProfileResponse>> GetUserProfileInternalAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var user = await _unitOfWork.Repository<User>().GetByIdAsync(userId, cancellationToken);
+            if (user == null)
+            {
+                return ServiceResult.Failure<UserProfileResponse>("User not found", ErrorCodes.NOT_FOUND);
+            }
+
+            var profileResponse = new UserProfileResponse(
+                user.Id,
+                user.Email,
+                user.FirstName,
+                user.LastName,
+                user.PhoneNumber,
+                user.Role,
+                user.IsEmailVerified,
+                user.CreatedAt);
+
+            return ServiceResult.Success(profileResponse);
+        }
+        catch (Exception ex)
+        {
+            _loggingService.LogError("Error getting user profile", ex, new { UserId = userId });
+            return ServiceResult.HandleException<UserProfileResponse>(ex, _logger, "GetUserProfile");
+        }
+    }
+
+    public async Task<Result<UserProfileResponse>> UpdateUserProfileAsync(
+        Guid userId,
+        UpdateUserProfileRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await UpdateUserProfileInternalAsync(userId, request, cancellationToken),
+            "UpdateUserProfile",
+            new { UserId = userId, FirstName = request.FirstName, LastName = request.LastName },
+            cancellationToken);
+    }
+
+    private async Task<Result<UserProfileResponse>> UpdateUserProfileInternalAsync(
+        Guid userId,
+        UpdateUserProfileRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var user = await _unitOfWork.Repository<User>().GetByIdAsync(userId, cancellationToken);
+            if (user == null)
+            {
+                return ServiceResult.Failure<UserProfileResponse>("User not found", ErrorCodes.NOT_FOUND);
+            }
+
+            // Update user properties
+            user.FirstName = request.FirstName;
+            user.LastName = request.LastName;
+            user.PhoneNumber = request.PhoneNumber;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            _unitOfWork.Repository<User>().Update(user);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            var profileResponse = new UserProfileResponse(
+                user.Id,
+                user.Email,
+                user.FirstName,
+                user.LastName,
+                user.PhoneNumber,
+                user.Role,
+                user.IsEmailVerified,
+                user.CreatedAt);
+
+            _loggingService.LogBusinessEvent("UserProfileUpdated", new { UserId = userId });
+            return ServiceResult.Success(profileResponse);
+        }
+        catch (Exception ex)
+        {
+            _loggingService.LogError("Error updating user profile", ex, new { UserId = userId });
+            return ServiceResult.HandleException<UserProfileResponse>(ex, _logger, "UpdateUserProfile");
+        }
+    }
 }
 
 // Background task data classes

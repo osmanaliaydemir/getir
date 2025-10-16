@@ -34,12 +34,12 @@ class _FakeResult_0<T> extends _i1.SmartFake implements _i2.Result<T> {
         );
 }
 
-/// A class which mocks [MerchantRepository].
+/// A class which mocks [IMerchantRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockMerchantRepository extends _i1.Mock
-    implements _i3.MerchantRepository {
-  MockMerchantRepository() {
+class MockIMerchantRepository extends _i1.Mock
+    implements _i3.IMerchantRepository {
+  MockIMerchantRepository() {
     _i1.throwOnMissingStub(this);
   }
 

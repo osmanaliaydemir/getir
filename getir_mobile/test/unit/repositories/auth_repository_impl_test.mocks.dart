@@ -134,6 +134,17 @@ class MockAuthDataSource extends _i1.Mock implements _i3.AuthDataSource {
       ) as _i4.Future<void>);
 
   @override
+  _i4.Future<void> changePassword(_i2.ChangePasswordRequest? request) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #changePassword,
+          [request],
+        ),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
+
+  @override
   _i4.Future<String?> getAccessToken() => (super.noSuchMethod(
         Invocation.method(
           #getAccessToken,

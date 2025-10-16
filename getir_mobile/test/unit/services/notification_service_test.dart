@@ -13,10 +13,10 @@ import 'notification_service_test.mocks.dart';
 @GenerateMocks([INotificationRepository])
 void main() {
   late NotificationService service;
-  late MockNotificationRepository mockRepository;
+  late MockINotificationRepository mockRepository;
 
   setUp(() {
-    mockRepository = MockNotificationRepository();
+    mockRepository = MockINotificationRepository();
     service = NotificationService(mockRepository);
   });
 

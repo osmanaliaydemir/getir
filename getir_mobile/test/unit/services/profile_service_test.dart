@@ -13,10 +13,10 @@ import 'profile_service_test.mocks.dart';
 @GenerateMocks([IProfileRepository])
 void main() {
   late ProfileService service;
-  late MockProfileRepository mockRepository;
+  late MockIProfileRepository mockRepository;
 
   setUp(() {
-    mockRepository = MockProfileRepository();
+    mockRepository = MockIProfileRepository();
     service = ProfileService(mockRepository);
   });
 

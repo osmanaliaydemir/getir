@@ -150,3 +150,7 @@ public class GetTranslationsByKeysResponse
     public int MissingCount { get; set; }
     public List<string> MissingKeys { get; set; } = new();
 }
+
+// User language preference (simplified for mobile app)
+public record UpdateUserLanguagePreferenceRequest(string LanguageCode);
+public record LanguagePreferenceResponse(string LanguageCode);

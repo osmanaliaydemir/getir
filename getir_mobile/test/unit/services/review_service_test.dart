@@ -13,10 +13,10 @@ import 'review_service_test.mocks.dart';
 @GenerateMocks([IReviewRepository])
 void main() {
   late ReviewService service;
-  late MockReviewRepository mockRepository;
+  late MockIReviewRepository mockRepository;
 
   setUp(() {
-    mockRepository = MockReviewRepository();
+    mockRepository = MockIReviewRepository();
     service = ReviewService(mockRepository);
   });
 
@@ -46,9 +46,9 @@ void main() {
     group('submitReview', () {
       test('submits review when repository call succeeds', () async {
         // Arrange
-        when(mockRepository.submitReview(submitRequest)).thenAnswer(
-          (_) async => Result.success(testReview),
-        );
+        when(
+          mockRepository.submitReview(submitRequest),
+        ).thenAnswer((_) async => Result.success(testReview));
 
         // Act
         final result = await service.submitReview(submitRequest);
@@ -62,9 +62,9 @@ void main() {
       test('returns failure when repository call fails', () async {
         // Arrange
         final exception = ValidationException(message: 'Invalid review data');
-        when(mockRepository.submitReview(submitRequest)).thenAnswer(
-          (_) async => Result.failure(exception),
-        );
+        when(
+          mockRepository.submitReview(submitRequest),
+        ).thenAnswer((_) async => Result.failure(exception));
 
         // Act
         final result = await service.submitReview(submitRequest);
@@ -78,9 +78,9 @@ void main() {
       test('returns failure when order not found', () async {
         // Arrange
         final exception = NotFoundException(message: 'Order not found');
-        when(mockRepository.submitReview(submitRequest)).thenAnswer(
-          (_) async => Result.failure(exception),
-        );
+        when(
+          mockRepository.submitReview(submitRequest),
+        ).thenAnswer((_) async => Result.failure(exception));
 
         // Act
         final result = await service.submitReview(submitRequest);
@@ -95,9 +95,9 @@ void main() {
         final exception = ValidationException(
           message: 'Order already reviewed',
         );
-        when(mockRepository.submitReview(submitRequest)).thenAnswer(
-          (_) async => Result.failure(exception),
-        );
+        when(
+          mockRepository.submitReview(submitRequest),
+        ).thenAnswer((_) async => Result.failure(exception));
 
         // Act
         final result = await service.submitReview(submitRequest);
@@ -186,11 +186,7 @@ void main() {
         // Assert
         expect(result.isSuccess, true);
         verify(
-          mockRepository.getMerchantReviews(
-            merchantId,
-            page: 2,
-            pageSize: 10,
-          ),
+          mockRepository.getMerchantReviews(merchantId, page: 2, pageSize: 10),
         ).called(1);
       });
     });
@@ -200,9 +196,9 @@ void main() {
 
       test('marks review as helpful when repository call succeeds', () async {
         // Arrange
-        when(mockRepository.markReviewAsHelpful(reviewId)).thenAnswer(
-          (_) async => Result.success(null),
-        );
+        when(
+          mockRepository.markReviewAsHelpful(reviewId),
+        ).thenAnswer((_) async => Result.success(null));
 
         // Act
         final result = await service.markReviewAsHelpful(reviewId);
@@ -215,9 +211,9 @@ void main() {
       test('returns failure when repository call fails', () async {
         // Arrange
         final exception = NotFoundException(message: 'Review not found');
-        when(mockRepository.markReviewAsHelpful(reviewId)).thenAnswer(
-          (_) async => Result.failure(exception),
-        );
+        when(
+          mockRepository.markReviewAsHelpful(reviewId),
+        ).thenAnswer((_) async => Result.failure(exception));
 
         // Act
         final result = await service.markReviewAsHelpful(reviewId);
@@ -233,9 +229,9 @@ void main() {
         final exception = ValidationException(
           message: 'Already marked as helpful',
         );
-        when(mockRepository.markReviewAsHelpful(reviewId)).thenAnswer(
-          (_) async => Result.failure(exception),
-        );
+        when(
+          mockRepository.markReviewAsHelpful(reviewId),
+        ).thenAnswer((_) async => Result.failure(exception));
 
         // Act
         final result = await service.markReviewAsHelpful(reviewId);
@@ -247,4 +243,3 @@ void main() {
     });
   });
 }
-

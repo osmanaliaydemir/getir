@@ -1,5 +1,6 @@
 using Getir.Application.Common;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 
 namespace Getir.WebApi.Controllers;
 
@@ -12,38 +13,33 @@ namespace Getir.WebApi.Controllers;
 public abstract class BaseController : ControllerBase
 {
     /// <summary>
-    /// Converts Result<T> to IActionResult with ApiResponse wrapper
+    /// Converts Result<T> to IActionResult with standardized ApiResponse
     /// </summary>
     protected IActionResult ToActionResult<T>(Result<T> result)
     {
         if (result.Success)
         {
-            return Ok(new 
-            { 
-                success = true,
-                value = result.Value,
-                error = (string?)null
-            });
+            return Ok(ApiResponse<T>.Success(result.Value!));
         }
         else
         {
-            return BadRequest(new 
-            { 
-                success = false,
-                value = default(T),
-                error = result.Error
-            });
+            return BadRequest(ApiResponse<T>.Fail(result.Error ?? "Operation failed", result.ErrorCode));
         }
     }
 
     /// <summary>
-    /// Converts Result to IActionResult
+    /// Converts Result to IActionResult with standardized ApiResponse
     /// </summary>
     protected IActionResult ToActionResult(Result result)
     {
-        return result.Success 
-            ? Ok() 
-            : BadRequest(result.Error);
+        if (result.Success)
+        {
+            return Ok(ApiResponse.Success());
+        }
+        else
+        {
+            return BadRequest(ApiResponse.Fail(result.Error ?? "Operation failed", result.ErrorCode));
+        }
     }
 
     /// <summary>
@@ -86,14 +82,42 @@ public abstract class BaseController : ControllerBase
     }
 
     /// <summary>
-    /// Handles validation errors
+    /// Handles validation errors with standardized response
     /// </summary>
     protected IActionResult? HandleValidationErrors()
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            var errors = string.Join(", ", ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage));
+            return BadRequest(ApiResponse.Fail(errors, ErrorCodes.VALIDATION_ERROR));
         }
         return null;
+    }
+
+    /// <summary>
+    /// Returns standardized success response with data
+    /// </summary>
+    protected IActionResult SuccessResponse<T>(T data, Dictionary<string, object>? metadata = null)
+    {
+        return Ok(ApiResponse<T>.Success(data, metadata));
+    }
+
+    /// <summary>
+    /// Returns standardized success response without data
+    /// </summary>
+    protected IActionResult SuccessResponse()
+    {
+        return Ok(ApiResponse.Success());
+    }
+
+    /// <summary>
+    /// Returns standardized error response
+    /// </summary>
+    protected IActionResult ErrorResponse(string error, string? errorCode = null, int statusCode = 400)
+    {
+        var response = ApiResponse.Fail(error, errorCode);
+        return StatusCode(statusCode, response);
     }
 }

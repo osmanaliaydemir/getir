@@ -33,11 +33,11 @@ class _FakeResult_0<T> extends _i1.SmartFake implements _i2.Result<T> {
         );
 }
 
-/// A class which mocks [AuthRepository].
+/// A class which mocks [IAuthRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockAuthRepository extends _i1.Mock implements _i3.AuthRepository {
-  MockAuthRepository() {
+class MockIAuthRepository extends _i1.Mock implements _i3.IAuthRepository {
+  MockIAuthRepository() {
     _i1.throwOnMissingStub(this);
   }
 
@@ -169,6 +169,31 @@ class MockAuthRepository extends _i1.Mock implements _i3.AuthRepository {
             #resetPassword,
             [
               token,
+              newPassword,
+            ],
+          ),
+        )),
+      ) as _i4.Future<_i2.Result<void>>);
+
+  @override
+  _i4.Future<_i2.Result<void>> changePassword(
+    String? currentPassword,
+    String? newPassword,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #changePassword,
+          [
+            currentPassword,
+            newPassword,
+          ],
+        ),
+        returnValue: _i4.Future<_i2.Result<void>>.value(_FakeResult_0<void>(
+          this,
+          Invocation.method(
+            #changePassword,
+            [
+              currentPassword,
               newPassword,
             ],
           ),

@@ -232,6 +232,31 @@ class MockAuthService extends _i1.Mock implements _i6.AuthService {
       ) as _i5.Future<_i2.Result<void>>);
 
   @override
+  _i5.Future<_i2.Result<void>> changePassword(
+    String? currentPassword,
+    String? newPassword,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #changePassword,
+          [
+            currentPassword,
+            newPassword,
+          ],
+        ),
+        returnValue: _i5.Future<_i2.Result<void>>.value(_FakeResult_0<void>(
+          this,
+          Invocation.method(
+            #changePassword,
+            [
+              currentPassword,
+              newPassword,
+            ],
+          ),
+        )),
+      ) as _i5.Future<_i2.Result<void>>);
+
+  @override
   _i5.Future<_i2.Result<_i7.UserEntity>> getCurrentUser() =>
       (super.noSuchMethod(
         Invocation.method(

@@ -22,7 +22,9 @@ class UserProfile {
       firstName: json['firstName'] ?? '',
       lastName: json['lastName'] ?? '',
       phoneNumber: json['phoneNumber'] as String?,
-      avatarUrl: json['avatarUrl'] as String?,
+      avatarUrl:
+          json['avatarUrl']
+              as String?, // Note: WebAPI UserProfileResponse doesn't include avatarUrl yet
     );
   }
 

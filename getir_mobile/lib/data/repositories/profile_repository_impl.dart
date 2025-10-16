@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../../core/errors/result.dart';
@@ -32,6 +33,7 @@ class ProfileRepositoryImpl implements IProfileRepository {
     required String lastName,
     String? phoneNumber,
     String? avatarUrl,
+    File? avatarImage,
   }) async {
     try {
       final profile = await _dataSource.updateUserProfile(
@@ -39,6 +41,7 @@ class ProfileRepositoryImpl implements IProfileRepository {
         lastName: lastName,
         phoneNumber: phoneNumber,
         avatarUrl: avatarUrl,
+        avatarImage: avatarImage,
       );
       return Result.success(profile);
     } on DioException catch (e) {

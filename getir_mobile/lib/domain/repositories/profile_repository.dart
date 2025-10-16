@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../../core/errors/result.dart';
 import '../entities/user_profile.dart';
 
@@ -8,5 +9,6 @@ abstract class IProfileRepository {
     required String lastName,
     String? phoneNumber,
     String? avatarUrl,
+    File? avatarImage,
   });
 }

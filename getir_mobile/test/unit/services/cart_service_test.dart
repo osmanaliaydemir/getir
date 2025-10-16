@@ -12,10 +12,10 @@ import 'cart_service_test.mocks.dart';
 
 void main() {
   late CartService cartService;
-  late MockCartRepository mockRepository;
+  late MockICartRepository mockRepository;
 
   setUp(() {
-    mockRepository = MockCartRepository();
+    mockRepository = MockICartRepository();
     cartService = CartService(mockRepository);
   });
 

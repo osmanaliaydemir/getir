@@ -2,21 +2,21 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/notification_preferences.dart';
-import '../../../domain/services/notification_service.dart';
+import '../../../domain/services/notification_preferences_service.dart';
 
 part 'notification_preferences_event.dart';
 part 'notification_preferences_state.dart';
 
 class NotificationPreferencesBloc
     extends Bloc<NotificationPreferencesEvent, NotificationPreferencesState> {
-  final NotificationService _notificationService;
+  final NotificationPreferencesService _notificationService;
 
   NotificationPreferencesBloc(this._notificationService)
     : super(NotificationPreferencesInitial()) {
     on<LoadNotificationPreferences>((event, emit) async {
       emit(NotificationPreferencesLoading());
 
-      final result = await _notificationService.getPreferences();
+      final result = await _notificationService.getNotificationPreferences();
 
       result.when(
         success: (prefs) => emit(NotificationPreferencesLoaded(prefs)),
@@ -28,7 +28,7 @@ class NotificationPreferencesBloc
     });
 
     on<UpdateNotificationPreferencesEvent>((event, emit) async {
-      final result = await _notificationService.updatePreferences(
+      final result = await _notificationService.updateNotificationPreferences(
         event.preferences,
       );
 

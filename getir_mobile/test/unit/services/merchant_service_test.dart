@@ -12,10 +12,10 @@ import 'merchant_service_test.mocks.dart';
 
 void main() {
   late MerchantService service;
-  late MockMerchantRepository mockRepository;
+  late MockIMerchantRepository mockRepository;
 
   setUp(() {
-    mockRepository = MockMerchantRepository();
+    mockRepository = MockIMerchantRepository();
     service = MerchantService(mockRepository);
   });
 

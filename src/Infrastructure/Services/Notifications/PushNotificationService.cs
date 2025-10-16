@@ -20,12 +20,8 @@ public class PushNotificationService : IPushNotificationService
     private readonly ILogger<PushNotificationService> _logger;
     private readonly HttpClient _httpClient;
 
-    public PushNotificationService(
-        ILoggingService loggingService,
-        IUnitOfWork unitOfWork,
-        IOptions<PushNotificationConfiguration> pushConfig,
-        ILogger<PushNotificationService> logger,
-        HttpClient httpClient)
+    public PushNotificationService(ILoggingService loggingService, IUnitOfWork unitOfWork, IOptions<PushNotificationConfiguration> pushConfig,
+                                    ILogger<PushNotificationService> logger, HttpClient httpClient)
     {
         _loggingService = loggingService;
         _unitOfWork = unitOfWork;
@@ -33,17 +29,29 @@ public class PushNotificationService : IPushNotificationService
         _logger = logger;
         _httpClient = httpClient;
 
-        // Configure HTTP client for FCM
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"key={_pushConfig.ServerKey}");
-        _httpClient.DefaultRequestHeaders.Add("Content-Type", "application/json");
+        // Configure HTTP client for FCM (only if ServerKey is configured)
+        if (!string.IsNullOrWhiteSpace(_pushConfig.ServerKey))
+        {
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"key={_pushConfig.ServerKey}");
+            _httpClient.DefaultRequestHeaders.Add("Content-Type", "application/json");
+        }
+        else
+        {
+            _logger.LogWarning("Push notification ServerKey is not configured. Push notifications will not work.");
+        }
     }
 
-    public async Task<Result> SendPushNotificationAsync(
-        PushNotificationRequest request, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> SendPushNotificationAsync(PushNotificationRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
+            // Check if push notifications are configured
+            if (string.IsNullOrWhiteSpace(_pushConfig.ServerKey))
+            {
+                _logger.LogWarning("Push notification requested but ServerKey is not configured");
+                return Result.Fail("Push notifications are not configured", "PUSH_NOT_CONFIGURED");
+            }
+
             // Validate device token
             if (string.IsNullOrWhiteSpace(request.DeviceToken))
             {
@@ -75,12 +83,17 @@ public class PushNotificationService : IPushNotificationService
         }
     }
 
-    public async Task<Result> SendBulkPushNotificationAsync(
-        IEnumerable<PushNotificationRequest> requests, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> SendBulkPushNotificationAsync(IEnumerable<PushNotificationRequest> requests, CancellationToken cancellationToken = default)
     {
         try
         {
+            // Check if push notifications are configured
+            if (string.IsNullOrWhiteSpace(_pushConfig.ServerKey))
+            {
+                _logger.LogWarning("Bulk push notification requested but ServerKey is not configured");
+                return Result.Fail("Push notifications are not configured", "PUSH_NOT_CONFIGURED");
+            }
+
             var results = new List<Result>();
             var batchSize = 100; // FCM supports up to 1000 tokens per request
             var batches = requests.Chunk(batchSize);
@@ -123,9 +136,7 @@ public class PushNotificationService : IPushNotificationService
         }
     }
 
-    public async Task<Result> SendPushToTopicAsync(
-        PushTopicRequest request, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> SendPushToTopicAsync(PushTopicRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -185,10 +196,7 @@ public class PushNotificationService : IPushNotificationService
         }
     }
 
-    public async Task<Result> SendPushToUserAsync(
-        Guid userId,
-        PushNotificationRequest request, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> SendPushToUserAsync(Guid userId, PushNotificationRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -238,9 +246,7 @@ public class PushNotificationService : IPushNotificationService
         }
     }
 
-    public async Task<Result> RegisterDeviceTokenAsync(
-        DeviceTokenRequest request, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> RegisterDeviceTokenAsync(DeviceTokenRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -301,9 +307,7 @@ public class PushNotificationService : IPushNotificationService
         }
     }
 
-    public async Task<Result> UnregisterDeviceTokenAsync(
-        string deviceToken, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> UnregisterDeviceTokenAsync(string deviceToken, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -339,9 +343,7 @@ public class PushNotificationService : IPushNotificationService
         }
     }
 
-    public Task<Result<PushNotificationStatus>> GetNotificationStatusAsync(
-        string messageId, 
-        CancellationToken cancellationToken = default)
+    public Task<Result<PushNotificationStatus>> GetNotificationStatusAsync(string messageId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -458,8 +460,10 @@ public class PushNotificationService : IPushNotificationService
 /// <summary>
 /// Push notification configuration
 /// </summary>
-public record PushNotificationConfiguration(
-    string ServerKey,
-    string FcmUrl = "https://fcm.googleapis.com/fcm/send",
-    int TimeoutSeconds = 30,
-    int MaxRetryAttempts = 3);
+public class PushNotificationConfiguration
+{
+    public string ServerKey { get; set; } = string.Empty;
+    public string FcmUrl { get; set; } = "https://fcm.googleapis.com/fcm/send";
+    public int TimeoutSeconds { get; set; } = 30;
+    public int MaxRetryAttempts { get; set; } = 3;
+}

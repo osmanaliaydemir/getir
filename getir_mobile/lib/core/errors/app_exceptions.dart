@@ -195,6 +195,16 @@ class ExceptionFactory {
     final statusCode = error.response?.statusCode;
     final responseData = error.response?.data;
 
+    // Handle case where responseData is not a Map
+    if (responseData != null && responseData is! Map<String, dynamic>) {
+      return NotFoundException(
+        message: responseData.toString(),
+        statusCode: statusCode,
+        responseData: responseData,
+        originalError: error,
+      );
+    }
+
     switch (statusCode) {
       case 400:
         return ValidationException(
@@ -262,6 +272,8 @@ class ExceptionFactory {
       return responseData['message'] as String? ??
           responseData['error'] as String? ??
           responseData['detail'] as String?;
+    } else if (responseData is String) {
+      return responseData;
     }
     return null;
   }

@@ -33,6 +33,9 @@ import 'presentation/bloc/search/search_bloc.dart';
 import 'presentation/bloc/notifications_feed/notifications_feed_bloc.dart';
 import 'presentation/bloc/working_hours/working_hours_bloc.dart';
 import 'presentation/bloc/review/review_bloc.dart';
+import 'presentation/bloc/favorites/favorites_bloc.dart';
+import 'presentation/bloc/orders/orders_bloc.dart';
+import 'presentation/bloc/language/language_bloc.dart' as lang_bloc;
 
 // Localization
 import 'l10n/app_localizations.g.dart';
@@ -111,6 +114,11 @@ class GetirApp extends StatelessWidget {
           create: (_) => getIt<WorkingHoursBloc>(),
         ),
         BlocProvider<ReviewBloc>(create: (_) => getIt<ReviewBloc>()),
+        BlocProvider<FavoritesBloc>(create: (_) => getIt<FavoritesBloc>()),
+        BlocProvider<OrdersBloc>(create: (_) => getIt<OrdersBloc>()),
+        BlocProvider<lang_bloc.LanguageBloc>(
+          create: (_) => getIt<lang_bloc.LanguageBloc>(),
+        ),
       ],
       child: BlocBuilder<LanguageCubit, LanguageState>(
         builder: (context, languageState) {

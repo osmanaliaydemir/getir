@@ -36,6 +36,8 @@ using Getir.Application.Services.WorkingHours;
 using Getir.Infrastructure.Persistence;
 using Getir.Infrastructure.Persistence.Repositories;
 using Getir.Infrastructure.Security;
+using Getir.Infrastructure.Services.Notifications;
+
 // WebApi namespaces
 using Getir.WebApi.Configuration;
 using Getir.WebApi.Middleware;
@@ -136,6 +138,9 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<ICampaignService, CampaignService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<INotificationPreferencesService, NotificationPreferencesService>();
+builder.Services.AddScoped<ISmsService, SmsService>();
+builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
 builder.Services.AddScoped<IUserPreferencesService, UserPreferencesService>();
 builder.Services.AddScoped<ICourierService, CourierService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
@@ -243,6 +248,9 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseSerilogRequestLogging();
 
 // ============= MIDDLEWARE =============
+// Global exception handler - should be first
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
 app.UseMiddleware<ValidationMiddleware>();
 
 // Skip SecurityAuditMiddleware in Testing environment (requires Session)

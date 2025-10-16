@@ -12,14 +12,22 @@ class UpdateProfile extends ProfileEvent {
   final String lastName;
   final String? phoneNumber;
   final String? avatarUrl;
+  final XFile? avatarImage;
 
   UpdateProfile({
     required this.firstName,
     required this.lastName,
     this.phoneNumber,
     this.avatarUrl,
+    this.avatarImage,
   });
 
   @override
-  List<Object?> get props => [firstName, lastName, phoneNumber, avatarUrl];
+  List<Object?> get props => [
+    firstName,
+    lastName,
+    phoneNumber,
+    avatarUrl,
+    avatarImage,
+  ];
 }

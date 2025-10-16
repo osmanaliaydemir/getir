@@ -184,52 +184,22 @@ class AppRouter {
     ],
     errorBuilder: (context, state) => const NotFoundPage(),
     redirect: (context, state) {
-      // Auth and onboarding guards
-      final storage = LocalStorageService();
+      // Minimal redirect - only handle onboarding
+      // Auth kontrolü SplashPage'de yapılıyor (async token kontrolü için)
+      final storage = getIt<LocalStorageService>();
       final hasOnboarded = storage.getUserData('has_seen_onboarding') == 'true';
-      // Token artık SharedPreferences'ta 'access_token' olarak saklanıyor
-      final token = storage.getUserData('access_token');
-
-      debugPrint('🔀 [GoRouter] Redirect check - Path: ${state.uri.path}');
-      debugPrint(
-        '   hasOnboarded: $hasOnboarded, hasToken: ${token != null && token.isNotEmpty}',
-      );
 
       final currentPath = state.uri.path;
-      final isAuthRoute =
-          currentPath == RouteConstants.login ||
-          currentPath == RouteConstants.register;
       final isSplash = currentPath == RouteConstants.splash;
       final isOnboarding = currentPath == RouteConstants.onboarding;
 
-      if (isSplash) {
-        if (!hasOnboarded) {
-          debugPrint(
-            '🔀 [GoRouter] Redirecting to onboarding (first time user)',
-          );
-          return RouteConstants.onboarding;
-        }
-        if (token == null || token.isEmpty) {
-          debugPrint('🔀 [GoRouter] Redirecting to login (no token)');
-          return RouteConstants.login;
-        }
-        debugPrint('🔀 [GoRouter] Redirecting to home (logged in user)');
-        return RouteConstants.home;
-      }
-
-      if (!hasOnboarded && !isOnboarding) {
+      // Onboarding kontrolü
+      if (!hasOnboarded && !isSplash && !isOnboarding) {
         debugPrint('🔀 [GoRouter] Redirecting to onboarding (not completed)');
         return RouteConstants.onboarding;
       }
 
-      // ⚠️ TEMPORARY: Disable auth guard for protected routes
-      // Token is in SecureStorage (async) but getUserData is sync
-      // This causes false negatives in redirect callback
-      // Auth protection is handled by:
-      // 1. BlocListener in pages (redirects on AuthUnauthenticated)
-      // 2. HTTP 401 responses (handled by TokenRefreshInterceptor)
-
-      debugPrint('🔀 [GoRouter] No redirect needed (auth guards disabled)');
+      // Token kontrolü SplashPage'de yapılıyor (async)
       return null;
     },
   );

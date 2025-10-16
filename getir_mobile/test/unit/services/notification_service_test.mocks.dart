@@ -35,12 +35,12 @@ class _FakeResult_0<T> extends _i1.SmartFake implements _i2.Result<T> {
         );
 }
 
-/// A class which mocks [NotificationRepository].
+/// A class which mocks [INotificationRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockNotificationRepository extends _i1.Mock
-    implements _i3.NotificationRepository {
-  MockNotificationRepository() {
+class MockINotificationRepository extends _i1.Mock
+    implements _i3.INotificationRepository {
+  MockINotificationRepository() {
     _i1.throwOnMissingStub(this);
   }
 

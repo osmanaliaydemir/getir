@@ -13,7 +13,7 @@ class NotificationRepositoryImpl implements INotificationRepository {
   @override
   Future<Result<NotificationPreferences>> getPreferences() async {
     try {
-      final preferences = await _ds.getPreferences();
+      final preferences = await _ds.getNotificationPreferences();
       return Result.success(preferences);
     } on DioException catch (e) {
       return Result.failure(ExceptionFactory.fromDioError(e));
@@ -33,7 +33,7 @@ class NotificationRepositoryImpl implements INotificationRepository {
     NotificationPreferences preferences,
   ) async {
     try {
-      final updatedPrefs = await _ds.updatePreferences(preferences);
+      final updatedPrefs = await _ds.updateNotificationPreferences(preferences);
       return Result.success(updatedPrefs);
     } on DioException catch (e) {
       return Result.failure(ExceptionFactory.fromDioError(e));

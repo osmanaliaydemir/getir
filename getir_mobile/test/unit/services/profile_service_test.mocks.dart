@@ -34,11 +34,12 @@ class _FakeResult_0<T> extends _i1.SmartFake implements _i2.Result<T> {
         );
 }
 
-/// A class which mocks [ProfileRepository].
+/// A class which mocks [IProfileRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockProfileRepository extends _i1.Mock implements _i3.ProfileRepository {
-  MockProfileRepository() {
+class MockIProfileRepository extends _i1.Mock
+    implements _i3.IProfileRepository {
+  MockIProfileRepository() {
     _i1.throwOnMissingStub(this);
   }
 

@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../../core/errors/result.dart';
 import '../entities/user_profile.dart';
 import '../repositories/profile_repository.dart';
@@ -20,12 +21,14 @@ class ProfileService {
     required String lastName,
     String? phoneNumber,
     String? avatarUrl,
+    File? avatarImage,
   }) async {
     return await _repository.updateUserProfile(
       firstName: firstName,
       lastName: lastName,
       phoneNumber: phoneNumber,
       avatarUrl: avatarUrl,
+      avatarImage: avatarImage,
     );
   }
 }
