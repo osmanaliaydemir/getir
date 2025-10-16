@@ -230,7 +230,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("SignalRCorsPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "https://localhost:3000") // Frontend URL
+        policy.SetIsOriginAllowed(_ => true) // Allow all origins for SignalR WebSocket
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();

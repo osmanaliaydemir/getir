@@ -131,12 +131,12 @@ class EnvironmentConfig {
   static String _getDefaultApiBaseUrl() {
     switch (_currentEnvironment) {
       case prod:
-        return 'http://ajilgo.runasp.net';
+        return 'https://ajilgo.runasp.net';
       case staging:
-        return 'http://ajilgo.runasp.net';
+        return 'https://ajilgo.runasp.net';
       case dev:
       default:
-        return 'http://ajilgo.runasp.net'; // Backend URL
+        return 'https://ajilgo.runasp.net'; // Backend URL
     }
   }
 

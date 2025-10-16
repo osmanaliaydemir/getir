@@ -94,7 +94,7 @@ class SignalRService {
         return;
       }
 
-      final hubUrl = '${EnvironmentConfig.apiBaseUrl}/hubs/order';
+      final hubUrl = '${EnvironmentConfig.apiBaseUrl}/hubs/orders';
 
       _orderHubConnection = HubConnectionBuilder()
           .withUrl(
@@ -123,11 +123,10 @@ class SignalRService {
       _orderHubStateController.add(_orderHubState);
       logger.info('OrderHub connected successfully', tag: 'SignalR');
     } catch (e, stackTrace) {
-      logger.error(
-        'OrderHub connection failed',
+      logger.warning(
+        'OrderHub connection failed - continuing without real-time order updates',
         tag: 'SignalR',
-        error: e,
-        stackTrace: stackTrace,
+        context: {'error': e.toString()},
       );
       _orderHubState = SignalRConnectionState.failed;
       _orderHubStateController.add(_orderHubState);
@@ -147,7 +146,7 @@ class SignalRService {
       final accessToken = await _encryptionService.getAccessToken();
       if (accessToken == null) return;
 
-      final hubUrl = '${EnvironmentConfig.apiBaseUrl}/hubs/tracking';
+      final hubUrl = '${EnvironmentConfig.apiBaseUrl}/hubs/realtime-tracking';
 
       _trackingHubConnection = HubConnectionBuilder()
           .withUrl(
@@ -175,11 +174,10 @@ class SignalRService {
       _trackingHubStateController.add(_trackingHubState);
       logger.info('TrackingHub connected successfully', tag: 'SignalR');
     } catch (e, stackTrace) {
-      logger.error(
-        'TrackingHub connection failed',
+      logger.warning(
+        'TrackingHub connection failed - continuing without real-time tracking',
         tag: 'SignalR',
-        error: e,
-        stackTrace: stackTrace,
+        context: {'error': e.toString()},
       );
       _trackingHubState = SignalRConnectionState.failed;
       _trackingHubStateController.add(_trackingHubState);
@@ -231,14 +229,16 @@ class SignalRService {
       _notificationHubStateController.add(_notificationHubState);
       logger.info('NotificationHub connected successfully', tag: 'SignalR');
     } catch (e, stackTrace) {
-      logger.error(
-        'NotificationHub connection failed',
+      // Log the error but don't crash the app
+      logger.warning(
+        'NotificationHub connection failed - continuing without real-time notifications',
         tag: 'SignalR',
-        error: e,
-        stackTrace: stackTrace,
+        context: {'error': e.toString()},
       );
       _notificationHubState = SignalRConnectionState.failed;
       _notificationHubStateController.add(_notificationHubState);
+
+      // Don't rethrow - allow app to continue
     }
   }
 

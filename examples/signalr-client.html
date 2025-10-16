@@ -167,7 +167,7 @@
 
         async function connectNotificationHub() {
             notificationConnection = new signalR.HubConnectionBuilder()
-                .withUrl("https://localhost:7001/hubs/notifications", {
+                .withUrl("https://ajilgo.runasp.net/hubs/notifications", {
                     accessTokenFactory: () => currentToken,
                     skipNegotiation: true,
                     transport: signalR.HttpTransportType.WebSockets
@@ -230,7 +230,7 @@
 
         async function connectOrderHub() {
             orderConnection = new signalR.HubConnectionBuilder()
-                .withUrl("https://localhost:7001/hubs/orders", {
+                .withUrl("https://ajilgo.runasp.net/hubs/orders", {
                     accessTokenFactory: () => currentToken,
                     skipNegotiation: true,
                     transport: signalR.HttpTransportType.WebSockets
@@ -302,7 +302,7 @@
 
         async function connectCourierHub() {
             courierConnection = new signalR.HubConnectionBuilder()
-                .withUrl("https://localhost:7001/hubs/courier", {
+                .withUrl("https://ajilgo.runasp.net/hubs/courier", {
                     accessTokenFactory: () => currentToken,
                     skipNegotiation: true,
                     transport: signalR.HttpTransportType.WebSockets

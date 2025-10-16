@@ -19,16 +19,35 @@ public class NotificationHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        var userId = GetUserId();
-        if (userId != null)
+        try
         {
-            // Add user to their personal group
-            await Groups.AddToGroupAsync(Context.ConnectionId, $"user_{userId}");
-            _logger.LogInformation("User {UserId} connected to NotificationHub. ConnectionId: {ConnectionId}", 
-                userId, Context.ConnectionId);
-        }
+            _logger.LogInformation("NotificationHub connection attempt. ConnectionId: {ConnectionId}, User: {User}", 
+                Context.ConnectionId, Context.User?.Identity?.Name ?? "Anonymous");
 
-        await base.OnConnectedAsync();
+            var userId = GetUserId();
+            if (userId != null)
+            {
+                // Add user to their personal group
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"user_{userId}");
+                _logger.LogInformation("User {UserId} connected to NotificationHub. ConnectionId: {ConnectionId}", 
+                    userId, Context.ConnectionId);
+            }
+            else
+            {
+                _logger.LogWarning("User connected to NotificationHub without valid userId. ConnectionId: {ConnectionId}", 
+                    Context.ConnectionId);
+            }
+
+            await base.OnConnectedAsync();
+            _logger.LogInformation("NotificationHub.OnConnectedAsync completed successfully. ConnectionId: {ConnectionId}", 
+                Context.ConnectionId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in NotificationHub.OnConnectedAsync. ConnectionId: {ConnectionId}", 
+                Context.ConnectionId);
+            throw; // Rethrow to signal connection failure
+        }
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)

@@ -19,15 +19,29 @@ public class OrderHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        var userId = GetUserId();
-        if (userId != null)
+        try
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, $"user_{userId}");
-            _logger.LogInformation("User {UserId} connected to OrderHub. ConnectionId: {ConnectionId}", 
-                userId, Context.ConnectionId);
-        }
+            var userId = GetUserId();
+            if (userId != null)
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"user_{userId}");
+                _logger.LogInformation("User {UserId} connected to OrderHub. ConnectionId: {ConnectionId}", 
+                    userId, Context.ConnectionId);
+            }
+            else
+            {
+                _logger.LogWarning("User connected to OrderHub without valid userId. ConnectionId: {ConnectionId}", 
+                    Context.ConnectionId);
+            }
 
-        await base.OnConnectedAsync();
+            await base.OnConnectedAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in OrderHub.OnConnectedAsync. ConnectionId: {ConnectionId}", 
+                Context.ConnectionId);
+            throw; // Rethrow to signal connection failure
+        }
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
