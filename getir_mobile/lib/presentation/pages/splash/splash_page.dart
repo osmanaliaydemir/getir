@@ -31,37 +31,37 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   }
 
   void _initializeAnimations() {
-    // Logo animation
+    // Logo animation - more dynamic
     _logoController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
 
-    _logoScale = Tween<double>(begin: 0.5, end: 1.0).animate(
+    _logoScale = Tween<double>(begin: 0.3, end: 1.0).animate(
       CurvedAnimation(parent: _logoController, curve: Curves.elasticOut),
     );
 
     _logoOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _logoController,
-        curve: const Interval(0.0, 0.8, curve: Curves.easeIn),
+        curve: const Interval(0.0, 0.7, curve: Curves.easeIn),
       ),
     );
 
-    // Text animation
+    // Text animation - staggered
     _textController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
 
     _textOpacity = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeIn));
+    ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeOut));
 
-    // Progress animation
+    // Progress animation - continuous
     _progressController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 2500),
       vsync: this,
     );
 
@@ -75,17 +75,20 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   }
 
   void _startSplashSequence() async {
-    // Start logo animation
-    await _logoController.forward();
+    // Start logo animation with delay
+    await Future.delayed(const Duration(milliseconds: 300));
+    _logoController.forward();
 
-    // Start text animation
-    await _textController.forward();
+    // Start text animation with overlap
+    await Future.delayed(const Duration(milliseconds: 800));
+    _textController.forward();
 
-    // Start progress animation
-    await _progressController.forward();
+    // Start progress animation with overlap
+    await Future.delayed(const Duration(milliseconds: 1200));
+    _progressController.forward();
 
-    // Wait a bit more for better UX
-    await Future.delayed(const Duration(milliseconds: 500));
+    // Wait for progress to complete + extra time for smooth transition
+    await Future.delayed(const Duration(milliseconds: 1500));
 
     // Check if user has seen onboarding
     final storage = LocalStorageService();
@@ -130,43 +133,56 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
           return Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
                 colors: [
                   Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                  Theme.of(context).colorScheme.primary.withOpacity(0.9),
+                  Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                  Theme.of(context).colorScheme.primary,
                 ],
+                stops: const [0.0, 0.3, 0.7, 1.0],
               ),
             ),
             child: SafeArea(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Spacer(flex: 2),
+                  const Spacer(flex: 3),
 
-                  // Logo Section
-                  Transform.scale(
-                    scale: _logoScale.value,
-                    child: Opacity(
-                      opacity: _logoOpacity.value,
-                      child: _buildLogo(),
+                  // Logo Section - Perfectly centered
+                  Center(
+                    child: Transform.scale(
+                      scale: _logoScale.value,
+                      child: Opacity(
+                        opacity: _logoOpacity.value,
+                        child: _buildLogo(),
+                      ),
                     ),
                   ),
 
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 50),
 
-                  // Text Section
-                  Opacity(opacity: _textOpacity.value, child: _buildText()),
-
-                  const Spacer(flex: 2),
-
-                  // Progress Section
-                  Opacity(
-                    opacity: _progressOpacity.value,
-                    child: _buildProgress(),
+                  // Text Section - Perfectly centered
+                  Center(
+                    child: Opacity(
+                      opacity: _textOpacity.value,
+                      child: _buildText(),
+                    ),
                   ),
 
-                  const SizedBox(height: 60),
+                  const Spacer(flex: 4),
+
+                  // Progress Section - Perfectly centered at bottom
+                  Center(
+                    child: Opacity(
+                      opacity: _progressOpacity.value,
+                      child: _buildProgress(),
+                    ),
+                  ),
+
+                  const SizedBox(height: 80),
                 ],
               ),
             ),
@@ -177,89 +193,241 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   }
 
   Widget _buildLogo() {
-    return Container(
-      width: 120,
-      height: 120,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+    return AnimatedBuilder(
+      animation: _logoController,
+      builder: (context, child) {
+        return Container(
+          width: 140,
+          height: 140,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 30,
+                offset: const Offset(0, 15),
+                spreadRadius: 2,
+              ),
+              BoxShadow(
+                color: Colors.white.withOpacity(0.2),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+                spreadRadius: 1,
+              ),
+            ],
           ),
-        ],
-      ),
-      child: const Icon(
-        Icons.local_shipping,
-        size: 60,
-        color: Color(0xFF5D3EBC), // Getir purple
-      ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Rotating background circle
+              Transform.rotate(
+                angle: _logoController.value * 2 * 3.14159,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF5D3EBC).withOpacity(0.1),
+                        const Color(0xFF5D3EBC).withOpacity(0.3),
+                        const Color(0xFF5D3EBC).withOpacity(0.1),
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+              // Main icon with pulse animation
+              Transform.scale(
+                scale: 1.0 + (0.05 * (1 - _logoController.value).abs()),
+                child: const Icon(
+                  Icons.local_shipping,
+                  size: 70,
+                  color: Color(0xFF5D3EBC), // Getir purple
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
   Widget _buildText() {
-    return Column(
-      children: [
-        Text(
-          'Getir',
-          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Hızlı Teslimat',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: Colors.white.withOpacity(0.9),
-            letterSpacing: 1,
-          ),
-        ),
-      ],
+    return AnimatedBuilder(
+      animation: _textController,
+      builder: (context, child) {
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Main title with bounce animation
+            Transform.translate(
+              offset: Offset(0, 20 * (1 - _textController.value)),
+              child: Text(
+                'Getir',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withOpacity(0.3),
+                      offset: const Offset(0, 2),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Subtitle with fade-in animation
+            Opacity(
+              opacity: _textController.value,
+              child: Text(
+                'Hızlı Teslimat',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Colors.white.withOpacity(0.9),
+                  letterSpacing: 1,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withOpacity(0.2),
+                      offset: const Offset(0, 1),
+                      blurRadius: 2,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildProgress() {
-    return Column(
-      children: [
-        // Progress bar
-        Container(
-          width: 200,
-          height: 4,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(2),
-          ),
-          child: AnimatedBuilder(
-            animation: _progressValue,
-            builder: (context, child) {
-              return FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: _progressValue.value,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+    return AnimatedBuilder(
+      animation: _progressController,
+      builder: (context, child) {
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Animated progress bar with glow effect
+            Center(
+              child: Container(
+                width: 250,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.white.withOpacity(0.1),
+                      blurRadius: 4,
+                      spreadRadius: 1,
+                    ),
+                  ],
                 ),
-              );
-            },
-          ),
-        ),
+                child: AnimatedBuilder(
+                  animation: _progressValue,
+                  builder: (context, child) {
+                    return Stack(
+                      children: [
+                        // Background
+                        Container(
+                          width: double.infinity,
+                          height: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                        // Progress fill with gradient
+                        FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: _progressValue.value,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.white,
+                                  Colors.white.withOpacity(0.9),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(3),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.white.withOpacity(0.5),
+                                  blurRadius: 8,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Animated shimmer effect
+                        if (_progressValue.value > 0)
+                          FractionallySizedBox(
+                            alignment: Alignment.centerLeft,
+                            widthFactor: _progressValue.value,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.white.withOpacity(0.3),
+                                    Colors.transparent,
+                                  ],
+                                  stops: const [0.0, 0.5, 1.0],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
 
-        const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-        // Loading text
-        Text(
-          'Yükleniyor...',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.white.withOpacity(0.8),
-          ),
-        ),
-      ],
+            // Loading text with dots animation
+            Center(
+              child: AnimatedBuilder(
+                animation: _progressController,
+                builder: (context, child) {
+                  final dots =
+                      '.' * ((_progressController.value * 3).floor() + 1);
+                  return Text(
+                    'Yükleniyor$dots',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.white.withOpacity(0.9),
+                      letterSpacing: 1,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withOpacity(0.3),
+                          offset: const Offset(0, 1),
+                          blurRadius: 2,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

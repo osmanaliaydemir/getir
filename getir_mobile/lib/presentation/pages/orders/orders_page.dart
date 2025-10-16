@@ -77,7 +77,7 @@ class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
         if (state is OrderError) {
           return ErrorStateWidget(
             errorType: _getErrorTypeFromMessage(state.message),
-            customMessage: state.message,
+            customMessage: _getUserFriendlyErrorMessage(state.message),
             onRetry: () {
               context.read<OrderBloc>().add(LoadUserOrders());
             },
@@ -445,5 +445,35 @@ extension _OrdersPageExtension on _OrdersPageState {
     }
 
     return ErrorType.generic;
+  }
+
+  String _getUserFriendlyErrorMessage(String message) {
+    final lowerMessage = message.toLowerCase();
+
+    if (lowerMessage.contains('network') ||
+        lowerMessage.contains('connection') ||
+        lowerMessage.contains('internet') ||
+        lowerMessage.contains('bağlantı')) {
+      return 'İnternet bağlantınızı kontrol edin ve tekrar deneyin.';
+    } else if (lowerMessage.contains('500') ||
+        lowerMessage.contains('502') ||
+        lowerMessage.contains('503') ||
+        lowerMessage.contains('server') ||
+        lowerMessage.contains('sunucu')) {
+      return 'Sunucu ile bağlantı kurulamadı. Lütfen daha sonra tekrar deneyin.';
+    } else if (lowerMessage.contains('404') ||
+        lowerMessage.contains('not found') ||
+        lowerMessage.contains('bulunamadı')) {
+      return 'Siparişleriniz bulunamadı. Lütfen tekrar deneyin.';
+    } else if (lowerMessage.contains('401') ||
+        lowerMessage.contains('403') ||
+        lowerMessage.contains('unauthorized') ||
+        lowerMessage.contains('yetkisiz')) {
+      return 'Bu işlemi gerçekleştirmek için giriş yapmanız gerekiyor.';
+    } else if (lowerMessage.contains('timeout')) {
+      return 'İşlem zaman aşımına uğradı. Lütfen tekrar deneyin.';
+    }
+
+    return 'Siparişleriniz yüklenirken bir hata oluştu. Lütfen tekrar deneyin.';
   }
 }

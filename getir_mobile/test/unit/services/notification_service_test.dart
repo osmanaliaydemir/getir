@@ -20,11 +20,26 @@ void main() {
     service = NotificationService(mockRepository);
   });
 
-  const testPreferences = NotificationPreferences(
-    orderUpdates: true,
-    promotions: false,
-    system: true,
-    marketing: false,
+  final testPreferences = NotificationPreferences(
+    id: 'test-id',
+    userId: 'test-id',
+    emailEnabled: true,
+    emailOrderUpdates: true,
+    emailPromotions: false,
+    emailNewsletter: false,
+    emailSecurityAlerts: false,
+    smsEnabled: true,
+    smsOrderUpdates: true,
+    smsPromotions: false,
+    smsSecurityAlerts: false,
+    pushEnabled: true,
+    pushOrderUpdates: true,
+    pushPromotions: false,
+    pushMerchantUpdates: false,
+    pushSecurityAlerts: false,
+    language: 'tr-TR',
+    createdAt: DateTime(2024, 1, 1),
+    updatedAt: DateTime(2024, 1, 1),
   );
 
   group('NotificationService -', () {

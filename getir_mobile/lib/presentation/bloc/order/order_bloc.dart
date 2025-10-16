@@ -311,6 +311,24 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     if (exception is AppException) {
       return exception.message;
     }
-    return 'An unexpected error occurred';
+    
+    // Provide more specific error messages based on exception type
+    final errorString = exception.toString().toLowerCase();
+    
+    if (errorString.contains('network') || errorString.contains('connection')) {
+      return 'İnternet bağlantınızı kontrol edin ve tekrar deneyin.';
+    } else if (errorString.contains('timeout')) {
+      return 'İşlem zaman aşımına uğradı. Lütfen tekrar deneyin.';
+    } else if (errorString.contains('unauthorized') || errorString.contains('401')) {
+      return 'Bu işlemi gerçekleştirmek için giriş yapmanız gerekiyor.';
+    } else if (errorString.contains('forbidden') || errorString.contains('403')) {
+      return 'Bu işlem için yetkiniz bulunmuyor.';
+    } else if (errorString.contains('not found') || errorString.contains('404')) {
+      return 'İstenen içerik bulunamadı.';
+    } else if (errorString.contains('server') || errorString.contains('500')) {
+      return 'Sunucu ile bağlantı kurulamadı. Lütfen daha sonra tekrar deneyin.';
+    }
+    
+    return 'Siparişleriniz yüklenirken bir hata oluştu. Lütfen tekrar deneyin.';
   }
 }

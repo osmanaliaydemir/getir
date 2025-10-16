@@ -49,5 +49,26 @@
   "variants": "Varyantlar",
   "required": "Zorunlu",
   "nutritionalInfo": "Besin Değerleri",
-  "addedToCart": "Sepete eklendi"
+  "addedToCart": "Sepete eklendi",
+  
+  "all": "Tümü",
+  "active": "Aktif",
+  "completed": "Tamamlanan",
+  "noOrdersFound": "Henüz siparişiniz yok",
+  "noOrdersMessage": "İlk siparişinizi vermek için mağazaları keşfedin",
+  "noActiveOrders": "Aktif siparişiniz yok",
+  "noActiveOrdersMessage": "Şu anda devam eden siparişiniz bulunmuyor",
+  "noCompletedOrders": "Tamamlanan siparişiniz yok",
+  "noCompletedOrdersMessage": "Henüz tamamlanan siparişiniz bulunmuyor",
+  "items": "ürün",
+  "orderNumber": "Sipariş No",
+  "viewDetails": "Detayları Gör",
+  "trackOrder": "Takip Et",
+  "pending": "Beklemede",
+  "confirmed": "Onaylandı",
+  "preparing": "Hazırlanıyor",
+  "onTheWay": "Yolda",
+  "delivered": "Teslim Edildi",
+  "cancelled": "İptal Edildi",
+  "unknown": "Bilinmiyor"
 }
