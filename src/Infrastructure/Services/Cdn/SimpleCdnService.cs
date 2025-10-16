@@ -20,10 +20,7 @@ public class SimpleCdnService : ICdnService
         _cdnBaseUrl = "https://cdn.getir.local"; // Development CDN URL
     }
 
-    public Task<Result<string>> GetCdnUrlAsync(
-        string originalUrl, 
-        string containerName,
-        CancellationToken cancellationToken = default)
+    public Task<Result<string>> GetCdnUrlAsync(string originalUrl, string containerName,CancellationToken cancellationToken = default)
     {
         try
         {
@@ -50,9 +47,7 @@ public class SimpleCdnService : ICdnService
         }
     }
 
-    public Task<Result> InvalidateCacheAsync(
-        string fileUrl, 
-        CancellationToken cancellationToken = default)
+    public Task<Result> InvalidateCacheAsync(string fileUrl, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -70,13 +65,8 @@ public class SimpleCdnService : ICdnService
         }
     }
 
-    public Task<Result<string>> GetOptimizedImageUrlAsync(
-        string originalUrl,
-        int? width = null,
-        int? height = null,
-        int? quality = null,
-        string? format = null,
-        CancellationToken cancellationToken = default)
+    public Task<Result<string>> GetOptimizedImageUrlAsync(string originalUrl, int? width = null, int? height = null,
+        int? quality = null, string? format = null, CancellationToken cancellationToken = default)
     {
         try
         {

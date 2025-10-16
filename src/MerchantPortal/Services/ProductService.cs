@@ -28,7 +28,7 @@ public class ProductService : IProductService
                 $"api/v1/merchants/merchantproduct?page={page}&pageSize={pageSize}",
                 ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -51,7 +51,7 @@ public class ProductService : IProductService
                 $"api/v1/product/{productId}",
                 ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -75,7 +75,7 @@ public class ProductService : IProductService
                 request,
                 ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -100,7 +100,7 @@ public class ProductService : IProductService
                 request,
                 ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -141,7 +141,7 @@ public class ProductService : IProductService
                 "api/v1/productcategory/my-categories",
                 ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {

@@ -12,11 +12,11 @@ public class ReadOnlyRepository<T> : IReadOnlyRepository<T> where T : class
     public ReadOnlyRepository(AppDbContext context)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context), "AppDbContext cannot be null in ReadOnlyRepository");
-        
+
         try
         {
             _dbSet = _context.Set<T>();
-            
+
             if (_dbSet == null)
             {
                 throw new InvalidOperationException($"DbSet<{typeof(T).Name}> is null. Entity may not be configured in AppDbContext.");
@@ -27,21 +27,17 @@ public class ReadOnlyRepository<T> : IReadOnlyRepository<T> where T : class
             throw new InvalidOperationException(
                 $"Failed to create DbSet<{typeof(T).Name}>. " +
                 $"Inner exception: {ex.Message}. " +
-                $"Check that: 1) Database connection is valid, 2) Entity is configured in OnModelCreating, 3) Migrations are applied.", 
+                $"Check that: 1) Database connection is valid, 2) Entity is configured in OnModelCreating, 3) Migrations are applied.",
                 ex);
         }
     }
 
-    public virtual async Task<bool> AnyAsync(
-        Expression<Func<T, bool>> filter,
-        CancellationToken cancellationToken = default)
+    public virtual async Task<bool> AnyAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
     {
         return await _dbSet.AsNoTracking().AnyAsync(filter, cancellationToken);
     }
 
-    public virtual async Task<int> CountAsync(
-        Expression<Func<T, bool>>? filter = null,
-        CancellationToken cancellationToken = default)
+    public virtual async Task<int> CountAsync(Expression<Func<T, bool>>? filter = null, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
 
@@ -53,13 +49,8 @@ public class ReadOnlyRepository<T> : IReadOnlyRepository<T> where T : class
         return await query.CountAsync(cancellationToken);
     }
 
-    public virtual async Task<IReadOnlyList<T>> ListAsync(
-        Expression<Func<T, bool>>? filter = null,
-        Expression<Func<T, object>>? orderBy = null,
-        bool ascending = true,
-        string? include = null,
-        int? take = null,
-        CancellationToken cancellationToken = default)
+    public virtual async Task<IReadOnlyList<T>> ListAsync(Expression<Func<T, bool>>? filter = null, Expression<Func<T, object>>? orderBy = null,
+        bool ascending = true, string? include = null, int? take = null, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
 
@@ -89,10 +80,7 @@ public class ReadOnlyRepository<T> : IReadOnlyRepository<T> where T : class
         return await query.ToListAsync(cancellationToken);
     }
 
-    public virtual async Task<T?> FirstOrDefaultAsync(
-        Expression<Func<T, bool>> filter,
-        string? include = null,
-        CancellationToken cancellationToken = default)
+    public virtual async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> filter, string? include = null, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
 
@@ -106,15 +94,9 @@ public class ReadOnlyRepository<T> : IReadOnlyRepository<T> where T : class
 
         return await query.FirstOrDefaultAsync(filter, cancellationToken);
     }
-    
-    public virtual async Task<IReadOnlyList<T>> GetPagedAsync(
-        Expression<Func<T, bool>>? filter = null,
-        Expression<Func<T, object>>? orderBy = null,
-        bool ascending = true,
-        int page = 1,
-        int pageSize = 20,
-        string? include = null,
-        CancellationToken cancellationToken = default)
+
+    public virtual async Task<IReadOnlyList<T>> GetPagedAsync(Expression<Func<T, bool>>? filter = null, Expression<Func<T, object>>? orderBy = null,
+        bool ascending = true, int page = 1, int pageSize = 20, string? include = null, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
 

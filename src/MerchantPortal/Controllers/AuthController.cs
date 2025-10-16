@@ -161,10 +161,10 @@ public class AuthController : Controller
             var apiResponse = await _apiClient.GetAsync<ApiResponse<MerchantResponse>>(
                 "api/v1/merchant/my-merchant");
 
-            if (apiResponse?.Success == true && apiResponse.Value != null)
+            if (apiResponse?.isSuccess == true && apiResponse.Data != null)
             {
-                HttpContext.Session.SetString("MerchantId", apiResponse.Value.Id.ToString());
-                _logger.LogInformation("MerchantId loaded to session: {MerchantId}", apiResponse.Value.Id);
+                HttpContext.Session.SetString("MerchantId", apiResponse.Data.Id.ToString());
+                _logger.LogInformation("MerchantId loaded to session: {MerchantId}", apiResponse.Data.Id);
             }
             else
             {

@@ -38,7 +38,7 @@ public class PaymentService : IPaymentService
                 endpoint += $"&endDate={endDate.Value:yyyy-MM-dd}";
 
             var response = await _apiClient.GetAsync<ApiResponse<MerchantCashSummaryResponse>>(endpoint, ct);
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -65,7 +65,7 @@ public class PaymentService : IPaymentService
         {
             var endpoint = $"api/v1/payment/merchant/settlements?merchantId={merchantId}&page={page}&pageSize={pageSize}";
             var response = await _apiClient.GetAsync<ApiResponse<PagedResult<SettlementResponse>>>(endpoint, ct);
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {

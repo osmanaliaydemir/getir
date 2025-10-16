@@ -20,10 +20,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return await _dbSet.FindAsync(new object[] { id }, cancellationToken);
     }
 
-    public virtual async Task<T?> GetAsync(
-        Expression<Func<T, bool>> filter,
-        string? include = null,
-        CancellationToken cancellationToken = default)
+    public virtual async Task<T?> GetAsync(Expression<Func<T, bool>> filter, string? include = null, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet.AsNoTracking(); // Performance optimization
 
@@ -38,14 +35,8 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return await query.FirstOrDefaultAsync(filter, cancellationToken);
     }
 
-    public virtual async Task<IReadOnlyList<T>> GetPagedAsync(
-        Expression<Func<T, bool>>? filter = null,
-        Expression<Func<T, object>>? orderBy = null,
-        bool ascending = true,
-        int page = 1,
-        int pageSize = 20,
-        string? include = null,
-        CancellationToken cancellationToken = default)
+    public virtual async Task<IReadOnlyList<T>> GetPagedAsync(Expression<Func<T, bool>>? filter = null, Expression<Func<T, object>>? orderBy = null,
+        bool ascending = true, int page = 1, int pageSize = 20, string? include = null, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet.AsNoTracking(); // Performance optimization
 
@@ -103,19 +94,14 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         _dbSet.Remove(entity);
     }
-    
+
     public virtual async Task DeleteAsync(T entity, CancellationToken cancellationToken = default)
     {
         await Task.Run(() => _dbSet.Remove(entity), cancellationToken);
     }
 
-    public virtual async Task<IReadOnlyList<T>> ListAsync(
-        Expression<Func<T, bool>>? filter = null,
-        Expression<Func<T, object>>? orderBy = null,
-        bool ascending = true,
-        int? take = null,
-        string? include = null,
-        CancellationToken cancellationToken = default)
+    public virtual async Task<IReadOnlyList<T>> ListAsync(Expression<Func<T, bool>>? filter = null, Expression<Func<T, object>>? orderBy = null,
+        bool ascending = true, int? take = null, string? include = null, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet;
 
@@ -145,10 +131,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return await query.ToListAsync(cancellationToken);
     }
 
-    public virtual async Task<T?> FirstOrDefaultAsync(
-        Expression<Func<T, bool>> filter,
-        string? include = null,
-        CancellationToken cancellationToken = default)
+    public virtual async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> filter, string? include = null, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet;
 

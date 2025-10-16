@@ -26,7 +26,7 @@ public class MerchantService : IMerchantService
                 "api/v1/merchant/my-merchant",
                 ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -51,7 +51,7 @@ public class MerchantService : IMerchantService
                 request,
                 ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -74,7 +74,7 @@ public class MerchantService : IMerchantService
                 $"api/v1/merchants/{merchantId}/merchantdashboard",
                 ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -98,7 +98,7 @@ public class MerchantService : IMerchantService
                 $"api/v1/merchants/{merchantId}/merchantdashboard/recent-orders?limit={limit}",
                 ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -122,7 +122,7 @@ public class MerchantService : IMerchantService
                 $"api/v1/merchants/{merchantId}/merchantdashboard/top-products?limit={limit}",
                 ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {

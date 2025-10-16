@@ -47,7 +47,7 @@ public class CategoryService : ICategoryService
         {
             var response = await _apiClient.GetAsync<ApiResponse<List<ProductCategoryResponse>>>("api/v1/productcategory", ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -71,7 +71,7 @@ public class CategoryService : ICategoryService
                 $"api/v1/productcategory/merchant/{merchantId}", 
                 ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -92,7 +92,7 @@ public class CategoryService : ICategoryService
         {
             var response = await _apiClient.GetAsync<ApiResponse<ProductCategoryResponse>>($"api/v1/productcategory/{categoryId}", ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -117,7 +117,7 @@ public class CategoryService : ICategoryService
                 $"api/v1/productcategory/merchant/{merchantId}", 
                 request, 
                 ct);
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -139,7 +139,7 @@ public class CategoryService : ICategoryService
         {
             var response = await _apiClient.PutAsync<ApiResponse<ProductCategoryResponse>>($"api/v1/productcategory/{categoryId}", request, ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {

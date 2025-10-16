@@ -32,7 +32,7 @@ public class OrderService : IOrderService
             }
 
             var response = await _apiClient.GetAsync<ApiResponse<PagedResult<OrderResponse>>>(endpoint, ct);
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -55,7 +55,7 @@ public class OrderService : IOrderService
                 $"api/v1/merchants/merchantorder/{orderId}",
                 ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -80,7 +80,7 @@ public class OrderService : IOrderService
                 request,
                 ct);
 
-            return response?.Success == true;
+            return response?.isSuccess == true;
         }
         catch (Exception ex)
         {
@@ -104,7 +104,7 @@ public class OrderService : IOrderService
                 $"api/v1/merchants/merchantorder/pending?page={page}&pageSize={pageSize}",
                 ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {

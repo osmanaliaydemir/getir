@@ -3,8 +3,8 @@ namespace Getir.MerchantPortal.Models;
 // API Response Models
 public class ApiResponse<T>
 {
-    public bool Success { get; set; }
-    public T? Value { get; set; }
+    public bool isSuccess { get; set; }
+    public T? Data { get; set; }
     public string? Error { get; set; }
 }
 

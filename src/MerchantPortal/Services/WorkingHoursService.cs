@@ -27,7 +27,7 @@ public class WorkingHoursService : IWorkingHoursService
                 $"api/v1/workinghours/merchant/{merchantId}",
                 ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -58,7 +58,7 @@ public class WorkingHoursService : IWorkingHoursService
                 request,
                 ct);
 
-            return response?.Success == true;
+            return response?.isSuccess == true;
         }
         catch (Exception ex)
         {

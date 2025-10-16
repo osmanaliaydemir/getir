@@ -25,11 +25,11 @@ public class AuthService : IAuthService
             // WebAPI now returns ApiResponse wrapper (BaseController updated)
             var apiResponse = await _apiClient.PostAsync<ApiResponse<LoginResponse>>("api/v1/auth/login", request, ct);
 
-            if (apiResponse?.Success == true && apiResponse.Value != null)
+            if (apiResponse?.isSuccess == true && apiResponse.Data != null)
             {
                 // Set auth token for future API calls
-                _apiClient.SetAuthToken(apiResponse.Value.Token);
-                return apiResponse.Value;
+                _apiClient.SetAuthToken(apiResponse.Data.Token);
+                return apiResponse.Data;
             }
 
             _logger.LogWarning("Login failed for user {Email}. Error: {Error}", 
@@ -58,7 +58,7 @@ public class AuthService : IAuthService
                 new { CurrentPassword = currentPassword, NewPassword = newPassword },
                 ct);
 
-            return response?.Success == true;
+            return response?.isSuccess == true;
         }
         catch (Exception ex)
         {

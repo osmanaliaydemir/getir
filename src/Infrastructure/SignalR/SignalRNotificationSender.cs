@@ -14,8 +14,7 @@ public class SignalRNotificationSender : ISignalRNotificationSender
 
     public async Task SendToUserAsync(Guid userId, string title, string message, string type)
     {
-        await _hubContext.Clients
-            .Group($"user_{userId}")
+        await _hubContext.Clients.Group($"user_{userId}")
             .SendAsync("ReceiveNotification", new
             {
                 title,
@@ -38,8 +37,7 @@ public class SignalROrderSender : ISignalROrderSender
     public async Task SendStatusUpdateAsync(Guid orderId, Guid userId, string status, string message)
     {
         // Send to specific order subscribers
-        await _hubContext.Clients
-            .Group($"order_{orderId}")
+        await _hubContext.Clients.Group($"order_{orderId}")
             .SendAsync("OrderStatusChanged", new
             {
                 orderId,

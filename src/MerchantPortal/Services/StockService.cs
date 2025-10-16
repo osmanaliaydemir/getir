@@ -26,7 +26,7 @@ public class StockService : IStockService
                 "api/StockManagement/alerts",
                 ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -97,7 +97,7 @@ public class StockService : IStockService
                 endpoint,
                 ct);
 
-            return response?.Value;
+            return response?.Data;
         }
         catch (Exception ex)
         {
@@ -121,7 +121,7 @@ public class StockService : IStockService
                 request,
                 ct);
 
-            return response?.Success == true;
+            return response?.isSuccess == true;
         }
         catch (Exception ex)
         {
@@ -145,7 +145,7 @@ public class StockService : IStockService
                 request,
                 ct);
 
-            return response?.Success == true;
+            return response?.isSuccess == true;
         }
         catch (Exception ex)
         {
@@ -170,7 +170,7 @@ public class StockService : IStockService
                 new { ResolutionNotes = resolutionNotes },
                 ct);
 
-            return response?.Success == true;
+            return response?.isSuccess == true;
         }
         catch (Exception ex)
         {
@@ -195,7 +195,7 @@ public class StockService : IStockService
                 null,
                 ct);
 
-            return response?.Success == true;
+            return response?.isSuccess == true;
         }
         catch (Exception ex)
         {
