@@ -200,6 +200,27 @@ builder.Services.AddScoped<ICdnService, Getir.Infrastructure.Services.Cdn.Simple
 // File Upload Settings
 builder.Services.Configure<FileUploadSettings>(builder.Configuration.GetSection("FileUpload"));
 
+// ============= SERVER CONFIGURATION =============
+// Kestrel Server: Request size limit (prevents memory buffering)
+builder.Services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>(options =>
+{
+    options.Limits.MaxRequestBodySize = ApplicationConstants.MaxRequestSizeBytes; // 10MB
+});
+
+// IIS Server: Request size limit
+builder.Services.Configure<Microsoft.AspNetCore.Builder.IISServerOptions>(options =>
+{
+    options.MaxRequestBodySize = ApplicationConstants.MaxRequestSizeBytes; // 10MB
+});
+
+// Form Options: Multipart form data limit (file uploads)
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = ApplicationConstants.MaxRequestSizeBytes; // 10MB
+    options.ValueLengthLimit = int.MaxValue;
+    options.MultipartHeadersLengthLimit = int.MaxValue;
+});
+
 // ============= CONFIGURATION =============
 // Add Controllers
 builder.Services.AddControllers();
@@ -274,22 +295,9 @@ app.UseSwaggerConfiguration();
 // ============= SECURITY =============
 app.UseHttpsRedirection();
 
-// Request size limiting
-app.Use(async (context, next) =>
-{
-    context.Request.EnableBuffering();
-    var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
-    context.Request.Body.Position = 0;
-    
-    if (body.Length > ApplicationConstants.MaxRequestSizeBytes) // Request size limit
-    {
-        context.Response.StatusCode = 413; // Payload Too Large
-        await context.Response.WriteAsync("Request size exceeds 10MB limit");
-        return;
-    }
-    
-    await next();
-});
+// Request size limiting is now handled by Kestrel/IIS native configuration
+// See builder.Services.Configure<KestrelServerOptions> above
+// This prevents memory buffering and provides better performance
 
 // Security headers
 app.Use(async (context, next) =>
