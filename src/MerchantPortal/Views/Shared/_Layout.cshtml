@@ -5,6 +5,10 @@
     var currentCulture = CultureInfo.CurrentUICulture;
     var isRtl = currentCulture.Name.StartsWith("ar");
     var langCode = currentCulture.TwoLetterISOLanguageName;
+    
+    // DEBUG: Test localizer
+    var dashboardTest = SharedLocalizer["Dashboard"];
+    var ordersTest = SharedLocalizer["Orders"];
 }
 <!DOCTYPE html>
 <html lang="@langCode" dir="@(isRtl ? "rtl" : "ltr")">
@@ -160,7 +164,8 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-brand">
-                <i class="fas fa-store"></i> Getir
+                <i class="fas fa-store"></i> @SharedLocalizer["AppTitle"]
+                <!-- DEBUG: @dashboardTest | @ordersTest -->
             </div>
             <nav class="sidebar-nav">
                 <a href="@Url.Action("Index", "Dashboard")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")">
