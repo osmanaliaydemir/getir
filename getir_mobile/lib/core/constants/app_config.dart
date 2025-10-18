@@ -12,12 +12,12 @@ class AppConfig {
 
   // API Configuration
   static String get apiBaseUrl {
-    return 'http://ajilgo.runasp.net/api/v1'; // All environments use same URL
+    return 'https://ajilgo.runasp.net/api/v1'; // All environments use same URL
   }
 
   // SignalR Hub URLs
   static String get signalRUrl {
-    return 'http://ajilgo.runasp.net/hubs'; // All environments use same URL
+    return 'https://ajilgo.runasp.net/hubs'; // All environments use same URL
   }
 
   // Firebase Configuration

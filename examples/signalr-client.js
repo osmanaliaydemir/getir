@@ -3,7 +3,7 @@
 // ============================================
 
 const SIGNALR_CONFIG = {
-    baseUrl: 'https://localhost:7001',
+    baseUrl: 'https://ajilgo.runasp.net',
     hubs: {
         notifications: '/hubs/notifications',
         orders: '/hubs/orders',

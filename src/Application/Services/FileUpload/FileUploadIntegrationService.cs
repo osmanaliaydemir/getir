@@ -2,7 +2,6 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
-using Microsoft.AspNetCore.Http;
 
 namespace Getir.Application.Services.FileUpload;
 
@@ -342,7 +341,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
     #region Additional FileUploadController Methods
 
     public async Task<Result<FileUploadResponse>> UploadFileAsync(
-        IFormFile file,
+        IUploadedFile file,
         Guid userId,
         CancellationToken cancellationToken = default)
     {
@@ -368,7 +367,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
     }
 
     public async Task<Result<IEnumerable<FileUploadResponse>>> UploadMultipleFilesAsync(
-        IFormFile[] files,
+        IUploadedFile[] files,
         Guid userId,
         CancellationToken cancellationToken = default)
     {
@@ -434,7 +433,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
     }
 
     public async Task<Result<FileUploadResponse>> UploadMerchantFileAsync(
-        IFormFile file,
+        IUploadedFile file,
         Guid merchantId,
         CancellationToken cancellationToken = default)
     {

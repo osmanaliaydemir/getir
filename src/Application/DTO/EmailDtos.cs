@@ -84,16 +84,18 @@ public record EmailTemplate(
 /// <summary>
 /// Email configuration
 /// </summary>
-public record EmailConfiguration(
-    string SmtpServer,
-    int SmtpPort,
-    bool UseSsl,
-    string Username,
-    string Password,
-    string FromEmail,
-    string FromName,
-    int TimeoutSeconds = 30,
-    int MaxRetryAttempts = 3);
+public class EmailConfiguration
+{
+    public string SmtpServer { get; set; } = default!;
+    public int SmtpPort { get; set; }
+    public bool UseSsl { get; set; }
+    public string Username { get; set; } = default!;
+    public string Password { get; set; } = default!;
+    public string FromEmail { get; set; } = default!;
+    public string FromName { get; set; } = default!;
+    public int TimeoutSeconds { get; set; } = 30;
+    public int MaxRetryAttempts { get; set; } = 3;
+}
 
 /// <summary>
 /// Bulk email request

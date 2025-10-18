@@ -12,6 +12,7 @@ namespace Getir.Application.Services.Orders;
 public class OrderService : BaseService, IOrderService
 {
     private readonly ISignalRService? _signalRService;
+    private readonly ISignalROrderSender? _signalROrderSender;
     private readonly IBackgroundTaskService _backgroundTaskService;
     private readonly IPaymentService _paymentService;
 
@@ -22,10 +23,12 @@ public class OrderService : BaseService, IOrderService
         ICacheService cacheService,
         IBackgroundTaskService backgroundTaskService,
         IPaymentService paymentService,
-        ISignalRService? signalRService = null) 
+        ISignalRService? signalRService = null,
+        ISignalROrderSender? signalROrderSender = null) 
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _signalRService = signalRService;
+        _signalROrderSender = signalROrderSender;
         _backgroundTaskService = backgroundTaskService;
         _paymentService = paymentService;
     }
@@ -60,6 +63,16 @@ public class OrderService : BaseService, IOrderService
             {
                 await _unitOfWork.RollbackAsync(cancellationToken);
                 return ServiceResult.Failure<OrderResponse>("Merchant not found or inactive", ErrorCodes.MERCHANT_NOT_FOUND);
+            }
+
+            // User kontrolü
+            var user = await _unitOfWork.ReadRepository<User>()
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken: cancellationToken);
+
+            if (user == null)
+            {
+                await _unitOfWork.RollbackAsync(cancellationToken);
+                return ServiceResult.Failure<OrderResponse>("User not found", ErrorCodes.UNAUTHORIZED);
             }
 
             // Ürünleri kontrol et ve fiyatları hesapla
@@ -279,6 +292,22 @@ public class OrderService : BaseService, IOrderService
                     "Order");
             }
 
+            // Send new order notification to merchant via SignalR
+            if (_signalROrderSender != null)
+            {
+                await _signalROrderSender.SendNewOrderToMerchantAsync(
+                    merchant.Id,
+                    new
+                    {
+                        orderId = order.Id,
+                        orderNumber = order.OrderNumber,
+                        customerName = $"{user.FirstName} {user.LastName}",
+                        totalAmount = order.Total,
+                        createdAt = order.CreatedAt,
+                        status = order.Status.ToStringValue()
+                    });
+            }
+
             // Log successful order creation
             _loggingService.LogUserAction(userId.ToString(), "OrderCreated", new { OrderId = order.Id, order.OrderNumber, MerchantId = merchant.Id });
 
@@ -286,8 +315,10 @@ public class OrderService : BaseService, IOrderService
             var response = new OrderResponse(
                 order.Id,
                 order.OrderNumber,
+                order.UserId,
                 merchant.Id,
                 merchant.Name,
+                order.CourierId,
                 order.Status.ToStringValue(),
                 order.SubTotal,
                 order.DeliveryFee,
@@ -296,6 +327,8 @@ public class OrderService : BaseService, IOrderService
                 order.PaymentMethod,
                 order.PaymentStatus,
                 order.DeliveryAddress,
+                order.DeliveryLatitude,
+                order.DeliveryLongitude,
                 order.EstimatedDeliveryTime,
                 order.CreatedAt,
                 orderLines.Select(ol => new OrderLineResponse(
@@ -359,8 +392,10 @@ public class OrderService : BaseService, IOrderService
             var response = new OrderResponse(
                 order.Id,
                 order.OrderNumber,
+                order.UserId,
                 order.MerchantId,
                 order.Merchant.Name,
+                order.CourierId,
                 order.Status.ToStringValue(),
                 order.SubTotal,
                 order.DeliveryFee,
@@ -369,6 +404,8 @@ public class OrderService : BaseService, IOrderService
                 order.PaymentMethod,
                 order.PaymentStatus,
                 order.DeliveryAddress,
+                order.DeliveryLatitude,
+                order.DeliveryLongitude,
                 order.EstimatedDeliveryTime,
                 order.CreatedAt,
                 order.OrderLines.Select(ol => new OrderLineResponse(
@@ -429,38 +466,7 @@ public class OrderService : BaseService, IOrderService
             var total = await _unitOfWork.ReadRepository<Order>()
                 .CountAsync(o => o.UserId == userId, cancellationToken);
 
-            var response = orders.Select(o => new OrderResponse(
-                o.Id,
-                o.OrderNumber,
-                o.MerchantId,
-                o.Merchant.Name,
-                o.Status.ToStringValue(),
-                o.SubTotal,
-                o.DeliveryFee,
-                o.Discount,
-                o.Total,
-                o.PaymentMethod,
-                o.PaymentStatus,
-                o.DeliveryAddress,
-                o.EstimatedDeliveryTime,
-                o.CreatedAt,
-                o.OrderLines.Select(ol => new OrderLineResponse(
-                    ol.Id,
-                    ol.ProductId,
-                    ol.ProductVariantId,
-                    ol.ProductName,
-                    ol.VariantName,
-                    ol.Quantity,
-                    ol.UnitPrice,
-                    ol.TotalPrice,
-                    ol.Options.Select(opt => new OrderLineOptionResponse(
-                        opt.Id,
-                        opt.ProductOptionId,
-                        opt.OptionName,
-                        opt.ExtraPrice,
-                        opt.CreatedAt)).ToList()
-                )).ToList()
-            )).ToList();
+            var response = orders.Select(MapToOrderResponse).ToList();
 
             var pagedResult = PagedResult<OrderResponse>.Create(response, total, query.Page, query.PageSize);
             
@@ -518,8 +524,10 @@ public class OrderService : BaseService, IOrderService
         var responses = orders.Select(o => new OrderResponse(
             o.Id,
             o.OrderNumber,
+            o.UserId,
             o.MerchantId,
             merchant.Name,
+            o.CourierId,
             o.Status.ToStringValue(),
             o.SubTotal,
             o.DeliveryFee,
@@ -528,6 +536,8 @@ public class OrderService : BaseService, IOrderService
             o.PaymentMethod,
             o.PaymentStatus,
             o.DeliveryAddress,
+            o.DeliveryLatitude,
+            o.DeliveryLongitude,
             o.EstimatedDeliveryTime,
             o.CreatedAt,
             o.OrderLines.Select(ol => new OrderLineResponse(
@@ -598,36 +608,17 @@ public class OrderService : BaseService, IOrderService
                 $"Your order {order.OrderNumber} has been confirmed by {order.Merchant.Name}!");
         }
 
-        var response = new OrderResponse(
-            order.Id,
-            order.OrderNumber,
-            order.MerchantId,
-            order.Merchant.Name,
-            order.Status.ToStringValue(),
-            order.SubTotal,
-            order.DeliveryFee,
-            order.Discount,
-            order.Total,
-            order.PaymentMethod,
-            order.PaymentStatus,
-            order.DeliveryAddress,
-            order.EstimatedDeliveryTime,
-            order.CreatedAt,
-                order.OrderLines.Select(ol => new OrderLineResponse(
-                    ol.Id,
-                    ol.ProductId,
-                    ol.ProductVariantId,
-                    ol.ProductName,
-                    ol.VariantName,
-                    ol.Quantity,
-                    ol.UnitPrice,
-                    ol.TotalPrice,
-                    ol.Options.Select(opt => new OrderLineOptionResponse(
-                        opt.Id,
-                        opt.ProductOptionId,
-                        opt.OptionName,
-                        opt.ExtraPrice,
-                        opt.CreatedAt)).ToList())).ToList());
+        // Send status change notification to merchant
+        if (_signalROrderSender != null)
+        {
+            await _signalROrderSender.SendOrderStatusChangedToMerchantAsync(
+                order.MerchantId,
+                order.Id,
+                order.OrderNumber,
+                order.Status.ToStringValue());
+        }
+
+        var response = MapToOrderResponse(order);
 
         return ServiceResult.Success(response);
     }
@@ -677,6 +668,16 @@ public class OrderService : BaseService, IOrderService
                 $"Your order {order.OrderNumber} has been rejected by {order.Merchant.Name}. Reason: {order.CancellationReason}");
         }
 
+        // Send cancellation notification to merchant
+        if (_signalROrderSender != null)
+        {
+            await _signalROrderSender.SendOrderCancelledToMerchantAsync(
+                order.MerchantId,
+                order.Id,
+                order.OrderNumber,
+                order.CancellationReason);
+        }
+
         return ServiceResult.Success();
     }
 
@@ -723,6 +724,16 @@ public class OrderService : BaseService, IOrderService
                 $"Your order {order.OrderNumber} is now being prepared by {order.Merchant.Name}!");
         }
 
+        // Send status change notification to merchant
+        if (_signalROrderSender != null)
+        {
+            await _signalROrderSender.SendOrderStatusChangedToMerchantAsync(
+                order.MerchantId,
+                order.Id,
+                order.OrderNumber,
+                order.Status.ToStringValue());
+        }
+
         return ServiceResult.Success();
     }
 
@@ -767,6 +778,16 @@ public class OrderService : BaseService, IOrderService
                 order.UserId,
                 order.Status.ToStringValue(),
                 $"Your order {order.OrderNumber} is ready for pickup from {order.Merchant.Name}!");
+        }
+
+        // Send status change notification to merchant
+        if (_signalROrderSender != null)
+        {
+            await _signalROrderSender.SendOrderStatusChangedToMerchantAsync(
+                order.MerchantId,
+                order.Id,
+                order.OrderNumber,
+                order.Status.ToStringValue());
         }
 
         return ServiceResult.Success();
@@ -817,6 +838,16 @@ public class OrderService : BaseService, IOrderService
                 order.UserId,
                 order.Status.ToStringValue(),
                 $"Your order {order.OrderNumber} has been cancelled by {order.Merchant.Name}. Reason: {reason}");
+        }
+
+        // Send cancellation notification to merchant
+        if (_signalROrderSender != null)
+        {
+            await _signalROrderSender.SendOrderCancelledToMerchantAsync(
+                order.MerchantId,
+                order.Id,
+                order.OrderNumber,
+                reason);
         }
 
         return ServiceResult.Success();
@@ -987,26 +1018,69 @@ public class OrderService : BaseService, IOrderService
             return Result.Fail<OrderDetailsResponse>("Order not found or access denied", ErrorCodes.ORDER_NOT_FOUND);
         }
 
+        // Get OrderLines with product details
+        var orderLines = await _unitOfWork.Repository<OrderLine>().ListAsync(
+            filter: ol => ol.OrderId == orderId,
+            include: "Product,Options",
+            cancellationToken: cancellationToken);
+
+        var items = orderLines.Select(ol => new OrderLineResponse(
+            Id: ol.Id,
+            ProductId: ol.ProductId,
+            ProductVariantId: ol.ProductVariantId,
+            ProductName: ol.ProductName,
+            VariantName: ol.VariantName,
+            Quantity: ol.Quantity,
+            UnitPrice: ol.UnitPrice,
+            TotalPrice: ol.TotalPrice,
+            Options: ol.Options?.Select(o => new OrderLineOptionResponse(
+                Id: o.Id,
+                ProductOptionId: o.ProductOptionId,
+                OptionName: o.OptionName,
+                ExtraPrice: o.ExtraPrice,
+                CreatedAt: o.CreatedAt
+            )).ToList() ?? new List<OrderLineOptionResponse>()
+        )).ToList();
+
+        // Get order timeline from status transition logs
+        var timeline = await _unitOfWork.Repository<OrderStatusTransitionLog>().ListAsync(
+            filter: t => t.OrderId == orderId,
+            orderBy: t => t.ChangedAt,
+            ascending: true,
+            cancellationToken: cancellationToken);
+
+        var timelineResponses = timeline.Select(t => new OrderTimelineResponse(
+            Timestamp: t.ChangedAt,
+            Status: t.ToStatus.ToString(),
+            Description: t.Reason ?? $"Order status changed to {t.ToStatus}",
+            ActorName: t.ChangedByRole
+        )).ToList();
+
+        // Get payment information if available
+        var payment = await _unitOfWork.Repository<Payment>().FirstOrDefaultAsync(
+            filter: p => p.OrderId == orderId,
+            cancellationToken: cancellationToken);
+
         var response = new OrderDetailsResponse(
             Id: order.Id,
             OrderNumber: order.OrderNumber,
             MerchantId: order.MerchantId,
-            MerchantName: order.Merchant?.Name ?? "Unknown", // Nullable reference type warning suppressed
+            MerchantName: order.Merchant?.Name ?? "Unknown",
             CustomerId: order.UserId,
-            CustomerName: "Customer", // TODO: Get from user service
+            CustomerName: $"{order.User?.FirstName ?? ""} {order.User?.LastName ?? ""}".Trim() == "" ? "Customer" : $"{order.User?.FirstName} {order.User?.LastName}",
             Status: order.Status.ToString(),
             SubTotal: order.SubTotal,
             DeliveryFee: order.DeliveryFee,
-            Discount: 0, // TODO: Add DiscountAmount property to Order entity
+            Discount: order.Discount,
             Total: order.Total,
-            PaymentMethod: "Cash", // TODO: Get from payment
-            PaymentStatus: "Pending", // TODO: Get from payment
-            DeliveryAddress: order.DeliveryAddress ?? "Unknown", // Nullable reference type warning suppressed
+            PaymentMethod: payment?.PaymentMethod.ToString() ?? order.PaymentMethod,
+            PaymentStatus: payment?.Status.ToString() ?? order.PaymentStatus,
+            DeliveryAddress: order.DeliveryAddress ?? "Unknown",
             EstimatedDeliveryTime: order.EstimatedDeliveryTime,
             CreatedAt: order.CreatedAt,
-            CompletedAt: null, // TODO: Add CompletedAt property to Order entity
-            Items: new List<OrderLineResponse>(), // TODO: Get order items
-            Timeline: new List<OrderTimelineResponse>() // TODO: Get timeline
+            CompletedAt: order.ActualDeliveryTime,
+            Items: items,
+            Timeline: timelineResponses
         );
 
         return Result.Ok(response);
@@ -1138,6 +1212,277 @@ public class OrderService : BaseService, IOrderService
         );
 
         return Result.Ok(response);
+    }
+
+    // SignalR Hub-specific methods
+
+    public async Task<Result<OrderResponse>> GetOrderByIdAsync(
+        Guid orderId,
+        CancellationToken cancellationToken = default)
+    {
+        var order = await _unitOfWork.ReadRepository<Order>()
+            .FirstOrDefaultAsync(
+                o => o.Id == orderId,
+                include: "Merchant,User,OrderLines",
+                cancellationToken: cancellationToken);
+
+        if (order == null)
+        {
+            return Result.Fail<OrderResponse>("Order not found", ErrorCodes.ORDER_NOT_FOUND);
+        }
+
+        var response = MapToOrderResponse(order);
+        return Result.Ok(response);
+    }
+
+    public async Task<Result<List<OrderResponse>>> GetUserActiveOrdersAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var activeStatuses = new[] 
+        { 
+            OrderStatus.Pending, 
+            OrderStatus.Confirmed, 
+            OrderStatus.Preparing, 
+            OrderStatus.Ready, 
+            OrderStatus.PickedUp,
+            OrderStatus.OnTheWay
+        };
+
+        var orders = await _unitOfWork.Repository<Order>()
+            .GetPagedAsync(
+                filter: o => o.UserId == userId && activeStatuses.Contains(o.Status),
+                orderBy: o => o.CreatedAt,
+                ascending: false,
+                page: 1,
+                pageSize: 10,
+                cancellationToken: cancellationToken);
+
+        var response = orders.Select(MapToOrderResponse).ToList();
+        return Result.Ok(response);
+    }
+
+    public async Task<Result<OrderResponse>> UpdateOrderStatusAsync(
+        UpdateOrderStatusRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var order = await _unitOfWork.Repository<Order>()
+            .FirstOrDefaultAsync(
+                o => o.Id == request.OrderId,
+                include: "Merchant,User,OrderLines",
+                cancellationToken: cancellationToken);
+
+        if (order == null)
+        {
+            return Result.Fail<OrderResponse>("Order not found", ErrorCodes.ORDER_NOT_FOUND);
+        }
+
+        // Parse status string to enum
+        if (!Enum.TryParse<OrderStatus>(request.NewStatus, out var newStatus))
+        {
+            return Result.Fail<OrderResponse>("Invalid order status", ErrorCodes.VALIDATION_ERROR);
+        }
+
+        var oldStatus = order.Status;
+        order.Status = newStatus;
+        order.UpdatedAt = DateTime.UtcNow;
+
+        _unitOfWork.Repository<Order>().Update(order);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Send notification via SignalR (if available)
+        if (_signalRService != null)
+        {
+            await _signalRService.SendOrderStatusUpdateAsync(
+                order.Id,
+                order.UserId,
+                newStatus.ToString(),
+                $"Order status updated to {newStatus}");
+        }
+
+        // 🔔 Send real-time notification to Merchant Portal
+        if (_signalROrderSender != null)
+        {
+            await _signalROrderSender.SendOrderStatusChangedToMerchantAsync(
+                order.MerchantId,
+                order.Id,
+                order.OrderNumber,
+                newStatus.ToString());
+        }
+
+        _loggingService.LogBusinessEvent("OrderStatusUpdated", new
+        {
+            orderId = order.Id,
+            oldStatus = oldStatus.ToString(),
+            newStatus = newStatus.ToString()
+        });
+
+        var response = MapToOrderResponse(order);
+        return Result.Ok(response);
+    }
+
+    public async Task<Result<OrderResponse>> CancelOrderAsync(
+        CancelOrderRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var order = await _unitOfWork.Repository<Order>()
+            .FirstOrDefaultAsync(
+                o => o.Id == request.OrderId,
+                include: "Merchant,User,OrderLines",
+                cancellationToken: cancellationToken);
+
+        if (order == null)
+        {
+            return Result.Fail<OrderResponse>("Order not found", ErrorCodes.ORDER_NOT_FOUND);
+        }
+
+        // Check if order can be cancelled
+        if (order.Status == OrderStatus.Delivered || order.Status == OrderStatus.Cancelled)
+        {
+            return Result.Fail<OrderResponse>("Order cannot be cancelled", ErrorCodes.INVALID_OPERATION);
+        }
+
+        order.Status = OrderStatus.Cancelled;
+        order.CancellationReason = request.Reason;
+        order.UpdatedAt = DateTime.UtcNow;
+
+        _unitOfWork.Repository<Order>().Update(order);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Notify user via SignalR (if available)
+        if (_signalRService != null)
+        {
+            await _signalRService.SendOrderStatusUpdateAsync(
+                order.Id,
+                order.UserId,
+                OrderStatus.Cancelled.ToString(),
+                $"Order cancelled: {request.Reason}");
+        }
+
+        // 🔔 Send real-time cancellation notification to Merchant Portal
+        if (_signalROrderSender != null)
+        {
+            await _signalROrderSender.SendOrderCancelledToMerchantAsync(
+                order.MerchantId,
+                order.Id,
+                order.OrderNumber,
+                request.Reason);
+        }
+
+        _loggingService.LogBusinessEvent("OrderCancelled", new
+        {
+            orderId = order.Id,
+            reason = request.Reason
+        });
+
+        var response = MapToOrderResponse(order);
+        return Result.Ok(response);
+    }
+
+    public async Task<Result<OrderResponse>> RateOrderAsync(
+        RateOrderRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var order = await _unitOfWork.Repository<Order>()
+            .FirstOrDefaultAsync(
+                o => o.Id == request.OrderId && o.UserId == request.UserId,
+                include: "Merchant,User,OrderLines",
+                cancellationToken: cancellationToken);
+
+        if (order == null)
+        {
+            return Result.Fail<OrderResponse>("Order not found or access denied", ErrorCodes.ORDER_NOT_FOUND);
+        }
+
+        // Check if order is delivered
+        if (order.Status != OrderStatus.Delivered)
+        {
+            return Result.Fail<OrderResponse>("Only delivered orders can be rated", ErrorCodes.INVALID_OPERATION);
+        }
+
+        // Validate rating
+        if (request.Rating < 1 || request.Rating > 5)
+        {
+            return Result.Fail<OrderResponse>("Rating must be between 1 and 5", ErrorCodes.VALIDATION_ERROR);
+        }
+
+        // Create review
+        var review = new Review
+        {
+            Id = Guid.NewGuid(),
+            OrderId = order.Id,
+            ReviewerId = request.UserId,
+            RevieweeId = order.MerchantId,
+            RevieweeType = "Merchant",
+            Rating = request.Rating,
+            Comment = request.Comment ?? string.Empty,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _unitOfWork.Repository<Review>().AddAsync(review, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _loggingService.LogBusinessEvent("OrderRated", new
+        {
+            orderId = order.Id,
+            rating = request.Rating,
+            userId = request.UserId
+        });
+
+        var response = MapToOrderResponse(order);
+        return Result.Ok(response);
+    }
+
+    public async Task<Result<List<OrderResponse>>> GetMerchantPendingOrdersAsync(
+        Guid merchantId,
+        CancellationToken cancellationToken = default)
+    {
+        var orders = await _unitOfWork.Repository<Order>()
+            .GetPagedAsync(
+                filter: o => o.MerchantId == merchantId && o.Status == OrderStatus.Pending,
+                orderBy: o => o.CreatedAt,
+                ascending: true,
+                page: 1,
+                pageSize: 50,
+                cancellationToken: cancellationToken);
+
+        var response = orders.Select(MapToOrderResponse).ToList();
+        return Result.Ok(response);
+    }
+
+    private OrderResponse MapToOrderResponse(Order order)
+    {
+        return new OrderResponse(
+            Id: order.Id,
+            OrderNumber: order.OrderNumber,
+            UserId: order.UserId,
+            MerchantId: order.MerchantId,
+            MerchantName: order.Merchant?.Name ?? "Unknown",
+            CourierId: order.CourierId,
+            Status: order.Status.ToString(),
+            SubTotal: order.SubTotal,
+            DeliveryFee: order.DeliveryFee,
+            Discount: order.Discount,
+            Total: order.Total,
+            PaymentMethod: order.PaymentMethod,
+            PaymentStatus: order.PaymentStatus.ToString(),
+            DeliveryAddress: order.DeliveryAddress,
+            DeliveryLatitude: order.DeliveryLatitude,
+            DeliveryLongitude: order.DeliveryLongitude,
+            EstimatedDeliveryTime: order.EstimatedDeliveryTime,
+            CreatedAt: order.CreatedAt,
+            Items: order.OrderLines?.Select(ol => new OrderLineResponse(
+                ol.Id,
+                ol.ProductId,
+                ol.ProductVariantId,
+                ol.ProductName,
+                ol.VariantName,
+                ol.Quantity,
+                ol.UnitPrice,
+                ol.TotalPrice,
+                new List<OrderLineOptionResponse>() // Simplified
+            )).ToList() ?? new List<OrderLineResponse>()
+        );
     }
 
     #endregion

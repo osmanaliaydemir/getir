@@ -51,6 +51,15 @@ class SearchHistoryItemRemoved extends SearchEvent {
   List<Object?> get props => [query];
 }
 
+// 🔄 Pagination Events
+class LoadMoreSearchResults extends SearchEvent {
+  const LoadMoreSearchResults();
+}
+
+class RefreshSearchResults extends SearchEvent {
+  const RefreshSearchResults();
+}
+
 enum SearchType {
   all,
   merchants,

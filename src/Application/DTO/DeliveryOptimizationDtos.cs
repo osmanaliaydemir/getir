@@ -168,3 +168,35 @@ public record CapacityAlertRequest(
     int CurrentLoad,
     int MaxCapacity,
     DateTime AlertTime);
+
+/// <summary>
+/// Update ETA (Estimated Time of Arrival) request
+/// </summary>
+public record UpdateETARequest(
+    Guid OrderId,
+    Guid CourierId,
+    int EstimatedMinutes,
+    DateTime Timestamp,
+    string? Reason = null);
+
+/// <summary>
+/// Calculate ETA request
+/// </summary>
+public record CalculateETARequest(
+    Guid OrderId,
+    double CurrentLatitude,
+    double CurrentLongitude,
+    double DestinationLatitude,
+    double DestinationLongitude,
+    string? TrafficCondition = "NORMAL");
+
+/// <summary>
+/// ETA response
+/// </summary>
+public record ETAResponse(
+    Guid OrderId,
+    int EstimatedMinutes,
+    double DistanceKm,
+    DateTime EstimatedArrivalTime,
+    string TrafficCondition,
+    DateTime CalculatedAt);

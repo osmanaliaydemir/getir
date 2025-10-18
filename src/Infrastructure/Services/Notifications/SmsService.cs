@@ -19,11 +19,7 @@ public class SmsService : ISmsService
     private readonly SmsConfiguration _smsConfig;
     private readonly ILogger<SmsService> _logger;
 
-    public SmsService(
-        ILoggingService loggingService,
-        HttpClient httpClient,
-        IOptions<SmsConfiguration> smsConfig,
-        ILogger<SmsService> logger)
+    public SmsService(ILoggingService loggingService, HttpClient httpClient, IOptions<SmsConfiguration> smsConfig, ILogger<SmsService> logger)
     {
         _loggingService = loggingService;
         _httpClient = httpClient;
@@ -35,9 +31,7 @@ public class SmsService : ISmsService
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "Getir-SMS-Service/1.0");
     }
 
-    public async Task<Result> SendSmsAsync(
-        SmsRequest request, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> SendSmsAsync(SmsRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -79,9 +73,7 @@ public class SmsService : ISmsService
         }
     }
 
-    public async Task<Result> SendBulkSmsAsync(
-        IEnumerable<SmsRequest> requests, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> SendBulkSmsAsync(IEnumerable<SmsRequest> requests, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -128,9 +120,7 @@ public class SmsService : ISmsService
         }
     }
 
-    public async Task<Result> SendTemplateSmsAsync(
-        SmsTemplateRequest request, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> SendTemplateSmsAsync(SmsTemplateRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -162,9 +152,7 @@ public class SmsService : ISmsService
         }
     }
 
-    public Task<Result<bool>> ValidatePhoneNumberAsync(
-        string phoneNumber, 
-        CancellationToken cancellationToken = default)
+    public Task<Result<bool>> ValidatePhoneNumberAsync(string phoneNumber, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -182,7 +170,7 @@ public class SmsService : ISmsService
                 // International phone number validation (basic)
                 var internationalPattern = @"^\+[1-9]\d{1,14}$";
                 var isInternational = Regex.IsMatch(phoneNumber.Replace(" ", "").Replace("-", ""), internationalPattern);
-                
+
                 return Task.FromResult(Result.Ok(isInternational));
             }
 
@@ -195,9 +183,7 @@ public class SmsService : ISmsService
         }
     }
 
-    public async Task<Result<SmsDeliveryStatus>> GetDeliveryStatusAsync(
-        string messageId, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<SmsDeliveryStatus>> GetDeliveryStatusAsync(string messageId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -218,8 +204,7 @@ public class SmsService : ISmsService
         }
     }
 
-    public async Task<Result<SmsBalance>> GetBalanceAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<Result<SmsBalance>> GetBalanceAsync(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -240,15 +225,12 @@ public class SmsService : ISmsService
         }
     }
 
-    public async Task<Result> SendOtpSmsAsync(
-        string phoneNumber, 
-        string otpCode, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> SendOtpSmsAsync(string phoneNumber, string otpCode, CancellationToken cancellationToken = default)
     {
         try
         {
             var message = $"Getir doğrulama kodunuz: {otpCode}. Bu kodu kimseyle paylaşmayın.";
-            
+
             var request = new SmsRequest(
                 phoneNumber,
                 message,
@@ -323,7 +305,7 @@ public class SmsService : ISmsService
             if (response.IsSuccessStatusCode)
             {
                 var result = JsonSerializer.Deserialize<JsonElement>(responseContent);
-                if (result.TryGetProperty("response", out var responseElement) && 
+                if (result.TryGetProperty("response", out var responseElement) &&
                     responseElement.TryGetProperty("status", out var statusElement) &&
                     statusElement.GetString() == "success")
                 {
@@ -344,10 +326,10 @@ public class SmsService : ISmsService
     {
         // Mock implementation for development/testing
         await Task.Delay(100, cancellationToken); // Simulate network delay
-        
-        _logger.LogInformation("Mock SMS sent to {PhoneNumber}: {Message}", 
+
+        _logger.LogInformation("Mock SMS sent to {PhoneNumber}: {Message}",
             MaskPhoneNumber(formattedPhone), request.Message);
-        
+
         return Result.Ok();
     }
 
@@ -358,22 +340,22 @@ public class SmsService : ISmsService
     private string FormatPhoneNumber(string phoneNumber)
     {
         var cleaned = phoneNumber.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "");
-        
+
         if (cleaned.StartsWith("0"))
         {
             return "+90" + cleaned.Substring(1);
         }
-        
+
         if (cleaned.StartsWith("+90"))
         {
             return cleaned;
         }
-        
+
         if (cleaned.StartsWith("90"))
         {
             return "+" + cleaned;
         }
-        
+
         return "+90" + cleaned;
     }
 
@@ -381,7 +363,7 @@ public class SmsService : ISmsService
     {
         if (string.IsNullOrEmpty(phoneNumber) || phoneNumber.Length < 4)
             return "***";
-            
+
         return phoneNumber.Substring(0, 3) + "***" + phoneNumber.Substring(phoneNumber.Length - 2);
     }
 

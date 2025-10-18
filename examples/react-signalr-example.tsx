@@ -44,7 +44,7 @@ export const useSignalR = (bearerToken: string | null) => {
 
         // Notification Hub
         const notificationHub = new signalR.HubConnectionBuilder()
-            .withUrl('https://localhost:7001/hubs/notifications', {
+            .withUrl('http://ajilgo.runasp.net/hubs/notifications', {
                 accessTokenFactory: () => bearerToken,
                 skipNegotiation: true,
                 transport: signalR.HttpTransportType.WebSockets
@@ -60,7 +60,7 @@ export const useSignalR = (bearerToken: string | null) => {
 
         // Order Hub
         const orderHub = new signalR.HubConnectionBuilder()
-            .withUrl('https://localhost:7001/hubs/orders', {
+            .withUrl('https://ajilgo.runasp.net/hubs/orders', {
                 accessTokenFactory: () => bearerToken,
                 skipNegotiation: true,
                 transport: signalR.HttpTransportType.WebSockets
@@ -75,7 +75,7 @@ export const useSignalR = (bearerToken: string | null) => {
 
         // Courier Hub
         const courierHub = new signalR.HubConnectionBuilder()
-            .withUrl('https://localhost:7001/hubs/courier', {
+            .withUrl('https://ajilgo.runasp.net/hubs/courier', {
                 accessTokenFactory: () => bearerToken,
                 skipNegotiation: true,
                 transport: signalR.HttpTransportType.WebSockets

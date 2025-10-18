@@ -1,6 +1,6 @@
+using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
-using Microsoft.AspNetCore.Http;
 
 namespace Getir.Application.Services.FileUpload;
 
@@ -77,12 +77,12 @@ public interface IFileUploadIntegrationService
 
     // Additional methods for FileUploadController
     Task<Result<FileUploadResponse>> UploadFileAsync(
-        IFormFile file,
+        IUploadedFile file,
         Guid userId,
         CancellationToken cancellationToken = default);
 
     Task<Result<IEnumerable<FileUploadResponse>>> UploadMultipleFilesAsync(
-        IFormFile[] files,
+        IUploadedFile[] files,
         Guid userId,
         CancellationToken cancellationToken = default);
 
@@ -98,7 +98,7 @@ public interface IFileUploadIntegrationService
         CancellationToken cancellationToken = default);
 
     Task<Result<FileUploadResponse>> UploadMerchantFileAsync(
-        IFormFile file,
+        IUploadedFile file,
         Guid merchantId,
         CancellationToken cancellationToken = default);
 

@@ -30,9 +30,7 @@ public class AuthController : BaseController
     [HttpPost("register")]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Register(
-        [FromBody] RegisterRequest request,
-        CancellationToken ct = default)
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct = default)
     {
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;
@@ -50,14 +48,15 @@ public class AuthController : BaseController
     [HttpPost("login")]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Login(
-        [FromBody] LoginRequest request,
-        CancellationToken ct = default)
+    public async Task<IActionResult> Login([FromBody] LoginRequest request,CancellationToken ct = default)
     {
         var validationResult = HandleValidationErrors();
-        if (validationResult != null) return validationResult;
+
+        if (validationResult != null)
+            return validationResult;
 
         var result = await _authService.LoginAsync(request, ct);
+
         return ToActionResult(result);
     }
 
@@ -70,9 +69,7 @@ public class AuthController : BaseController
     [HttpPost("refresh")]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Refresh(
-        [FromBody] RefreshTokenRequest request,
-        CancellationToken ct = default)
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request, CancellationToken ct = default)
     {
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;
@@ -96,6 +93,65 @@ public class AuthController : BaseController
         if (unauthorizedResult != null) return unauthorizedResult;
 
         var result = await _authService.LogoutAsync(userId, ct);
+        return ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Request password reset (sends 6-digit code via email)
+    /// </summary>
+    /// <param name="request">Forgot password request</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Success response</returns>
+    [HttpPost("forgot-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken ct = default)
+    {
+        var validationResult = HandleValidationErrors();
+        if (validationResult != null) return validationResult;
+
+        var result = await _authService.ForgotPasswordAsync(request, ct);
+        return ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Reset password using code from email
+    /// </summary>
+    /// <param name="request">Reset password request</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Success response</returns>
+    [HttpPost("reset-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken ct = default)
+    {
+        var validationResult = HandleValidationErrors();
+        if (validationResult != null) return validationResult;
+
+        var result = await _authService.ResetPasswordAsync(request, ct);
+        return ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Change password for authenticated user
+    /// </summary>
+    /// <param name="request">Change password request</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Success response</returns>
+    [HttpPost("change-password")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken ct = default)
+    {
+        var validationResult = HandleValidationErrors();
+        if (validationResult != null) return validationResult;
+
+        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
+        if (unauthorizedResult != null) return unauthorizedResult;
+
+        var result = await _authService.ChangePasswordAsync(userId, request, ct);
         return ToActionResult(result);
     }
 }

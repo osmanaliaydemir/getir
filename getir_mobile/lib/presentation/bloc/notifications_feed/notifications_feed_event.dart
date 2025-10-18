@@ -18,3 +18,12 @@ class MarkNotificationRead extends NotificationsFeedEvent {
   @override
   List<Object?> get props => [notificationId];
 }
+
+// 🔄 Pagination Events
+class LoadMoreNotifications extends NotificationsFeedEvent {
+  const LoadMoreNotifications();
+}
+
+class RefreshNotifications extends NotificationsFeedEvent {
+  const RefreshNotifications();
+}

@@ -1,0 +1,138 @@
+@model List<Getir.MerchantPortal.Models.CategoryTreeNode>
+@{
+    ViewData["Title"] = "Kategoriler";
+    var allCategories = ViewBag.AllCategories as List<Getir.MerchantPortal.Models.ProductCategoryResponse> ?? new();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard-modern.css" />
+    <link rel="stylesheet" href="~/css/modules/categories/categories.css" asp-append-version="true" />
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3><i class="fas fa-tags"></i> Kategoriler</h3>
+        <p class="text-muted mb-0" id="reorderHint" style="display: none;">
+            <i class="fas fa-arrows-alt-v me-2"></i>Kategorileri sürükleyerek sıralayın
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-primary" id="toggleReorderBtn">
+            <i class="fas fa-arrows-alt-v"></i> Sırala
+        </button>
+        <button type="button" class="btn btn-success" id="saveOrderBtn" style="display: none;">
+            <i class="fas fa-save"></i> Sıralamayı Kaydet
+        </button>
+        <button type="button" class="btn btn-secondary" id="cancelOrderBtn" style="display: none;">
+            <i class="fas fa-times"></i> İptal
+        </button>
+        <a href="@Url.Action("Create")" class="btn btn-getir">
+            <i class="fas fa-plus"></i> Yeni Kategori Ekle
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="stat-card">
+            <h5 class="mb-3">
+                <i class="fas fa-sitemap"></i> Kategori Ağacı
+            </h5>
+            
+            @if (Model != null && Model.Any())
+            {
+                <div class="category-tree">
+                    @foreach (var node in Model)
+                    {
+                        @await Html.PartialAsync("_CategoryTreeNode", node)
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">Henüz kategori eklemediniz</h5>
+                    <p class="text-muted">Ürünlerinizi organize etmek için kategori oluşturun</p>
+                    <a href="@Url.Action("Create")" class="btn btn-getir mt-3">
+                        <i class="fas fa-plus"></i> İlk Kategoriyi Ekle
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="stat-card">
+            <h5 class="mb-3">
+                <i class="fas fa-info-circle"></i> İstatistikler
+            </h5>
+            
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Toplam Kategori</span>
+                    <strong>@allCategories.Count</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Ana Kategoriler</span>
+                    <strong>@allCategories.Count(c => c.ParentCategoryId == null)</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Alt Kategoriler</span>
+                    <strong>@allCategories.Count(c => c.ParentCategoryId != null)</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Aktif Kategoriler</span>
+                    <strong>@allCategories.Count(c => c.IsActive)</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Toplam Ürün</span>
+                    <strong>@allCategories.Sum(c => c.ProductCount)</strong>
+                </div>
+            </div>
+            
+            <hr />
+            
+            <h6 class="mb-3">En Çok Ürünlü Kategoriler</h6>
+            @foreach (var category in allCategories.OrderByDescending(c => c.ProductCount).Take(5))
+            {
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <i class="fas fa-folder text-muted"></i>
+                        <span class="ms-2">@category.Name</span>
+                    </div>
+                    <span class="badge bg-primary">@category.ProductCount</span>
+                </div>
+            }
+        </div>
+        
+        <div class="stat-card mt-3">
+            <h6 class="mb-3">
+                <i class="fas fa-lightbulb"></i> İpuçları
+            </h6>
+            <ul class="small text-muted mb-0" style="list-style: none; padding-left: 0;">
+                <li class="mb-2">
+                    <i class="fas fa-check text-success"></i>
+                    Kategorileri mantıklı bir hiyerarşi ile düzenleyin
+                </li>
+                <li class="mb-2">
+                    <i class="fas fa-check text-success"></i>
+                    Her ürünü uygun kategoriye atayın
+                </li>
+                <li class="mb-2">
+                    <i class="fas fa-check text-success"></i>
+                    Kategori isimlerini kısa ve açık tutun
+                </li>
+                <li class="mb-2">
+                    <i class="fas fa-check text-success"></i>
+                    Kullanılmayan kategorileri silebilirsiniz
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/modules/categories/categories.js" asp-append-version="true"></script>
+}
+

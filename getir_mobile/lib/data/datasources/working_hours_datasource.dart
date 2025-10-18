@@ -23,7 +23,7 @@ class WorkingHoursDataSourceImpl implements WorkingHoursDataSource {
   ) async {
     try {
       final response = await _dio.get(
-        '/api/v1/WorkingHours/merchant/$merchantId',
+        '/api/v1/workinghours/merchant/$merchantId',
       );
 
       if (response.statusCode == 200) {
@@ -56,7 +56,7 @@ class WorkingHoursDataSourceImpl implements WorkingHoursDataSource {
           : <String, dynamic>{};
 
       final response = await _dio.get(
-        '/api/v1/WorkingHours/merchant/$merchantId/is-open',
+        '/api/v1/workinghours/merchant/$merchantId/is-open',
         queryParameters: queryParams,
       );
 
@@ -86,7 +86,7 @@ class WorkingHoursDataSourceImpl implements WorkingHoursDataSource {
   @override
   Future<WorkingHours> getWorkingHoursById(String id) async {
     try {
-      final response = await _dio.get('/api/v1/WorkingHours/$id');
+      final response = await _dio.get('/api/v1/workinghours/$id');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;

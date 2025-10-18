@@ -1,0 +1,297 @@
+﻿@inject IViewLocalizer Localizer
+@inject IStringLocalizer<SharedResources> SharedLocalizer
+@using System.Globalization
+@{
+    var currentCulture = CultureInfo.CurrentUICulture;
+    var isRtl = currentCulture.Name.StartsWith("ar");
+    var langCode = currentCulture.TwoLetterISOLanguageName;
+}
+<!DOCTYPE html>
+<html lang="@langCode" dir="@(isRtl ? "rtl" : "ltr")">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - @SharedLocalizer["AppTitle"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/signalr-notifications.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dashboard-modern.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dark-mode.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/rtl-support.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/modules/language-switcher.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
+    <style>
+        :root {
+            --getir-purple: #5D3EBC;
+            --getir-yellow: #FFD300;
+            --sidebar-width: 260px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--getir-purple) 0%, #4a2d96 100%);
+            color: white;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-brand {
+            padding: 1.5rem 1rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            color: var(--getir-yellow);
+        }
+        
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+        
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .sidebar-nav i {
+            width: 30px;
+            margin-right: 10px;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+        
+        .top-navbar {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--getir-purple);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .content-wrapper {
+            padding: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .btn-getir {
+            background: var(--getir-purple);
+            color: white;
+            border: none;
+        }
+        
+        .btn-getir:hover {
+            background: #4a2d96;
+            color: white;
+        }
+        
+        .alert-custom {
+            border-left: 4px solid var(--getir-purple);
+        }
+    </style>
+</head>
+<body>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fas fa-store"></i> Getir
+            </div>
+            <nav class="sidebar-nav">
+                <a href="@Url.Action("Index", "Dashboard")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")">
+                    <i class="fas fa-home"></i> @SharedLocalizer["Dashboard"]
+                </a>
+                <a href="@Url.Action("Index", "Products")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Products" ? "active" : "")">
+                    <i class="fas fa-box"></i> @SharedLocalizer["Products"]
+                </a>
+                <a href="@Url.Action("Index", "Orders")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Orders" ? "active" : "")">
+                    <i class="fas fa-shopping-cart"></i> @SharedLocalizer["Orders"]
+                </a>
+                <a href="@Url.Action("Pending", "Orders")">
+                    <i class="fas fa-clock"></i> @SharedLocalizer["PendingOrders"]
+                </a>
+                <a href="@Url.Action("Index", "Categories")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Categories" ? "active" : "")">
+                    <i class="fas fa-tags"></i> @SharedLocalizer["Categories"]
+                </a>
+                <a href="@Url.Action("Index", "Payments")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Payments" ? "active" : "")">
+                    <i class="fas fa-money-bill-wave"></i> @SharedLocalizer["Payments"]
+                </a>
+                <a href="@Url.Action("Index", "Stock")">
+                    <i class="fas fa-cubes"></i> @SharedLocalizer["Stock"]
+                </a>
+                <a href="@Url.Action("Settings", "Merchant")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Merchant" ? "active" : "")">
+                    <i class="fas fa-cog"></i> @SharedLocalizer["Settings"]
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="top-navbar">
+                <div>
+                    <h5 class="mb-0">@ViewData["Title"]</h5>
+                </div>
+                <div class="user-menu">
+                    <!-- Language Switcher -->
+                    <div class="dropdown me-2">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Dil Seçimi">
+                            <i class="fas fa-globe"></i>
+                            @switch (currentCulture.TwoLetterISOLanguageName)
+                            {
+                                case "tr": <text>🇹🇷 TR</text> break;
+                                case "en": <text>🇬🇧 EN</text> break;
+                                case "ar": <text>🇸🇦 AR</text> break;
+                            }
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                            <li>
+                                <form asp-controller="Language" asp-action="SetLanguage" method="post" class="dropdown-item-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="culture" value="tr-TR" />
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                    <button type="submit" class="dropdown-item @(currentCulture.Name == "tr-TR" ? "active" : "")">
+                                        🇹🇷 Türkçe
+                                    </button>
+                                </form>
+                            </li>
+                            <li>
+                                <form asp-controller="Language" asp-action="SetLanguage" method="post" class="dropdown-item-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="culture" value="en-US" />
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                    <button type="submit" class="dropdown-item @(currentCulture.Name == "en-US" ? "active" : "")">
+                                        🇬🇧 English
+                                    </button>
+                                </form>
+                            </li>
+                            <li>
+                                <form asp-controller="Language" asp-action="SetLanguage" method="post" class="dropdown-item-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="culture" value="ar-SA" />
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                    <button type="submit" class="dropdown-item @(currentCulture.Name == "ar-SA" ? "active" : "")">
+                                        🇸🇦 العربية
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Theme Toggle -->
+                    <button type="button" id="themeToggleBtn" class="btn btn-sm btn-outline-secondary me-2" title="Tema Değiştir" onclick="ThemeManager.toggle()">
+                        <i class="fas fa-moon theme-toggle-icon moon"></i>
+                        <i class="fas fa-sun theme-toggle-icon sun" style="display:none;"></i>
+                    </button>
+                    
+                    <span>@Context.Session.GetString("UserName")</span>
+                    <div class="user-avatar">
+                        @(Context.Session.GetString("UserName")?.Substring(0, 1).ToUpper())
+                    </div>
+                    <form asp-controller="Auth" asp-action="Logout" method="post" style="display:inline;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-sign-out-alt"></i> @SharedLocalizer["Logout"]
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="content-wrapper">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show alert-custom" role="alert">
+                        <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show alert-custom" role="alert">
+                        <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+                
+                @RenderBody()
+            </div>
+        </div>
+    }
+    else
+    {
+        @RenderBody()
+    }
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@7.0.14/dist/browser/signalr.min.js"></script>
+    <script src="~/js/theme-manager.js" asp-append-version="true"></script>
+    <script src="~/js/signalr-helper.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,7 +1,8 @@
+import '../../core/errors/result.dart';
 import '../entities/product.dart';
 
-abstract class ProductRepository {
-  Future<List<Product>> getProducts({
+abstract class IProductRepository {
+  Future<Result<List<Product>>> getProducts({
     int page = 1,
     int limit = 20,
     String? merchantId,
@@ -9,8 +10,16 @@ abstract class ProductRepository {
     String? search,
   });
 
-  Future<Product> getProductById(String id);
-  Future<List<Product>> getProductsByMerchant(String merchantId);
-  Future<List<Product>> searchProducts(String query);
-  Future<List<String>> getCategories();
+  Future<Result<Product>> getProductById(String id);
+  Future<Result<List<Product>>> getProductsByMerchant(
+    String merchantId, {
+    int page = 1,
+    int limit = 20,
+  });
+  Future<Result<List<Product>>> searchProducts(
+    String query, {
+    int page = 1,
+    int limit = 20,
+  });
+  Future<Result<List<String>>> getCategories();
 }

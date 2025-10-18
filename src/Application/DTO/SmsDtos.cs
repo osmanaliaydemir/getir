@@ -68,14 +68,16 @@ public record SmsTemplate(
 /// <summary>
 /// SMS configuration
 /// </summary>
-public record SmsConfiguration(
-    string ProviderName,
-    string ApiKey,
-    string ApiSecret,
-    string? SenderId = null,
-    string BaseUrl = "",
-    int TimeoutSeconds = 30,
-    int MaxRetryAttempts = 3);
+public class SmsConfiguration
+{
+    public string ProviderName { get; set; } = string.Empty;
+    public string ApiKey { get; set; } = string.Empty;
+    public string ApiSecret { get; set; } = string.Empty;
+    public string? SenderId { get; set; }
+    public string BaseUrl { get; set; } = "";
+    public int TimeoutSeconds { get; set; } = 30;
+    public int MaxRetryAttempts { get; set; } = 3;
+}
 
 /// <summary>
 /// SMS balance

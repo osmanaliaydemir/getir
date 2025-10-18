@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:provider/provider.dart';
+
+import '../../bloc/auth/auth_bloc.dart';
+import '../../bloc/cart/cart_bloc.dart';
+import '../../widgets/common/language_selector.dart';
+import '../../../core/cubits/language/language_cubit.dart';
+import '../../../core/localization/app_localizations.dart';
+import '../../../core/constants/route_constants.dart';
 import '../../../core/navigation/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/localization/app_localizations.dart';
-import '../../../core/providers/language_provider.dart';
-import '../../bloc/auth/auth_bloc.dart';
-import '../../widgets/common/language_selector.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -53,9 +57,22 @@ class _LoginPageState extends State<LoginPage> {
       body: SafeArea(
         child: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
+            debugPrint(
+              '📡 [LoginPage] Received AuthBloc state: ${state.runtimeType}',
+            );
+
             if (state is AuthAuthenticated) {
-              AppNavigation.goToHome(context);
+              debugPrint(
+                '🎉 [LoginPage] User authenticated, navigating to home...',
+              );
+              // ✅ Trigger cart merge after successful login
+              context.read<CartBloc>().add(MergeLocalCartAfterLogin());
+
+              // Use context.go instead of AppNavigation helper
+              context.go(RouteConstants.home);
+              debugPrint('✅ [LoginPage] Navigated to home using context.go');
             } else if (state is AuthError) {
+              debugPrint('❌ [LoginPage] Auth error: ${state.message}');
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
@@ -76,12 +93,14 @@ class _LoginPageState extends State<LoginPage> {
                   // Language Selector
                   Align(
                     alignment: Alignment.centerRight,
-                    child: Consumer<LanguageProvider>(
-                      builder: (context, languageProvider, child) {
+                    child: BlocBuilder<LanguageCubit, LanguageState>(
+                      builder: (context, state) {
                         return LanguageSelector(
-                          currentLanguage: languageProvider.currentLanguageCode,
+                          currentLanguage: state.languageCode,
                           onLanguageChanged: (languageCode) {
-                            languageProvider.changeLanguageByCode(languageCode);
+                            context.read<LanguageCubit>().changeLanguageByCode(
+                              languageCode,
+                            );
                           },
                         );
                       },
@@ -128,58 +147,173 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 48),
 
                   // Email Field
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: l10n.email,
-                      hintText: 'example@email.com',
-                      prefixIcon: const Icon(Icons.email_outlined),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.emailRequired;
-                      }
-                      if (!RegExp(
-                        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                      ).hasMatch(value)) {
-                        return l10n.invalidEmail;
-                      }
-                      return null;
-                    },
+                    child: TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 16,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: l10n.email,
+                        hintText: 'example@email.com',
+                        prefixIcon: const Icon(
+                          Icons.email_outlined,
+                          color: AppColors.primary,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Colors.grey.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppColors.primary,
+                            width: 2,
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppColors.error,
+                            width: 1,
+                          ),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppColors.error,
+                            width: 2,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return l10n.emailRequired;
+                        }
+                        if (!RegExp(
+                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                        ).hasMatch(value)) {
+                          return l10n.invalidEmail;
+                        }
+                        return null;
+                      },
+                    ),
                   ),
                   const SizedBox(height: 16),
 
                   // Password Field
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      labelText: l10n.password,
-                      hintText: l10n.password,
-                      prefixIcon: const Icon(Icons.lock_outlined),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility
-                              : Icons.visibility_off,
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                      ),
+                      ],
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.passwordRequired;
-                      }
-                      if (value.length < 6) {
-                        return l10n.passwordTooShort;
-                      }
-                      return null;
-                    },
+                    child: TextFormField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 16,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: l10n.password,
+                        hintText: l10n.password,
+                        prefixIcon: const Icon(
+                          Icons.lock_outlined,
+                          color: AppColors.primary,
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: AppColors.textSecondary,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Colors.grey.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppColors.primary,
+                            width: 2,
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppColors.error,
+                            width: 1,
+                          ),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppColors.error,
+                            width: 2,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return l10n.passwordRequired;
+                        }
+                        if (value.length < 6) {
+                          return l10n.passwordTooShort;
+                        }
+                        return null;
+                      },
+                    ),
                   ),
                   const SizedBox(height: 12),
 
@@ -205,20 +339,54 @@ class _LoginPageState extends State<LoginPage> {
                   // Login Button
                   BlocBuilder<AuthBloc, AuthState>(
                     builder: (context, state) {
-                      return ElevatedButton(
-                        onPressed: state is AuthLoading ? null : _login,
-                        child: state is AuthLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    AppColors.white,
+                      return Container(
+                        height: 56,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          gradient: const LinearGradient(
+                            colors: [AppColors.primary, AppColors.primaryDark],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.3),
+                              blurRadius: 15,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          onPressed: state is AuthLoading ? null : _login,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: state is AuthLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      AppColors.white,
+                                    ),
+                                  ),
+                                )
+                              : Text(
+                                  l10n.login,
+                                  style: const TextStyle(
+                                    color: AppColors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
                                   ),
                                 ),
-                              )
-                            : Text(l10n.login),
+                        ),
                       );
                     },
                   ),

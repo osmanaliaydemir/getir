@@ -2,7 +2,9 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
+using Getir.Domain.Enums;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace Getir.Application.Services.Auth;
 
@@ -11,6 +13,7 @@ public class AuthService : BaseService, IAuthService
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IBackgroundTaskService _backgroundTaskService;
+    private readonly IEmailService _emailService;
     private readonly int _accessTokenMinutes;
     private readonly int _refreshTokenMinutes;
 
@@ -21,12 +24,14 @@ public class AuthService : BaseService, IAuthService
         ICacheService cacheService,
         IBackgroundTaskService backgroundTaskService,
         IJwtTokenService jwtTokenService,
-        IPasswordHasher passwordHasher) 
+        IPasswordHasher passwordHasher,
+        IEmailService emailService) 
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _jwtTokenService = jwtTokenService;
         _passwordHasher = passwordHasher;
         _backgroundTaskService = backgroundTaskService;
+        _emailService = emailService;
         _accessTokenMinutes = 60; // Bu değerler configuration'dan gelecek şekilde iyileştirilebilir
         _refreshTokenMinutes = 10080; // 7 days
     }
@@ -127,21 +132,19 @@ public class AuthService : BaseService, IAuthService
         LoginRequest request,
         CancellationToken cancellationToken = default)
     {
-        return await ExecuteWithPerformanceTracking(
-            async () => await LoginInternalAsync(request, cancellationToken),
-            "UserLogin",
-            new { Email = request.Email },
+        return await ExecuteWithPerformanceTracking( async () => await LoginInternalAsync(request, cancellationToken),
+            "UserLogin", new { Email = request.Email },
             cancellationToken);
     }
 
-    private async Task<Result<AuthResponse>> LoginInternalAsync(
-        LoginRequest request,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<AuthResponse>> LoginInternalAsync(LoginRequest request,CancellationToken cancellationToken = default)
     {
         try
         {
             var user = await _unitOfWork.ReadRepository<User>()
-                .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken: cancellationToken);
+                .FirstOrDefaultAsync(u => u.Email == request.Email, 
+                    include: "OwnedMerchants",  // Load OwnedMerchants for MerchantOwner role
+                    cancellationToken: cancellationToken);
 
             if (user == null)
             {
@@ -186,6 +189,38 @@ public class AuthService : BaseService, IAuthService
             // Log successful login
             _loggingService.LogUserAction(user.Id.ToString(), "UserLoggedIn", new { Email = user.Email, Role = user.Role.ToString() });
 
+            // Get MerchantId if user is MerchantOwner
+            Guid? merchantId = null;
+            if (user.Role > UserRole.Customer || user.Role > UserRole.Courier)
+            {
+                _logger.LogInformation("MerchantOwner login - UserId: {UserId}, OwnedMerchants count: {Count}", 
+                    user.Id, user.OwnedMerchants?.Count ?? 0);
+                
+                if (user.OwnedMerchants?.Any() == true)
+                {
+                    merchantId = user.OwnedMerchants.First().Id;
+                    _logger.LogInformation("MerchantId loaded from Include: {MerchantId}", merchantId);
+                }
+                else
+                {
+                    _logger.LogWarning("OwnedMerchants not loaded via Include. Querying directly...");
+                    
+                    // Fallback: Direct query for MerchantId
+                    var merchant = await _unitOfWork.ReadRepository<Merchant>()
+                        .FirstOrDefaultAsync(m => m.OwnerId == user.Id && m.IsActive, cancellationToken: cancellationToken);
+                    
+                    if (merchant != null)
+                    {
+                        merchantId = merchant.Id;
+                        _logger.LogInformation("MerchantId loaded from direct query: {MerchantId}", merchantId);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("No active Merchant found for MerchantOwner! UserId: {UserId}", user.Id);
+                    }
+                }
+            }
+
             return ServiceResult.Success(new AuthResponse(
                 accessToken,
                 refreshTokenValue,
@@ -193,7 +228,8 @@ public class AuthService : BaseService, IAuthService
                 user.Role,
                 user.Id,
                 user.Email,
-                $"{user.FirstName} {user.LastName}"
+                $"{user.FirstName} {user.LastName}",
+                merchantId
             ));
         }
         catch (Exception ex)
@@ -330,6 +366,396 @@ public class AuthService : BaseService, IAuthService
         {
             _loggingService.LogError("Error during user logout", ex, new { UserId = userId });
             return ServiceResult.HandleException(ex, _logger, "UserLogout");
+        }
+    }
+
+    public async Task<Result> ForgotPasswordAsync(
+        ForgotPasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await ForgotPasswordInternalAsync(request, cancellationToken),
+            "ForgotPassword",
+            new { Email = request.Email },
+            cancellationToken);
+    }
+
+    private async Task<Result> ForgotPasswordInternalAsync(
+        ForgotPasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Find user by email
+            var userRepo = _unitOfWork.Repository<User>();
+            var user = await userRepo.FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken: cancellationToken);
+            
+            // Security: Don't reveal if user exists or not
+            if (user == null)
+            {
+                _logger.LogWarning("Password reset requested for non-existent email: {Email}", request.Email);
+                return ServiceResult.Success(); // Return success even if user doesn't exist
+            }
+
+            // Generate 6-digit reset code
+            var resetCode = new Random().Next(100000, 999999).ToString();
+            var resetToken = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{user.Id}:{resetCode}:{DateTime.UtcNow:o}"));
+
+            // Store reset token in cache (expires in 15 minutes)
+            var cacheKey = $"password_reset:{user.Id}";
+            await _cacheService.SetAsync(
+                cacheKey, 
+                resetCode, 
+                TimeSpan.FromMinutes(15), 
+                cancellationToken);
+
+            // Send reset code via email
+            var emailResult = await _emailService.SendHtmlEmailAsync(
+                user.Email,
+                "Şifre Sıfırlama Kodu",
+                $@"
+                <html>
+                <body>
+                    <h2>Şifre Sıfırlama</h2>
+                    <p>Merhaba {user.FirstName},</p>
+                    <p>Şifrenizi sıfırlamak için aşağıdaki kodu kullanın:</p>
+                    <h1 style='color: #5D3EBC; letter-spacing: 5px;'>{resetCode}</h1>
+                    <p>Bu kod 15 dakika içinde geçerliliğini yitirecektir.</p>
+                    <p>Eğer bu işlemi siz yapmadıysanız, bu e-postayı görmezden gelebilirsiniz.</p>
+                    <br>
+                    <p>Getir Ekibi</p>
+                </body>
+                </html>",
+                cancellationToken: cancellationToken);
+
+            if (!emailResult.Success)
+            {
+                _logger.LogError("Failed to send password reset email to {Email}", user.Email);
+                return ServiceResult.Failure("Şifre sıfırlama e-postası gönderilemedi");
+            }
+
+            _loggingService.LogBusinessEvent(
+                "PasswordResetCodeSent",
+                new { UserId = user.Id, Email = user.Email },
+                LogLevel.Information);
+
+            return ServiceResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _loggingService.LogError("Error during forgot password", ex, new { Email = request.Email });
+            return ServiceResult.HandleException(ex, _logger, "ForgotPassword");
+        }
+    }
+
+    public async Task<Result> ResetPasswordAsync(
+        ResetPasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await ResetPasswordInternalAsync(request, cancellationToken),
+            "ResetPassword",
+            new { Token = request.Token },
+            cancellationToken);
+    }
+
+    private async Task<Result> ResetPasswordInternalAsync(
+        ResetPasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Decode token: format is "userId:code:timestamp"
+            string decodedToken;
+            try
+            {
+                var tokenBytes = Convert.FromBase64String(request.Token);
+                decodedToken = System.Text.Encoding.UTF8.GetString(tokenBytes);
+            }
+            catch
+            {
+                return ServiceResult.Failure("Geçersiz sıfırlama kodu", ErrorCodes.VALIDATION_ERROR);
+            }
+
+            var parts = decodedToken.Split(':');
+            if (parts.Length != 3 || !Guid.TryParse(parts[0], out var userId))
+            {
+                return ServiceResult.Failure("Geçersiz sıfırlama kodu formatı", ErrorCodes.VALIDATION_ERROR);
+            }
+
+            var providedCode = parts[1];
+
+            // Get stored code from cache
+            var cacheKey = $"password_reset:{userId}";
+            var storedCode = await _cacheService.GetAsync<string>(cacheKey, cancellationToken);
+
+            if (string.IsNullOrEmpty(storedCode))
+            {
+                return ServiceResult.Failure("Sıfırlama kodu geçersiz veya süresi dolmuş", ErrorCodes.VALIDATION_ERROR);
+            }
+
+            if (storedCode != providedCode)
+            {
+                return ServiceResult.Failure("Sıfırlama kodu hatalı", ErrorCodes.VALIDATION_ERROR);
+            }
+
+            // Get user
+            var userRepo = _unitOfWork.Repository<User>();
+            var user = await userRepo.GetByIdAsync(userId, cancellationToken);
+            if (user == null)
+            {
+                return ServiceResult.Failure("Kullanıcı bulunamadı", ErrorCodes.NOT_FOUND);
+            }
+
+            // Update password
+            user.PasswordHash = _passwordHasher.HashPassword(request.NewPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            userRepo.Update(user);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Remove reset code from cache
+            await _cacheService.RemoveAsync(cacheKey, cancellationToken);
+
+            // Invalidate all refresh tokens for security
+            var refreshTokenRepo = _unitOfWork.Repository<RefreshToken>();
+            var refreshTokens = await refreshTokenRepo.ListAsync(
+                filter: t => t.UserId == userId && !t.IsRevoked,
+                cancellationToken: cancellationToken);
+            
+            foreach (var token in refreshTokens)
+            {
+                token.RevokedAt = DateTime.UtcNow;
+                token.IsRevoked = true;
+                refreshTokenRepo.Update(token);
+            }
+            
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            _loggingService.LogBusinessEvent(
+                "PasswordResetSuccess",
+                new { UserId = userId, Email = user.Email },
+                LogLevel.Information);
+
+            // Send confirmation email
+            await _emailService.SendHtmlEmailAsync(
+                user.Email,
+                "Şifreniz Değiştirildi",
+                $@"
+                <html>
+                <body>
+                    <h2>Şifre Değişikliği</h2>
+                    <p>Merhaba {user.FirstName},</p>
+                    <p>Şifreniz başarıyla değiştirildi.</p>
+                    <p>Eğer bu işlemi siz yapmadıysanız, lütfen derhal bizimle iletişime geçin.</p>
+                    <br>
+                    <p>Getir Ekibi</p>
+                </body>
+                </html>",
+                cancellationToken: cancellationToken);
+
+            return ServiceResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _loggingService.LogError("Error during password reset", ex, new { Token = request.Token });
+            return ServiceResult.HandleException(ex, _logger, "ResetPassword");
+        }
+    }
+
+    public async Task<Result> ChangePasswordAsync(
+        Guid userId,
+        ChangePasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await ChangePasswordInternalAsync(userId, request, cancellationToken),
+            "ChangePassword",
+            new { UserId = userId },
+            cancellationToken);
+    }
+
+    private async Task<Result> ChangePasswordInternalAsync(
+        Guid userId,
+        ChangePasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Get user
+            var userRepo = _unitOfWork.Repository<User>();
+            var user = await userRepo.GetByIdAsync(userId, cancellationToken);
+            
+            if (user == null)
+            {
+                return ServiceResult.Failure("Kullanıcı bulunamadı", ErrorCodes.NOT_FOUND);
+            }
+
+            if (!user.IsActive)
+            {
+                return ServiceResult.Failure("Hesabınız devre dışı bırakılmış", ErrorCodes.AUTH_ACCOUNT_DEACTIVATED);
+            }
+
+            // Verify current password
+            if (!_passwordHasher.VerifyPassword(request.CurrentPassword, user.PasswordHash))
+            {
+                _loggingService.LogSecurityEvent("ChangePasswordFailedWrongPassword", user.Id.ToString(), new { UserId = userId });
+                return ServiceResult.Failure("Mevcut şifreniz hatalı", ErrorCodes.AUTH_INVALID_CREDENTIALS);
+            }
+
+            // Validate new password is different
+            if (_passwordHasher.VerifyPassword(request.NewPassword, user.PasswordHash))
+            {
+                return ServiceResult.Failure("Yeni şifre, mevcut şifrenizle aynı olamaz", ErrorCodes.VALIDATION_ERROR);
+            }
+
+            // Update password
+            user.PasswordHash = _passwordHasher.HashPassword(request.NewPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            userRepo.Update(user);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Invalidate all refresh tokens for security
+            var refreshTokenRepo = _unitOfWork.Repository<RefreshToken>();
+            var refreshTokens = await refreshTokenRepo.ListAsync(
+                filter: t => t.UserId == userId && !t.IsRevoked,
+                cancellationToken: cancellationToken);
+            
+            foreach (var token in refreshTokens)
+            {
+                token.RevokedAt = DateTime.UtcNow;
+                token.IsRevoked = true;
+                refreshTokenRepo.Update(token);
+            }
+            
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            _loggingService.LogBusinessEvent(
+                "PasswordChanged",
+                new { UserId = userId, Email = user.Email },
+                LogLevel.Information);
+
+            // Send confirmation email
+            await _emailService.SendHtmlEmailAsync(
+                user.Email,
+                "Şifreniz Değiştirildi",
+                $@"
+                <html>
+                <body>
+                    <h2>Şifre Değişikliği</h2>
+                    <p>Merhaba {user.FirstName},</p>
+                    <p>Hesabınızın şifresi başarıyla değiştirildi.</p>
+                    <p>Eğer bu işlemi siz yapmadıysanız, lütfen derhal bizimle iletişime geçin.</p>
+                    <p>Tarih: {DateTime.UtcNow:dd MMM yyyy HH:mm} UTC</p>
+                    <br/>
+                    <p>Getir Ekibi</p>
+                </body>
+                </html>", null, 
+                cancellationToken);
+
+            return ServiceResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _loggingService.LogError("Error during password change", ex, new { UserId = userId });
+            return ServiceResult.HandleException(ex, _logger, "ChangePassword");
+        }
+    }
+
+    public async Task<Result<UserProfileResponse>> GetUserProfileAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetUserProfileInternalAsync(userId, cancellationToken),
+            "GetUserProfile",
+            new { UserId = userId },
+            cancellationToken);
+    }
+
+    private async Task<Result<UserProfileResponse>> GetUserProfileInternalAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var user = await _unitOfWork.Repository<User>().GetByIdAsync(userId, cancellationToken);
+            if (user == null)
+            {
+                return ServiceResult.Failure<UserProfileResponse>("User not found", ErrorCodes.NOT_FOUND);
+            }
+
+            var profileResponse = new UserProfileResponse(
+                user.Id,
+                user.Email,
+                user.FirstName,
+                user.LastName,
+                user.PhoneNumber,
+                user.Role,
+                user.IsEmailVerified,
+                user.CreatedAt);
+
+            return ServiceResult.Success(profileResponse);
+        }
+        catch (Exception ex)
+        {
+            _loggingService.LogError("Error getting user profile", ex, new { UserId = userId });
+            return ServiceResult.HandleException<UserProfileResponse>(ex, _logger, "GetUserProfile");
+        }
+    }
+
+    public async Task<Result<UserProfileResponse>> UpdateUserProfileAsync(
+        Guid userId,
+        UpdateUserProfileRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await UpdateUserProfileInternalAsync(userId, request, cancellationToken),
+            "UpdateUserProfile",
+            new { UserId = userId, FirstName = request.FirstName, LastName = request.LastName },
+            cancellationToken);
+    }
+
+    private async Task<Result<UserProfileResponse>> UpdateUserProfileInternalAsync(
+        Guid userId,
+        UpdateUserProfileRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var user = await _unitOfWork.Repository<User>().GetByIdAsync(userId, cancellationToken);
+            if (user == null)
+            {
+                return ServiceResult.Failure<UserProfileResponse>("User not found", ErrorCodes.NOT_FOUND);
+            }
+
+            // Update user properties
+            user.FirstName = request.FirstName;
+            user.LastName = request.LastName;
+            user.PhoneNumber = request.PhoneNumber;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            _unitOfWork.Repository<User>().Update(user);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            var profileResponse = new UserProfileResponse(
+                user.Id,
+                user.Email,
+                user.FirstName,
+                user.LastName,
+                user.PhoneNumber,
+                user.Role,
+                user.IsEmailVerified,
+                user.CreatedAt);
+
+            _loggingService.LogBusinessEvent("UserProfileUpdated", new { UserId = userId });
+            return ServiceResult.Success(profileResponse);
+        }
+        catch (Exception ex)
+        {
+            _loggingService.LogError("Error updating user profile", ex, new { UserId = userId });
+            return ServiceResult.HandleException<UserProfileResponse>(ex, _logger, "UpdateUserProfile");
         }
     }
 }

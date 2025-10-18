@@ -1,4 +1,6 @@
-class Order {
+import 'package:equatable/equatable.dart';
+
+class Order extends Equatable {
   final String id;
   final String userId;
   final String merchantId;
@@ -49,6 +51,33 @@ class Order {
     required this.statusHistory,
   });
 
+  @override
+  List<Object?> get props => [
+    id,
+    userId,
+    merchantId,
+    merchantName,
+    merchantLogoUrl,
+    deliveryAddressId,
+    deliveryAddress,
+    deliveryLatitude,
+    deliveryLongitude,
+    status,
+    paymentStatus,
+    paymentMethod,
+    subtotal,
+    deliveryFee,
+    discountAmount,
+    totalAmount,
+    couponCode,
+    notes,
+    estimatedDeliveryTime,
+    createdAt,
+    updatedAt,
+    items,
+    statusHistory,
+  ];
+
   factory Order.fromJson(Map<String, dynamic> json) {
     return Order(
       id: json['id'] as String,
@@ -69,14 +98,19 @@ class Order {
       totalAmount: (json['totalAmount'] as num).toDouble(),
       couponCode: json['couponCode'] as String?,
       notes: json['notes'] as String?,
-      estimatedDeliveryTime: DateTime.parse(json['estimatedDeliveryTime'] as String),
+      estimatedDeliveryTime: DateTime.parse(
+        json['estimatedDeliveryTime'] as String,
+      ),
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
       items: (json['items'] as List<dynamic>)
           .map((item) => OrderItem.fromJson(item as Map<String, dynamic>))
           .toList(),
       statusHistory: (json['statusHistory'] as List<dynamic>)
-          .map((status) => OrderStatusHistory.fromJson(status as Map<String, dynamic>))
+          .map(
+            (status) =>
+                OrderStatusHistory.fromJson(status as Map<String, dynamic>),
+          )
           .toList(),
     );
   }
@@ -110,7 +144,7 @@ class Order {
   }
 }
 
-class OrderItem {
+class OrderItem extends Equatable {
   final String id;
   final String productId;
   final String productName;
@@ -137,6 +171,21 @@ class OrderItem {
     required this.selectedOptionNames,
   });
 
+  @override
+  List<Object?> get props => [
+    id,
+    productId,
+    productName,
+    productImageUrl,
+    unitPrice,
+    quantity,
+    totalPrice,
+    selectedVariantId,
+    selectedVariantName,
+    selectedOptionIds,
+    selectedOptionNames,
+  ];
+
   factory OrderItem.fromJson(Map<String, dynamic> json) {
     return OrderItem(
       id: json['id'] as String,
@@ -148,8 +197,10 @@ class OrderItem {
       totalPrice: (json['totalPrice'] as num).toDouble(),
       selectedVariantId: json['selectedVariantId'] as String?,
       selectedVariantName: json['selectedVariantName'] as String?,
-      selectedOptionIds: (json['selectedOptionIds'] as List<dynamic>).cast<String>(),
-      selectedOptionNames: (json['selectedOptionNames'] as List<dynamic>).cast<String>(),
+      selectedOptionIds: (json['selectedOptionIds'] as List<dynamic>)
+          .cast<String>(),
+      selectedOptionNames: (json['selectedOptionNames'] as List<dynamic>)
+          .cast<String>(),
     );
   }
 
@@ -170,7 +221,7 @@ class OrderItem {
   }
 }
 
-class OrderStatusHistory {
+class OrderStatusHistory extends Equatable {
   final String id;
   final String orderId;
   final OrderStatus status;
@@ -184,6 +235,9 @@ class OrderStatusHistory {
     this.notes,
     required this.timestamp,
   });
+
+  @override
+  List<Object?> get props => [id, orderId, status, notes, timestamp];
 
   factory OrderStatusHistory.fromJson(Map<String, dynamic> json) {
     return OrderStatusHistory(

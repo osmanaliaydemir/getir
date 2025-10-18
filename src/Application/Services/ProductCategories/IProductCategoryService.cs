@@ -6,6 +6,10 @@ namespace Getir.Application.Services.ProductCategories;
 public interface IProductCategoryService
 {
     // Merchant kendi kategorilerini yönetir
+    Task<Result<List<ProductCategoryResponse>>> GetMerchantCategoriesAsync(
+        Guid merchantId,
+        CancellationToken cancellationToken = default);
+    
     Task<Result<List<ProductCategoryTreeResponse>>> GetMerchantCategoryTreeAsync(
         Guid merchantId,
         CancellationToken cancellationToken = default);

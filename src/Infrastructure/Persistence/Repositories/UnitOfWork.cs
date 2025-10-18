@@ -13,7 +13,7 @@ public class UnitOfWork : IUnitOfWork
 
     public UnitOfWork(AppDbContext context)
     {
-        _context = context;
+        _context = context ?? throw new ArgumentNullException(nameof(context), "AppDbContext cannot be null in UnitOfWork. Ensure DbContext is properly registered in DI container.");
         _repositories = new ConcurrentDictionary<Type, object>();
         _readRepositories = new ConcurrentDictionary<Type, object>();
     }
@@ -33,6 +33,11 @@ public class UnitOfWork : IUnitOfWork
 
     public IReadOnlyRepository<T> ReadRepository<T>() where T : class
     {
+        if (_context == null)
+        {
+            throw new InvalidOperationException($"AppDbContext is null when creating ReadRepository<{typeof(T).Name}>. Check DI registration.");
+        }
+        
         var type = typeof(T);
         
         if (!_readRepositories.ContainsKey(type))

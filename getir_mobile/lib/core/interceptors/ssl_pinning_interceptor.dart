@@ -3,7 +3,9 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:crypto/crypto.dart'; // ✅ SHA-256 hashing için
 import '../config/environment_config.dart';
+import '../services/logger_service.dart';
 
 /// SSL/Certificate Pinning Interceptor
 /// Validates server certificates against pinned certificates
@@ -19,7 +21,7 @@ class SslPinningInterceptor extends Interceptor {
     // Only enable in production with flag
     if (!EnvironmentConfig.isProduction ||
         !EnvironmentConfig.enableSslPinning) {
-      debugPrint('🔓 SSL Pinning: Disabled');
+      logger.info('SSL Pinning: Disabled', tag: 'SSLPinning');
       _isInitialized = true;
       return;
     }
@@ -38,16 +40,28 @@ class SslPinningInterceptor extends Interceptor {
           final certData = await rootBundle.load(certPath);
           final bytes = certData.buffer.asUint8List();
           _securityContext!.setTrustedCertificatesBytes(bytes);
-          debugPrint('🔒 SSL Pinning: Loaded certificate $certPath');
+          logger.info(
+            'Loaded certificate',
+            tag: 'SSLPinning',
+            context: {'path': certPath},
+          );
         } catch (e) {
-          debugPrint('⚠️  SSL Pinning: Failed to load $certPath: $e');
+          logger.warning(
+            'Failed to load certificate',
+            tag: 'SSLPinning',
+            context: {'path': certPath, 'error': e.toString()},
+          );
         }
       }
 
       _isInitialized = true;
-      debugPrint('🔒 SSL Pinning: Initialized successfully');
+      logger.info('SSL Pinning initialized successfully', tag: 'SSLPinning');
     } catch (e) {
-      debugPrint('❌ SSL Pinning: Initialization failed: $e');
+      logger.error(
+        'SSL Pinning initialization failed',
+        tag: 'SSLPinning',
+        error: e,
+      );
       _isInitialized = false;
     }
   }
@@ -68,7 +82,11 @@ class SslPinningInterceptor extends Interceptor {
             // Custom certificate validation
             // In production, you should implement proper certificate validation
             // For now, we trust our pinned certificates
-            debugPrint('🔍 SSL Pinning: Validating certificate for $host');
+            logger.debug(
+              'Validating certificate',
+              tag: 'SSLPinning',
+              context: {'host': host},
+            );
 
             // TODO: Implement proper certificate validation
             // 1. Check certificate chain
@@ -94,36 +112,86 @@ class SslPinningInterceptor extends Interceptor {
       // TODO: Add your pinned certificate SHA-256 hashes here
       // For now, allow all certificates in development
       if (EnvironmentConfig.isDevelopment) {
-        debugPrint(
-          '🔓 SSL Pinning: Development mode - allowing all certificates',
+        logger.debug(
+          'Development mode - allowing all certificates',
+          tag: 'SSLPinning',
         );
         return true;
       }
 
       // In production, validate against pinned hashes
       // You should implement proper certificate validation here
-      debugPrint('🔐 SSL Pinning: Validating certificate for $host');
+      logger.debug(
+        'Validating certificate against pinned hashes',
+        tag: 'SSLPinning',
+        context: {'host': host},
+      );
       return _isPinnedCertificate(certDer);
     } catch (e) {
-      debugPrint('❌ Certificate validation failed: $e');
+      logger.error(
+        'Certificate validation failed',
+        tag: 'SSLPinning',
+        error: e,
+      );
       return false;
     }
   }
 
   /// Check if certificate is pinned
   bool _isPinnedCertificate(Uint8List certDer) {
-    // TODO: Replace with your actual pinned certificate hashes
-    // Get these by running:
-    // openssl s_client -connect api.getir.com:443 | openssl x509 -fingerprint -sha256 -noout
-    //
-    // For production, compute SHA-256 hash of certDer and compare with pinned hashes
-    // Example:
-    // import 'package:crypto/crypto.dart';
-    // final hash = sha256.convert(certDer).toString();
-    // return pinnedHashes.contains(hash);
+    // Production certificate pinning
+    // Compute SHA-256 hash of the certificate
+    final certHash = sha256.convert(certDer).toString();
 
-    // For now, allow all in development (already checked above)
-    return true;
+    // ⚠️ IMPORTANT: Replace these with your actual production certificate hashes
+    // How to get certificate hash:
+    //
+    // Option 1 - OpenSSL (Linux/Mac/Git Bash):
+    // openssl s_client -connect ajilgo.runasp.net:443 </dev/null 2>/dev/null | \
+    //   openssl x509 -outform DER | \
+    //   openssl dgst -sha256 -binary | \
+    //   openssl base64
+    //
+    // Option 2 - PowerShell (Windows):
+    // $cert = (Invoke-WebRequest -Uri "https://ajilgo.runasp.net").BaseResponse.ServicePoint.Certificate
+    // $bytes = $cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert)
+    // [System.Convert]::ToBase64String((New-Object System.Security.Cryptography.SHA256Managed).ComputeHash($bytes))
+    //
+    // Option 3 - Browser (Easy):
+    // 1. Chrome'da https://ajilgo.runasp.net'e git
+    // 2. Adres çubuğundaki kilit ikonuna tıkla
+    // 3. Certificate → Details → Thumbprint (SHA-256) kopyala
+
+    // ✅ Pinned certificate hashes (SHA-256)
+    final pinnedHashes = {
+      // ⚠️ PLACEHOLDER - GERÇEK HASH'LERLE DEĞİŞTİR!
+      // ajilgo.runasp.net certificate hash (ÖRNEK - GERÇEK DEĞİL!)
+      'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456',
+
+      // Backup certificate (certificate renewal için)
+      'b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef1234567',
+
+      // Let's Encrypt Root CA (if using Let's Encrypt)
+      'c3d4e5f6789012345678901234567890abcdef1234567890abcdef12345678',
+    };
+
+    final isValid = pinnedHashes.contains(certHash);
+
+    if (!isValid) {
+      logger.warning(
+        'Certificate hash not in pinned list!',
+        tag: 'SSLPinning',
+        context: {'hash': certHash, 'pinnedCount': pinnedHashes.length},
+      );
+    } else {
+      logger.debug(
+        'Certificate validated successfully',
+        tag: 'SSLPinning',
+        context: {'hash': certHash.substring(0, 16) + '...'},
+      );
+    }
+
+    return isValid;
   }
 
   @override
@@ -131,9 +199,12 @@ class SslPinningInterceptor extends Interceptor {
     if (err.type == DioExceptionType.connectionError &&
         err.error is HandshakeException) {
       // SSL handshake failed - possible MITM attack
-      debugPrint('🚨 SSL Pinning: Certificate validation failed!');
-      debugPrint('   This could indicate a Man-in-the-Middle attack.');
-      debugPrint('   Connection rejected for security reasons.');
+      logger.error(
+        'SSL Certificate validation failed! Possible MITM attack detected.',
+        tag: 'SSLPinning',
+        error: err.error,
+        context: {'url': err.requestOptions.uri.toString()},
+      );
 
       handler.reject(
         DioException(
@@ -153,7 +224,7 @@ class SslPinningInterceptor extends Interceptor {
 class SslPinningSetup {
   /// Print setup instructions
   static void printInstructions() {
-    debugPrint('''
+    logger.info('''
     
 ╔═══════════════════════════════════════════════════════════════════════════╗
 ║                     SSL PINNING SETUP INSTRUCTIONS                        ║

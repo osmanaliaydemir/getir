@@ -12,9 +12,15 @@ class NotificationsFeedLoading extends NotificationsFeedState {}
 
 class NotificationsFeedLoaded extends NotificationsFeedState {
   final List<AppNotification> items;
-  const NotificationsFeedLoaded(this.items);
+  final PaginationModel<AppNotification>? pagination;
+
+  const NotificationsFeedLoaded(this.items, {this.pagination});
+
   @override
-  List<Object?> get props => [items];
+  List<Object?> get props => [items, pagination];
+
+  bool get hasPagination => pagination != null;
+  bool get canLoadMore => pagination?.hasNextPage ?? false;
 }
 
 class NotificationsFeedError extends NotificationsFeedState {

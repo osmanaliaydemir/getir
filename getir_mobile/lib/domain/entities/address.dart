@@ -1,4 +1,6 @@
-class UserAddress {
+import 'package:equatable/equatable.dart';
+
+class UserAddress extends Equatable {
   final String id;
   final String userId;
   final String title;
@@ -30,6 +32,24 @@ class UserAddress {
     required this.createdAt,
     required this.updatedAt,
   });
+
+  @override
+  List<Object?> get props => [
+    id,
+    userId,
+    title,
+    fullAddress,
+    buildingNumber,
+    floor,
+    apartment,
+    landmark,
+    latitude,
+    longitude,
+    type,
+    isDefault,
+    createdAt,
+    updatedAt,
+  ];
 
   factory UserAddress.fromJson(Map<String, dynamic> json) {
     return UserAddress(

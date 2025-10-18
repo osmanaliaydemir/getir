@@ -21,6 +21,34 @@ public class ProductCategoryService : BaseService, IProductCategoryService
         _backgroundTaskService = backgroundTaskService;
     }
 
+    public async Task<Result<List<ProductCategoryResponse>>> GetMerchantCategoriesAsync(
+        Guid merchantId,
+        CancellationToken cancellationToken = default)
+    {
+        var categories = await _unitOfWork.ReadRepository<ProductCategory>()
+            .ListAsync(
+                c => c.MerchantId == merchantId && c.IsActive,
+                include: "ParentCategory,Products",
+                cancellationToken: cancellationToken);
+
+        var response = categories.Select(c => new ProductCategoryResponse(
+            c.Id,
+            c.MerchantId,
+            "", // MerchantName - optional
+            c.ParentCategoryId,
+            c.ParentCategory?.Name,
+            c.Name,
+            c.Description,
+            c.ImageUrl,
+            c.DisplayOrder,
+            c.IsActive,
+            c.SubCategories?.Count ?? 0,
+            c.Products?.Count ?? 0
+        )).ToList();
+
+        return Result.Ok(response);
+    }
+
     public async Task<Result<List<ProductCategoryTreeResponse>>> GetMerchantCategoryTreeAsync(
         Guid merchantId,
         CancellationToken cancellationToken = default)

@@ -24,10 +24,7 @@ public class OptimizedRepository<T> : IGenericRepository<T> where T : class
         return await _dbSet.FindAsync(new object[] { id }, cancellationToken);
     }
 
-    public virtual async Task<T?> GetAsync(
-        Expression<Func<T, bool>> filter,
-        string? include = null,
-        CancellationToken cancellationToken = default)
+    public virtual async Task<T?> GetAsync(Expression<Func<T, bool>> filter, string? include = null, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
 
@@ -42,14 +39,8 @@ public class OptimizedRepository<T> : IGenericRepository<T> where T : class
         return await query.FirstOrDefaultAsync(filter, cancellationToken);
     }
 
-    public virtual async Task<IReadOnlyList<T>> GetPagedAsync(
-        Expression<Func<T, bool>>? filter = null,
-        Expression<Func<T, object>>? orderBy = null,
-        bool ascending = true,
-        int page = 1,
-        int pageSize = 20,
-        string? include = null,
-        CancellationToken cancellationToken = default)
+    public virtual async Task<IReadOnlyList<T>> GetPagedAsync(Expression<Func<T, bool>>? filter = null, Expression<Func<T, object>>? orderBy = null,
+        bool ascending = true, int page = 1, int pageSize = 20, string? include = null, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
 
@@ -77,12 +68,8 @@ public class OptimizedRepository<T> : IGenericRepository<T> where T : class
             .ToListAsync(cancellationToken);
     }
 
-    public virtual async Task<IReadOnlyList<T>> GetAllAsync(
-        Expression<Func<T, bool>>? filter = null,
-        Expression<Func<T, object>>? orderBy = null,
-        bool ascending = true,
-        string? include = null,
-        CancellationToken cancellationToken = default)
+    public virtual async Task<IReadOnlyList<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null, Expression<Func<T, object>>? orderBy = null,
+        bool ascending = true, string? include = null, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
 
@@ -107,9 +94,7 @@ public class OptimizedRepository<T> : IGenericRepository<T> where T : class
         return await query.ToListAsync(cancellationToken);
     }
 
-    public virtual async Task<int> CountAsync(
-        Expression<Func<T, bool>>? filter = null,
-        CancellationToken cancellationToken = default)
+    public virtual async Task<int> CountAsync(Expression<Func<T, bool>>? filter = null, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
 
@@ -121,9 +106,7 @@ public class OptimizedRepository<T> : IGenericRepository<T> where T : class
         return await query.CountAsync(cancellationToken);
     }
 
-    public virtual async Task<bool> AnyAsync(
-        Expression<Func<T, bool>> filter,
-        CancellationToken cancellationToken = default)
+    public virtual async Task<bool> AnyAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
     {
         return await _dbSet.AsNoTracking().AnyAsync(filter, cancellationToken);
     }
@@ -133,12 +116,8 @@ public class OptimizedRepository<T> : IGenericRepository<T> where T : class
     /// <summary>
     /// Get entities with multiple includes to prevent N+1 problems
     /// </summary>
-    public async Task<IReadOnlyList<T>> GetWithIncludesAsync(
-        Expression<Func<T, bool>>? filter = null,
-        string[]? includes = null,
-        int page = 1,
-        int pageSize = 20,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<T>> GetWithIncludesAsync(Expression<Func<T, bool>>? filter = null, string[]? includes = null,
+        int page = 1, int pageSize = 20, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
 
@@ -164,10 +143,7 @@ public class OptimizedRepository<T> : IGenericRepository<T> where T : class
     /// <summary>
     /// Get entities with split query to handle complex includes
     /// </summary>
-    public async Task<IReadOnlyList<T>> GetWithSplitQueryAsync(
-        Expression<Func<T, bool>>? filter = null,
-        string[]? includes = null,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<T>> GetWithSplitQueryAsync(Expression<Func<T, bool>>? filter = null, string[]? includes = null, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet.AsNoTracking().AsSplitQuery();
 
@@ -235,10 +211,7 @@ public class OptimizedRepository<T> : IGenericRepository<T> where T : class
         await Task.CompletedTask;
     }
 
-    public virtual async Task<T?> FirstOrDefaultAsync(
-        Expression<Func<T, bool>> filter,
-        string? include = null,
-        CancellationToken cancellationToken = default)
+    public virtual async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> filter, string? include = null, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
 
@@ -253,13 +226,8 @@ public class OptimizedRepository<T> : IGenericRepository<T> where T : class
         return await query.FirstOrDefaultAsync(filter, cancellationToken);
     }
 
-    public virtual async Task<IReadOnlyList<T>> ListAsync(
-        Expression<Func<T, bool>>? filter = null,
-        Expression<Func<T, object>>? orderBy = null,
-        bool ascending = true,
-        int? limit = null,
-        string? include = null,
-        CancellationToken cancellationToken = default)
+    public virtual async Task<IReadOnlyList<T>> ListAsync(Expression<Func<T, bool>>? filter = null, Expression<Func<T, object>>? orderBy = null,
+        bool ascending = true, int? limit = null, string? include = null, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
 

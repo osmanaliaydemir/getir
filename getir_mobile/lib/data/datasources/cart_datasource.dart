@@ -95,7 +95,7 @@ class CartDataSourceImpl implements CartDataSource {
   Future<Cart> applyCoupon(String couponCode) async {
     try {
       final response = await _dio.post(
-        '/api/v1/coupons/apply',
+        '/api/v1/coupon/apply',
         data: {'couponCode': couponCode},
       );
       return _cartFromJson(response.data);
@@ -107,7 +107,7 @@ class CartDataSourceImpl implements CartDataSource {
   @override
   Future<Cart> removeCoupon() async {
     try {
-      final response = await _dio.delete('/api/v1/coupons/remove');
+      final response = await _dio.delete('/api/v1/coupon/remove');
       return _cartFromJson(response.data);
     } catch (e) {
       throw Exception('Failed to remove coupon: $e');
@@ -118,7 +118,8 @@ class CartDataSourceImpl implements CartDataSource {
     return Cart(
       id: json['id']?.toString() ?? '',
       userId: json['userId']?.toString() ?? '',
-      items: (json['items'] as List<dynamic>?)
+      items:
+          (json['items'] as List<dynamic>?)
               ?.map((item) => _cartItemFromJson(item))
               .toList() ??
           [],
@@ -127,8 +128,12 @@ class CartDataSourceImpl implements CartDataSource {
       total: (json['total'] ?? 0.0).toDouble(),
       couponCode: json['couponCode'],
       discountAmount: json['discountAmount']?.toDouble(),
-      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(
+        json['createdAt'] ?? DateTime.now().toIso8601String(),
+      ),
+      updatedAt: DateTime.parse(
+        json['updatedAt'] ?? DateTime.now().toIso8601String(),
+      ),
     );
   }
 
@@ -147,7 +152,9 @@ class CartDataSourceImpl implements CartDataSource {
       selectedOptionNames: List<String>.from(json['selectedOptionNames'] ?? []),
       merchantId: json['merchantId']?.toString() ?? '',
       merchantName: json['merchantName'] ?? '',
-      addedAt: DateTime.parse(json['addedAt'] ?? DateTime.now().toIso8601String()),
+      addedAt: DateTime.parse(
+        json['addedAt'] ?? DateTime.now().toIso8601String(),
+      ),
     );
   }
 }

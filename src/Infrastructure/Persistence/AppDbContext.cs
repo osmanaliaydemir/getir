@@ -32,6 +32,7 @@ public class AppDbContext : DbContext
     public DbSet<UserLoyaltyPoint> UserLoyaltyPoints { get; set; }
     public DbSet<LoyaltyPointTransaction> LoyaltyPointTransactions { get; set; }
     public DbSet<WorkingHours> WorkingHours { get; set; }
+    public DbSet<SpecialHoliday> SpecialHolidays { get; set; }
     public DbSet<DeliveryZone> DeliveryZones { get; set; }
     public DbSet<ProductOptionGroup> ProductOptionGroups { get; set; }
     public DbSet<ProductOption> ProductOptions { get; set; }
@@ -67,6 +68,7 @@ public class AppDbContext : DbContext
     public DbSet<Language> Languages { get; set; }
     public DbSet<Translation> Translations { get; set; }
     public DbSet<UserLanguagePreference> UserLanguagePreferences { get; set; }
+    public DbSet<UserNotificationPreferences> UserNotificationPreferences { get; set; }
     
     // Rate Limiting entities
     public DbSet<RateLimitRule> RateLimitRules { get; set; }
@@ -85,6 +87,41 @@ public class AppDbContext : DbContext
     // Delivery optimization entities
     public DbSet<DeliveryCapacity> DeliveryCapacities { get; set; }
     public DbSet<DeliveryRoute> DeliveryRoutes { get; set; }
+    public DbSet<CourierLocation> CourierLocations { get; set; }
+    
+    // Favorites
+    public DbSet<FavoriteProduct> FavoriteProducts { get; set; }
+    
+    // Device & Notification entities
+    public DbSet<DeviceToken> DeviceTokens { get; set; }
+    public DbSet<NotificationLog> NotificationLogs { get; set; }
+    public DbSet<NotificationHistory> NotificationHistories { get; set; }
+    public DbSet<NotificationTemplate> NotificationTemplates { get; set; }
+    
+    // Merchant documents
+    public DbSet<MerchantDocument> MerchantDocuments { get; set; }
+    
+    // Market entities
+    public DbSet<Market> Markets { get; set; }
+    public DbSet<MarketCategory> MarketCategories { get; set; }
+    public DbSet<MarketProduct> MarketProducts { get; set; }
+    public DbSet<MarketProductVariant> MarketProductVariants { get; set; }
+    
+    // Restaurant entities
+    public DbSet<Restaurant> Restaurants { get; set; }
+    public DbSet<RestaurantMenuCategory> RestaurantMenuCategories { get; set; }
+    public DbSet<RestaurantProduct> RestaurantProducts { get; set; }
+    public DbSet<RestaurantProductOption> RestaurantProductOptions { get; set; }
+    public DbSet<RestaurantProductOptionGroup> RestaurantProductOptionGroups { get; set; }
+    
+    // Inventory entities
+    public DbSet<InventoryCountSession> InventoryCountSessions { get; set; }
+    public DbSet<InventoryCountItem> InventoryCountItems { get; set; }
+    public DbSet<InventoryDiscrepancy> InventoryDiscrepancies { get; set; }
+    
+    // Stock sync entities
+    public DbSet<StockSyncSession> StockSyncSessions { get; set; }
+    public DbSet<StockSyncDetail> StockSyncDetails { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -102,6 +139,12 @@ public class AppDbContext : DbContext
             entity.Property(e => e.PhoneNumber).HasMaxLength(20);
             entity.Property(e => e.Role).IsRequired().HasConversion<int>().HasDefaultValue(Domain.Enums.UserRole.Customer);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            // Configure inverse navigation for UserNotificationPreferences
+            entity.HasOne(u => u.NotificationPreferences)
+                .WithOne(p => p.User)
+                .HasForeignKey<UserNotificationPreferences>(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // RefreshToken configuration
@@ -232,6 +275,8 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.ProductName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.VariantName).HasMaxLength(200);
+            entity.Property(e => e.ProductVariantId);
             entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
             entity.Property(e => e.TotalPrice).HasPrecision(18, 2);
 
@@ -244,6 +289,9 @@ public class AppDbContext : DbContext
                 .WithMany(p => p.OrderLines)
                 .HasForeignKey(e => e.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
+            
+            // Index for variant lookups
+            entity.HasIndex(e => e.ProductVariantId);
         });
 
         // WorkingHours configuration
@@ -259,6 +307,39 @@ public class AppDbContext : DbContext
             
             entity.HasOne(e => e.Merchant)
                 .WithMany(m => m.WorkingHours)
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // SpecialHoliday configuration
+        modelBuilder.Entity<SpecialHoliday>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.StartDate).IsRequired();
+            entity.Property(e => e.EndDate).IsRequired();
+            entity.Property(e => e.IsClosed).IsRequired().HasDefaultValue(true);
+            
+            // Nullable TimeSpan - EF Core 9 native support
+            entity.Property(e => e.SpecialOpenTime)
+                .HasColumnType("TIME")
+                .IsRequired(false);
+            
+            entity.Property(e => e.SpecialCloseTime)
+                .HasColumnType("TIME")
+                .IsRequired(false);
+            
+            entity.Property(e => e.IsRecurring).IsRequired().HasDefaultValue(false);
+            entity.Property(e => e.IsActive).IsRequired().HasDefaultValue(true);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.MerchantId);
+            entity.HasIndex(e => new { e.StartDate, e.EndDate });
+            entity.HasIndex(e => e.IsActive);
+            
+            entity.HasOne(e => e.Merchant)
+                .WithMany()
                 .HasForeignKey(e => e.MerchantId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
@@ -1158,6 +1239,41 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        // UserNotificationPreferences Configuration
+        modelBuilder.Entity<UserNotificationPreferences>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            
+            // String properties
+            entity.Property(e => e.NotificationSound)
+                .IsRequired()
+                .HasMaxLength(50)
+                .HasDefaultValue("default");
+            
+            entity.Property(e => e.Language)
+                .IsRequired()
+                .HasMaxLength(10)
+                .HasDefaultValue("tr-TR");
+            
+            // TimeSpan properties - EF Core 9 native support
+            entity.Property(e => e.QuietStartTime)
+                .HasColumnType("TIME")
+                .IsRequired(false);
+            
+            entity.Property(e => e.QuietEndTime)
+                .HasColumnType("TIME")
+                .IsRequired(false);
+            
+            // Timestamps
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            // Indexes
+            entity.HasIndex(e => e.UserId).IsUnique(); // One preference per user
+            
+            // Note: Foreign key relationship is configured in User entity
+        });
+
         // RateLimitRule Configuration
         modelBuilder.Entity<RateLimitRule>(entity =>
         {
@@ -1437,6 +1553,81 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.UpdatedByUser)
                 .WithMany()
                 .HasForeignKey(e => e.UpdatedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+        
+        // FavoriteProduct configuration
+        modelBuilder.Entity<FavoriteProduct>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.ProductId).IsRequired();
+            entity.Property(e => e.AddedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => new { e.UserId, e.ProductId }).IsUnique();
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.ProductId);
+            entity.HasIndex(e => e.AddedAt);
+            entity.HasIndex(e => new { e.UserId, e.AddedAt }); // Pagination optimize
+            
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(e => e.Product)
+                .WithMany()
+                .HasForeignKey(e => e.ProductId)
+                .OnDelete(DeleteBehavior.NoAction); // Prevent cascade cycle
+        });
+        
+        // CourierLocation configuration
+        modelBuilder.Entity<CourierLocation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Latitude).IsRequired();
+            entity.Property(e => e.Longitude).IsRequired();
+            entity.Property(e => e.Timestamp).HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.CourierId);
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => e.Timestamp);
+            entity.HasIndex(e => new { e.CourierId, e.Timestamp });
+            
+            entity.HasOne(e => e.Courier)
+                .WithMany()
+                .HasForeignKey(e => e.CourierId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(e => e.Order)
+                .WithMany()
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+        
+        // LoyaltyPointTransaction configuration
+        modelBuilder.Entity<LoyaltyPointTransaction>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Type).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => new { e.UserId, e.CreatedAt });
+            
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(e => e.Order)
+                .WithMany()
+                .HasForeignKey(e => e.OrderId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
     }

@@ -24,12 +24,8 @@ public class NotificationController : BaseController
     private readonly ISmsService _smsService;
     private readonly IPushNotificationService _pushService;
 
-    public NotificationController(
-        INotificationService notificationService,
-        INotificationPreferencesService preferencesService,
-        IEmailService emailService,
-        ISmsService smsService,
-        IPushNotificationService pushService)
+    public NotificationController(INotificationService notificationService, INotificationPreferencesService preferencesService,
+        IEmailService emailService, ISmsService smsService, IPushNotificationService pushService)
     {
         _notificationService = notificationService;
         _preferencesService = preferencesService;
@@ -47,15 +43,13 @@ public class NotificationController : BaseController
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<NotificationResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetNotifications(
-        [FromQuery] PaginationQuery query,
-        CancellationToken ct = default)
+    public async Task<IActionResult> GetNotifications([FromQuery] PaginationQuery query, CancellationToken ct = default)
     {
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
         var result = await _notificationService.GetUserNotificationsAsync(userId, query, ct);
-        return ToActionResult(result);
+        return ToActionResult<PagedResult<NotificationResponse>>(result);
     }
 
     /// <summary>
@@ -68,9 +62,7 @@ public class NotificationController : BaseController
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> MarkAsRead(
-        [FromBody] MarkAsReadRequest request,
-        CancellationToken ct = default)
+    public async Task<IActionResult> MarkAsRead([FromBody] MarkAsReadRequest request, CancellationToken ct = default)
     {
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;
@@ -98,7 +90,7 @@ public class NotificationController : BaseController
         if (unauthorizedResult != null) return unauthorizedResult;
 
         var result = await _preferencesService.GetUserPreferencesAsync(userId, ct);
-        return ToActionResult(result);
+        return ToActionResult<NotificationPreferencesResponse>(result);
     }
 
     /// <summary>
@@ -111,9 +103,7 @@ public class NotificationController : BaseController
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> UpdateNotificationPreferences(
-        [FromBody] UpdateNotificationPreferencesRequest request,
-        CancellationToken ct = default)
+    public async Task<IActionResult> UpdateNotificationPreferences([FromBody] UpdateNotificationPreferencesRequest request, CancellationToken ct = default)
     {
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;
@@ -122,10 +112,6 @@ public class NotificationController : BaseController
         if (unauthorizedResult != null) return unauthorizedResult;
 
         var result = await _preferencesService.UpdateUserPreferencesAsync(userId, request, ct);
-        if (result.Success)
-        {
-            return NoContent();
-        }
         return ToActionResult(result);
     }
 
@@ -143,10 +129,6 @@ public class NotificationController : BaseController
         if (unauthorizedResult != null) return unauthorizedResult;
 
         var result = await _preferencesService.ResetToDefaultsAsync(userId, ct);
-        if (result.Success)
-        {
-            return NoContent();
-        }
         return ToActionResult(result);
     }
 
@@ -164,7 +146,7 @@ public class NotificationController : BaseController
         if (unauthorizedResult != null) return unauthorizedResult;
 
         var result = await _preferencesService.GetPreferencesSummaryAsync(userId, ct);
-        return ToActionResult(result);
+        return ToActionResult<NotificationPreferencesSummary>(result);
     }
 
     #endregion
@@ -181,9 +163,7 @@ public class NotificationController : BaseController
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> SendEmailNotification(
-        [FromBody] EmailRequest request,
-        CancellationToken ct = default)
+    public async Task<IActionResult> SendEmailNotification([FromBody] EmailRequest request, CancellationToken ct = default)
     {
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;
@@ -194,7 +174,7 @@ public class NotificationController : BaseController
         // Check if user can receive email notifications
         var canReceive = await _preferencesService.CanReceiveNotificationAsync(
             userId, NotificationType.SystemAnnouncement, NotificationChannel.Email, ct);
-        
+
         if (!canReceive.Success || !canReceive.Value)
         {
             return BadRequest(new ProblemDetails
@@ -206,10 +186,6 @@ public class NotificationController : BaseController
         }
 
         var result = await _emailService.SendEmailAsync(request, ct);
-        if (result.Success)
-        {
-            return NoContent();
-        }
         return ToActionResult(result);
     }
 
@@ -223,9 +199,7 @@ public class NotificationController : BaseController
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> SendSmsNotification(
-        [FromBody] SmsRequest request,
-        CancellationToken ct = default)
+    public async Task<IActionResult> SendSmsNotification([FromBody] SmsRequest request, CancellationToken ct = default)
     {
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;
@@ -236,7 +210,7 @@ public class NotificationController : BaseController
         // Check if user can receive SMS notifications
         var canReceive = await _preferencesService.CanReceiveNotificationAsync(
             userId, NotificationType.SystemAnnouncement, NotificationChannel.Sms, ct);
-        
+
         if (!canReceive.Success || !canReceive.Value)
         {
             return BadRequest(new ProblemDetails
@@ -248,10 +222,6 @@ public class NotificationController : BaseController
         }
 
         var result = await _smsService.SendSmsAsync(request, ct);
-        if (result.Success)
-        {
-            return NoContent();
-        }
         return ToActionResult(result);
     }
 
@@ -265,9 +235,7 @@ public class NotificationController : BaseController
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> SendPushNotification(
-        [FromBody] PushNotificationRequest request,
-        CancellationToken ct = default)
+    public async Task<IActionResult> SendPushNotification([FromBody] PushNotificationRequest request, CancellationToken ct = default)
     {
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;
@@ -278,7 +246,7 @@ public class NotificationController : BaseController
         // Check if user can receive push notifications
         var canReceive = await _preferencesService.CanReceiveNotificationAsync(
             userId, NotificationType.SystemAnnouncement, NotificationChannel.Push, ct);
-        
+
         if (!canReceive.Success || !canReceive.Value)
         {
             return BadRequest(new ProblemDetails
@@ -290,10 +258,6 @@ public class NotificationController : BaseController
         }
 
         var result = await _pushService.SendPushNotificationAsync(request, ct);
-        if (result.Success)
-        {
-            return NoContent();
-        }
         return ToActionResult(result);
     }
 

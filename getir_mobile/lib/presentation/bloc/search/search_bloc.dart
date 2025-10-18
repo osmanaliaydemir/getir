@@ -1,32 +1,33 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/app_exceptions.dart';
+import '../../../core/models/pagination_model.dart';
 import 'search_event.dart';
 import 'search_state.dart';
-import '../../../domain/usecases/merchant_usecases.dart';
-import '../../../domain/usecases/product_usecases.dart';
+import '../../../domain/services/merchant_service.dart';
+import '../../../domain/services/product_service.dart';
 import '../../../core/services/search_history_service.dart';
 
 class SearchBloc extends Bloc<SearchEvent, SearchState> {
-  final SearchMerchantsUseCase _searchMerchantsUseCase;
-  final SearchProductsUseCase _searchProductsUseCase;
+  final MerchantService _merchantService;
+  final ProductService _productService;
   final SearchHistoryService _searchHistoryService;
 
   Timer? _debounceTimer;
 
-  SearchBloc({
-    required SearchMerchantsUseCase searchMerchantsUseCase,
-    required SearchProductsUseCase searchProductsUseCase,
-    required SearchHistoryService searchHistoryService,
-  })  : _searchMerchantsUseCase = searchMerchantsUseCase,
-        _searchProductsUseCase = searchProductsUseCase,
-        _searchHistoryService = searchHistoryService,
-        super(const SearchInitial()) {
+  SearchBloc(
+    this._merchantService,
+    this._productService,
+    this._searchHistoryService,
+  ) : super(const SearchInitial()) {
     on<SearchQueryChanged>(_onSearchQueryChanged);
     on<SearchTypeChanged>(_onSearchTypeChanged);
     on<SearchSubmitted>(_onSearchSubmitted);
     on<SearchHistoryLoaded>(_onSearchHistoryLoaded);
     on<SearchHistoryCleared>(_onSearchHistoryCleared);
     on<SearchHistoryItemRemoved>(_onSearchHistoryItemRemoved);
+    on<LoadMoreSearchResults>(_onLoadMoreSearchResults);
+    on<RefreshSearchResults>(_onRefreshSearchResults);
   }
 
   Future<void> _onSearchQueryChanged(
@@ -38,12 +39,14 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
 
     if (event.query.isEmpty) {
       final history = await _searchHistoryService.getSearchHistory();
-      emit(SearchInitial(
-        searchHistory: history,
-        currentSearchType: state is SearchInitial
-            ? (state as SearchInitial).currentSearchType
-            : SearchType.all,
-      ));
+      emit(
+        SearchInitial(
+          searchHistory: history,
+          currentSearchType: state is SearchInitial
+              ? (state as SearchInitial).currentSearchType
+              : SearchType.all,
+        ),
+      );
       return;
     }
 
@@ -59,18 +62,22 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
   ) async {
     if (state is SearchInitial) {
       final history = await _searchHistoryService.getSearchHistory();
-      emit(SearchInitial(
-        searchHistory: history,
-        currentSearchType: event.searchType,
-      ));
+      emit(
+        SearchInitial(
+          searchHistory: history,
+          currentSearchType: event.searchType,
+        ),
+      );
     } else if (state is SearchSuccess) {
       final currentState = state as SearchSuccess;
-      emit(SearchSuccess(
-        merchants: currentState.merchants,
-        products: currentState.products,
-        query: currentState.query,
-        searchType: event.searchType,
-      ));
+      emit(
+        SearchSuccess(
+          merchants: currentState.merchants,
+          products: currentState.products,
+          query: currentState.query,
+          searchType: event.searchType,
+        ),
+      );
     }
   }
 
@@ -83,50 +90,90 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     final searchType = state is SearchInitial
         ? (state as SearchInitial).currentSearchType
         : state is SearchSuccess
-            ? (state as SearchSuccess).searchType
-            : SearchType.all;
+        ? (state as SearchSuccess).searchType
+        : SearchType.all;
 
     emit(SearchLoading(searchType: searchType));
 
-    try {
-      // Save to search history
-      await _searchHistoryService.addSearchQuery(event.query.trim());
+    // Save to search history
+    await _searchHistoryService.addSearchQuery(event.query.trim());
 
-      switch (searchType) {
-        case SearchType.all:
-          final merchants = await _searchMerchantsUseCase(event.query.trim());
-          final products = await _searchProductsUseCase(event.query.trim());
-          emit(SearchSuccess(
-            merchants: merchants,
-            products: products,
-            query: event.query.trim(),
-            searchType: searchType,
-          ));
-          break;
+    switch (searchType) {
+      case SearchType.all:
+        final merchantsResult = await _merchantService.searchMerchants(
+          event.query.trim(),
+        );
+        final productsResult = await _productService.searchProducts(
+          event.query.trim(),
+        );
 
-        case SearchType.merchants:
-          final merchants = await _searchMerchantsUseCase(event.query.trim());
-          emit(SearchSuccess(
-            merchants: merchants,
-            products: const [],
-            query: event.query.trim(),
-            searchType: searchType,
-          ));
-          break;
+        // Check if both succeeded
+        if (merchantsResult.isSuccess && productsResult.isSuccess) {
+          emit(
+            SearchSuccess(
+              merchants: merchantsResult.data,
+              products: productsResult.data,
+              query: event.query.trim(),
+              searchType: searchType,
+            ),
+          );
+        } else {
+          // If either failed, show error from the first failure
+          final exception =
+              merchantsResult.exceptionOrNull ?? productsResult.exceptionOrNull;
+          final message = _getErrorMessage(exception!);
+          emit(SearchError(message));
+        }
+        break;
 
-        case SearchType.products:
-          final products = await _searchProductsUseCase(event.query.trim());
-          emit(SearchSuccess(
-            merchants: const [],
-            products: products,
-            query: event.query.trim(),
-            searchType: searchType,
-          ));
-          break;
-      }
-    } catch (e) {
-      emit(SearchError(e.toString()));
+      case SearchType.merchants:
+        final result = await _merchantService.searchMerchants(
+          event.query.trim(),
+        );
+
+        result.when(
+          success: (merchants) => emit(
+            SearchSuccess(
+              merchants: merchants,
+              products: const [],
+              query: event.query.trim(),
+              searchType: searchType,
+            ),
+          ),
+          failure: (exception) {
+            final message = _getErrorMessage(exception);
+            emit(SearchError(message));
+          },
+        );
+        break;
+
+      case SearchType.products:
+        final result = await _productService.searchProducts(event.query.trim());
+
+        result.when(
+          success: (products) => emit(
+            SearchSuccess(
+              merchants: const [],
+              products: products,
+              query: event.query.trim(),
+              searchType: searchType,
+            ),
+          ),
+          failure: (exception) {
+            final message = _getErrorMessage(exception);
+            emit(SearchError(message));
+          },
+        );
+        break;
     }
+  }
+
+  /// Extract user-friendly error message from exception
+  String _getErrorMessage(Exception exception) {
+    if (exception is AppException) {
+      return exception.message;
+    }
+    return 'An unexpected error occurred';
   }
 
   Future<void> _onSearchHistoryLoaded(
@@ -135,12 +182,14 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
   ) async {
     try {
       final history = await _searchHistoryService.getSearchHistory();
-      emit(SearchInitial(
-        searchHistory: history,
-        currentSearchType: state is SearchInitial
-            ? (state as SearchInitial).currentSearchType
-            : SearchType.all,
-      ));
+      emit(
+        SearchInitial(
+          searchHistory: history,
+          currentSearchType: state is SearchInitial
+              ? (state as SearchInitial).currentSearchType
+              : SearchType.all,
+        ),
+      );
     } catch (e) {
       emit(SearchError(e.toString()));
     }
@@ -165,15 +214,100 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     try {
       await _searchHistoryService.removeSearchQuery(event.query);
       final history = await _searchHistoryService.getSearchHistory();
-      emit(SearchInitial(
-        searchHistory: history,
-        currentSearchType: state is SearchInitial
-            ? (state as SearchInitial).currentSearchType
-            : SearchType.all,
-      ));
+      emit(
+        SearchInitial(
+          searchHistory: history,
+          currentSearchType: state is SearchInitial
+              ? (state as SearchInitial).currentSearchType
+              : SearchType.all,
+        ),
+      );
     } catch (e) {
       emit(SearchError(e.toString()));
     }
+  }
+
+  // 🔄 ============= PAGINATION HANDLERS =============
+
+  Future<void> _onLoadMoreSearchResults(
+    LoadMoreSearchResults event,
+    Emitter<SearchState> emit,
+  ) async {
+    if (state is! SearchSuccess) return;
+    final currentState = state as SearchSuccess;
+
+    if (currentState.searchType == SearchType.products &&
+        currentState.productPagination != null &&
+        currentState.productPagination!.hasNextPage) {
+      final nextPage = currentState.productPagination!.nextPage;
+      final result = await _productService.searchProducts(
+        currentState.query,
+        page: nextPage,
+      );
+
+      result.when(
+        success: (newProducts) {
+          final updatedProducts = [...currentState.products, ...newProducts];
+          final updatedPagination = currentState.productPagination!
+              .addItems(newProducts)
+              .copyWith(
+                currentPage: nextPage,
+                hasNextPage: newProducts.length >= 20,
+              );
+          emit(
+            SearchSuccess(
+              merchants: currentState.merchants,
+              products: updatedProducts,
+              query: currentState.query,
+              searchType: currentState.searchType,
+              productPagination: updatedPagination,
+              merchantPagination: currentState.merchantPagination,
+            ),
+          );
+        },
+        failure: (_) {},
+      );
+    } else if (currentState.searchType == SearchType.merchants &&
+        currentState.merchantPagination != null &&
+        currentState.merchantPagination!.hasNextPage) {
+      final nextPage = currentState.merchantPagination!.nextPage;
+      final result = await _merchantService.searchMerchants(
+        currentState.query,
+        page: nextPage,
+      );
+
+      result.when(
+        success: (newMerchants) {
+          final updatedMerchants = [...currentState.merchants, ...newMerchants];
+          final updatedPagination = currentState.merchantPagination!
+              .addItems(newMerchants)
+              .copyWith(
+                currentPage: nextPage,
+                hasNextPage: newMerchants.length >= 20,
+              );
+          emit(
+            SearchSuccess(
+              merchants: updatedMerchants,
+              products: currentState.products,
+              query: currentState.query,
+              searchType: currentState.searchType,
+              merchantPagination: updatedPagination,
+              productPagination: currentState.productPagination,
+            ),
+          );
+        },
+        failure: (_) {},
+      );
+    }
+  }
+
+  Future<void> _onRefreshSearchResults(
+    RefreshSearchResults event,
+    Emitter<SearchState> emit,
+  ) async {
+    if (state is! SearchSuccess) return;
+    final currentState = state as SearchSuccess;
+    add(SearchSubmitted(currentState.query));
   }
 
   @override
@@ -182,4 +316,3 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     return super.close();
   }
 }
-

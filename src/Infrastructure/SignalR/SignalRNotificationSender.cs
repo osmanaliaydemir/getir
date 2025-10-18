@@ -14,8 +14,7 @@ public class SignalRNotificationSender : ISignalRNotificationSender
 
     public async Task SendToUserAsync(Guid userId, string title, string message, string type)
     {
-        await _hubContext.Clients
-            .Group($"user_{userId}")
+        await _hubContext.Clients.Group($"user_{userId}")
             .SendAsync("ReceiveNotification", new
             {
                 title,
@@ -38,8 +37,7 @@ public class SignalROrderSender : ISignalROrderSender
     public async Task SendStatusUpdateAsync(Guid orderId, Guid userId, string status, string message)
     {
         // Send to specific order subscribers
-        await _hubContext.Clients
-            .Group($"order_{orderId}")
+        await _hubContext.Clients.Group($"order_{orderId}")
             .SendAsync("OrderStatusChanged", new
             {
                 orderId,
@@ -56,6 +54,42 @@ public class SignalROrderSender : ISignalROrderSender
                 orderId,
                 status,
                 message,
+                timestamp = DateTime.UtcNow
+            });
+    }
+
+    public async Task SendNewOrderToMerchantAsync(Guid merchantId, object orderData)
+    {
+        // Send to merchant group
+        await _hubContext.Clients
+            .Group($"merchant_{merchantId}")
+            .SendAsync("NewOrderReceived", orderData);
+    }
+
+    public async Task SendOrderStatusChangedToMerchantAsync(Guid merchantId, Guid orderId, string orderNumber, string status)
+    {
+        // Send to merchant group
+        await _hubContext.Clients
+            .Group($"merchant_{merchantId}")
+            .SendAsync("OrderStatusChanged", new
+            {
+                orderId,
+                orderNumber,
+                status,
+                timestamp = DateTime.UtcNow
+            });
+    }
+
+    public async Task SendOrderCancelledToMerchantAsync(Guid merchantId, Guid orderId, string orderNumber, string? reason)
+    {
+        // Send to merchant group
+        await _hubContext.Clients
+            .Group($"merchant_{merchantId}")
+            .SendAsync("OrderCancelled", new
+            {
+                orderId,
+                orderNumber,
+                reason,
                 timestamp = DateTime.UtcNow
             });
     }

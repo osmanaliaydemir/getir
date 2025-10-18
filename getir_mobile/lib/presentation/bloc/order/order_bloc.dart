@@ -1,8 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import '../../../core/errors/app_exceptions.dart';
 import '../../../domain/entities/order.dart';
-import '../../../domain/usecases/order_usecases.dart';
+import '../../../domain/services/order_service.dart';
 import '../../../data/datasources/order_datasource.dart';
+import '../../../core/services/analytics_service.dart';
 
 // Events
 abstract class OrderEvent extends Equatable {
@@ -136,27 +139,10 @@ class OrderError extends OrderState {
 
 // BLoC
 class OrderBloc extends Bloc<OrderEvent, OrderState> {
-  final GetUserOrdersUseCase _getUserOrdersUseCase;
-  final GetOrderByIdUseCase _getOrderByIdUseCase;
-  final CreateOrderUseCase _createOrderUseCase;
-  final CancelOrderUseCase _cancelOrderUseCase;
-  final ProcessPaymentUseCase _processPaymentUseCase;
-  final GetPaymentStatusUseCase _getPaymentStatusUseCase;
+  final OrderService _orderService;
+  final AnalyticsService _analytics;
 
-  OrderBloc({
-    required GetUserOrdersUseCase getUserOrdersUseCase,
-    required GetOrderByIdUseCase getOrderByIdUseCase,
-    required CreateOrderUseCase createOrderUseCase,
-    required CancelOrderUseCase cancelOrderUseCase,
-    required ProcessPaymentUseCase processPaymentUseCase,
-    required GetPaymentStatusUseCase getPaymentStatusUseCase,
-  }) : _getUserOrdersUseCase = getUserOrdersUseCase,
-       _getOrderByIdUseCase = getOrderByIdUseCase,
-       _createOrderUseCase = createOrderUseCase,
-       _cancelOrderUseCase = cancelOrderUseCase,
-       _processPaymentUseCase = processPaymentUseCase,
-       _getPaymentStatusUseCase = getPaymentStatusUseCase,
-       super(OrderInitial()) {
+  OrderBloc(this._orderService, this._analytics) : super(OrderInitial()) {
     on<LoadUserOrders>(_onLoadUserOrders);
     on<LoadOrderById>(_onLoadOrderById);
     on<CreateOrder>(_onCreateOrder);
@@ -170,12 +156,16 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     Emitter<OrderState> emit,
   ) async {
     emit(OrderLoading());
-    try {
-      final orders = await _getUserOrdersUseCase();
-      emit(OrdersLoaded(orders));
-    } catch (e) {
-      emit(OrderError(e.toString()));
-    }
+
+    final result = await _orderService.getUserOrders();
+
+    result.when(
+      success: (orders) => emit(OrdersLoaded(orders)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(OrderError(message));
+      },
+    );
   }
 
   Future<void> _onLoadOrderById(
@@ -183,12 +173,16 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     Emitter<OrderState> emit,
   ) async {
     emit(OrderLoading());
-    try {
-      final order = await _getOrderByIdUseCase(event.orderId);
-      emit(OrderLoaded(order));
-    } catch (e) {
-      emit(OrderError(e.toString()));
-    }
+
+    final result = await _orderService.getOrderById(event.orderId);
+
+    result.when(
+      success: (order) => emit(OrderLoaded(order)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(OrderError(message));
+      },
+    );
   }
 
   Future<void> _onCreateOrder(
@@ -196,11 +190,40 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     Emitter<OrderState> emit,
   ) async {
     emit(OrderLoading());
-    try {
-      final order = await _createOrderUseCase(event.request);
-      emit(OrderCreated(order));
-    } catch (e) {
-      emit(OrderError(e.toString()));
+
+    final result = await _orderService.createOrder(event.request);
+
+    if (result.isSuccess) {
+      final order = result.data!;
+
+      // 📊 Analytics: Track order creation (purchase)
+      await _analytics.logPurchase(
+        orderId: order.id,
+        total: order.totalAmount,
+        currency: 'TRY',
+        items: order.items
+            .map(
+              (item) => AnalyticsEventItem(
+                itemId: item.productId,
+                itemName: item.productName,
+                price: item.unitPrice,
+                quantity: item.quantity,
+              ),
+            )
+            .toList(),
+        shipping: order.deliveryFee,
+      );
+
+      if (!emit.isDone) {
+        emit(OrderCreated(order));
+      }
+    } else {
+      final message = _getErrorMessage(result.exception);
+      emit(OrderError(message));
+      await _analytics.logError(
+        error: result.exception,
+        reason: 'Order creation failed',
+      );
     }
   }
 
@@ -209,11 +232,29 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     Emitter<OrderState> emit,
   ) async {
     emit(OrderLoading());
-    try {
-      final order = await _cancelOrderUseCase(event.orderId);
-      emit(OrderCancelled(order));
-    } catch (e) {
-      emit(OrderError(e.toString()));
+
+    final result = await _orderService.cancelOrder(event.orderId);
+
+    if (result.isSuccess) {
+      final order = result.data!;
+
+      // 📊 Analytics: Track order cancellation
+      await _analytics.logOrderCancelled(
+        orderId: order.id,
+        value: order.totalAmount,
+        reason: 'user_cancelled',
+      );
+
+      if (!emit.isDone) {
+        emit(OrderCancelled(order));
+      }
+    } else {
+      final message = _getErrorMessage(result.exception);
+      emit(OrderError(message));
+      await _analytics.logError(
+        error: result.exception,
+        reason: 'Order cancellation failed',
+      );
     }
   }
 
@@ -222,11 +263,29 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     Emitter<OrderState> emit,
   ) async {
     emit(OrderLoading());
-    try {
-      final paymentResult = await _processPaymentUseCase(event.request);
-      emit(PaymentProcessed(paymentResult));
-    } catch (e) {
-      emit(OrderError(e.toString()));
+
+    final result = await _orderService.processPayment(event.request);
+
+    if (result.isSuccess) {
+      final paymentResult = result.data!;
+
+      // 📊 Analytics: Track payment info added
+      await _analytics.logAddPaymentInfo(
+        paymentType: event.request.paymentMethod.value,
+        value: event.request.amount,
+        currency: 'TRY',
+      );
+
+      if (!emit.isDone) {
+        emit(PaymentProcessed(paymentResult));
+      }
+    } else {
+      final message = _getErrorMessage(result.exception);
+      emit(OrderError(message));
+      await _analytics.logError(
+        error: result.exception,
+        reason: 'Payment processing failed',
+      );
     }
   }
 
@@ -235,11 +294,41 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     Emitter<OrderState> emit,
   ) async {
     emit(OrderLoading());
-    try {
-      final paymentResult = await _getPaymentStatusUseCase(event.paymentId);
-      emit(PaymentStatusLoaded(paymentResult));
-    } catch (e) {
-      emit(OrderError(e.toString()));
+
+    final result = await _orderService.getPaymentStatus(event.paymentId);
+
+    result.when(
+      success: (paymentResult) => emit(PaymentStatusLoaded(paymentResult)),
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(OrderError(message));
+      },
+    );
+  }
+
+  /// Extract user-friendly error message from exception
+  String _getErrorMessage(Exception exception) {
+    if (exception is AppException) {
+      return exception.message;
     }
+    
+    // Provide more specific error messages based on exception type
+    final errorString = exception.toString().toLowerCase();
+    
+    if (errorString.contains('network') || errorString.contains('connection')) {
+      return 'İnternet bağlantınızı kontrol edin ve tekrar deneyin.';
+    } else if (errorString.contains('timeout')) {
+      return 'İşlem zaman aşımına uğradı. Lütfen tekrar deneyin.';
+    } else if (errorString.contains('unauthorized') || errorString.contains('401')) {
+      return 'Bu işlemi gerçekleştirmek için giriş yapmanız gerekiyor.';
+    } else if (errorString.contains('forbidden') || errorString.contains('403')) {
+      return 'Bu işlem için yetkiniz bulunmuyor.';
+    } else if (errorString.contains('not found') || errorString.contains('404')) {
+      return 'İstenen içerik bulunamadı.';
+    } else if (errorString.contains('server') || errorString.contains('500')) {
+      return 'Sunucu ile bağlantı kurulamadı. Lütfen daha sonra tekrar deneyin.';
+    }
+    
+    return 'Siparişleriniz yüklenirken bir hata oluştu. Lütfen tekrar deneyin.';
   }
 }

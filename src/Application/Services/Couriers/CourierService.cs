@@ -592,6 +592,164 @@ public class CourierService : BaseService, ICourierService
         return Result.Ok(response);
     }
 
+    // SignalR Hub-specific methods
+
+    public async Task<Result> UpdateLocationAsync(
+        CourierLocationUpdateWithOrderRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        // Store location in database (assuming CourierLocation entity exists)
+        var location = new CourierLocation
+        {
+            Id = Guid.NewGuid(),
+            CourierId = request.CourierId,
+            OrderId = request.OrderId,
+            Latitude = (double)request.Latitude,
+            Longitude = (double)request.Longitude,
+            Timestamp = request.Timestamp,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _unitOfWork.Repository<CourierLocation>().AddAsync(location, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _loggingService.LogBusinessEvent("CourierLocationUpdated", new
+        {
+            courierId = request.CourierId,
+            orderId = request.OrderId,
+            latitude = request.Latitude,
+            longitude = request.Longitude
+        });
+
+        return Result.Ok();
+    }
+
+    public async Task<Result<CourierLocationResponse>> GetCurrentLocationAsync(
+        Guid courierId,
+        CancellationToken cancellationToken = default)
+    {
+        // Get most recent location
+        var locations = await _unitOfWork.Repository<CourierLocation>()
+            .GetPagedAsync(
+                filter: l => l.CourierId == courierId,
+                orderBy: l => l.Timestamp,
+                ascending: false,
+                page: 1,
+                pageSize: 1,
+                cancellationToken: cancellationToken);
+
+        var latestLocation = locations.FirstOrDefault();
+
+        if (latestLocation == null)
+        {
+            return Result.Fail<CourierLocationResponse>("No location found for courier", "LOCATION_NOT_FOUND");
+        }
+
+        // Check courier availability
+        var courier = await _unitOfWork.ReadRepository<User>()
+            .FirstOrDefaultAsync(u => u.Id == courierId && u.Role == UserRole.Courier, cancellationToken: cancellationToken);
+
+        var response = new CourierLocationResponse(
+            courierId,
+            (decimal)latestLocation.Latitude,
+            (decimal)latestLocation.Longitude,
+            latestLocation.Timestamp,
+            courier?.IsActive ?? false);
+
+        return Result.Ok(response);
+    }
+
+    public async Task<Result<List<CourierLocationHistoryItem>>> GetLocationHistoryAsync(
+        Guid courierId,
+        Guid orderId,
+        CancellationToken cancellationToken = default)
+    {
+        var locations = await _unitOfWork.Repository<CourierLocation>()
+            .GetPagedAsync(
+                filter: l => l.CourierId == courierId && l.OrderId == orderId,
+                orderBy: l => l.Timestamp,
+                ascending: true,
+                page: 1,
+                pageSize: 100,
+                cancellationToken: cancellationToken);
+
+        var response = locations.Select(l => new CourierLocationHistoryItem(
+            l.Id,
+            l.CourierId,
+            l.OrderId,
+            (decimal)l.Latitude,
+            (decimal)l.Longitude,
+            l.Timestamp,
+            null, // Speed
+            null  // Accuracy
+        )).ToList();
+
+        return Result.Ok(response);
+    }
+
+    public async Task<Result<List<CourierOrderResponse>>> GetAssignedOrdersAsync(
+        Guid courierId,
+        CancellationToken cancellationToken = default)
+    {
+        var orders = await _unitOfWork.Repository<Order>()
+            .GetPagedAsync(
+                filter: o => o.CourierId == courierId && 
+                            (o.Status == OrderStatus.Ready || 
+                             o.Status == OrderStatus.PickedUp || 
+                             o.Status == OrderStatus.OnTheWay),
+                orderBy: o => o.CreatedAt,
+                ascending: true,
+                page: 1,
+                pageSize: 20,
+                cancellationToken: cancellationToken);
+
+        var response = orders.Select(o => new CourierOrderResponse(
+            o.Id,
+            o.OrderNumber,
+            o.MerchantId,
+            o.Merchant?.Name ?? "Unknown",
+            o.Status.ToString(),
+            o.Total,
+            o.DeliveryAddress,
+            o.EstimatedDeliveryTime,
+            o.CreatedAt
+        )).ToList();
+
+        return Result.Ok(response);
+    }
+
+    public async Task<Result> UpdateAvailabilityAsync(
+        Guid courierId,
+        CourierAvailabilityStatus status,
+        CancellationToken cancellationToken = default)
+    {
+        var courier = await _unitOfWork.Repository<User>()
+            .FirstOrDefaultAsync(
+                u => u.Id == courierId && u.Role == UserRole.Courier,
+                null,
+                cancellationToken);
+
+        if (courier == null)
+        {
+            return Result.Fail("Courier not found", "COURIER_NOT_FOUND");
+        }
+
+        // Update availability (assuming User has availability-related fields)
+        courier.IsActive = (status == CourierAvailabilityStatus.Available);
+        courier.UpdatedAt = DateTime.UtcNow;
+
+        _unitOfWork.Repository<User>().Update(courier);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _loggingService.LogBusinessEvent("CourierAvailabilityUpdated", new
+        {
+            courierId,
+            status = status.ToString()
+        });
+
+        return Result.Ok();
+    }
+
     // Helper methods
     private static decimal CalculateDistance(decimal lat1, decimal lon1, decimal lat2, decimal lon2)
     {

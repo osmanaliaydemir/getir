@@ -5,7 +5,7 @@ class AppConstants {
   static const String appBuildNumber = '1';
 
   // API Configuration
-  static const String baseUrl = 'http://ajilgo.runasp.net'; // Backend API URL
+  static const String baseUrl = 'https://ajilgo.runasp.net'; // Backend API URL
   static const String apiVersion = 'v1';
   static const String apiBaseUrl = '$baseUrl/api/$apiVersion';
 

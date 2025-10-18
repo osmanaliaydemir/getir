@@ -785,5 +785,184 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
         return optimized;
     }
 
+    // SignalR Hub-specific methods
+
+    public async Task<Result<int>> CalculateETAAsync(
+        Guid orderId,
+        double latitude,
+        double longitude,
+        CancellationToken cancellationToken = default)
+    {
+        var order = await _unitOfWork.ReadRepository<Order>()
+            .FirstOrDefaultAsync(o => o.Id == orderId, cancellationToken: cancellationToken);
+
+        if (order == null)
+        {
+            return Result.Fail<int>("Order not found", ErrorCodes.ORDER_NOT_FOUND);
+        }
+
+        // Calculate distance from current location to delivery address
+        var distance = CalculateDistance(
+            latitude,
+            longitude,
+            (double)order.DeliveryLatitude,
+            (double)order.DeliveryLongitude);
+
+        // Calculate ETA based on distance (assume 30 km/h average speed)
+        var estimatedMinutes = (int)(distance / 30.0 * 60.0);
+
+        // Add traffic buffer (20%)
+        estimatedMinutes = (int)(estimatedMinutes * 1.2);
+
+        _loggingService.LogBusinessEvent("ETACalculated", new
+        {
+            orderId,
+            distance,
+            estimatedMinutes
+        });
+
+        return Result.Ok(estimatedMinutes);
+    }
+
+    public async Task<Result> UpdateETAAsync(
+        UpdateETARequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var order = await _unitOfWork.Repository<Order>()
+            .FirstOrDefaultAsync(o => o.Id == request.OrderId, null, cancellationToken);
+
+        if (order == null)
+        {
+            return Result.Fail("Order not found", ErrorCodes.ORDER_NOT_FOUND);
+        }
+
+        // Update estimated delivery time
+        order.EstimatedDeliveryTime = DateTime.UtcNow.AddMinutes(request.EstimatedMinutes);
+        order.UpdatedAt = DateTime.UtcNow;
+
+        _unitOfWork.Repository<Order>().Update(order);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _loggingService.LogBusinessEvent("ETAUpdated", new
+        {
+            orderId = request.OrderId,
+            courierId = request.CourierId,
+            estimatedMinutes = request.EstimatedMinutes
+        });
+
+        return Result.Ok();
+    }
+
+    public async Task<Result<RouteOptimizationResponse>> GetOptimizedRouteForCourierAsync(
+        Guid courierId,
+        CancellationToken cancellationToken = default)
+    {
+        // Get courier's assigned orders
+        var orders = await _unitOfWork.Repository<Order>()
+            .GetPagedAsync(
+                filter: o => o.CourierId == courierId && 
+                            (o.Status == OrderStatus.Ready || 
+                             o.Status == OrderStatus.PickedUp || 
+                             o.Status == OrderStatus.OnTheWay),
+                orderBy: o => o.CreatedAt,
+                ascending: true,
+                page: 1,
+                pageSize: 20,
+                cancellationToken: cancellationToken);
+
+        if (!orders.Any())
+        {
+            return Result.Ok(new RouteOptimizationResponse(
+                new List<DeliveryRouteResponse>(),
+                "NO_ORDERS",
+                "No active orders assigned"));
+        }
+
+        // Get courier's current location (latest)
+        var latestLocation = await _unitOfWork.Repository<CourierLocation>()
+            .GetPagedAsync(
+                filter: l => l.CourierId == courierId,
+                orderBy: l => l.Timestamp,
+                ascending: false,
+                page: 1,
+                pageSize: 1,
+                cancellationToken: cancellationToken);
+
+        var currentLocation = latestLocation.FirstOrDefault();
+        
+        if (currentLocation == null)
+        {
+            return Result.Fail<RouteOptimizationResponse>(
+                "Courier location not found", 
+                "LOCATION_NOT_FOUND");
+        }
+
+        // Create waypoints from order delivery addresses
+        var waypoints = orders.Select(o => new RouteWaypoint(
+            (double)o.DeliveryLatitude,
+            (double)o.DeliveryLongitude,
+            o.DeliveryAddress,
+            true
+        )).ToList();
+
+        // Optimize route order (simple nearest neighbor algorithm)
+        var optimizedWaypoints = OptimizeWaypointOrder(waypoints);
+
+        // Calculate total distance and duration
+        double totalDistance = 0;
+        int totalDuration = 0;
+
+        for (int i = 0; i < optimizedWaypoints.Count; i++)
+        {
+            var start = i == 0 
+                ? new { Lat = currentLocation.Latitude, Lon = currentLocation.Longitude }
+                : new { Lat = optimizedWaypoints[i - 1].Latitude, Lon = optimizedWaypoints[i - 1].Longitude };
+            
+            var end = optimizedWaypoints[i];
+            
+            var distance = CalculateDistance(start.Lat, start.Lon, end.Latitude, end.Longitude);
+            totalDistance += distance;
+            totalDuration += (int)(distance / 30.0 * 60.0); // 30 km/h average speed
+        }
+
+        // Create optimized route response
+        var route = new DeliveryRouteResponse(
+            Id: Guid.NewGuid(),
+            RouteName: $"Optimized Route - {orders.Count} deliveries",
+            RouteType: "OPTIMIZED",
+            Waypoints: optimizedWaypoints,
+            Polyline: "encoded_polyline_here", // Would be actual polyline in production
+            TotalDistanceKm: totalDistance,
+            EstimatedDurationMinutes: totalDuration,
+            EstimatedTrafficDelayMinutes: (int)(totalDuration * 0.2), // 20% traffic buffer
+            EstimatedFuelCost: (decimal)(totalDistance * 1.5), // Rough estimate
+            RouteScore: 0.95m,
+            HasTollRoads: false,
+            HasHighTrafficAreas: false,
+            IsHighwayPreferred: false,
+            IsSelected: true,
+            IsCompleted: false,
+            StartedAt: null,
+            CompletedAt: null,
+            Notes: $"{orders.Count} deliveries optimized for shortest distance",
+            CreatedAt: DateTime.UtcNow
+        );
+
+        var response = new RouteOptimizationResponse(
+            new List<DeliveryRouteResponse> { route },
+            "SUCCESS",
+            null);
+
+        _loggingService.LogBusinessEvent("OptimizedRouteGenerated", new
+        {
+            courierId,
+            orderCount = orders.Count,
+            totalDistance,
+            totalDuration
+        });
+
+        return Result.Ok(response);
+    }
+
     #endregion
 }

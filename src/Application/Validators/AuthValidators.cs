@@ -32,3 +32,23 @@ public class RefreshTokenRequestValidator : AbstractValidator<RefreshTokenReques
             .NotEmpty().WithMessage("Refresh token is required");
     }
 }
+
+public class ForgotPasswordRequestValidator : AbstractValidator<ForgotPasswordRequest>
+{
+    public ForgotPasswordRequestValidator()
+    {
+        RuleFor(x => x.Email).EmailRule();
+    }
+}
+
+public class ResetPasswordRequestValidator : AbstractValidator<ResetPasswordRequest>
+{
+    public ResetPasswordRequestValidator()
+    {
+        RuleFor(x => x.Token)
+            .NotEmpty().WithMessage("Reset token is required")
+            .MinimumLength(10).WithMessage("Invalid reset token format");
+
+        RuleFor(x => x.NewPassword).PasswordRule();
+    }
+}

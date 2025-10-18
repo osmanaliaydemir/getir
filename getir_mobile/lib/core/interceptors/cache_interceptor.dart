@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:dio_cache_interceptor_hive_store/dio_cache_interceptor_hive_store.dart';
 import 'package:path_provider/path_provider.dart';
+import '../services/logger_service.dart';
 import 'package:flutter/foundation.dart';
 
 /// API Response Cache Interceptor
@@ -45,9 +46,9 @@ class ApiCacheInterceptor {
       );
 
       _isInitialized = true;
-      debugPrint('💾 API Cache: Initialized successfully');
+      logger.info('API Cache initialized successfully', tag: 'Cache');
     } catch (e) {
-      debugPrint('❌ API Cache: Initialization failed: $e');
+      logger.error('API Cache initialization failed', tag: 'Cache', error: e);
       _isInitialized = false;
     }
   }
@@ -102,9 +103,9 @@ class ApiCacheInterceptor {
 
     try {
       await _cacheOptions!.store!.clean();
-      debugPrint('🗑️  API Cache: Cleared successfully');
+      logger.info('API Cache cleared successfully', tag: 'Cache');
     } catch (e) {
-      debugPrint('❌ API Cache: Clear failed: $e');
+      logger.error('API Cache clear failed', tag: 'Cache', error: e);
     }
   }
 
@@ -114,9 +115,18 @@ class ApiCacheInterceptor {
 
     try {
       await _cacheOptions!.store!.delete(key);
-      debugPrint('🗑️  API Cache: Deleted key: $key');
+      logger.debug(
+        'API Cache key deleted',
+        tag: 'Cache',
+        context: {'key': key},
+      );
     } catch (e) {
-      debugPrint('❌ API Cache: Delete failed: $e');
+      logger.error(
+        'API Cache delete failed',
+        tag: 'Cache',
+        error: e,
+        context: {'key': key},
+      );
     }
   }
 
@@ -126,9 +136,9 @@ class ApiCacheInterceptor {
 
     try {
       await _cacheOptions!.store!.clean(staleOnly: true);
-      debugPrint('🗑️  API Cache: Cleared expired entries');
+      logger.debug('Cleared expired cache entries', tag: 'APICache');
     } catch (e) {
-      debugPrint('❌ API Cache: Clear expired failed: $e');
+      logger.error('Clear expired cache failed', tag: 'APICache', error: e);
     }
   }
 }

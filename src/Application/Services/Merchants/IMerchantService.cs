@@ -14,6 +14,10 @@ public interface IMerchantService
         Guid id,
         CancellationToken cancellationToken = default);
     
+    Task<Result<MerchantResponse>> GetMerchantByOwnerIdAsync(
+        Guid ownerId,
+        CancellationToken cancellationToken = default);
+    
     Task<Result<MerchantResponse>> CreateMerchantAsync(
         CreateMerchantRequest request,
         Guid ownerId,

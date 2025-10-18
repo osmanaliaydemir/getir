@@ -139,6 +139,17 @@ public class MerchantService : BaseService, IMerchantService
             cancellationToken);
     }
 
+    public async Task<Result<MerchantResponse>> GetMerchantByOwnerIdAsync(
+        Guid ownerId,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetMerchantByOwnerIdInternalAsync(ownerId, cancellationToken),
+            "GetMerchantByOwnerId",
+            new { OwnerId = ownerId },
+            cancellationToken);
+    }
+
     private async Task<Result<MerchantResponse>> GetMerchantByIdInternalAsync(
         Guid id,
         CancellationToken cancellationToken = default)
@@ -175,12 +186,16 @@ public class MerchantService : BaseService, IMerchantService
                         ServiceCategoryId = merchant.ServiceCategoryId,
                         ServiceCategoryName = merchant.ServiceCategory.Name,
                         LogoUrl = merchant.LogoUrl,
+                        CoverImageUrl = merchant.CoverImageUrl,
                         Address = merchant.Address,
                         Latitude = merchant.Latitude,
                         Longitude = merchant.Longitude,
+                        PhoneNumber = merchant.PhoneNumber,
+                        Email = merchant.Email,
                         MinimumOrderAmount = merchant.MinimumOrderAmount,
                         DeliveryFee = merchant.DeliveryFee,
                         AverageDeliveryTime = merchant.AverageDeliveryTime,
+                        IsBusy = merchant.IsBusy,
                         IsOpen = merchant.IsOpen
                     };
 
@@ -193,6 +208,67 @@ public class MerchantService : BaseService, IMerchantService
         {
             _logger.LogException(ex, "GetMerchantById", new { MerchantId = id });
             return ServiceResult.HandleException<MerchantResponse>(ex, _logger, "GetMerchantById");
+        }
+    }
+
+    private async Task<Result<MerchantResponse>> GetMerchantByOwnerIdInternalAsync(
+        Guid ownerId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var cacheKey = $"merchant_owner_{ownerId}";
+            
+            return await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    var merchant = await _unitOfWork.Repository<Merchant>()
+                        .GetAsync(m => m.OwnerId == ownerId, include: "ServiceCategory,Owner", cancellationToken: cancellationToken);
+
+                    if (merchant == null)
+                    {
+                        throw new EntityNotFoundException("Merchant", $"Owner: {ownerId}");
+                    }
+
+                    var response = new MerchantResponse
+                    {
+                        Id = merchant.Id,
+                        Name = merchant.Name,
+                        Description = merchant.Description,
+                        CreatedAt = merchant.CreatedAt,
+                        UpdatedAt = merchant.UpdatedAt,
+                        IsActive = merchant.IsActive,
+                        IsDeleted = false,
+                        Rating = merchant.Rating,
+                        TotalReviews = merchant.TotalReviews,
+                        OwnerId = merchant.OwnerId,
+                        OwnerName = string.Concat(merchant.Owner.FirstName, " ", merchant.Owner.LastName),
+                        ServiceCategoryId = merchant.ServiceCategoryId,
+                        ServiceCategoryName = merchant.ServiceCategory.Name,
+                        LogoUrl = merchant.LogoUrl,
+                        CoverImageUrl = merchant.CoverImageUrl,
+                        Address = merchant.Address,
+                        Latitude = merchant.Latitude,
+                        Longitude = merchant.Longitude,
+                        PhoneNumber = merchant.PhoneNumber,
+                        Email = merchant.Email,
+                        MinimumOrderAmount = merchant.MinimumOrderAmount,
+                        DeliveryFee = merchant.DeliveryFee,
+                        AverageDeliveryTime = merchant.AverageDeliveryTime,
+                        IsBusy = merchant.IsBusy,
+                        IsOpen = merchant.IsOpen
+                    };
+
+                    return ServiceResult.Success(response);
+                },
+                TimeSpan.FromMinutes(ApplicationConstants.DefaultCacheMinutes),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogException(ex, "GetMerchantByOwnerId", new { OwnerId = ownerId });
+            return ServiceResult.HandleException<MerchantResponse>(ex, _logger, "GetMerchantByOwnerId");
         }
     }
 
@@ -357,10 +433,17 @@ public class MerchantService : BaseService, IMerchantService
         merchant.Name = request.Name;
         merchant.Description = request.Description;
         merchant.Address = request.Address;
+        merchant.Latitude = request.Latitude;
+        merchant.Longitude = request.Longitude;
         merchant.PhoneNumber = request.PhoneNumber;
         merchant.Email = request.Email;
         merchant.MinimumOrderAmount = request.MinimumOrderAmount;
         merchant.DeliveryFee = request.DeliveryFee;
+        merchant.AverageDeliveryTime = request.AverageDeliveryTime;
+        merchant.IsActive = request.IsActive;
+        merchant.IsBusy = request.IsBusy;
+        merchant.LogoUrl = request.LogoUrl;
+        merchant.CoverImageUrl = request.CoverImageUrl;
         merchant.UpdatedAt = DateTime.UtcNow;
 
         _unitOfWork.Repository<Merchant>().Update(merchant);
@@ -386,12 +469,16 @@ public class MerchantService : BaseService, IMerchantService
             ServiceCategoryId = updatedMerchant.ServiceCategoryId,
             ServiceCategoryName = updatedMerchant.ServiceCategory.Name,
             LogoUrl = updatedMerchant.LogoUrl,
+            CoverImageUrl = updatedMerchant.CoverImageUrl,
             Address = updatedMerchant.Address,
             Latitude = updatedMerchant.Latitude,
             Longitude = updatedMerchant.Longitude,
+            PhoneNumber = updatedMerchant.PhoneNumber,
+            Email = updatedMerchant.Email,
             MinimumOrderAmount = updatedMerchant.MinimumOrderAmount,
             DeliveryFee = updatedMerchant.DeliveryFee,
             AverageDeliveryTime = updatedMerchant.AverageDeliveryTime,
+            IsBusy = updatedMerchant.IsBusy,
             IsOpen = updatedMerchant.IsOpen
         };
 

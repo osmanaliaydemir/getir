@@ -18,6 +18,38 @@ public record CourierLocationUpdateRequest(
     decimal Latitude,
     decimal Longitude);
 
+/// <summary>
+/// Extended courier location update with order context
+/// </summary>
+public record CourierLocationUpdateWithOrderRequest(
+    Guid CourierId,
+    Guid OrderId,
+    decimal Latitude,
+    decimal Longitude,
+    DateTime Timestamp);
+
+/// <summary>
+/// Courier location history item
+/// </summary>
+public record CourierLocationHistoryItem(
+    Guid Id,
+    Guid CourierId,
+    Guid? OrderId,
+    decimal Latitude,
+    decimal Longitude,
+    DateTime Timestamp,
+    decimal? Speed = null,
+    decimal? Accuracy = null);
+
+/// <summary>
+/// Courier location history response
+/// </summary>
+public record CourierLocationHistoryResponse(
+    Guid CourierId,
+    Guid? OrderId,
+    List<CourierLocationHistoryItem> Locations,
+    int TotalCount);
+
 public record SetAvailabilityRequest(
     bool IsAvailable);
 

@@ -5,6 +5,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Getir.WebApi</RootNamespace>
+    <!-- XML Documentation için gerekli ayarlar -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- 1591: Missing XML comment uyarılarını kapat (hepsinde comment yok diye hata vermesin) -->
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

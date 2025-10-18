@@ -14,7 +14,11 @@ abstract class MerchantDataSource {
   });
 
   Future<Merchant> getMerchantById(String id);
-  Future<List<Merchant>> searchMerchants(String query);
+  Future<List<Merchant>> searchMerchants(
+    String query, {
+    int page = 1,
+    int limit = 20,
+  });
   Future<List<Merchant>> getNearbyMerchants({
     required double latitude,
     required double longitude,
@@ -45,10 +49,7 @@ class MerchantDataSourceImpl implements MerchantDataSource {
     double? radius,
   }) async {
     try {
-      final queryParams = <String, dynamic>{
-        'page': page,
-        'limit': limit,
-      };
+      final queryParams = <String, dynamic>{'page': page, 'pageSize': limit};
 
       if (search != null) queryParams['search'] = search;
       if (category != null) queryParams['category'] = category;
@@ -57,7 +58,7 @@ class MerchantDataSourceImpl implements MerchantDataSource {
       if (radius != null) queryParams['radius'] = radius;
 
       final response = await _dio.get(
-        '/api/v1/merchants',
+        '/api/v1/merchant',
         queryParameters: queryParams,
       );
 
@@ -71,7 +72,7 @@ class MerchantDataSourceImpl implements MerchantDataSource {
   @override
   Future<Merchant> getMerchantById(String id) async {
     try {
-      final response = await _dio.get('/api/v1/merchants/$id');
+      final response = await _dio.get('/api/v1/merchant/$id');
       return _merchantFromJson(response.data);
     } catch (e) {
       throw Exception('Failed to fetch merchant: $e');
@@ -79,20 +80,20 @@ class MerchantDataSourceImpl implements MerchantDataSource {
   }
 
   @override
-  Future<List<Merchant>> searchMerchants(String query) async {
+  Future<List<Merchant>> searchMerchants(
+    String query, {
+    int page = 1,
+    int limit = 20,
+  }) async {
     try {
       final response = await _dio.get(
         '/api/v1/search/merchants',
-        queryParameters: {
-          'query': query,
-          'pageNumber': 1,
-          'pageSize': 20,
-        },
+        queryParameters: {'query': query, 'page': page, 'pageSize': limit},
       );
 
       final data = response.data['data'];
       if (data == null) return [];
-      
+
       final List<dynamic> items = data['items'] ?? data;
       return items.map((json) => _merchantFromJson(json)).toList();
     } catch (e) {
@@ -108,7 +109,7 @@ class MerchantDataSourceImpl implements MerchantDataSource {
   }) async {
     try {
       final response = await _dio.get(
-        '/api/v1/geo/merchants/nearby',
+        '/api/v1/geolocation/merchants/nearby',
         queryParameters: {
           'latitude': latitude,
           'longitude': longitude,
@@ -132,7 +133,7 @@ class MerchantDataSourceImpl implements MerchantDataSource {
   }) async {
     try {
       final response = await _dio.get(
-        '/api/v1/geo/merchants/nearby',
+        '/api/v1/geolocation/merchants/nearby',
         queryParameters: {
           'latitude': latitude,
           'longitude': longitude,
@@ -168,7 +169,7 @@ class MerchantDataSourceImpl implements MerchantDataSource {
       minimumOrderAmount: (json['minimumOrderAmount'] ?? 0.0).toDouble(),
       isDeliveryAvailable: json['isDeliveryAvailable'] ?? true,
       isPickupAvailable: json['isPickupAvailable'] ?? false,
-      categoryType: json['categoryType'] != null 
+      categoryType: json['categoryType'] != null
           ? ServiceCategoryType.fromInt(json['categoryType'] as int)
           : null,
     );

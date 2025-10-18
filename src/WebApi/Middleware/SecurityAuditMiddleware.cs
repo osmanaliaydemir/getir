@@ -43,7 +43,7 @@ public class SecurityAuditMiddleware
                     Details = $"Request completed successfully. Status: {context.Response.StatusCode}",
                     IpAddress = ipAddress,
                     UserAgent = userAgent,
-                    SessionId = context.Session?.Id,
+                    SessionId = requestId, // WebAPI is stateless, use RequestId instead of Session
                     RequestId = requestId,
                     IsSuccess = context.Response.StatusCode < 400,
                     Timestamp = startTime
@@ -66,7 +66,7 @@ public class SecurityAuditMiddleware
                     Details = $"Request failed with exception: {ex.Message}",
                     IpAddress = ipAddress,
                     UserAgent = userAgent,
-                    SessionId = context.Session?.Id,
+                    SessionId = requestId, // WebAPI is stateless, use RequestId instead of Session
                     RequestId = requestId,
                     IsSuccess = false,
                     ErrorMessage = ex.Message,

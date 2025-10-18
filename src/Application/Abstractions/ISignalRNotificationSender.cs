@@ -8,6 +8,9 @@ public interface ISignalRNotificationSender
 public interface ISignalROrderSender
 {
     Task SendStatusUpdateAsync(Guid orderId, Guid userId, string status, string message);
+    Task SendNewOrderToMerchantAsync(Guid merchantId, object orderData);
+    Task SendOrderStatusChangedToMerchantAsync(Guid merchantId, Guid orderId, string orderNumber, string status);
+    Task SendOrderCancelledToMerchantAsync(Guid merchantId, Guid orderId, string orderNumber, string? reason);
 }
 
 public interface ISignalRCourierSender

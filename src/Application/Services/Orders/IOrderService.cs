@@ -88,4 +88,11 @@ public interface IOrderService
         Guid merchantOwnerId,
         CancellationToken cancellationToken = default);
 
+    // SignalR Hub methods
+    Task<Result<OrderResponse>> GetOrderByIdAsync(Guid orderId, CancellationToken cancellationToken = default);
+    Task<Result<List<OrderResponse>>> GetUserActiveOrdersAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<Result<OrderResponse>> UpdateOrderStatusAsync(UpdateOrderStatusRequest request, CancellationToken cancellationToken = default);
+    Task<Result<OrderResponse>> CancelOrderAsync(CancelOrderRequest request, CancellationToken cancellationToken = default);
+    Task<Result<OrderResponse>> RateOrderAsync(RateOrderRequest request, CancellationToken cancellationToken = default);
+    Task<Result<List<OrderResponse>>> GetMerchantPendingOrdersAsync(Guid merchantId, CancellationToken cancellationToken = default);
 }

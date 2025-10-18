@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SignalR Test - Getir</title>
+    <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .log { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e9; color: #2e7d32; }
+        button { background: #5d3ebc; color: white; border: none; padding: 10px 20px; margin: 5px; cursor: pointer; border-radius: 4px; }
+        input { padding: 8px; margin: 5px; width: 300px; }
+    </style>
+</head>
+<body>
+    <h1>🔌 SignalR Connection Test</h1>
+    
+    <div>
+        <h3>1. Login ve Token Al</h3>
+        <input id="email" type="text" placeholder="Email" value="customer1@example.com">
+        <input id="password" type="password" placeholder="Password" value="Test123!">
+        <button onclick="login()">Login</button>
+    </div>
+
+    <div>
+        <h3>2. SignalR Hub'lara Bağlan</h3>
+        <button onclick="connectNotifications()">Connect to NotificationHub</button>
+        <button onclick="connectOrders()">Connect to OrderHub</button>
+        <button onclick="connectTracking()">Connect to TrackingHub</button>
+    </div>
+
+    <div>
+        <h3>3. Bağlantı Durumu</h3>
+        <div id="status"></div>
+    </div>
+
+    <div>
+        <h3>4. Log'lar</h3>
+        <div id="logs"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://ajilgo.runasp.net';
+        let token = null;
+        let notificationHub = null;
+        let orderHub = null;
+        let trackingHub = null;
+
+        function log(message, type = 'log') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            document.getElementById('logs').prepend(div);
+            console.log(message);
+        }
+
+        async function login() {
+            try {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                log('🔄 Logging in...');
+                
+                const response = await fetch(`${API_URL}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                
+                if (data.isSuccess && data.data) {
+                    token = data.data.accessToken;
+                    log(`✅ Login successful! Token: ${token.substring(0, 50)}...`, 'success');
+                    updateStatus();
+                } else {
+                    log(`❌ Login failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Login error: ${error.message}`, 'error');
+            }
+        }
+
+        async function connectNotifications() {
+            if (!token) {
+                log('❌ Please login first!', 'error');
+                return;
+            }
+
+            try {
+                log('🔄 Connecting to NotificationHub...');
+                
+                notificationHub = new signalR.HubConnectionBuilder()
+                    .withUrl(`${API_URL}/hubs/notifications`, {
+                        accessTokenFactory: () => token
+                    })
+                    .configureLogging(signalR.LogLevel.Debug)
+                    .build();
+
+                notificationHub.on('ReceiveNotification', (data) => {
+                    log(`📨 Notification received: ${JSON.stringify(data)}`, 'success');
+                });
+
+                await notificationHub.start();
+                log('✅ NotificationHub connected successfully!', 'success');
+                updateStatus();
+            } catch (error) {
+                log(`❌ NotificationHub connection failed: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function connectOrders() {
+            if (!token) {
+                log('❌ Please login first!', 'error');
+                return;
+            }
+
+            try {
+                log('🔄 Connecting to OrderHub...');
+                
+                orderHub = new signalR.HubConnectionBuilder()
+                    .withUrl(`${API_URL}/hubs/orders`, {
+                        accessTokenFactory: () => token
+                    })
+                    .configureLogging(signalR.LogLevel.Debug)
+                    .build();
+
+                orderHub.on('OrderStatusChanged', (data) => {
+                    log(`📦 Order status changed: ${JSON.stringify(data)}`, 'success');
+                });
+
+                await orderHub.start();
+                log('✅ OrderHub connected successfully!', 'success');
+                updateStatus();
+            } catch (error) {
+                log(`❌ OrderHub connection failed: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function connectTracking() {
+            if (!token) {
+                log('❌ Please login first!', 'error');
+                return;
+            }
+
+            try {
+                log('🔄 Connecting to TrackingHub...');
+                
+                trackingHub = new signalR.HubConnectionBuilder()
+                    .withUrl(`${API_URL}/hubs/realtime-tracking`, {
+                        accessTokenFactory: () => token
+                    })
+                    .configureLogging(signalR.LogLevel.Debug)
+                    .build();
+
+                trackingHub.on('LocationUpdated', (data) => {
+                    log(`📍 Location updated: ${JSON.stringify(data)}`, 'success');
+                });
+
+                await trackingHub.start();
+                log('✅ TrackingHub connected successfully!', 'success');
+                updateStatus();
+            } catch (error) {
+                log(`❌ TrackingHub connection failed: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        function updateStatus() {
+            const status = document.getElementById('status');
+            status.innerHTML = `
+                <div class="log ${token ? 'success' : 'disconnected'}">
+                    🔑 Token: ${token ? 'Available' : 'Not logged in'}
+                </div>
+                <div class="log ${notificationHub?.state === 'Connected' ? 'success' : 'disconnected'}">
+                    📨 NotificationHub: ${notificationHub?.state || 'Disconnected'}
+                </div>
+                <div class="log ${orderHub?.state === 'Connected' ? 'success' : 'disconnected'}">
+                    📦 OrderHub: ${orderHub?.state || 'Disconnected'}
+                </div>
+                <div class="log ${trackingHub?.state === 'Connected' ? 'success' : 'disconnected'}">
+                    📍 TrackingHub: ${trackingHub?.state || 'Disconnected'}
+                </div>
+            `;
+        }
+
+        // Auto update status every 2 seconds
+        setInterval(updateStatus, 2000);
+        updateStatus();
+    </script>
+</body>
+</html>
+

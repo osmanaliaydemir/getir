@@ -1,11 +1,12 @@
+import '../../core/errors/result.dart';
 import '../entities/order.dart';
 import '../../data/datasources/order_datasource.dart';
 
 abstract class IOrderRepository {
-  Future<Order> createOrder(CreateOrderRequest request);
-  Future<List<Order>> getUserOrders();
-  Future<Order> getOrderById(String orderId);
-  Future<Order> cancelOrder(String orderId);
-  Future<PaymentResult> processPayment(CreatePaymentRequest request);
-  Future<PaymentResult> getPaymentStatus(String paymentId);
+  Future<Result<Order>> createOrder(CreateOrderRequest request);
+  Future<Result<List<Order>>> getUserOrders();
+  Future<Result<Order>> getOrderById(String orderId);
+  Future<Result<Order>> cancelOrder(String orderId);
+  Future<Result<PaymentResult>> processPayment(CreatePaymentRequest request);
+  Future<Result<PaymentResult>> getPaymentStatus(String paymentId);
 }

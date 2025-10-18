@@ -13,11 +13,11 @@ class EnvironmentConfig {
   static String get apiBaseUrl {
     switch (_environment) {
       case Environment.development:
-        return 'http://ajilgo.runasp.net/api/v1';
+        return 'https://ajilgo.runasp.net/api/v1';
       case Environment.staging:
-        return 'http://ajilgo.runasp.net/api/v1';
+        return 'https://ajilgo.runasp.net/api/v1';
       case Environment.production:
-        return 'http://ajilgo.runasp.net/api/v1';
+        return 'https://ajilgo.runasp.net/api/v1';
     }
   }
 
@@ -25,11 +25,11 @@ class EnvironmentConfig {
   static String get signalRUrl {
     switch (_environment) {
       case Environment.development:
-        return 'http://ajilgo.runasp.net/hubs';
+        return 'https://ajilgo.runasp.net/hubs';
       case Environment.staging:
-        return 'http://ajilgo.runasp.net/hubs';
+        return 'https://ajilgo.runasp.net/hubs';
       case Environment.production:
-        return 'http://ajilgo.runasp.net/hubs';
+        return 'https://ajilgo.runasp.net/hubs';
     }
   }
 

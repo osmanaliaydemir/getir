@@ -13,6 +13,7 @@ public static class ErrorCodes
     public const string FORBIDDEN = "FORBIDDEN";
     public const string CONFLICT = "CONFLICT";
     public const string BAD_REQUEST = "BAD_REQUEST";
+    public const string INVALID_OPERATION = "INVALID_OPERATION";
     
     // Transaction errors
     public const string TRANSACTION_ERROR = "TRANSACTION_ERROR";
@@ -38,6 +39,8 @@ public static class ErrorCodes
     public const string CART_DIFFERENT_MERCHANT = "CART_DIFFERENT_MERCHANT";
     public const string ALREADY_REVIEWED = "ALREADY_REVIEWED";
     public const string CANNOT_REVIEW = "CANNOT_REVIEW";
+    public const string PRODUCT_ALREADY_IN_FAVORITES = "PRODUCT_ALREADY_IN_FAVORITES";
+    public const string PRODUCT_NOT_IN_FAVORITES = "PRODUCT_NOT_IN_FAVORITES";
     
     // System errors
     public const string EXTERNAL_SERVICE_ERROR = "EXTERNAL_SERVICE_ERROR";

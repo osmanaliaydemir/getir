@@ -6,9 +6,10 @@ public enum OrderStatus
     Confirmed = 1,
     Preparing = 2,
     Ready = 3,
-    OnTheWay = 4,
-    Delivered = 5,
-    Cancelled = 6
+    PickedUp = 4,
+    OnTheWay = 5,
+    Delivered = 6,
+    Cancelled = 7
 }
 
 public static class OrderStatusExtensions
@@ -21,6 +22,7 @@ public static class OrderStatusExtensions
             OrderStatus.Confirmed => "Confirmed",
             OrderStatus.Preparing => "Preparing",
             OrderStatus.Ready => "Ready",
+            OrderStatus.PickedUp => "PickedUp",
             OrderStatus.OnTheWay => "OnTheWay",
             OrderStatus.Delivered => "Delivered",
             OrderStatus.Cancelled => "Cancelled",
@@ -36,6 +38,7 @@ public static class OrderStatusExtensions
             "confirmed" => OrderStatus.Confirmed,
             "preparing" => OrderStatus.Preparing,
             "ready" => OrderStatus.Ready,
+            "pickedup" => OrderStatus.PickedUp,
             "ontheway" => OrderStatus.OnTheWay,
             "delivered" => OrderStatus.Delivered,
             "cancelled" => OrderStatus.Cancelled,
@@ -53,8 +56,10 @@ public static class OrderStatusExtensions
             (OrderStatus.Confirmed, OrderStatus.Cancelled) => true,
             (OrderStatus.Preparing, OrderStatus.Ready) => true,
             (OrderStatus.Preparing, OrderStatus.Cancelled) => true,
-            (OrderStatus.Ready, OrderStatus.OnTheWay) => true,
+            (OrderStatus.Ready, OrderStatus.PickedUp) => true,
             (OrderStatus.Ready, OrderStatus.Cancelled) => true,
+            (OrderStatus.PickedUp, OrderStatus.OnTheWay) => true,
+            (OrderStatus.PickedUp, OrderStatus.Cancelled) => true,
             (OrderStatus.OnTheWay, OrderStatus.Delivered) => true,
             (OrderStatus.OnTheWay, OrderStatus.Cancelled) => true,
             _ => false

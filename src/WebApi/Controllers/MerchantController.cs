@@ -57,6 +57,25 @@ public class MerchantController : BaseController
     }
 
     /// <summary>
+    /// Get my merchant (current user's merchant)
+    /// </summary>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Merchant details</returns>
+    [HttpGet("my-merchant")]
+    [Authorize]
+    [Authorize(Roles = "MerchantOwner")]
+    [ProducesResponseType(typeof(MerchantResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMyMerchant(CancellationToken ct = default)
+    {
+        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
+        if (unauthorizedResult != null) return unauthorizedResult;
+
+        var result = await _merchantService.GetMerchantByOwnerIdAsync(userId, ct);
+        return ToActionResult(result);
+    }
+
+    /// <summary>
     /// Create a new merchant
     /// </summary>
     /// <param name="request">Create merchant request</param>
