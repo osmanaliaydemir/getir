@@ -1251,6 +1251,16 @@ public class OrderService : BaseService, IOrderService
                 $"Order status updated to {newStatus}");
         }
 
+        // 🔔 Send real-time notification to Merchant Portal
+        if (_signalROrderSender != null)
+        {
+            await _signalROrderSender.SendOrderStatusChangedToMerchantAsync(
+                order.MerchantId,
+                order.Id,
+                order.OrderNumber,
+                newStatus.ToString());
+        }
+
         _loggingService.LogBusinessEvent("OrderStatusUpdated", new
         {
             orderId = order.Id,
@@ -1290,7 +1300,7 @@ public class OrderService : BaseService, IOrderService
         _unitOfWork.Repository<Order>().Update(order);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Notify via SignalR (if available)
+        // Notify user via SignalR (if available)
         if (_signalRService != null)
         {
             await _signalRService.SendOrderStatusUpdateAsync(
@@ -1298,6 +1308,16 @@ public class OrderService : BaseService, IOrderService
                 order.UserId,
                 OrderStatus.Cancelled.ToString(),
                 $"Order cancelled: {request.Reason}");
+        }
+
+        // 🔔 Send real-time cancellation notification to Merchant Portal
+        if (_signalROrderSender != null)
+        {
+            await _signalROrderSender.SendOrderCancelledToMerchantAsync(
+                order.MerchantId,
+                order.Id,
+                order.OrderNumber,
+                request.Reason);
         }
 
         _loggingService.LogBusinessEvent("OrderCancelled", new
