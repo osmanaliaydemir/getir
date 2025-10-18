@@ -19,7 +19,7 @@ class FavoritesDataSourceImpl implements FavoritesDataSource {
   }) async {
     final response = await _dio.get(
       '/api/v1/user/favorites',
-      queryParameters: {'page': page, 'limit': limit},
+      queryParameters: {'page': page, 'pageSize': limit},
     );
 
     // Handle ApiResponse format

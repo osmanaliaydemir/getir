@@ -24,7 +24,7 @@ class OrdersDataSourceImpl implements OrdersDataSource {
   Future<List<Order>> getUserOrders({int page = 1, int limit = 20}) async {
     final response = await _dio.get(
       '/api/v1/user/orders',
-      queryParameters: {'page': page, 'limit': limit},
+      queryParameters: {'page': page, 'pageSize': limit},
     );
 
     // Handle ApiResponse format

@@ -9,6 +9,7 @@ using Getir.Application.Services.Coupons;
 using Getir.Application.Services.Couriers;
 using Getir.Application.Services.DeliveryOptimization;
 using Getir.Application.Services.DeliveryZones;
+using Getir.Application.Services.Favorites;
 using Getir.Application.Services.FileUpload;
 using Getir.Application.Services.GeoLocation;
 using Getir.Application.Services.Internationalization;
@@ -63,6 +64,9 @@ public static class ApplicationServiceExtensions
         
         // Order Services
         services.AddScoped<IOrderService, OrderService>();
+        
+        // Favorites Services
+        services.AddScoped<IFavoritesService, FavoritesService>();
         
         // Address Services
         services.AddScoped<IUserAddressService, UserAddressService>();

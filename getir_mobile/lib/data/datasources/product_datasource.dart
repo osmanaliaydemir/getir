@@ -38,7 +38,7 @@ class ProductDataSourceImpl implements ProductDataSource {
     String? search,
   }) async {
     try {
-      final queryParams = <String, dynamic>{'page': page, 'limit': limit};
+      final queryParams = <String, dynamic>{'page': page, 'pageSize': limit};
 
       if (merchantId != null) queryParams['merchantId'] = merchantId;
       if (category != null) queryParams['category'] = category;
@@ -75,7 +75,7 @@ class ProductDataSourceImpl implements ProductDataSource {
     try {
       final response = await _dio.get(
         '/api/v1/product/merchant/$merchantId',
-        queryParameters: {'page': page, 'limit': limit},
+        queryParameters: {'page': page, 'pageSize': limit},
       );
       final List<dynamic> data = response.data['data'] ?? response.data;
       return data.map((json) => _productFromJson(json)).toList();
@@ -95,7 +95,7 @@ class ProductDataSourceImpl implements ProductDataSource {
         '/api/v1/search/products',
         queryParameters: {
           'query': query,
-          'pageNumber': page,
+          'page': page,
           'pageSize': limit,
         },
       );

@@ -49,7 +49,7 @@ class MerchantDataSourceImpl implements MerchantDataSource {
     double? radius,
   }) async {
     try {
-      final queryParams = <String, dynamic>{'page': page, 'limit': limit};
+      final queryParams = <String, dynamic>{'page': page, 'pageSize': limit};
 
       if (search != null) queryParams['search'] = search;
       if (category != null) queryParams['category'] = category;
@@ -88,11 +88,7 @@ class MerchantDataSourceImpl implements MerchantDataSource {
     try {
       final response = await _dio.get(
         '/api/v1/search/merchants',
-        queryParameters: {
-          'query': query,
-          'pageNumber': page,
-          'pageSize': limit,
-        },
+        queryParameters: {'query': query, 'page': page, 'pageSize': limit},
       );
 
       final data = response.data['data'];
