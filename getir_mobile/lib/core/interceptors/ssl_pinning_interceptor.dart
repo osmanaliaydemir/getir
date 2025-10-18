@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:crypto/crypto.dart'; // ✅ SHA-256 hashing için
 import '../config/environment_config.dart';
 import '../services/logger_service.dart';
 
@@ -138,18 +139,59 @@ class SslPinningInterceptor extends Interceptor {
 
   /// Check if certificate is pinned
   bool _isPinnedCertificate(Uint8List certDer) {
-    // TODO: Replace with your actual pinned certificate hashes
-    // Get these by running:
-    // openssl s_client -connect api.getir.com:443 | openssl x509 -fingerprint -sha256 -noout
-    //
-    // For production, compute SHA-256 hash of certDer and compare with pinned hashes
-    // Example:
-    // import 'package:crypto/crypto.dart';
-    // final hash = sha256.convert(certDer).toString();
-    // return pinnedHashes.contains(hash);
+    // Production certificate pinning
+    // Compute SHA-256 hash of the certificate
+    final certHash = sha256.convert(certDer).toString();
 
-    // For now, allow all in development (already checked above)
-    return true;
+    // ⚠️ IMPORTANT: Replace these with your actual production certificate hashes
+    // How to get certificate hash:
+    //
+    // Option 1 - OpenSSL (Linux/Mac/Git Bash):
+    // openssl s_client -connect ajilgo.runasp.net:443 </dev/null 2>/dev/null | \
+    //   openssl x509 -outform DER | \
+    //   openssl dgst -sha256 -binary | \
+    //   openssl base64
+    //
+    // Option 2 - PowerShell (Windows):
+    // $cert = (Invoke-WebRequest -Uri "https://ajilgo.runasp.net").BaseResponse.ServicePoint.Certificate
+    // $bytes = $cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert)
+    // [System.Convert]::ToBase64String((New-Object System.Security.Cryptography.SHA256Managed).ComputeHash($bytes))
+    //
+    // Option 3 - Browser (Easy):
+    // 1. Chrome'da https://ajilgo.runasp.net'e git
+    // 2. Adres çubuğundaki kilit ikonuna tıkla
+    // 3. Certificate → Details → Thumbprint (SHA-256) kopyala
+
+    // ✅ Pinned certificate hashes (SHA-256)
+    final pinnedHashes = {
+      // ⚠️ PLACEHOLDER - GERÇEK HASH'LERLE DEĞİŞTİR!
+      // ajilgo.runasp.net certificate hash (ÖRNEK - GERÇEK DEĞİL!)
+      'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456',
+
+      // Backup certificate (certificate renewal için)
+      'b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef1234567',
+
+      // Let's Encrypt Root CA (if using Let's Encrypt)
+      'c3d4e5f6789012345678901234567890abcdef1234567890abcdef12345678',
+    };
+
+    final isValid = pinnedHashes.contains(certHash);
+
+    if (!isValid) {
+      logger.warning(
+        'Certificate hash not in pinned list!',
+        tag: 'SSLPinning',
+        context: {'hash': certHash, 'pinnedCount': pinnedHashes.length},
+      );
+    } else {
+      logger.debug(
+        'Certificate validated successfully',
+        tag: 'SSLPinning',
+        context: {'hash': certHash.substring(0, 16) + '...'},
+      );
+    }
+
+    return isValid;
   }
 
   @override
