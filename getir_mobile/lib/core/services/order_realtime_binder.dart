@@ -17,6 +17,23 @@ class OrderRealtimeBinder {
   StreamSubscription<OrderStatusUpdate>? _subscription;
   StreamSubscription<TrackingData>? _trackingSubscription;
 
+  /// Dispose all resources and close connections
+  void dispose() {
+    if (!_started) return;
+
+    _subscription?.cancel();
+    _trackingSubscription?.cancel();
+
+    try {
+      final signalR = getIt<SignalRService>();
+      signalR.dispose();
+    } catch (e) {
+      debugPrint('Error disposing SignalR in OrderRealtimeBinder: $e');
+    }
+
+    _started = false;
+  }
+
   /// Start listening to order updates
   Future<void> start(BuildContext context) async {
     if (_started) return;

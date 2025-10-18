@@ -78,8 +78,59 @@ Widget _buildErrorScreen(dynamic error, StackTrace stackTrace) {
   );
 }
 
-class GetirApp extends StatelessWidget {
+class GetirApp extends StatefulWidget {
   const GetirApp({super.key});
+
+  @override
+  State<GetirApp> createState() => _GetirAppState();
+}
+
+class _GetirAppState extends State<GetirApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    // 🔥 SignalR memory leak fix - dispose all connections
+    try {
+      final signalRService = getIt<OrderRealtimeBinder>();
+      signalRService.dispose();
+    } catch (e) {
+      debugPrint('Error disposing SignalR: $e');
+    }
+
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // Handle app lifecycle for SignalR connections
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+        // App going to background - optionally pause connections
+        break;
+      case AppLifecycleState.resumed:
+        // App coming back - reconnect if needed
+        try {
+          final signalRService = getIt<OrderRealtimeBinder>();
+          signalRService.start(context);
+        } catch (e) {
+          debugPrint('Error reconnecting SignalR: $e');
+        }
+        break;
+      case AppLifecycleState.detached:
+        break;
+      case AppLifecycleState.hidden:
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
