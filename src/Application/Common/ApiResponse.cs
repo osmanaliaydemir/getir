@@ -10,11 +10,16 @@ public class ApiResponse<T>
     /// Indicates if the operation was successful
     /// </summary>
     public bool IsSuccess { get; set; }
-
+    
     /// <summary>
     /// The data payload (null if operation failed)
     /// </summary>
     public T? Data { get; set; }
+    
+    /// <summary>
+    /// Alias for mobile compatibility
+    /// </summary>
+    public T? Value => Data;
 
     /// <summary>
     /// Error message (null if operation succeeded)

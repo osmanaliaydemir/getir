@@ -214,7 +214,7 @@ class _FavoriteProductsPageState extends State<FavoriteProductsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    favorite.name,
+                    favorite.productName,
                     style: AppTypography.bodyLarge.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
@@ -222,10 +222,10 @@ class _FavoriteProductsPageState extends State<FavoriteProductsPage> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (favorite.description != null) ...[
+                  if (favorite.productDescription != null) ...[
                     const SizedBox(height: 4),
                     Text(
-                      favorite.description!,
+                      favorite.productDescription!,
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -234,12 +234,28 @@ class _FavoriteProductsPageState extends State<FavoriteProductsPage> {
                     ),
                   ],
                   const SizedBox(height: 8),
-                  Text(
-                    favorite.categoryName,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  Row(
+                    children: [
+                      Icon(
+                        favorite.isAvailable
+                            ? Icons.check_circle
+                            : Icons.cancel,
+                        size: 16,
+                        color: favorite.isAvailable
+                            ? AppColors.success
+                            : AppColors.error,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        favorite.isAvailable ? 'Mevcut' : 'Stokta Yok',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: favorite.isAvailable
+                              ? AppColors.success
+                              : AppColors.error,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -350,7 +366,7 @@ class _FavoriteProductsPageState extends State<FavoriteProductsPage> {
     );
   }
 
-  void _removeFromFavorites(String productId) {
+  void _removeFromFavorites(String favoriteId) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -366,7 +382,9 @@ class _FavoriteProductsPageState extends State<FavoriteProductsPage> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              context.read<FavoritesBloc>().add(RemoveFromFavorites(productId));
+              context.read<FavoritesBloc>().add(
+                RemoveFromFavorites(favoriteId),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,

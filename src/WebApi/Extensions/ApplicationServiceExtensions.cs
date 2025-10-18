@@ -127,6 +127,22 @@ public static class ApplicationServiceExtensions
         
         // Stock Management Services
         services.AddScoped<IStockManagementService, StockManagementService>();
+        services.AddScoped<IStockAlertService, StockAlertService>();
+        services.AddScoped<IStockSyncService, StockSyncService>();
+        services.AddScoped<IInventoryService, InventoryService>();
+        
+        // Order Support Services
+        services.AddScoped<IOrderStatusValidatorService, OrderStatusValidatorService>();
+        services.AddScoped<IOrderStatusTransitionService, OrderStatusTransitionService>();
+        
+        // Merchant Support Services
+        services.AddScoped<IMerchantDocumentService, MerchantDocumentService>();
+        
+        // Product Support Services
+        services.AddScoped<IMarketProductVariantService, MarketProductVariantService>();
+        
+        // Notification Support Services
+        services.AddScoped<INotificationHistoryService, NotificationHistoryService>();
         
         // Payment Services
         services.AddScoped<IPaymentService, PaymentService>();

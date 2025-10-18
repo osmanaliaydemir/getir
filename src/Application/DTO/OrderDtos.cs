@@ -31,6 +31,8 @@ public record OrderResponse(
     string PaymentMethod,
     string PaymentStatus,
     string DeliveryAddress,
+    decimal? DeliveryLatitude,
+    decimal? DeliveryLongitude,
     DateTime? EstimatedDeliveryTime,
     DateTime CreatedAt,
     List<OrderLineResponse> Items);

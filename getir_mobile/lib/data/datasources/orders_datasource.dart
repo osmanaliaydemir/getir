@@ -27,11 +27,12 @@ class OrdersDataSourceImpl implements OrdersDataSource {
       queryParameters: {'page': page, 'pageSize': limit},
     );
 
-    // Handle ApiResponse format
+    // Handle ApiResponse<PagedResult> format
     final responseData = response.data;
     if (responseData is Map<String, dynamic>) {
       if (responseData['success'] == true && responseData['value'] != null) {
-        final ordersList = responseData['value'] as List;
+        final pagedResult = responseData['value'] as Map<String, dynamic>;
+        final ordersList = pagedResult['items'] as List;
         return ordersList
             .map((json) => Order.fromJson(json as Map<String, dynamic>))
             .toList();

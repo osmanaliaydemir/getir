@@ -87,6 +87,41 @@ public class AppDbContext : DbContext
     // Delivery optimization entities
     public DbSet<DeliveryCapacity> DeliveryCapacities { get; set; }
     public DbSet<DeliveryRoute> DeliveryRoutes { get; set; }
+    public DbSet<CourierLocation> CourierLocations { get; set; }
+    
+    // Favorites
+    public DbSet<FavoriteProduct> FavoriteProducts { get; set; }
+    
+    // Device & Notification entities
+    public DbSet<DeviceToken> DeviceTokens { get; set; }
+    public DbSet<NotificationLog> NotificationLogs { get; set; }
+    public DbSet<NotificationHistory> NotificationHistories { get; set; }
+    public DbSet<NotificationTemplate> NotificationTemplates { get; set; }
+    
+    // Merchant documents
+    public DbSet<MerchantDocument> MerchantDocuments { get; set; }
+    
+    // Market entities
+    public DbSet<Market> Markets { get; set; }
+    public DbSet<MarketCategory> MarketCategories { get; set; }
+    public DbSet<MarketProduct> MarketProducts { get; set; }
+    public DbSet<MarketProductVariant> MarketProductVariants { get; set; }
+    
+    // Restaurant entities
+    public DbSet<Restaurant> Restaurants { get; set; }
+    public DbSet<RestaurantMenuCategory> RestaurantMenuCategories { get; set; }
+    public DbSet<RestaurantProduct> RestaurantProducts { get; set; }
+    public DbSet<RestaurantProductOption> RestaurantProductOptions { get; set; }
+    public DbSet<RestaurantProductOptionGroup> RestaurantProductOptionGroups { get; set; }
+    
+    // Inventory entities
+    public DbSet<InventoryCountSession> InventoryCountSessions { get; set; }
+    public DbSet<InventoryCountItem> InventoryCountItems { get; set; }
+    public DbSet<InventoryDiscrepancy> InventoryDiscrepancies { get; set; }
+    
+    // Stock sync entities
+    public DbSet<StockSyncSession> StockSyncSessions { get; set; }
+    public DbSet<StockSyncDetail> StockSyncDetails { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1519,6 +1554,31 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.UpdatedBy)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+        
+        // FavoriteProduct configuration
+        modelBuilder.Entity<FavoriteProduct>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.ProductId).IsRequired();
+            entity.Property(e => e.AddedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => new { e.UserId, e.ProductId }).IsUnique();
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.ProductId);
+            entity.HasIndex(e => e.AddedAt);
+            entity.HasIndex(e => new { e.UserId, e.AddedAt }); // Pagination optimize
+            
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(e => e.Product)
+                .WithMany()
+                .HasForeignKey(e => e.ProductId)
+                .OnDelete(DeleteBehavior.NoAction); // Prevent cascade cycle
         });
     }
 }

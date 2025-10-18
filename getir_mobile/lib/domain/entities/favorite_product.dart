@@ -2,34 +2,40 @@ import 'package:equatable/equatable.dart';
 
 class FavoriteProduct extends Equatable {
   final String id;
-  final String name;
-  final String? description;
+  final String productId;
+  final String productName;
+  final String? productDescription;
   final double price;
   final String? imageUrl;
-  final String categoryName;
+  final String merchantId;
   final String merchantName;
+  final bool isAvailable;
   final DateTime addedAt;
 
   const FavoriteProduct({
     required this.id,
-    required this.name,
-    this.description,
+    required this.productId,
+    required this.productName,
+    this.productDescription,
     required this.price,
     this.imageUrl,
-    required this.categoryName,
+    required this.merchantId,
     required this.merchantName,
+    required this.isAvailable,
     required this.addedAt,
   });
 
   factory FavoriteProduct.fromJson(Map<String, dynamic> json) {
     return FavoriteProduct(
       id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String?,
+      productId: json['productId'] as String,
+      productName: json['productName'] as String,
+      productDescription: json['productDescription'] as String?,
       price: (json['price'] as num).toDouble(),
       imageUrl: json['imageUrl'] as String?,
-      categoryName: json['categoryName'] as String,
+      merchantId: json['merchantId'] as String,
       merchantName: json['merchantName'] as String,
+      isAvailable: json['isAvailable'] as bool? ?? true,
       addedAt: DateTime.parse(json['addedAt'] as String),
     );
   }
@@ -37,12 +43,14 @@ class FavoriteProduct extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'name': name,
-      'description': description,
+      'productId': productId,
+      'productName': productName,
+      'productDescription': productDescription,
       'price': price,
       'imageUrl': imageUrl,
-      'categoryName': categoryName,
+      'merchantId': merchantId,
       'merchantName': merchantName,
+      'isAvailable': isAvailable,
       'addedAt': addedAt.toIso8601String(),
     };
   }
@@ -50,12 +58,14 @@ class FavoriteProduct extends Equatable {
   @override
   List<Object?> get props => [
     id,
-    name,
-    description,
+    productId,
+    productName,
+    productDescription,
     price,
     imageUrl,
-    categoryName,
+    merchantId,
     merchantName,
+    isAvailable,
     addedAt,
   ];
 }

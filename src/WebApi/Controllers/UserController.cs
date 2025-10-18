@@ -53,7 +53,7 @@ public class UserController : BaseController
         if (unauthorizedResult != null) return unauthorizedResult;
 
         var result = await _userAddressService.GetUserAddressesAsync(userId, ct);
-        return ToActionResult<List<AddressResponse>>(result);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -155,7 +155,7 @@ public class UserController : BaseController
         if (unauthorizedResult != null) return unauthorizedResult;
 
         var result = await _authService.GetUserProfileAsync(userId, ct);
-        return ToActionResult<UserProfileResponse>(result);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -325,8 +325,13 @@ public class UserController : BaseController
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;
 
-        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
-        if (unauthorizedResult != null) return unauthorizedResult;
+        GetCurrentUserIdOrUnauthorized(out var _);
+
+        // Validate that route orderId matches request orderId
+        if (request.OrderId != orderId)
+        {
+            return BadRequest("Order ID mismatch");
+        }
 
         var result = await _orderService.CancelOrderAsync(request, ct);
         return ToActionResult(result);
@@ -356,22 +361,33 @@ public class UserController : BaseController
             return ToActionResult(originalOrderResult);
         }
 
-        var originalOrder = originalOrderResult.Value;
+        var originalOrder = originalOrderResult.Value!;
+        
+        if (originalOrder.Items.Count == 0)
+        {
+            return BadRequest("Original order has no items");
+        }
         
         // Create reorder request from original order
-        var createRequest = new CreateOrderRequest
-        {
-            MerchantId = originalOrder.MerchantId,
-            DeliveryAddressId = originalOrder.DeliveryAddressId,
-            Items = originalOrder.Items.Select(item => new OrderItemRequest
-            {
-                ProductId = item.ProductId,
-                Quantity = item.Quantity,
-                Notes = item.Notes
-            }).ToList(),
-            PaymentMethod = originalOrder.PaymentMethod,
-            Notes = "Reordered from " + orderId
-        };
+        var createRequest = new CreateOrderRequest(
+            MerchantId: originalOrder.MerchantId,
+            Items: originalOrder.Items.Select(item => new OrderLineRequest(
+                ProductId: item.ProductId,
+                ProductVariantId: item.ProductVariantId,
+                Quantity: item.Quantity,
+                Notes: null, // Notes not stored in OrderLineResponse
+                Options: item.Options.Select(opt => new CreateOrderLineOptionRequest(
+                    ProductOptionId: opt.ProductOptionId,
+                    OptionName: opt.OptionName,
+                    ExtraPrice: opt.ExtraPrice
+                )).ToList()
+            )).ToList(),
+            DeliveryAddress: originalOrder.DeliveryAddress,
+            DeliveryLatitude: originalOrder.DeliveryLatitude ?? 0,
+            DeliveryLongitude: originalOrder.DeliveryLongitude ?? 0,
+            PaymentMethod: originalOrder.PaymentMethod,
+            Notes: $"Reordered from {orderId}"
+        );
 
         var result = await _orderService.CreateOrderAsync(userId, createRequest, ct);
         return ToActionResult(result);
@@ -392,7 +408,7 @@ public class UserController : BaseController
         if (unauthorizedResult != null) return unauthorizedResult;
 
         var result = await _userPreferencesService.GetOrCreateUserPreferencesAsync(userId, ct);
-        return ToActionResult<UserNotificationPreferencesResponse>(result);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -490,5 +506,3 @@ public class UserController : BaseController
         return Ok(languageResponse);
     }
 }
-
-public record AddToFavoritesRequest(string ProductId);

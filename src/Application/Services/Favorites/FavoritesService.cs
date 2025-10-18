@@ -2,7 +2,6 @@ using Getir.Application.Abstractions;
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Favorites;
@@ -35,63 +34,57 @@ public class FavoritesService : BaseService, IFavoritesService
         PaginationQuery query,
         CancellationToken cancellationToken)
     {
-        var cacheKey = $"user_favorites_{userId}_page_{query.Page}_size_{query.PageSize}";
-        var cachedResult = await CacheService.GetAsync<PagedResult<FavoriteProductResponse>>(cacheKey, cancellationToken);
-        if (cachedResult != null)
+        try
         {
-            Logger.LogInformation("Favorites retrieved from cache for user {UserId}", userId);
-            return Result<PagedResult<FavoriteProductResponse>>.Success(cachedResult);
+            var cacheKey = string.Concat("user_favorites_", userId, "_", query.Page, "_", query.PageSize);
+            
+            return await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    // Query favorites from database using GetPagedAsync
+                    var favorites = await _unitOfWork.Repository<FavoriteProduct>().GetPagedAsync(
+                        filter: f => f.UserId == userId,
+                        orderBy: f => f.AddedAt,
+                        ascending: false,
+                        page: query.Page,
+                        pageSize: query.PageSize,
+                        include: "Product,Product.Merchant",
+                        cancellationToken: cancellationToken);
+
+                    var total = await _unitOfWork.ReadRepository<FavoriteProduct>()
+                        .CountAsync(f => f.UserId == userId, cancellationToken);
+
+                    var favoriteResponses = favorites.Select(f => new FavoriteProductResponse
+                    {
+                        Id = f.Id,
+                        ProductId = f.ProductId,
+                        ProductName = f.Product.Name,
+                        ProductDescription = f.Product.Description,
+                        Price = f.Product.Price,
+                        ImageUrl = f.Product.ImageUrl,
+                        MerchantId = f.Product.MerchantId,
+                        MerchantName = f.Product.Merchant?.Name ?? "",
+                        IsAvailable = f.Product.IsAvailable,
+                        AddedAt = f.AddedAt
+                    }).ToList();
+
+                    var pagedResult = PagedResult<FavoriteProductResponse>.Create(
+                        favoriteResponses,
+                        total,
+                        query.Page,
+                        query.PageSize);
+                    
+                    return ServiceResult.Success(pagedResult);
+                },
+                TimeSpan.FromMinutes(ApplicationConstants.ShortCacheMinutes),
+                cancellationToken);
         }
-
-        // Query favorites from database
-        var favoritesQuery = UnitOfWork.Repository<FavoriteProduct>()
-            .GetQueryable()
-            .Where(f => f.UserId == userId)
-            .Include(f => f.Product)
-            .ThenInclude(p => p.Merchant)
-            .OrderByDescending(f => f.AddedAt);
-
-        var totalCount = await favoritesQuery.CountAsync(cancellationToken);
-        
-        var favorites = await favoritesQuery
-            .Skip((query.Page - 1) * query.PageSize)
-            .Take(query.PageSize)
-            .ToListAsync(cancellationToken);
-
-        var favoriteResponses = favorites.Select(f => new FavoriteProductResponse
+        catch (Exception ex)
         {
-            Id = f.Id,
-            ProductId = f.ProductId,
-            ProductName = f.Product.Name,
-            ProductDescription = f.Product.Description,
-            Price = f.Product.Price,
-            ImageUrl = f.Product.ImageUrl,
-            MerchantId = f.Product.MerchantId,
-            MerchantName = f.Product.Merchant?.Name ?? "",
-            IsAvailable = f.Product.IsAvailable,
-            AddedAt = f.AddedAt
-        }).ToList();
-
-        var result = new PagedResult<FavoriteProductResponse>
-        {
-            Data = favoriteResponses,
-            Page = query.Page,
-            PageSize = query.PageSize,
-            TotalCount = totalCount,
-            TotalPages = (int)Math.Ceiling(totalCount / (double)query.PageSize)
-        };
-
-        // Cache result for 5 minutes
-        await CacheService.SetAsync(cacheKey, result, TimeSpan.FromMinutes(5), cancellationToken);
-
-        Logger.LogInformation(
-            "Retrieved {Count} favorites for user {UserId} (Page {Page}/{TotalPages})",
-            favoriteResponses.Count,
-            userId,
-            query.Page,
-            result.TotalPages);
-
-        return Result<PagedResult<FavoriteProductResponse>>.Success(result);
+            _loggingService.LogError("Error getting user favorites", ex, new { userId, Page = query.Page, PageSize = query.PageSize });
+            return ServiceResult.HandleException<PagedResult<FavoriteProductResponse>>(ex, _logger, "GetUserFavorites");
+        }
     }
 
     public async Task<Result> AddToFavoritesAsync(
@@ -112,22 +105,23 @@ public class FavoritesService : BaseService, IFavoritesService
         CancellationToken cancellationToken)
     {
         // Check if product exists
-        var product = await UnitOfWork.Repository<Product>()
+        var product = await _unitOfWork.Repository<Product>()
             .GetByIdAsync(productId, cancellationToken);
         
         if (product == null)
         {
-            return Result.Failure(ErrorCodes.ProductNotFound, "Product not found");
+            return Result.Fail("Product not found", ErrorCodes.PRODUCT_NOT_FOUND);
         }
 
         // Check if already in favorites
-        var existingFavorite = await UnitOfWork.Repository<FavoriteProduct>()
-            .GetQueryable()
-            .FirstOrDefaultAsync(f => f.UserId == userId && f.ProductId == productId, cancellationToken);
+        var existingFavorite = await _unitOfWork.ReadRepository<FavoriteProduct>()
+            .FirstOrDefaultAsync(
+                f => f.UserId == userId && f.ProductId == productId,
+                cancellationToken: cancellationToken);
 
         if (existingFavorite != null)
         {
-            return Result.Failure(ErrorCodes.AlreadyExists, "Product already in favorites");
+            return Result.Fail("Product already in favorites", ErrorCodes.PRODUCT_ALREADY_IN_FAVORITES);
         }
 
         // Add to favorites
@@ -139,14 +133,14 @@ public class FavoritesService : BaseService, IFavoritesService
             AddedAt = DateTime.UtcNow
         };
 
-        await UnitOfWork.Repository<FavoriteProduct>().AddAsync(favorite, cancellationToken);
-        await UnitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<FavoriteProduct>().AddAsync(favorite, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Invalidate cache
-        await InvalidateFavoritesCacheAsync(userId, cancellationToken);
+        await InvalidateCacheAsync($"user_favorites_{userId}_*", cancellationToken);
 
-        Logger.LogInformation("Product {ProductId} added to favorites for user {UserId}", productId, userId);
-        return Result.Success();
+        _logger.LogInformation("Product {ProductId} added to favorites for user {UserId}", productId, userId);
+        return Result.Ok();
     }
 
     public async Task<Result> RemoveFromFavoritesAsync(
@@ -166,23 +160,24 @@ public class FavoritesService : BaseService, IFavoritesService
         Guid productId,
         CancellationToken cancellationToken)
     {
-        var favorite = await UnitOfWork.Repository<FavoriteProduct>()
-            .GetQueryable()
-            .FirstOrDefaultAsync(f => f.UserId == userId && f.ProductId == productId, cancellationToken);
+        var favorite = await _unitOfWork.ReadRepository<FavoriteProduct>()
+            .FirstOrDefaultAsync(
+                f => f.UserId == userId && f.ProductId == productId,
+                cancellationToken: cancellationToken);
 
         if (favorite == null)
         {
-            return Result.Failure(ErrorCodes.NotFound, "Favorite not found");
+            return Result.Fail("Favorite not found", ErrorCodes.PRODUCT_NOT_IN_FAVORITES);
         }
 
-        UnitOfWork.Repository<FavoriteProduct>().Delete(favorite);
-        await UnitOfWork.SaveChangesAsync(cancellationToken);
+        _unitOfWork.Repository<FavoriteProduct>().Delete(favorite);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Invalidate cache
-        await InvalidateFavoritesCacheAsync(userId, cancellationToken);
+        await InvalidateCacheAsync($"user_favorites_{userId}_*", cancellationToken);
 
-        Logger.LogInformation("Product {ProductId} removed from favorites for user {UserId}", productId, userId);
-        return Result.Success();
+        _logger.LogInformation("Product {ProductId} removed from favorites for user {UserId}", productId, userId);
+        return Result.Ok();
     }
 
     public async Task<Result<bool>> IsFavoriteAsync(
@@ -190,18 +185,9 @@ public class FavoritesService : BaseService, IFavoritesService
         Guid productId,
         CancellationToken cancellationToken = default)
     {
-        var exists = await UnitOfWork.Repository<FavoriteProduct>()
-            .GetQueryable()
+        var exists = await _unitOfWork.ReadRepository<FavoriteProduct>()
             .AnyAsync(f => f.UserId == userId && f.ProductId == productId, cancellationToken);
 
-        return Result<bool>.Success(exists);
-    }
-
-    private async Task InvalidateFavoritesCacheAsync(Guid userId, CancellationToken cancellationToken)
-    {
-        // Invalidate all cache entries for this user's favorites
-        var cacheKeyPattern = $"user_favorites_{userId}_*";
-        await CacheService.RemoveByPatternAsync(cacheKeyPattern, cancellationToken);
+        return Result.Ok(exists);
     }
 }
-

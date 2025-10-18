@@ -327,6 +327,8 @@ public class OrderService : BaseService, IOrderService
                 order.PaymentMethod,
                 order.PaymentStatus,
                 order.DeliveryAddress,
+                order.DeliveryLatitude,
+                order.DeliveryLongitude,
                 order.EstimatedDeliveryTime,
                 order.CreatedAt,
                 orderLines.Select(ol => new OrderLineResponse(
@@ -402,6 +404,8 @@ public class OrderService : BaseService, IOrderService
                 order.PaymentMethod,
                 order.PaymentStatus,
                 order.DeliveryAddress,
+                order.DeliveryLatitude,
+                order.DeliveryLongitude,
                 order.EstimatedDeliveryTime,
                 order.CreatedAt,
                 order.OrderLines.Select(ol => new OrderLineResponse(
@@ -532,6 +536,8 @@ public class OrderService : BaseService, IOrderService
             o.PaymentMethod,
             o.PaymentStatus,
             o.DeliveryAddress,
+            o.DeliveryLatitude,
+            o.DeliveryLongitude,
             o.EstimatedDeliveryTime,
             o.CreatedAt,
             o.OrderLines.Select(ol => new OrderLineResponse(
@@ -1012,26 +1018,69 @@ public class OrderService : BaseService, IOrderService
             return Result.Fail<OrderDetailsResponse>("Order not found or access denied", ErrorCodes.ORDER_NOT_FOUND);
         }
 
+        // Get OrderLines with product details
+        var orderLines = await _unitOfWork.Repository<OrderLine>().ListAsync(
+            filter: ol => ol.OrderId == orderId,
+            include: "Product,Options",
+            cancellationToken: cancellationToken);
+
+        var items = orderLines.Select(ol => new OrderLineResponse(
+            Id: ol.Id,
+            ProductId: ol.ProductId,
+            ProductVariantId: ol.ProductVariantId,
+            ProductName: ol.ProductName,
+            VariantName: ol.VariantName,
+            Quantity: ol.Quantity,
+            UnitPrice: ol.UnitPrice,
+            TotalPrice: ol.TotalPrice,
+            Options: ol.Options?.Select(o => new OrderLineOptionResponse(
+                Id: o.Id,
+                ProductOptionId: o.ProductOptionId,
+                OptionName: o.OptionName,
+                ExtraPrice: o.ExtraPrice,
+                CreatedAt: o.CreatedAt
+            )).ToList() ?? new List<OrderLineOptionResponse>()
+        )).ToList();
+
+        // Get order timeline from status transition logs
+        var timeline = await _unitOfWork.Repository<OrderStatusTransitionLog>().ListAsync(
+            filter: t => t.OrderId == orderId,
+            orderBy: t => t.ChangedAt,
+            ascending: true,
+            cancellationToken: cancellationToken);
+
+        var timelineResponses = timeline.Select(t => new OrderTimelineResponse(
+            Timestamp: t.ChangedAt,
+            Status: t.ToStatus.ToString(),
+            Description: t.Reason ?? $"Order status changed to {t.ToStatus}",
+            ActorName: t.ChangedByRole
+        )).ToList();
+
+        // Get payment information if available
+        var payment = await _unitOfWork.Repository<Payment>().FirstOrDefaultAsync(
+            filter: p => p.OrderId == orderId,
+            cancellationToken: cancellationToken);
+
         var response = new OrderDetailsResponse(
             Id: order.Id,
             OrderNumber: order.OrderNumber,
             MerchantId: order.MerchantId,
-            MerchantName: order.Merchant?.Name ?? "Unknown", // Nullable reference type warning suppressed
+            MerchantName: order.Merchant?.Name ?? "Unknown",
             CustomerId: order.UserId,
-            CustomerName: "Customer", // TODO: Get from user service
+            CustomerName: $"{order.User?.FirstName ?? ""} {order.User?.LastName ?? ""}".Trim() == "" ? "Customer" : $"{order.User?.FirstName} {order.User?.LastName}",
             Status: order.Status.ToString(),
             SubTotal: order.SubTotal,
             DeliveryFee: order.DeliveryFee,
-            Discount: 0, // TODO: Add DiscountAmount property to Order entity
+            Discount: order.Discount,
             Total: order.Total,
-            PaymentMethod: "Cash", // TODO: Get from payment
-            PaymentStatus: "Pending", // TODO: Get from payment
-            DeliveryAddress: order.DeliveryAddress ?? "Unknown", // Nullable reference type warning suppressed
+            PaymentMethod: payment?.PaymentMethod.ToString() ?? order.PaymentMethod,
+            PaymentStatus: payment?.Status.ToString() ?? order.PaymentStatus,
+            DeliveryAddress: order.DeliveryAddress ?? "Unknown",
             EstimatedDeliveryTime: order.EstimatedDeliveryTime,
             CreatedAt: order.CreatedAt,
-            CompletedAt: null, // TODO: Add CompletedAt property to Order entity
-            Items: new List<OrderLineResponse>(), // TODO: Get order items
-            Timeline: new List<OrderTimelineResponse>() // TODO: Get timeline
+            CompletedAt: order.ActualDeliveryTime,
+            Items: items,
+            Timeline: timelineResponses
         );
 
         return Result.Ok(response);
@@ -1418,6 +1467,8 @@ public class OrderService : BaseService, IOrderService
             PaymentMethod: order.PaymentMethod,
             PaymentStatus: order.PaymentStatus.ToString(),
             DeliveryAddress: order.DeliveryAddress,
+            DeliveryLatitude: order.DeliveryLatitude,
+            DeliveryLongitude: order.DeliveryLongitude,
             EstimatedDeliveryTime: order.EstimatedDeliveryTime,
             CreatedAt: order.CreatedAt,
             Items: order.OrderLines?.Select(ol => new OrderLineResponse(

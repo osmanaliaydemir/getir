@@ -103,8 +103,13 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
 });
 
 // ============= CONFIGURATION =============
-// Add Controllers
-builder.Services.AddControllers();
+// Add Controllers with JSON options (camelCase for mobile compatibility)
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.WriteIndented = false; // Production performance
+    });
 
 builder.Services.AddAuthConfiguration(builder.Configuration);
 builder.Services.AddApiKeyConfiguration(builder.Configuration);
