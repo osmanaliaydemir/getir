@@ -36,6 +36,9 @@ builder.Services.AddDataProtection()
 // Localization
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
+// Add specific resource localization
+builder.Services.AddScoped<IStringLocalizer<SharedResources>, StringLocalizer<SharedResources>>();
+
 // Configure supported cultures
 var supportedCultures = new[]
 {

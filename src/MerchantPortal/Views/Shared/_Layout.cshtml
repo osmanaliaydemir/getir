@@ -9,6 +9,11 @@
     // DEBUG: Test localizer
     var dashboardTest = SharedLocalizer["Dashboard"];
     var ordersTest = SharedLocalizer["Orders"];
+    var appTitleTest = SharedLocalizer["AppTitle"];
+    
+    // Force resource loading test
+    var resourceManager = new System.Resources.ResourceManager("Getir.MerchantPortal.Resources.SharedResources", typeof(SharedResources).Assembly);
+    var dashboardFromResourceManager = resourceManager.GetString("Dashboard", currentCulture);
 }
 <!DOCTYPE html>
 <html lang="@langCode" dir="@(isRtl ? "rtl" : "ltr")">
@@ -165,7 +170,7 @@
         <div class="sidebar">
             <div class="sidebar-brand">
                 <i class="fas fa-store"></i> @SharedLocalizer["AppTitle"]
-                <!-- DEBUG: @dashboardTest | @ordersTest -->
+                <!-- DEBUG: @dashboardTest | @ordersTest | @appTitleTest | ResourceManager: @dashboardFromResourceManager -->
             </div>
             <nav class="sidebar-nav">
                 <a href="@Url.Action("Index", "Dashboard")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")">
