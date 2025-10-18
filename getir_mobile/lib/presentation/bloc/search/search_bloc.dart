@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/errors/app_exceptions.dart';
+import '../../../core/models/pagination_model.dart';
 import 'search_event.dart';
 import 'search_state.dart';
 import '../../../domain/services/merchant_service.dart';
@@ -25,6 +26,8 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     on<SearchHistoryLoaded>(_onSearchHistoryLoaded);
     on<SearchHistoryCleared>(_onSearchHistoryCleared);
     on<SearchHistoryItemRemoved>(_onSearchHistoryItemRemoved);
+    on<LoadMoreSearchResults>(_onLoadMoreSearchResults);
+    on<RefreshSearchResults>(_onRefreshSearchResults);
   }
 
   Future<void> _onSearchQueryChanged(
@@ -222,6 +225,89 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     } catch (e) {
       emit(SearchError(e.toString()));
     }
+  }
+
+  // 🔄 ============= PAGINATION HANDLERS =============
+
+  Future<void> _onLoadMoreSearchResults(
+    LoadMoreSearchResults event,
+    Emitter<SearchState> emit,
+  ) async {
+    if (state is! SearchSuccess) return;
+    final currentState = state as SearchSuccess;
+
+    if (currentState.searchType == SearchType.products &&
+        currentState.productPagination != null &&
+        currentState.productPagination!.hasNextPage) {
+      final nextPage = currentState.productPagination!.nextPage;
+      final result = await _productService.searchProducts(
+        currentState.query,
+        page: nextPage,
+      );
+
+      result.when(
+        success: (newProducts) {
+          final updatedProducts = [...currentState.products, ...newProducts];
+          final updatedPagination = currentState.productPagination!
+              .addItems(newProducts)
+              .copyWith(
+                currentPage: nextPage,
+                hasNextPage: newProducts.length >= 20,
+              );
+          emit(
+            SearchSuccess(
+              merchants: currentState.merchants,
+              products: updatedProducts,
+              query: currentState.query,
+              searchType: currentState.searchType,
+              productPagination: updatedPagination,
+              merchantPagination: currentState.merchantPagination,
+            ),
+          );
+        },
+        failure: (_) {},
+      );
+    } else if (currentState.searchType == SearchType.merchants &&
+        currentState.merchantPagination != null &&
+        currentState.merchantPagination!.hasNextPage) {
+      final nextPage = currentState.merchantPagination!.nextPage;
+      final result = await _merchantService.searchMerchants(
+        currentState.query,
+        page: nextPage,
+      );
+
+      result.when(
+        success: (newMerchants) {
+          final updatedMerchants = [...currentState.merchants, ...newMerchants];
+          final updatedPagination = currentState.merchantPagination!
+              .addItems(newMerchants)
+              .copyWith(
+                currentPage: nextPage,
+                hasNextPage: newMerchants.length >= 20,
+              );
+          emit(
+            SearchSuccess(
+              merchants: updatedMerchants,
+              products: currentState.products,
+              query: currentState.query,
+              searchType: currentState.searchType,
+              merchantPagination: updatedPagination,
+              productPagination: currentState.productPagination,
+            ),
+          );
+        },
+        failure: (_) {},
+      );
+    }
+  }
+
+  Future<void> _onRefreshSearchResults(
+    RefreshSearchResults event,
+    Emitter<SearchState> emit,
+  ) async {
+    if (state is! SearchSuccess) return;
+    final currentState = state as SearchSuccess;
+    add(SearchSubmitted(currentState.query));
   }
 
   @override

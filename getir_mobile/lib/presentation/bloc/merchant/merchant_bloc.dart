@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../core/errors/app_exceptions.dart';
+import '../../../core/models/pagination_model.dart';
 import '../../../domain/entities/merchant.dart';
 import '../../../domain/services/merchant_service.dart';
 
@@ -94,6 +95,21 @@ class LoadNearbyMerchantsByCategory extends MerchantEvent {
   List<Object> get props => [latitude, longitude, categoryType, radius];
 }
 
+// 🔄 Pagination Events
+class LoadMoreMerchants extends MerchantEvent {
+  const LoadMoreMerchants();
+}
+
+class RefreshMerchants extends MerchantEvent {
+  final String? search;
+  final String? category;
+
+  const RefreshMerchants({this.search, this.category});
+
+  @override
+  List<Object?> get props => [search, category];
+}
+
 // States
 abstract class MerchantState extends Equatable {
   const MerchantState();
@@ -117,11 +133,15 @@ class MerchantLoaded extends MerchantState {
 
 class MerchantsLoaded extends MerchantState {
   final List<Merchant> merchants;
+  final PaginationModel<Merchant>? pagination;
 
-  const MerchantsLoaded(this.merchants);
+  const MerchantsLoaded(this.merchants, {this.pagination});
 
   @override
-  List<Object> get props => [merchants];
+  List<Object?> get props => [merchants, pagination];
+
+  bool get hasPagination => pagination != null;
+  bool get canLoadMore => pagination?.hasNextPage ?? false;
 }
 
 class MerchantError extends MerchantState {
@@ -143,6 +163,8 @@ class MerchantBloc extends Bloc<MerchantEvent, MerchantState> {
     on<SearchMerchants>(_onSearchMerchants);
     on<LoadNearbyMerchants>(_onLoadNearbyMerchants);
     on<LoadNearbyMerchantsByCategory>(_onLoadNearbyMerchantsByCategory);
+    on<LoadMoreMerchants>(_onLoadMoreMerchants);
+    on<RefreshMerchants>(_onRefreshMerchants);
   }
 
   Future<void> _onLoadMerchants(
@@ -250,5 +272,99 @@ class MerchantBloc extends Bloc<MerchantEvent, MerchantState> {
       return exception.message;
     }
     return 'An unexpected error occurred';
+  }
+
+  // 🔄 ============= PAGINATION HANDLERS =============
+
+  Future<void> _onLoadMoreMerchants(
+    LoadMoreMerchants event,
+    Emitter<MerchantState> emit,
+  ) async {
+    if (state is! MerchantsLoaded) return;
+    final currentState = state as MerchantsLoaded;
+
+    if (currentState.pagination == null ||
+        !currentState.pagination!.hasNextPage ||
+        currentState.pagination!.isLoading) {
+      return;
+    }
+
+    final loadingPagination = currentState.pagination!.setLoading(true);
+    emit(
+      MerchantsLoaded(currentState.merchants, pagination: loadingPagination),
+    );
+
+    final nextPage = currentState.pagination!.nextPage;
+    final result = await _merchantService.getMerchants(
+      page: nextPage,
+      limit: 20,
+    );
+
+    result.when(
+      success: (newMerchants) {
+        final updatedMerchants = [...currentState.merchants, ...newMerchants];
+        final updatedPagination = currentState.pagination!
+            .addItems(newMerchants)
+            .copyWith(
+              currentPage: nextPage,
+              hasNextPage: newMerchants.length >= 20,
+              isLoading: false,
+            );
+        emit(MerchantsLoaded(updatedMerchants, pagination: updatedPagination));
+      },
+      failure: (exception) {
+        final errorPagination = currentState.pagination!.setLoading(false);
+        emit(
+          MerchantsLoaded(currentState.merchants, pagination: errorPagination),
+        );
+      },
+    );
+  }
+
+  Future<void> _onRefreshMerchants(
+    RefreshMerchants event,
+    Emitter<MerchantState> emit,
+  ) async {
+    if (state is MerchantsLoaded) {
+      final currentState = state as MerchantsLoaded;
+      if (currentState.pagination != null) {
+        final refreshingPagination = currentState.pagination!.setRefreshing(
+          true,
+        );
+        emit(
+          MerchantsLoaded(
+            currentState.merchants,
+            pagination: refreshingPagination,
+          ),
+        );
+      }
+    }
+
+    final result = await _merchantService.getMerchants(
+      page: 1,
+      limit: 20,
+      search: event.search,
+      category: event.category,
+    );
+
+    result.when(
+      success: (merchants) {
+        final pagination = PaginationModel<Merchant>(
+          items: merchants,
+          currentPage: 1,
+          totalPages: 999,
+          totalItems: merchants.length,
+          hasNextPage: merchants.length >= 20,
+          hasPreviousPage: false,
+          isLoading: false,
+          isRefreshing: false,
+        );
+        emit(MerchantsLoaded(merchants, pagination: pagination));
+      },
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(MerchantError(message));
+      },
+    );
   }
 }

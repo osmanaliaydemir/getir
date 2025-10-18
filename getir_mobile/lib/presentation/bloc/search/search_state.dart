@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../../core/models/pagination_model.dart';
 import '../../../domain/entities/merchant.dart';
 import '../../../domain/entities/product.dart';
 import 'search_event.dart';
@@ -37,18 +38,31 @@ class SearchSuccess extends SearchState {
   final List<Product> products;
   final String query;
   final SearchType searchType;
+  final PaginationModel<Merchant>? merchantPagination;
+  final PaginationModel<Product>? productPagination;
 
   const SearchSuccess({
     required this.merchants,
     required this.products,
     required this.query,
     required this.searchType,
+    this.merchantPagination,
+    this.productPagination,
   });
 
   bool get isEmpty => merchants.isEmpty && products.isEmpty;
+  bool get canLoadMoreMerchants => merchantPagination?.hasNextPage ?? false;
+  bool get canLoadMoreProducts => productPagination?.hasNextPage ?? false;
 
   @override
-  List<Object?> get props => [merchants, products, query, searchType];
+  List<Object?> get props => [
+    merchants,
+    products,
+    query,
+    searchType,
+    merchantPagination,
+    productPagination,
+  ];
 }
 
 class SearchError extends SearchState {
@@ -72,4 +86,3 @@ class SearchHistoryUpdated extends SearchState {
   @override
   List<Object?> get props => [searchHistory, currentSearchType];
 }
-

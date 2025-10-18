@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../core/errors/app_exceptions.dart';
+import '../../../core/models/pagination_model.dart';
 import '../../../domain/entities/notification.dart';
 import '../../../domain/repositories/notifications_feed_repository.dart';
 
@@ -15,6 +16,8 @@ class NotificationsFeedBloc
     : super(NotificationsFeedInitial()) {
     on<LoadNotificationsFeed>(_onLoad);
     on<MarkNotificationRead>(_onMarkRead);
+    on<LoadMoreNotifications>(_onLoadMore);
+    on<RefreshNotifications>(_onRefresh);
   }
 
   Future<void> _onLoad(
@@ -78,5 +81,72 @@ class NotificationsFeedBloc
       return exception.message;
     }
     return 'An unexpected error occurred';
+  }
+
+  // 🔄 ============= PAGINATION HANDLERS =============
+
+  Future<void> _onLoadMore(
+    LoadMoreNotifications event,
+    Emitter<NotificationsFeedState> emit,
+  ) async {
+    if (state is! NotificationsFeedLoaded) return;
+    final currentState = state as NotificationsFeedLoaded;
+
+    if (currentState.pagination == null ||
+        !currentState.pagination!.hasNextPage ||
+        currentState.pagination!.isLoading) {
+      return;
+    }
+
+    final loadingPagination = currentState.pagination!.setLoading(true);
+    emit(NotificationsFeedLoaded(currentState.items, pagination: loadingPagination));
+
+    final nextPage = currentState.pagination!.nextPage;
+    final result = await repository.getNotifications(page: nextPage, pageSize: 20);
+
+    result.when(
+      success: (newItems) {
+        final updatedItems = [...currentState.items, ...newItems];
+        final updatedPagination = currentState.pagination!
+            .addItems(newItems)
+            .copyWith(
+              currentPage: nextPage,
+              hasNextPage: newItems.length >= 20,
+              isLoading: false,
+            );
+        emit(NotificationsFeedLoaded(updatedItems, pagination: updatedPagination));
+      },
+      failure: (exception) {
+        final errorPagination = currentState.pagination!.setLoading(false);
+        emit(NotificationsFeedLoaded(currentState.items, pagination: errorPagination));
+      },
+    );
+  }
+
+  Future<void> _onRefresh(
+    RefreshNotifications event,
+    Emitter<NotificationsFeedState> emit,
+  ) async {
+    final result = await repository.getNotifications(page: 1, pageSize: 20);
+
+    result.when(
+      success: (items) {
+        final pagination = PaginationModel<AppNotification>(
+          items: items,
+          currentPage: 1,
+          totalPages: 999,
+          totalItems: items.length,
+          hasNextPage: items.length >= 20,
+          hasPreviousPage: false,
+          isLoading: false,
+          isRefreshing: false,
+        );
+        emit(NotificationsFeedLoaded(items, pagination: pagination));
+      },
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(NotificationsFeedError(message));
+      },
+    );
   }
 }

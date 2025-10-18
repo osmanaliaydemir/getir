@@ -15,3 +15,8 @@ class LoadOrderDetails extends OrdersEvent {
   @override
   List<Object?> get props => [orderId];
 }
+
+// 🔄 Pagination Events
+class LoadMoreOrders extends OrdersEvent {}
+
+class RefreshOrders extends OrdersEvent {}

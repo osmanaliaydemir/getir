@@ -11,10 +11,15 @@ class OrdersLoading extends OrdersState {}
 
 class OrdersLoaded extends OrdersState {
   final List<Order> orders;
-  OrdersLoaded(this.orders);
+  final PaginationModel<Order>? pagination;
+
+  OrdersLoaded(this.orders, {this.pagination});
 
   @override
-  List<Object?> get props => [orders];
+  List<Object?> get props => [orders, pagination];
+
+  bool get hasPagination => pagination != null;
+  bool get canLoadMore => pagination?.hasNextPage ?? false;
 }
 
 class OrderDetailsLoaded extends OrdersState {

@@ -11,10 +11,15 @@ class FavoritesLoading extends FavoritesState {}
 
 class FavoritesLoaded extends FavoritesState {
   final List<FavoriteProduct> favorites;
-  FavoritesLoaded(this.favorites);
+  final PaginationModel<FavoriteProduct>? pagination;
+
+  FavoritesLoaded(this.favorites, {this.pagination});
 
   @override
-  List<Object?> get props => [favorites];
+  List<Object?> get props => [favorites, pagination];
+
+  bool get hasPagination => pagination != null;
+  bool get canLoadMore => pagination?.hasNextPage ?? false;
 }
 
 class FavoritesError extends FavoritesState {

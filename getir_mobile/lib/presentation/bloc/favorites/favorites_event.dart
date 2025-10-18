@@ -24,3 +24,8 @@ class RemoveFromFavorites extends FavoritesEvent {
   @override
   List<Object?> get props => [productId];
 }
+
+// 🔄 Pagination Events
+class LoadMoreFavorites extends FavoritesEvent {}
+
+class RefreshFavorites extends FavoritesEvent {}
