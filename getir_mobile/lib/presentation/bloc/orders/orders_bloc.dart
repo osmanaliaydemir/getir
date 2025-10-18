@@ -106,7 +106,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       }
     }
 
-    final result = await _ordersService.getUserOrders(page: 1);
+    final result = await _ordersService.getUserOrders();
 
     result.when(
       success: (orders) {

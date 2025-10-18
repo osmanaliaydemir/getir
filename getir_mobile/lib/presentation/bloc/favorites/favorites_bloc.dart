@@ -128,7 +128,7 @@ class FavoritesBloc extends Bloc<FavoritesEvent, FavoritesState> {
     RefreshFavorites event,
     Emitter<FavoritesState> emit,
   ) async {
-    final result = await _favoritesService.getFavorites(page: 1);
+    final result = await _favoritesService.getFavorites();
 
     result.when(
       success: (favorites) {

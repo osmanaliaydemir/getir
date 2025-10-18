@@ -29,8 +29,12 @@ class MerchantService {
     return await _repository.getMerchantById(merchantId);
   }
 
-  Future<Result<List<Merchant>>> searchMerchants(String query) async {
-    return await _repository.searchMerchants(query);
+  Future<Result<List<Merchant>>> searchMerchants(
+    String query, {
+    int page = 1,
+    int limit = 20,
+  }) async {
+    return await _repository.searchMerchants(query, page: page, limit: limit);
   }
 
   Future<Result<List<Merchant>>> getNearbyMerchants({

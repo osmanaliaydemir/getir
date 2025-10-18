@@ -11,9 +11,15 @@ class FavoritesRepositoryImpl implements IFavoritesRepository {
   FavoritesRepositoryImpl(this._dataSource);
 
   @override
-  Future<Result<List<FavoriteProduct>>> getFavorites() async {
+  Future<Result<List<FavoriteProduct>>> getFavorites({
+    int page = 1,
+    int limit = 20,
+  }) async {
     try {
-      final favorites = await _dataSource.getFavorites();
+      final favorites = await _dataSource.getFavorites(
+        page: page,
+        limit: limit,
+      );
       return Result.success(favorites);
     } on DioException catch (e) {
       return Result.failure(ExceptionFactory.fromDioError(e));

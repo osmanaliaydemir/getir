@@ -3,17 +3,18 @@ import 'package:equatable/equatable.dart';
 import '../../../core/errors/app_exceptions.dart';
 import '../../../core/models/pagination_model.dart';
 import '../../../domain/entities/notification.dart';
-import '../../../domain/repositories/notifications_feed_repository.dart';
+import '../../../domain/services/notifications_feed_service.dart';
 
 part 'notifications_feed_event.dart';
 part 'notifications_feed_state.dart';
 
 class NotificationsFeedBloc
     extends Bloc<NotificationsFeedEvent, NotificationsFeedState> {
-  final INotificationsFeedRepository repository;
+  final NotificationsFeedService _service;
 
-  NotificationsFeedBloc({required this.repository})
-    : super(NotificationsFeedInitial()) {
+  NotificationsFeedBloc({required NotificationsFeedService service})
+    : _service = service,
+      super(NotificationsFeedInitial()) {
     on<LoadNotificationsFeed>(_onLoad);
     on<MarkNotificationRead>(_onMarkRead);
     on<LoadMoreNotifications>(_onLoadMore);
@@ -26,7 +27,7 @@ class NotificationsFeedBloc
   ) async {
     emit(NotificationsFeedLoading());
 
-    final result = await repository.getNotifications(
+    final result = await _service.getNotifications(
       page: event.page,
       pageSize: event.pageSize,
     );
@@ -44,7 +45,7 @@ class NotificationsFeedBloc
     MarkNotificationRead event,
     Emitter<NotificationsFeedState> emit,
   ) async {
-    final result = await repository.markAsRead(event.notificationId);
+    final result = await _service.markAsRead(event.notificationId);
 
     result.when(
       success: (_) {
@@ -99,10 +100,18 @@ class NotificationsFeedBloc
     }
 
     final loadingPagination = currentState.pagination!.setLoading(true);
-    emit(NotificationsFeedLoaded(currentState.items, pagination: loadingPagination));
+    emit(
+      NotificationsFeedLoaded(
+        currentState.items,
+        pagination: loadingPagination,
+      ),
+    );
 
     final nextPage = currentState.pagination!.nextPage;
-    final result = await repository.getNotifications(page: nextPage, pageSize: 20);
+    final result = await _service.getNotifications(
+      page: nextPage,
+      pageSize: 20,
+    );
 
     result.when(
       success: (newItems) {
@@ -114,11 +123,18 @@ class NotificationsFeedBloc
               hasNextPage: newItems.length >= 20,
               isLoading: false,
             );
-        emit(NotificationsFeedLoaded(updatedItems, pagination: updatedPagination));
+        emit(
+          NotificationsFeedLoaded(updatedItems, pagination: updatedPagination),
+        );
       },
       failure: (exception) {
         final errorPagination = currentState.pagination!.setLoading(false);
-        emit(NotificationsFeedLoaded(currentState.items, pagination: errorPagination));
+        emit(
+          NotificationsFeedLoaded(
+            currentState.items,
+            pagination: errorPagination,
+          ),
+        );
       },
     );
   }
@@ -127,7 +143,7 @@ class NotificationsFeedBloc
     RefreshNotifications event,
     Emitter<NotificationsFeedState> emit,
   ) async {
-    final result = await repository.getNotifications(page: 1, pageSize: 20);
+    final result = await _service.getNotifications(page: 1, pageSize: 20);
 
     result.when(
       success: (items) {

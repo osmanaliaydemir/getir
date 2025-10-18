@@ -10,8 +10,11 @@ class OrdersService {
 
   const OrdersService(this._repository);
 
-  Future<Result<List<Order>>> getUserOrders() async {
-    return await _repository.getUserOrders();
+  Future<Result<List<Order>>> getUserOrders({
+    int page = 1,
+    int limit = 20,
+  }) async {
+    return await _repository.getUserOrders(page: page, limit: limit);
   }
 
   Future<Result<Order>> getOrderDetails(String orderId) async {

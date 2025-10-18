@@ -14,7 +14,11 @@ abstract class MerchantDataSource {
   });
 
   Future<Merchant> getMerchantById(String id);
-  Future<List<Merchant>> searchMerchants(String query);
+  Future<List<Merchant>> searchMerchants(
+    String query, {
+    int page = 1,
+    int limit = 20,
+  });
   Future<List<Merchant>> getNearbyMerchants({
     required double latitude,
     required double longitude,
@@ -76,11 +80,19 @@ class MerchantDataSourceImpl implements MerchantDataSource {
   }
 
   @override
-  Future<List<Merchant>> searchMerchants(String query) async {
+  Future<List<Merchant>> searchMerchants(
+    String query, {
+    int page = 1,
+    int limit = 20,
+  }) async {
     try {
       final response = await _dio.get(
         '/api/v1/search/merchants',
-        queryParameters: {'query': query, 'pageNumber': 1, 'pageSize': 20},
+        queryParameters: {
+          'query': query,
+          'pageNumber': page,
+          'pageSize': limit,
+        },
       );
 
       final data = response.data['data'];

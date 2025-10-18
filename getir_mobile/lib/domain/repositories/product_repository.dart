@@ -11,7 +11,15 @@ abstract class IProductRepository {
   });
 
   Future<Result<Product>> getProductById(String id);
-  Future<Result<List<Product>>> getProductsByMerchant(String merchantId);
-  Future<Result<List<Product>>> searchProducts(String query);
+  Future<Result<List<Product>>> getProductsByMerchant(
+    String merchantId, {
+    int page = 1,
+    int limit = 20,
+  });
+  Future<Result<List<Product>>> searchProducts(
+    String query, {
+    int page = 1,
+    int limit = 20,
+  });
   Future<Result<List<String>>> getCategories();
 }

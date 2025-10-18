@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import '../../domain/entities/favorite_product.dart';
 
 abstract class FavoritesDataSource {
-  Future<List<FavoriteProduct>> getFavorites();
+  Future<List<FavoriteProduct>> getFavorites({int page = 1, int limit = 20});
   Future<void> addToFavorites(String productId);
   Future<void> removeFromFavorites(String productId);
   Future<bool> isFavorite(String productId);
@@ -13,8 +13,14 @@ class FavoritesDataSourceImpl implements FavoritesDataSource {
   FavoritesDataSourceImpl(this._dio);
 
   @override
-  Future<List<FavoriteProduct>> getFavorites() async {
-    final response = await _dio.get('/api/v1/user/favorites');
+  Future<List<FavoriteProduct>> getFavorites({
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final response = await _dio.get(
+      '/api/v1/user/favorites',
+      queryParameters: {'page': page, 'limit': limit},
+    );
 
     // Handle ApiResponse format
     final responseData = response.data;

@@ -81,6 +81,7 @@ import '../../domain/services/favorites_service.dart';
 import '../../domain/services/orders_service.dart';
 import '../../domain/services/language_service.dart';
 import '../../domain/services/notification_preferences_service.dart';
+import '../../domain/services/notifications_feed_service.dart';
 
 // Cubits (Global State)
 import '../cubits/network/network_cubit.dart';
@@ -289,6 +290,7 @@ void _registerServices() {
   getIt.registerFactory(() => OrdersService(getIt()));
   getIt.registerFactory(() => LanguageService(getIt()));
   getIt.registerFactory(() => NotificationPreferencesService(getIt()));
+  getIt.registerFactory(() => NotificationsFeedService(getIt()));
 }
 
 void _registerCubits(SharedPreferences prefs, NetworkService networkService) {
@@ -342,7 +344,7 @@ void _registerBlocs() {
   );
 
   // NotificationsFeedBloc
-  getIt.registerFactory(() => NotificationsFeedBloc(repository: getIt()));
+  getIt.registerFactory(() => NotificationsFeedBloc(service: getIt()));
 
   // ReviewBloc
   getIt.registerFactory(() => ReviewBloc(getIt<ReviewService>()));

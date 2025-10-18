@@ -2,7 +2,10 @@ import '../../core/errors/result.dart';
 import '../entities/order.dart';
 
 abstract class IOrdersRepository {
-  Future<Result<List<Order>>> getUserOrders();
+  Future<Result<List<Order>>> getUserOrders({
+    int page = 1,
+    int limit = 20,
+  });
   Future<Result<Order>> getOrderDetails(String orderId);
   Future<Result<Order>> createOrder({
     required String merchantId,

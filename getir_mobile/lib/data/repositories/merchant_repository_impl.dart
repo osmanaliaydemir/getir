@@ -59,9 +59,13 @@ class MerchantRepositoryImpl implements IMerchantRepository {
   }
 
   @override
-  Future<Result<List<Merchant>>> searchMerchants(String query) async {
+  Future<Result<List<Merchant>>> searchMerchants(
+    String query, {
+    int page = 1,
+    int limit = 20,
+  }) async {
     try {
-      final merchants = await _dataSource.searchMerchants(query);
+      final merchants = await _dataSource.searchMerchants(query, page: page, limit: limit);
       return Result.success(merchants);
     } on DioException catch (e) {
       return Result.failure(ExceptionFactory.fromDioError(e));

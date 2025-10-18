@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import '../../domain/entities/order.dart';
 
 abstract class OrdersDataSource {
-  Future<List<Order>> getUserOrders();
+  Future<List<Order>> getUserOrders({int page = 1, int limit = 20});
   Future<Order> getOrderDetails(String orderId);
   Future<Order> createOrder({
     required String merchantId,
@@ -21,8 +21,11 @@ class OrdersDataSourceImpl implements OrdersDataSource {
   OrdersDataSourceImpl(this._dio);
 
   @override
-  Future<List<Order>> getUserOrders() async {
-    final response = await _dio.get('/api/v1/user/orders');
+  Future<List<Order>> getUserOrders({int page = 1, int limit = 20}) async {
+    final response = await _dio.get(
+      '/api/v1/user/orders',
+      queryParameters: {'page': page, 'limit': limit},
+    );
 
     // Handle ApiResponse format
     final responseData = response.data;

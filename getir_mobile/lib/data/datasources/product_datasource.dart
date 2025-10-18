@@ -11,8 +11,16 @@ abstract class ProductDataSource {
   });
 
   Future<Product> getProductById(String id);
-  Future<List<Product>> getProductsByMerchant(String merchantId);
-  Future<List<Product>> searchProducts(String query);
+  Future<List<Product>> getProductsByMerchant(
+    String merchantId, {
+    int page = 1,
+    int limit = 20,
+  });
+  Future<List<Product>> searchProducts(
+    String query, {
+    int page = 1,
+    int limit = 20,
+  });
   Future<List<String>> getCategories();
 }
 
@@ -59,9 +67,16 @@ class ProductDataSourceImpl implements ProductDataSource {
   }
 
   @override
-  Future<List<Product>> getProductsByMerchant(String merchantId) async {
+  Future<List<Product>> getProductsByMerchant(
+    String merchantId, {
+    int page = 1,
+    int limit = 20,
+  }) async {
     try {
-      final response = await _dio.get('/api/v1/product/merchant/$merchantId');
+      final response = await _dio.get(
+        '/api/v1/product/merchant/$merchantId',
+        queryParameters: {'page': page, 'limit': limit},
+      );
       final List<dynamic> data = response.data['data'] ?? response.data;
       return data.map((json) => _productFromJson(json)).toList();
     } catch (e) {
@@ -70,11 +85,19 @@ class ProductDataSourceImpl implements ProductDataSource {
   }
 
   @override
-  Future<List<Product>> searchProducts(String query) async {
+  Future<List<Product>> searchProducts(
+    String query, {
+    int page = 1,
+    int limit = 20,
+  }) async {
     try {
       final response = await _dio.get(
         '/api/v1/search/products',
-        queryParameters: {'query': query, 'pageNumber': 1, 'pageSize': 20},
+        queryParameters: {
+          'query': query,
+          'pageNumber': page,
+          'pageSize': limit,
+        },
       );
 
       final data = response.data['data'];

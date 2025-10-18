@@ -13,7 +13,11 @@ abstract class IMerchantRepository {
   });
 
   Future<Result<Merchant>> getMerchantById(String id);
-  Future<Result<List<Merchant>>> searchMerchants(String query);
+  Future<Result<List<Merchant>>> searchMerchants(
+    String query, {
+    int page = 1,
+    int limit = 20,
+  });
   Future<Result<List<Merchant>>> getNearbyMerchants({
     required double latitude,
     required double longitude,

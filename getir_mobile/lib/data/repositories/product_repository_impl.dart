@@ -55,9 +55,17 @@ class ProductRepositoryImpl implements IProductRepository {
   }
 
   @override
-  Future<Result<List<Product>>> getProductsByMerchant(String merchantId) async {
+  Future<Result<List<Product>>> getProductsByMerchant(
+    String merchantId, {
+    int page = 1,
+    int limit = 20,
+  }) async {
     try {
-      final products = await _dataSource.getProductsByMerchant(merchantId);
+      final products = await _dataSource.getProductsByMerchant(
+        merchantId,
+        page: page,
+        limit: limit,
+      );
       return Result.success(products);
     } on DioException catch (e) {
       return Result.failure(ExceptionFactory.fromDioError(e));
@@ -73,9 +81,17 @@ class ProductRepositoryImpl implements IProductRepository {
   }
 
   @override
-  Future<Result<List<Product>>> searchProducts(String query) async {
+  Future<Result<List<Product>>> searchProducts(
+    String query, {
+    int page = 1,
+    int limit = 20,
+  }) async {
     try {
-      final products = await _dataSource.searchProducts(query);
+      final products = await _dataSource.searchProducts(
+        query,
+        page: page,
+        limit: limit,
+      );
       return Result.success(products);
     } on DioException catch (e) {
       return Result.failure(ExceptionFactory.fromDioError(e));

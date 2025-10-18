@@ -29,12 +29,24 @@ class ProductService {
     return await _repository.getProductById(productId);
   }
 
-  Future<Result<List<Product>>> getProductsByMerchant(String merchantId) async {
-    return await _repository.getProductsByMerchant(merchantId);
+  Future<Result<List<Product>>> getProductsByMerchant(
+    String merchantId, {
+    int page = 1,
+    int limit = 20,
+  }) async {
+    return await _repository.getProductsByMerchant(
+      merchantId,
+      page: page,
+      limit: limit,
+    );
   }
 
-  Future<Result<List<Product>>> searchProducts(String query) async {
-    return await _repository.searchProducts(query);
+  Future<Result<List<Product>>> searchProducts(
+    String query, {
+    int page = 1,
+    int limit = 20,
+  }) async {
+    return await _repository.searchProducts(query, page: page, limit: limit);
   }
 
   Future<Result<List<String>>> getCategories() async {

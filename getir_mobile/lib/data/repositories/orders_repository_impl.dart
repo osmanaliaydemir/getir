@@ -11,9 +11,12 @@ class OrdersRepositoryImpl implements IOrdersRepository {
   OrdersRepositoryImpl(this._dataSource);
 
   @override
-  Future<Result<List<Order>>> getUserOrders() async {
+  Future<Result<List<Order>>> getUserOrders({
+    int page = 1,
+    int limit = 20,
+  }) async {
     try {
-      final orders = await _dataSource.getUserOrders();
+      final orders = await _dataSource.getUserOrders(page: page, limit: limit);
       return Result.success(orders);
     } on DioException catch (e) {
       return Result.failure(ExceptionFactory.fromDioError(e));

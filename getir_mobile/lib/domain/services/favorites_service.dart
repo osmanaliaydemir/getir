@@ -10,8 +10,8 @@ class FavoritesService {
 
   const FavoritesService(this._repository);
 
-  Future<Result<List<FavoriteProduct>>> getFavorites() async {
-    return await _repository.getFavorites();
+  Future<Result<List<FavoriteProduct>>> getFavorites({int page = 1, int limit = 20}) async {
+    return await _repository.getFavorites(page: page, limit: limit);
   }
 
   Future<Result<void>> addToFavorites(String productId) async {
