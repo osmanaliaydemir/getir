@@ -63,6 +63,12 @@
   <data name="AppTitle" xml:space="preserve">
     <value>لوحة تاجر جتير</value>
   </data>
+  <data name="Welcome" xml:space="preserve">
+    <value>مرحبا</value>
+  </data>
+  <data name="TodayStats" xml:space="preserve">
+    <value>تحميل إحصائيات اليوم...</value>
+  </data>
   <data name="Dashboard" xml:space="preserve">
     <value>لوحة القيادة</value>
   </data>

@@ -63,6 +63,12 @@
   <data name="AppTitle" xml:space="preserve">
     <value>Getir Merchant Panel</value>
   </data>
+  <data name="Welcome" xml:space="preserve">
+    <value>Welcome</value>
+  </data>
+  <data name="TodayStats" xml:space="preserve">
+    <value>Loading today's statistics...</value>
+  </data>
   <data name="Dashboard" xml:space="preserve">
     <value>Dashboard</value>
   </data>
