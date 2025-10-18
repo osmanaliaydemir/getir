@@ -62,5 +62,4 @@ public class RestaurantProduct
     public virtual Restaurant Restaurant { get; set; } = default!;
     public virtual RestaurantMenuCategory? MenuCategory { get; set; }
     public virtual ICollection<RestaurantProductOption> Options { get; set; } = new List<RestaurantProductOption>();
-    public virtual ICollection<OrderLine> OrderLines { get; set; } = new List<OrderLine>();
 }

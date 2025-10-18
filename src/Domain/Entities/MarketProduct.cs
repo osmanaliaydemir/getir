@@ -82,5 +82,4 @@ public class MarketProduct
     public virtual Market Market { get; set; } = default!;
     public virtual MarketCategory? Category { get; set; }
     public virtual ICollection<MarketProductVariant> Variants { get; set; } = new List<MarketProductVariant>();
-    public virtual ICollection<OrderLine> OrderLines { get; set; } = new List<OrderLine>();
 }
