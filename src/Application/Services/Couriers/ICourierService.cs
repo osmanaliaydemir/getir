@@ -25,4 +25,11 @@ public interface ICourierService
     
     // Earnings methods
     Task<Result<CourierEarningsDetailResponse>> GetEarningsDetailAsync(CourierEarningsQuery query, CancellationToken cancellationToken = default);
+    
+    // SignalR Hub methods
+    Task<Result> UpdateLocationAsync(CourierLocationUpdateWithOrderRequest request, CancellationToken cancellationToken = default);
+    Task<Result<CourierLocationResponse>> GetCurrentLocationAsync(Guid courierId, CancellationToken cancellationToken = default);
+    Task<Result<List<CourierLocationHistoryItem>>> GetLocationHistoryAsync(Guid courierId, Guid orderId, CancellationToken cancellationToken = default);
+    Task<Result<List<CourierOrderResponse>>> GetAssignedOrdersAsync(Guid courierId, CancellationToken cancellationToken = default);
+    Task<Result> UpdateAvailabilityAsync(Guid courierId, Domain.Enums.CourierAvailabilityStatus status, CancellationToken cancellationToken = default);
 }

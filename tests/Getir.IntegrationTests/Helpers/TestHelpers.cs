@@ -1,5 +1,9 @@
 using System.Net.Http.Json;
 using Getir.Application.DTO;
+using Getir.Domain.Entities;
+using Getir.Domain.Enums;
+using Getir.Infrastructure.Persistence;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Getir.IntegrationTests.Helpers;
 
@@ -31,54 +35,115 @@ public static class TestHelpers
         return (authResponse!.AccessToken, authResponse.UserId);
     }
 
-    public static async Task<Guid> CreateTestMerchantAsync(HttpClient client)
+    /// <summary>
+    /// Creates test merchant directly in database (bypassing REST API)
+    /// This is faster and more reliable for test setup
+    /// </summary>
+    public static async Task<Guid> CreateTestMerchantAsync(IServiceProvider services, Guid? ownerId = null)
     {
-        var merchantRequest = new CreateMerchantRequest(
-            $"Test Merchant {Guid.NewGuid()}",
-            "Test Description",
-            Guid.Parse("11111111-1111-1111-1111-111111111111"),
-            "Test Address",
-            40.7128m,
-            -74.0060m,
-            "+905551234567",
-            $"merchant{Guid.NewGuid()}@example.com",
-            50.0m,
-            10.0m);
+        using var scope = services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        var response = await client.PostAsJsonAsync("/api/v1/merchant", merchantRequest);
-        
-        if (!response.IsSuccessStatusCode)
+        var merchantId = Guid.NewGuid();
+        var ownerUserId = ownerId ?? Guid.NewGuid();
+
+        // Create owner user if not provided
+        if (ownerId == null)
         {
-            var errorContent = await response.Content.ReadAsStringAsync();
-            throw new Exception($"Failed to create merchant. Status: {response.StatusCode}, Error: {errorContent}");
+            var owner = new User
+            {
+                Id = ownerUserId,
+                Email = $"merchant-owner-{merchantId}@test.com",
+                PasswordHash = "$2a$11$test",
+                FirstName = "Test",
+                LastName = "Merchant Owner",
+                Role = UserRole.MerchantOwner,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            dbContext.Users.Add(owner);
         }
-        
-        var merchant = await response.Content.ReadFromJsonAsync<MerchantResponse>();
-        return merchant!.Id;
+
+        var merchant = new Merchant
+        {
+            Id = merchantId,
+            OwnerId = ownerUserId,
+            Name = $"Test Merchant {Guid.NewGuid().ToString().Substring(0, 8)}",
+            Description = "Test merchant description",
+            ServiceCategoryId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+            Address = "123 Test Street",
+            Latitude = 40.7128m,
+            Longitude = -74.0060m,
+            PhoneNumber = "+905551234567",
+            Email = $"merchant{merchantId.ToString().Substring(0, 8)}@test.com",
+            MinimumOrderAmount = 50.0m,
+            DeliveryFee = 10.0m,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        dbContext.Merchants.Add(merchant);
+        await dbContext.SaveChangesAsync();
+
+        return merchantId;
     }
 
+    /// <summary>
+    /// Overload for HttpClient compatibility (gets DbContext from DI)
+    /// </summary>
+    public static async Task<Guid> CreateTestMerchantAsync(HttpClient client)
+    {
+        // This is a workaround - we need to get DbContext from somewhere
+        // For now, throw a helpful exception
+        throw new NotSupportedException(
+            "Use CreateTestMerchantAsync(IServiceProvider services) instead. " +
+            "Call from test class with _factory.Services");
+    }
+
+    /// <summary>
+    /// Creates test product directly in database
+    /// </summary>
+    public static async Task<Guid> CreateTestProductAsync(
+        IServiceProvider services,
+        Guid merchantId,
+        string name = "Test Product",
+        decimal price = 100.0m)
+    {
+        using var scope = services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var productId = Guid.NewGuid();
+
+        var product = new Product
+        {
+            Id = productId,
+            MerchantId = merchantId,
+            ProductCategoryId = null,
+            Name = name,
+            Description = "Test product description",
+            Price = price,
+            ImageUrl = null,
+            StockQuantity = 100,
+            Unit = "piece",
+            IsAvailable = true,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        dbContext.Products.Add(product);
+        await dbContext.SaveChangesAsync();
+
+        return productId;
+    }
+
+    /// <summary>
+    /// Overload for backward compatibility
+    /// </summary>
     public static async Task<Guid> CreateTestProductAsync(HttpClient client, Guid merchantId, string name = "Test Product", decimal price = 100.0m)
     {
-        var productRequest = new CreateProductRequest(
-            merchantId,
-            null,
-            name,
-            "Test product description",
-            price,
-            null,
-            10,
-            "piece");
-
-        var response = await client.PostAsJsonAsync("/api/v1/product", productRequest);
-        
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-            throw new Exception($"Failed to create product. Status: {response.StatusCode}, Error: {errorContent}");
-        }
-        
-        var product = await response.Content.ReadFromJsonAsync<ProductResponse>();
-        return product!.Id;
+        throw new NotSupportedException(
+            "Use CreateTestProductAsync(IServiceProvider services, Guid merchantId) instead. " +
+            "Call from test class with _factory.Services");
     }
 
     public static async Task<Guid> CreateTestAddressAsync(HttpClient client)
@@ -103,41 +168,126 @@ public static class TestHelpers
         return address!.Id;
     }
 
-    public static async Task<Guid> CreateTestOrderAsync(HttpClient client)
+    /// <summary>
+    /// Creates test order directly in database
+    /// </summary>
+    public static async Task<Guid> CreateTestOrderAsync(
+        IServiceProvider services,
+        Guid? userId = null,
+        Guid? merchantId = null,
+        Guid? productId = null)
     {
-        var merchantId = await CreateTestMerchantAsync(client);
-        var productId = await CreateTestProductAsync(client, merchantId);
+        using var scope = services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // Clear cart and add product
-        await client.DeleteAsync("/api/v1/cart/clear");
-        var addToCartRequest = new AddToCartRequest(merchantId, productId, 2, null);
-        await client.PostAsJsonAsync("/api/v1/cart/items", addToCartRequest);
+        // Create test user if not provided
+        var customerId = userId ?? Guid.NewGuid();
+        if (userId == null)
+        {
+            var customer = new User
+            {
+                Id = customerId,
+                Email = $"customer-{customerId}@test.com",
+                PasswordHash = "$2a$11$test",
+                FirstName = "Test",
+                LastName = "Customer",
+                Role = UserRole.Customer,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            dbContext.Users.Add(customer);
+        }
+
+        // Create merchant if not provided
+        var testMerchantId = merchantId ?? await CreateTestMerchantAsync(services);
+
+        // Create product if not provided
+        var testProductId = productId ?? await CreateTestProductAsync(services, testMerchantId);
 
         // Create order
-        var items = new List<OrderLineRequest>
+        var orderId = Guid.NewGuid();
+        var order = new Order
         {
-            new OrderLineRequest(productId, null, 2, null, null)
+            Id = orderId,
+            OrderNumber = $"TEST-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}",
+            UserId = customerId,
+            MerchantId = testMerchantId,
+            Status = OrderStatus.Pending,
+            SubTotal = 200.0m,
+            DeliveryFee = 10.0m,
+            Discount = 0m,
+            Total = 210.0m,
+            PaymentMethod = "CREDIT_CARD",
+            PaymentStatus = "Pending",
+            DeliveryAddress = "123 Test Street, Test City",
+            DeliveryLatitude = 40.7128m,
+            DeliveryLongitude = -74.0060m,
+            EstimatedDeliveryTime = DateTime.UtcNow.AddMinutes(30),
+            CreatedAt = DateTime.UtcNow
         };
 
-        var orderRequest = new CreateOrderRequest(
-            merchantId,
-            items,
-            "Test Address",
-            40.7128m,
-            -74.0060m,
-            "CREDIT_CARD",
-            null);
+        dbContext.Orders.Add(order);
 
-        var response = await client.PostAsJsonAsync("/api/v1/order", orderRequest);
-        
-        if (!response.IsSuccessStatusCode)
+        // Create order line
+        var orderLine = new OrderLine
         {
-            var errorContent = await response.Content.ReadAsStringAsync();
-            throw new Exception($"Failed to create order. Status: {response.StatusCode}, Error: {errorContent}");
-        }
-        
-        var order = await response.Content.ReadFromJsonAsync<OrderResponse>();
-        return order!.Id;
+            Id = Guid.NewGuid(),
+            OrderId = orderId,
+            ProductId = testProductId,
+            ProductName = "Test Product",
+            Quantity = 2,
+            UnitPrice = 100.0m,
+            TotalPrice = 200.0m
+        };
+
+        dbContext.OrderLines.Add(orderLine);
+        await dbContext.SaveChangesAsync();
+
+        return orderId;
+    }
+
+    /// <summary>
+    /// Overload for backward compatibility
+    /// </summary>
+    public static async Task<Guid> CreateTestOrderAsync(HttpClient client)
+    {
+        throw new NotSupportedException(
+            "Use CreateTestOrderAsync(IServiceProvider services) instead. " +
+            "Call from test class with _factory.Services");
+    }
+
+    /// <summary>
+    /// Creates test address directly in database
+    /// </summary>
+    public static async Task<Guid> CreateTestAddressAsync(
+        IServiceProvider services,
+        Guid userId,
+        string address = "Test Address")
+    {
+        using var scope = services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var addressId = Guid.NewGuid();
+        var userAddress = new UserAddress
+        {
+            Id = addressId,
+            UserId = userId,
+            Title = address,
+            FullAddress = "123 Test St",
+            City = "Test City",
+            District = "Test District",
+            Latitude = 40.7128m,
+            Longitude = -74.0060m,
+            IsDefault = true,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        dbContext.UserAddresses.Add(userAddress);
+        await dbContext.SaveChangesAsync();
+
+        return addressId;
     }
 }
+
 

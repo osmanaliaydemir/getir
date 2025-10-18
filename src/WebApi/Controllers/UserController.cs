@@ -180,7 +180,7 @@ public class UserController : BaseController
     [HttpGet("favorites")]
     [ProducesResponseType(typeof(List<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetFavorites(CancellationToken ct = default)
+    public IActionResult GetFavorites(CancellationToken ct = default)
     {
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
@@ -198,7 +198,7 @@ public class UserController : BaseController
     [HttpPost("favorites")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> AddToFavorites([FromBody] AddToFavoritesRequest request, CancellationToken ct = default)
+    public IActionResult AddToFavorites([FromBody] AddToFavoritesRequest request, CancellationToken ct = default)
     {
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
@@ -216,7 +216,7 @@ public class UserController : BaseController
     [HttpDelete("favorites/{productId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> RemoveFromFavorites([FromRoute] string productId, CancellationToken ct = default)
+    public IActionResult RemoveFromFavorites([FromRoute] string productId, CancellationToken ct = default)
     {
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
@@ -234,7 +234,7 @@ public class UserController : BaseController
     [HttpGet("favorites/{productId}/status")]
     [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> IsFavorite([FromRoute] string productId, CancellationToken ct = default)
+    public IActionResult IsFavorite([FromRoute] string productId, CancellationToken ct = default)
     {
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
@@ -251,7 +251,7 @@ public class UserController : BaseController
     [HttpGet("orders")]
     [ProducesResponseType(typeof(List<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetUserOrders(CancellationToken ct = default)
+    public IActionResult GetUserOrders(CancellationToken ct = default)
     {
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
@@ -270,7 +270,7 @@ public class UserController : BaseController
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetOrderDetails([FromRoute] string orderId, CancellationToken ct = default)
+    public IActionResult GetOrderDetails([FromRoute] string orderId, CancellationToken ct = default)
     {
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
@@ -289,7 +289,7 @@ public class UserController : BaseController
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> CancelOrder([FromRoute] string orderId, CancellationToken ct = default)
+    public IActionResult CancelOrder([FromRoute] string orderId, CancellationToken ct = default)
     {
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
@@ -308,7 +308,7 @@ public class UserController : BaseController
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Reorder(
+    public IActionResult Reorder(
         [FromRoute] string orderId,
         CancellationToken ct = default)
     {
@@ -393,7 +393,7 @@ public class UserController : BaseController
 
         var result = await _userPreferencesService.GetOrCreateUserPreferencesAsync(userId, ct);
 
-        if (!result.Success)
+        if (!result.Success || result.Value == null)
             return ToActionResult(result);
 
         var languageResponse = new LanguagePreferenceResponse(result.Value.Language);
@@ -425,7 +425,7 @@ public class UserController : BaseController
 
         var result = await _userPreferencesService.UpdateUserPreferencesAsync(userId, updateRequest, ct);
 
-        if (!result.Success)
+        if (!result.Success || result.Value == null)
             return ToActionResult(result);
 
         var languageResponse = new LanguagePreferenceResponse(result.Value.Language);

@@ -13,6 +13,7 @@ public static class ErrorCodes
     public const string FORBIDDEN = "FORBIDDEN";
     public const string CONFLICT = "CONFLICT";
     public const string BAD_REQUEST = "BAD_REQUEST";
+    public const string INVALID_OPERATION = "INVALID_OPERATION";
     
     // Transaction errors
     public const string TRANSACTION_ERROR = "TRANSACTION_ERROR";

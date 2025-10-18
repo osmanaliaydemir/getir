@@ -19,8 +19,10 @@ public record OrderLineRequest(
 public record OrderResponse(
     Guid Id,
     string OrderNumber,
+    Guid UserId,
     Guid MerchantId,
     string MerchantName,
+    Guid? CourierId,
     string Status,
     decimal SubTotal,
     decimal DeliveryFee,
@@ -72,6 +74,32 @@ public record UpdateOrderStatusRequest(
     Guid OrderId,
     string NewStatus,
     string? Reason = null);
+
+/// <summary>
+/// Rate order request
+/// </summary>
+public record RateOrderRequest(
+    Guid OrderId,
+    Guid UserId,
+    int Rating, // 1-5
+    string? Comment = null,
+    DateTime? RatedAt = null);
+
+/// <summary>
+/// Rate order response
+/// </summary>
+public record RateOrderResponse(
+    Guid OrderId,
+    int Rating,
+    string? Comment,
+    DateTime RatedAt);
+
+/// <summary>
+/// Get user active orders request
+/// </summary>
+public record GetUserActiveOrdersRequest(
+    Guid UserId,
+    int MaxOrders = 10);
 
 public record OrderDetailsResponse(
     Guid Id,

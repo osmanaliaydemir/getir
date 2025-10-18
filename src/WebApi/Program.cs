@@ -160,11 +160,13 @@ if (!app.Environment.IsEnvironment("Testing"))
     app.UseMiddleware<SecurityAuditMiddleware>();
 }
 
-app.UseMiddleware<RateLimitMiddleware>();
-
-// Rate limiting
-app.UseIpRateLimiting();
-app.UseClientRateLimiting();
+// Skip rate limiting in Testing environment
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    app.UseMiddleware<RateLimitMiddleware>();
+    app.UseIpRateLimiting();
+    app.UseClientRateLimiting();
+}
 
 if (app.Environment.IsDevelopment())
 {

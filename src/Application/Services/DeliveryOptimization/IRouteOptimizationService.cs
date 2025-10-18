@@ -82,4 +82,20 @@ public interface IRouteOptimizationService
         List<RouteWaypoint> waypoints,
         RoutePreferences? preferences = null,
         CancellationToken cancellationToken = default);
+    
+    // SignalR Hub methods
+    /// <summary>
+    /// Calculate ETA for order
+    /// </summary>
+    Task<Result<int>> CalculateETAAsync(Guid orderId, double latitude, double longitude, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Update ETA
+    /// </summary>
+    Task<Result> UpdateETAAsync(UpdateETARequest request, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Get optimized route for courier's assigned orders
+    /// </summary>
+    Task<Result<RouteOptimizationResponse>> GetOptimizedRouteForCourierAsync(Guid courierId, CancellationToken cancellationToken = default);
 }
