@@ -1,15 +1,25 @@
-﻿<!DOCTYPE html>
-<html lang="tr">
+﻿@inject IViewLocalizer Localizer
+@inject IStringLocalizer<SharedResources> SharedLocalizer
+@using System.Globalization
+@{
+    var currentCulture = CultureInfo.CurrentUICulture;
+    var isRtl = currentCulture.Name.StartsWith("ar");
+    var langCode = currentCulture.TwoLetterISOLanguageName;
+}
+<!DOCTYPE html>
+<html lang="@langCode" dir="@(isRtl ? "rtl" : "ltr")">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Getir Merchant Portal</title>
+    <title>@ViewData["Title"] - @SharedLocalizer["AppTitle"]</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/signalr-notifications.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/dashboard-modern.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/dark-mode.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/rtl-support.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/modules/language-switcher.css" asp-append-version="true" />
     @RenderSection("Styles", required: false)
     <style>
         :root {
@@ -154,28 +164,28 @@
             </div>
             <nav class="sidebar-nav">
                 <a href="@Url.Action("Index", "Dashboard")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")">
-                    <i class="fas fa-home"></i> Ana Sayfa
+                    <i class="fas fa-home"></i> @SharedLocalizer["Dashboard"]
                 </a>
                 <a href="@Url.Action("Index", "Products")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Products" ? "active" : "")">
-                    <i class="fas fa-box"></i> Ürünler
+                    <i class="fas fa-box"></i> @SharedLocalizer["Products"]
                 </a>
                 <a href="@Url.Action("Index", "Orders")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Orders" ? "active" : "")">
-                    <i class="fas fa-shopping-cart"></i> Siparişler
+                    <i class="fas fa-shopping-cart"></i> @SharedLocalizer["Orders"]
                 </a>
                 <a href="@Url.Action("Pending", "Orders")">
-                    <i class="fas fa-clock"></i> Bekleyen Siparişler
+                    <i class="fas fa-clock"></i> @SharedLocalizer["PendingOrders"]
                 </a>
                 <a href="@Url.Action("Index", "Categories")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Categories" ? "active" : "")">
-                    <i class="fas fa-tags"></i> Kategoriler
+                    <i class="fas fa-tags"></i> @SharedLocalizer["Categories"]
                 </a>
                 <a href="@Url.Action("Index", "Payments")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Payments" ? "active" : "")">
-                    <i class="fas fa-money-bill-wave"></i> Ödemeler
+                    <i class="fas fa-money-bill-wave"></i> @SharedLocalizer["Payments"]
                 </a>
-                <a href="@Url.Action("Notifications", "Settings")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Settings" ? "active" : "")">
-                    <i class="fas fa-bell"></i> Bildirimler
+                <a href="@Url.Action("Index", "Stock")">
+                    <i class="fas fa-cubes"></i> @SharedLocalizer["Stock"]
                 </a>
                 <a href="@Url.Action("Settings", "Merchant")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Merchant" ? "active" : "")">
-                    <i class="fas fa-cog"></i> Ayarlar
+                    <i class="fas fa-cog"></i> @SharedLocalizer["Settings"]
                 </a>
             </nav>
         </div>
@@ -187,6 +197,51 @@
                     <h5 class="mb-0">@ViewData["Title"]</h5>
                 </div>
                 <div class="user-menu">
+                    <!-- Language Switcher -->
+                    <div class="dropdown me-2">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Dil Seçimi">
+                            <i class="fas fa-globe"></i>
+                            @switch (currentCulture.TwoLetterISOLanguageName)
+                            {
+                                case "tr": <text>🇹🇷 TR</text> break;
+                                case "en": <text>🇬🇧 EN</text> break;
+                                case "ar": <text>🇸🇦 AR</text> break;
+                            }
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                            <li>
+                                <form asp-controller="Language" asp-action="SetLanguage" method="post" class="dropdown-item-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="culture" value="tr-TR" />
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                    <button type="submit" class="dropdown-item @(currentCulture.Name == "tr-TR" ? "active" : "")">
+                                        🇹🇷 Türkçe
+                                    </button>
+                                </form>
+                            </li>
+                            <li>
+                                <form asp-controller="Language" asp-action="SetLanguage" method="post" class="dropdown-item-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="culture" value="en-US" />
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                    <button type="submit" class="dropdown-item @(currentCulture.Name == "en-US" ? "active" : "")">
+                                        🇬🇧 English
+                                    </button>
+                                </form>
+                            </li>
+                            <li>
+                                <form asp-controller="Language" asp-action="SetLanguage" method="post" class="dropdown-item-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="culture" value="ar-SA" />
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                    <button type="submit" class="dropdown-item @(currentCulture.Name == "ar-SA" ? "active" : "")">
+                                        🇸🇦 العربية
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                    
                     <!-- Theme Toggle -->
                     <button type="button" id="themeToggleBtn" class="btn btn-sm btn-outline-secondary me-2" title="Tema Değiştir" onclick="ThemeManager.toggle()">
                         <i class="fas fa-moon theme-toggle-icon moon"></i>
@@ -200,7 +255,7 @@
                     <form asp-controller="Auth" asp-action="Logout" method="post" style="display:inline;">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-sm btn-outline-danger">
-                            <i class="fas fa-sign-out-alt"></i> Çıkış
+                            <i class="fas fa-sign-out-alt"></i> @SharedLocalizer["Logout"]
                         </button>
                     </form>
                 </div>

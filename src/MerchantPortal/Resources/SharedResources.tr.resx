@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  
+  <!-- Common UI -->
+  <data name="AppTitle" xml:space="preserve">
+    <value>Getir İşletme Paneli</value>
+  </data>
+  <data name="Dashboard" xml:space="preserve">
+    <value>Ana Sayfa</value>
+  </data>
+  <data name="Orders" xml:space="preserve">
+    <value>Siparişler</value>
+  </data>
+  <data name="Products" xml:space="preserve">
+    <value>Ürünler</value>
+  </data>
+  <data name="Categories" xml:space="preserve">
+    <value>Kategoriler</value>
+  </data>
+  <data name="Stock" xml:space="preserve">
+    <value>Stok</value>
+  </data>
+  <data name="Payments" xml:space="preserve">
+    <value>Ödemeler</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Ayarlar</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>Çıkış Yap</value>
+  </data>
+  
+  <!-- Dashboard -->
+  <data name="TotalOrders" xml:space="preserve">
+    <value>Toplam Sipariş</value>
+  </data>
+  <data name="PendingOrders" xml:space="preserve">
+    <value>Bekleyen Siparişler</value>
+  </data>
+  <data name="TodayRevenue" xml:space="preserve">
+    <value>Bugünün Geliri</value>
+  </data>
+  <data name="ActiveProducts" xml:space="preserve">
+    <value>Aktif Ürünler</value>
+  </data>
+  <data name="RecentOrders" xml:space="preserve">
+    <value>Son Siparişler</value>
+  </data>
+  <data name="LowStockAlerts" xml:space="preserve">
+    <value>Düşük Stok Uyarıları</value>
+  </data>
+  
+  <!-- Orders -->
+  <data name="OrderNumber" xml:space="preserve">
+    <value>Sipariş No</value>
+  </data>
+  <data name="Customer" xml:space="preserve">
+    <value>Müşteri</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Durum</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+    <value>Toplam</value>
+  </data>
+  <data name="Actions" xml:space="preserve">
+    <value>İşlemler</value>
+  </data>
+  <data name="ViewDetails" xml:space="preserve">
+    <value>Detayları Gör</value>
+  </data>
+  <data name="ConfirmOrder" xml:space="preserve">
+    <value>Siparişi Onayla</value>
+  </data>
+  <data name="RejectOrder" xml:space="preserve">
+    <value>Siparişi Reddet</value>
+  </data>
+  
+  <!-- Products -->
+  <data name="ProductName" xml:space="preserve">
+    <value>Ürün Adı</value>
+  </data>
+  <data name="Price" xml:space="preserve">
+    <value>Fiyat</value>
+  </data>
+  <data name="StockQuantity" xml:space="preserve">
+    <value>Stok Miktarı</value>
+  </data>
+  <data name="Category" xml:space="preserve">
+    <value>Kategori</value>
+  </data>
+  <data name="AddProduct" xml:space="preserve">
+    <value>Ürün Ekle</value>
+  </data>
+  <data name="EditProduct" xml:space="preserve">
+    <value>Ürünü Düzenle</value>
+  </data>
+  <data name="DeleteProduct" xml:space="preserve">
+    <value>Ürünü Sil</value>
+  </data>
+  
+  <!-- Common Actions -->
+  <data name="Save" xml:space="preserve">
+    <value>Kaydet</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>İptal</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Sil</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Düzenle</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>Ara</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>Filtrele</value>
+  </data>
+  
+  <!-- Messages -->
+  <data name="SuccessfullySaved" xml:space="preserve">
+    <value>Başarıyla kaydedildi</value>
+  </data>
+  <data name="ErrorOccurred" xml:space="preserve">
+    <value>Bir hata oluştu</value>
+  </data>
+  <data name="ConfirmDelete" xml:space="preserve">
+    <value>Silmek istediğinizden emin misiniz?</value>
+  </data>
+  
+  <!-- Validation -->
+  <data name="Required" xml:space="preserve">
+    <value>Bu alan zorunludur</value>
+  </data>
+  <data name="InvalidEmail" xml:space="preserve">
+    <value>Geçersiz email adresi</value>
+  </data>
+  <data name="InvalidPhone" xml:space="preserve">
+    <value>Geçersiz telefon numarası</value>
+  </data>
+</root>
+

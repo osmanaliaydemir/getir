@@ -1,7 +1,11 @@
 using Getir.MerchantPortal.Middleware;
 using Getir.MerchantPortal.Services;
+using Getir.MerchantPortal.Resources;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.Localization;
+using System.Globalization;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,8 +33,34 @@ builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "Keys")))
     .SetApplicationName("GetirMerchantPortal");
 
+// Localization
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+
+// Configure supported cultures
+var supportedCultures = new[]
+{
+    new CultureInfo("tr-TR"), // Türkçe (Default)
+    new CultureInfo("en-US"), // English
+    new CultureInfo("ar-SA")  // Arabic
+};
+
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    options.DefaultRequestCulture = new RequestCulture("tr-TR");
+    options.SupportedCultures = supportedCultures;
+    options.SupportedUICultures = supportedCultures;
+    
+    // Cookie-based culture provider (priority)
+    options.RequestCultureProviders.Insert(0, new CookieRequestCultureProvider
+    {
+        CookieName = "MerchantPortal.Culture"
+    });
+});
+
 // Add services to the container
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddViewLocalization() // View localization
+    .AddDataAnnotationsLocalization(); // Data annotation localization
 
 // Session
 builder.Services.AddSession(options =>
@@ -111,6 +141,9 @@ if (!app.Environment.IsDevelopment())
 
 // app.UseHttpsRedirection(); // ✅ HTTP için HTTPS redirect kapalı
 app.UseStaticFiles();
+
+// 🌐 Use Request Localization (before routing!)
+app.UseRequestLocalization();
 
 app.UseRouting();
 
