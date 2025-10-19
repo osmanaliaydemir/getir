@@ -306,50 +306,9 @@ new Chart(ctx, {
 
 ---
 
-### 3. Working Hours API Integration (1-2 saat)
-
-**Sorun:**
-- UI %100 hazır
-- Backend call yok (mock data)
-
-**Yapılacaklar:**
-```csharp
-// 1. MerchantController.cs - Update
-[HttpPost("working-hours/save")]
-public async Task<IActionResult> SaveWorkingHours([FromForm] List<WorkingHoursRequest> workingHours)
-{
-    var merchantId = GetCurrentMerchantId();
-    
-    foreach (var wh in workingHours)
-    {
-        if (wh.Id > 0)
-            await _apiClient.PutAsync($"/api/merchants/{merchantId}/working-hours/{wh.Id}", wh);
-        else
-            await _apiClient.PostAsync($"/api/merchants/{merchantId}/working-hours", wh);
-    }
-    
-    TempData["Success"] = "Working hours updated successfully";
-    return RedirectToAction("WorkingHours");
-}
-
-// 2. WorkingHours/Index.cshtml - JavaScript güncelle
-async function loadWorkingHours() {
-    const response = await fetch(`/api/merchants/${merchantId}/working-hours`);
-    const data = await response.json();
-    // Populate form
-}
-```
-
-**Çıktı:**
-- Gerçek backend entegrasyonu
-- CRUD operations çalışır
-- Validation
-
----
-
 ## 🟢 ORTA ÖNCELİKLİ
 
-### 4. Stock Management Enhancement (2-3 saat)
+### 3. Stock Management Enhancement (2-3 saat)
 
 **Eklenecek Özellikler:**
 - Low stock dashboard widget
@@ -385,7 +344,7 @@ async function loadWorkingHours() {
 
 ---
 
-### 5. File Upload Enhancement (2-3 saat)
+### 4. File Upload Enhancement (2-3 saat)
 
 **Eklenecek:**
 - Drag & drop upload
@@ -436,9 +395,8 @@ await axios.post('/upload', formData, {
 | 4 | **CORS Policy Hardening** | **Web API** | **1h** | 🟢 **ORTA** |
 | 5 | **Payment Tracking Module** | **Portal** | **4-5h** | 🟡 **YÜKSEK** |
 | 6 | **Advanced Analytics** | **Portal** | **3-4h** | 🟡 **YÜKSEK** |
-| 7 | ~~**Working Hours Integration**~~ | ~~**Portal**~~ | ~~**1-2h**~~ | ✅ **TAMAMLANDI** |
-| 8 | **Stock Management Enhancement** | **Portal** | **2-3h** | 🟢 **ORTA** |
-| 9 | **File Upload Enhancement** | **Portal** | **2-3h** | 🟢 **ORTA** |
+| 7 | **Stock Management Enhancement** | **Portal** | **2-3h** | 🟢 **ORTA** |
+| 8 | **File Upload Enhancement** | **Portal** | **2-3h** | 🟢 **ORTA** |
 
 **Toplam Kalan:** 21-30 saat (3-4 gün)
 
@@ -457,8 +415,8 @@ await axios.post('/upload', formData, {
 6. **Background Jobs** (8-12h) - Büyük feature
 
 ### Sonrası (Enhancement)
-7. **Stock Management Enhancement** (2-3h)
-8. **File Upload Enhancement** (2-3h)
+6. **Stock Management Enhancement** (2-3h)
+7. **File Upload Enhancement** (2-3h)
 
 **Toplam:** 23-32 saat
 
@@ -498,14 +456,13 @@ await axios.post('/upload', formData, {
 |-------|-----------|-----------|----------|------------|
 | CORS Policy | 7/10 | 6/10 | 10/10 | **23/30** ⭐ |
 | Application Insights | 9/10 | 8/10 | 8/10 | **25/30** ⭐⭐ |
-| Working Hours | 6/10 | 7/10 | 9/10 | **22/30** ⭐ |
 | Payment Tracking | 7/10 | 9/10 | 6/10 | **22/30** ⭐ |
 | Advanced Analytics | 5/10 | 7/10 | 7/10 | **19/30** |
 | Background Jobs | 6/10 | 8/10 | 4/10 | **18/30** |
 | Stock Enhancement | 4/10 | 6/10 | 8/10 | **18/30** |
 | File Upload | 3/10 | 5/10 | 7/10 | **15/30** |
 
-**Önerilen Sıra:** Application Insights → CORS → Working Hours → Payment → Analytics → Background Jobs → Diğerleri
+**Önerilen Sıra:** Application Insights → CORS → Payment → Analytics → Background Jobs → Diğerleri
 
 ---
 
