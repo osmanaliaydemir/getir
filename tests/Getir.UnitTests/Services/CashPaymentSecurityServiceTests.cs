@@ -46,7 +46,7 @@ public class CashPaymentSecurityServiceTests
     {
         // Arrange
         var request = new CalculateChangeRequest(
-            TotalAmount: 100m,
+            OrderAmount: 100m,
             GivenAmount: 150m);
 
         // Act
@@ -55,7 +55,7 @@ public class CashPaymentSecurityServiceTests
         // Assert
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Change.Should().Be(50m);
+        result.Value.ChangeAmount.Should().Be(50m);
         result.Value.IsValid.Should().BeTrue();
     }
 
@@ -64,7 +64,7 @@ public class CashPaymentSecurityServiceTests
     {
         // Arrange
         var request = new CalculateChangeRequest(
-            TotalAmount: 100m,
+            OrderAmount: 100m,
             GivenAmount: 80m); // Less than total
 
         // Act

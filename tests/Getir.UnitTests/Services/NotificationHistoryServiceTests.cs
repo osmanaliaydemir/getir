@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 using DomainEntities = Getir.Domain.Entities;
+using DomainEnums = Getir.Domain.Enums;
 
 namespace Getir.UnitTests.Services;
 
@@ -41,7 +42,7 @@ public class NotificationHistoryServiceTests
             Guid.NewGuid(),
             "Test",
             "Message",
-            NotificationType.OrderUpdate,
+            DomainEnums.NotificationType.OrderUpdate,
             NotificationChannel.Push,
             NotificationStatus.Sent,
             null,

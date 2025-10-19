@@ -263,7 +263,6 @@ public class InventoryServiceTests
                 SKU = $"SKU-{i + 1}",
                 Price = 80 + (i * 5),
                 StockQuantity = 30 + (i * 3),
-                IsActive = true,
                 CreatedAt = DateTime.UtcNow
             });
         }
@@ -318,9 +317,8 @@ public class InventoryServiceTests
                 PreviousQuantity = 100,
                 NewQuantity = 90,
                 ChangeAmount = -10,
-                ChangeType = Domain.Enums.StockChangeType.OrderReduction,
-                ChangedAt = DateTime.UtcNow.AddDays(-60), // 60 days ago
-                CreatedAt = DateTime.UtcNow.AddDays(-60)
+                ChangeType = Domain.Enums.StockChangeType.Sale,
+                ChangedAt = DateTime.UtcNow.AddDays(-60) // 60 days ago
             });
         }
         return history;
