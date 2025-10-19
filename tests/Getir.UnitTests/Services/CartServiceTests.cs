@@ -177,4 +177,170 @@ public class CartServiceTests
         cartRepoMock.Verify(r => r.RemoveRange(It.IsAny<IEnumerable<CartItem>>()), Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task GetCartAsync_WithItems_ShouldReturnCart()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var merchant = TestDataGenerator.CreateMerchant();
+        var product = TestDataGenerator.CreateProduct(merchant.Id);
+        product.Name = "Test Product";
+        product.Price = 50m;
+
+        var cartItem = TestDataGenerator.CreateCartItem(userId, merchant.Id, product.Id);
+        cartItem.Quantity = 2;
+        cartItem.Product = product;
+        cartItem.Merchant = merchant;
+
+        var readCartRepoMock = new Mock<IReadOnlyRepository<CartItem>>();
+        readCartRepoMock.Setup(r => r.ListAsync(
+            It.IsAny<System.Linq.Expressions.Expression<Func<CartItem, bool>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<CartItem, object>>>(),
+            It.IsAny<bool>(),
+            It.IsAny<string?>(),
+            It.IsAny<int?>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<CartItem> { cartItem });
+
+        _unitOfWorkMock.Setup(u => u.ReadRepository<CartItem>()).Returns(readCartRepoMock.Object);
+
+        // Act
+        var result = await _cartService.GetCartAsync(userId);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.Items.Should().HaveCount(1);
+        result.Value.Total.Should().BeGreaterThan(0m); // Cart includes delivery fee calculation
+    }
+
+    [Fact]
+    public async Task GetCartAsync_EmptyCart_ShouldReturnEmptyCart()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+
+        var readCartRepoMock = new Mock<IReadOnlyRepository<CartItem>>();
+        readCartRepoMock.Setup(r => r.ListAsync(
+            It.IsAny<System.Linq.Expressions.Expression<Func<CartItem, bool>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<CartItem, object>>>(),
+            It.IsAny<bool>(),
+            It.IsAny<string?>(),
+            It.IsAny<int?>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<CartItem>());
+
+        _unitOfWorkMock.Setup(u => u.ReadRepository<CartItem>()).Returns(readCartRepoMock.Object);
+
+        // Act
+        var result = await _cartService.GetCartAsync(userId);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.Items.Should().BeEmpty();
+        result.Value.Total.Should().Be(0m);
+    }
+
+    [Fact]
+    public async Task UpdateItemAsync_ValidUpdate_ShouldSucceed()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var itemId = Guid.NewGuid();
+        var product = TestDataGenerator.CreateProduct(Guid.NewGuid(), stockQuantity: 100);
+        
+        var cartItem = TestDataGenerator.CreateCartItem(userId, Guid.NewGuid(), product.Id);
+        cartItem.Id = itemId;
+        cartItem.Quantity = 2;
+        cartItem.Product = product;
+
+        var request = new UpdateCartItemRequest(5, "Updated notes");
+
+        var cartRepoMock = new Mock<IGenericRepository<CartItem>>();
+        cartRepoMock.Setup(r => r.GetByIdAsync(itemId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cartItem);
+
+        _unitOfWorkMock.Setup(u => u.Repository<CartItem>()).Returns(cartRepoMock.Object);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).Returns(Task.FromResult(1));
+
+        // Act
+        var result = await _cartService.UpdateItemAsync(userId, itemId, request);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        cartItem.Quantity.Should().Be(5);
+        cartItem.Notes.Should().Be("Updated notes");
+    }
+
+    [Fact]
+    public async Task UpdateItemAsync_ItemNotFound_ShouldFail()
+    {
+        // Arrange
+        var request = new UpdateCartItemRequest(5, null);
+
+        var cartRepoMock = new Mock<IGenericRepository<CartItem>>();
+        cartRepoMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((CartItem?)null);
+
+        _unitOfWorkMock.Setup(u => u.Repository<CartItem>()).Returns(cartRepoMock.Object);
+
+        // Act
+        var result = await _cartService.UpdateItemAsync(Guid.NewGuid(), Guid.NewGuid(), request);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().BeOneOf("CART_ITEM_NOT_FOUND", "NOT_FOUND_CART_ITEM");
+    }
+
+    [Fact]
+    public async Task RemoveItemAsync_ValidItem_ShouldRemove()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var itemId = Guid.NewGuid();
+        
+        var cartItem = TestDataGenerator.CreateCartItem(userId, Guid.NewGuid(), Guid.NewGuid());
+        cartItem.Id = itemId;
+
+        var cartRepoMock = new Mock<IGenericRepository<CartItem>>();
+        cartRepoMock.Setup(r => r.GetByIdAsync(itemId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cartItem);
+
+        _unitOfWorkMock.Setup(u => u.Repository<CartItem>()).Returns(cartRepoMock.Object);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).Returns(Task.FromResult(1));
+
+        // Act
+        var result = await _cartService.RemoveItemAsync(userId, itemId);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        cartRepoMock.Verify(r => r.Remove(cartItem), Times.Once);
+    }
+
+    [Fact]
+    public async Task RemoveItemAsync_NotOwner_ShouldFail()
+    {
+        // Arrange
+        var actualUserId = Guid.NewGuid();
+        var wrongUserId = Guid.NewGuid();
+        var itemId = Guid.NewGuid();
+        
+        var cartItem = TestDataGenerator.CreateCartItem(actualUserId, Guid.NewGuid(), Guid.NewGuid());
+        cartItem.Id = itemId;
+
+        var cartRepoMock = new Mock<IGenericRepository<CartItem>>();
+        cartRepoMock.Setup(r => r.GetByIdAsync(itemId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cartItem);
+
+        _unitOfWorkMock.Setup(u => u.Repository<CartItem>()).Returns(cartRepoMock.Object);
+
+        // Act
+        var result = await _cartService.RemoveItemAsync(wrongUserId, itemId);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().BeOneOf("CART_ITEM_NOT_FOUND", "NOT_FOUND_CART_ITEM");
+    }
 }

@@ -254,6 +254,255 @@ public class OrderServiceTests
         result.ErrorCode.Should().Be("MERCHANT_NOT_FOUND");
     }
 
+    [Fact]
+    public async Task GetOrderByIdAsync_ValidOrder_ShouldReturnOrder()
+    {
+        // Arrange
+        var orderId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        
+        var order = new Order
+        {
+            Id = orderId,
+            UserId = userId,
+            MerchantId = Guid.NewGuid(),
+            OrderNumber = "ORD-001",
+            Status = OrderStatus.Confirmed,
+            SubTotal = 100m,
+            Total = 115m
+        };
+
+        SetupOrderByIdMock(order);
+
+        // Act
+        var result = await _orderService.GetOrderByIdAsync(orderId, userId);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.Id.Should().Be(orderId);
+    }
+
+    [Fact]
+    public async Task GetOrderByIdAsync_NotOwner_ShouldFail()
+    {
+        // Arrange
+        var orderId = Guid.NewGuid();
+        var actualUserId = Guid.NewGuid();
+        var wrongUserId = Guid.NewGuid();
+        
+        var order = new Order
+        {
+            Id = orderId,
+            UserId = actualUserId
+        };
+
+        SetupOrderByIdMock(order);
+
+        // Act
+        var result = await _orderService.GetOrderByIdAsync(orderId, wrongUserId);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().BeOneOf("ACCESS_DENIED", "FORBIDDEN", "INTERNAL_ERROR");
+    }
+
+    [Fact]
+    public async Task AcceptOrderAsync_ValidOrder_ShouldAccept()
+    {
+        // Arrange
+        var orderId = Guid.NewGuid();
+        var merchantOwnerId = Guid.NewGuid();
+        
+        var merchant = TestDataGenerator.CreateMerchant();
+        merchant.OwnerId = merchantOwnerId;
+        
+        var order = new Order
+        {
+            Id = orderId,
+            MerchantId = merchant.Id,
+            Merchant = merchant,
+            Status = OrderStatus.Pending
+        };
+
+        SetupOrderWithMerchantMock(order);
+        SetupOrderUpdateRepositories();
+
+        // Act
+        var result = await _orderService.AcceptOrderAsync(orderId, merchantOwnerId);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        order.Status.Should().Be(OrderStatus.Confirmed);
+    }
+
+    [Fact]
+    public async Task AcceptOrderAsync_NotMerchantOwner_ShouldFail()
+    {
+        // Arrange
+        var orderId = Guid.NewGuid();
+        var actualOwnerId = Guid.NewGuid();
+        var wrongOwnerId = Guid.NewGuid();
+        
+        var merchant = TestDataGenerator.CreateMerchant();
+        merchant.OwnerId = actualOwnerId;
+        
+        var order = new Order
+        {
+            Id = orderId,
+            MerchantId = merchant.Id,
+            Merchant = merchant,
+            Status = OrderStatus.Pending
+        };
+
+        SetupOrderWithMerchantMock(order);
+
+        // Act
+        var result = await _orderService.AcceptOrderAsync(orderId, wrongOwnerId);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().BeOneOf("ACCESS_DENIED", "FORBIDDEN", "INTERNAL_ERROR");
+    }
+
+    [Fact]
+    public async Task RejectOrderAsync_ValidOrder_ShouldReject()
+    {
+        // Arrange
+        var orderId = Guid.NewGuid();
+        var merchantOwnerId = Guid.NewGuid();
+        
+        var merchant = TestDataGenerator.CreateMerchant();
+        merchant.OwnerId = merchantOwnerId;
+        
+        var order = new Order
+        {
+            Id = orderId,
+            MerchantId = merchant.Id,
+            Merchant = merchant,
+            Status = OrderStatus.Pending
+        };
+
+        SetupOrderWithMerchantMock(order);
+        SetupOrderUpdateRepositories();
+
+        // Act
+        var result = await _orderService.RejectOrderAsync(orderId, merchantOwnerId, "Out of ingredients");
+
+        // Assert
+        result.Success.Should().BeTrue();
+        order.Status.Should().Be(OrderStatus.Cancelled);
+    }
+
+    [Fact]
+    public async Task CancelOrderAsync_ValidOrder_ShouldCancel()
+    {
+        // Arrange
+        var orderId = Guid.NewGuid();
+        var merchantOwnerId = Guid.NewGuid();
+        
+        var merchant = TestDataGenerator.CreateMerchant();
+        merchant.OwnerId = merchantOwnerId;
+        
+        var order = new Order
+        {
+            Id = orderId,
+            MerchantId = merchant.Id,
+            Merchant = merchant,
+            Status = OrderStatus.Confirmed
+        };
+
+        SetupOrderWithMerchantMock(order);
+        SetupOrderUpdateRepositories();
+
+        // Act
+        var result = await _orderService.CancelOrderAsync(orderId, merchantOwnerId, "Customer request");
+
+        // Assert
+        result.Success.Should().BeTrue();
+        order.Status.Should().Be(OrderStatus.Cancelled);
+    }
+
+    [Fact]
+    public async Task GetUserOrdersAsync_ShouldReturnUserOrders()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var orders = new List<Order>
+        {
+            new() { Id = Guid.NewGuid(), UserId = userId, Status = OrderStatus.Delivered },
+            new() { Id = Guid.NewGuid(), UserId = userId, Status = OrderStatus.Confirmed }
+        };
+
+        SetupPagedOrders(orders, totalCount: 2);
+
+        // Act
+        var result = await _orderService.GetUserOrdersAsync(userId, new PaginationQuery { Page = 1, PageSize = 10 });
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.Items.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task StartPreparingOrderAsync_ValidOrder_ShouldUpdateStatus()
+    {
+        // Arrange
+        var orderId = Guid.NewGuid();
+        var merchantOwnerId = Guid.NewGuid();
+        
+        var merchant = TestDataGenerator.CreateMerchant();
+        merchant.OwnerId = merchantOwnerId;
+        
+        var order = new Order
+        {
+            Id = orderId,
+            MerchantId = merchant.Id,
+            Merchant = merchant,
+            Status = OrderStatus.Confirmed
+        };
+
+        SetupOrderWithMerchantMock(order);
+        SetupOrderUpdateRepositories();
+
+        // Act
+        var result = await _orderService.StartPreparingOrderAsync(orderId, merchantOwnerId);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        order.Status.Should().Be(OrderStatus.Preparing);
+    }
+
+    [Fact]
+    public async Task MarkOrderAsReadyAsync_ValidOrder_ShouldUpdateStatus()
+    {
+        // Arrange
+        var orderId = Guid.NewGuid();
+        var merchantOwnerId = Guid.NewGuid();
+        
+        var merchant = TestDataGenerator.CreateMerchant();
+        merchant.OwnerId = merchantOwnerId;
+        
+        var order = new Order
+        {
+            Id = orderId,
+            MerchantId = merchant.Id,
+            Merchant = merchant,
+            Status = OrderStatus.Preparing
+        };
+
+        SetupOrderWithMerchantMock(order);
+        SetupOrderUpdateRepositories();
+
+        // Act
+        var result = await _orderService.MarkOrderAsReadyAsync(orderId, merchantOwnerId);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        order.Status.Should().Be(OrderStatus.Ready);
+    }
+
     // Helper methods
     private void SetupMerchantMock(Merchant merchant)
     {
@@ -360,5 +609,57 @@ public class OrderServiceTests
             .ReturnsAsync(user);
 
         _unitOfWorkMock.Setup(u => u.ReadRepository<User>()).Returns(readRepoMock.Object);
+    }
+
+    private void SetupOrderByIdMock(Order? order)
+    {
+        var readRepoMock = new Mock<IReadOnlyRepository<Order>>();
+        readRepoMock.Setup(r => r.FirstOrDefaultAsync(
+            It.IsAny<System.Linq.Expressions.Expression<Func<Order, bool>>>(),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(order);
+
+        _unitOfWorkMock.Setup(u => u.ReadRepository<Order>()).Returns(readRepoMock.Object);
+    }
+
+    private void SetupOrderWithMerchantMock(Order? order)
+    {
+        var readRepoMock = new Mock<IReadOnlyRepository<Order>>();
+        readRepoMock.Setup(r => r.FirstOrDefaultAsync(
+            It.IsAny<System.Linq.Expressions.Expression<Func<Order, bool>>>(),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(order);
+
+        _unitOfWorkMock.Setup(u => u.ReadRepository<Order>()).Returns(readRepoMock.Object);
+    }
+
+    private void SetupOrderUpdateRepositories()
+    {
+        var orderRepoMock = new Mock<IGenericRepository<Order>>();
+        _unitOfWorkMock.Setup(u => u.Repository<Order>()).Returns(orderRepoMock.Object);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).Returns(Task.FromResult(1));
+    }
+
+    private void SetupPagedOrders(List<Order> orders, int totalCount)
+    {
+        var readRepoMock = new Mock<IReadOnlyRepository<Order>>();
+        readRepoMock.Setup(r => r.GetPagedAsync(
+            It.IsAny<System.Linq.Expressions.Expression<Func<Order, bool>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<Order, object>>>(),
+            It.IsAny<bool>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(orders);
+
+        readRepoMock.Setup(r => r.CountAsync(
+            It.IsAny<System.Linq.Expressions.Expression<Func<Order, bool>>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(totalCount);
+
+        _unitOfWorkMock.Setup(u => u.ReadRepository<Order>()).Returns(readRepoMock.Object);
     }
 }
