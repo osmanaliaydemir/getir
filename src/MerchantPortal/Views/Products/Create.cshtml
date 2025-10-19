@@ -82,7 +82,7 @@
                              model="new { 
                                  FieldName = nameof(Model.ImageUrl),
                                  MaxFiles = 5,
-                                 AcceptedTypes = new[] { "image/jpeg", "image/png", "image/webp" },
+                                 AcceptedTypes = new string[] { "image/jpeg", "image/png", "image/webp" },
                                  MaxFileSize = 5242880
                              }" />
                     <input asp-for="ImageUrl" type="hidden" id="imageUrlField" />

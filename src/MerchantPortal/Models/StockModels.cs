@@ -7,10 +7,11 @@ public class LowStockProductModel
 {
     public Guid ProductId { get; set; }
     public string ProductName { get; set; } = default!;
+    public string SKU { get; set; } = default!;
     public string? ImageUrl { get; set; }
     public int CurrentStock { get; set; }
-    public int MinimumStock { get; set; }
-    public int ReorderQuantity { get; set; }
+    public int MinStock { get; set; }
+    public int MaxStock { get; set; }
     public decimal UnitPrice { get; set; }
     public string Status { get; set; } = default!; // Critical, Low, Normal
 }
@@ -61,11 +62,18 @@ public class ReorderPointModel
 /// </summary>
 public class BulkStockUpdateModel
 {
-    public List<Guid> ProductIds { get; set; } = new();
-    public int? StockQuantity { get; set; }
-    public int? AdjustmentAmount { get; set; } // +10 or -5
+    public Guid ProductId { get; set; }
+    public int NewStockLevel { get; set; }
     public string? Reason { get; set; }
-    public bool IsAdjustment { get; set; } // true = add/subtract, false = set value
+}
+
+/// <summary>
+/// Bulk update request wrapper
+/// </summary>
+public class BulkUpdateStockRequest
+{
+    public List<BulkStockUpdateModel> Updates { get; set; } = new();
+    public string? Reason { get; set; }
 }
 
 /// <summary>

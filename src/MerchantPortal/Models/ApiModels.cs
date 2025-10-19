@@ -179,11 +179,14 @@ public class ProductResponse
     public Guid? ProductCategoryId { get; set; }
     public string? CategoryName { get; set; }
     public string Name { get; set; } = default!;
+    public string SKU { get; set; } = default!;
     public string? Description { get; set; }
     public string? ImageUrl { get; set; }
     public decimal Price { get; set; }
     public decimal? DiscountedPrice { get; set; }
     public int StockQuantity { get; set; }
+    public int? MinStock { get; set; }
+    public int? MaxStock { get; set; }
     public string? Unit { get; set; }
     public bool IsAvailable { get; set; }
     public bool IsActive { get; set; }
