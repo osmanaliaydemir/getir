@@ -183,39 +183,6 @@ options.AddPolicy("SignalRCorsPolicy", policy =>
 
 ## 🟡 YÜKSEK ÖNCELİKLİ
 
-### 4. Payment Tracking Module (4-5 saat)
-
-**Eksik Özellikler:**
-- Payment history listing
-- Settlement reports
-- Revenue analytics
-- Payment method breakdown
-- Excel/PDF export
-- Invoice generation
-
-**Yapılacak Dosyalar:**
-```
-src/MerchantPortal/
-├── Controllers/PaymentsController.cs       (YENİ)
-├── Services/IPaymentService.cs             (YENİ)
-├── Services/PaymentService.cs              (YENİ)
-├── Models/PaymentModels.cs                 (YENİ)
-├── Views/Payments/
-│   ├── Index.cshtml                        (YENİ)
-│   ├── Reports.cshtml                      (YENİ)
-│   └── Settlements.cshtml                  (YENİ)
-└── wwwroot/js/payments.js                  (YENİ)
-```
-
-**Özellikler:**
-- Payment history table (DataTables)
-- Date range filter
-- Payment status filter
-- Export to Excel
-- Settlement summary cards
-- Revenue charts
-
----
 
 
 ## 🟢 ORTA ÖNCELİKLİ
@@ -361,6 +328,13 @@ await axios.post('/upload', formData, {
   - Orders Bar Chart (status breakdown)
   - Category Pie/Doughnut Chart
   - 3 API endpoints (mock data ready)
+- [x] Payment Tracking Module (4-5 saat)
+  - Payment history with DataTables
+  - Revenue analytics dashboard
+  - Settlement reports (daily breakdown)
+  - Payment method breakdown charts
+  - Excel/CSV export
+  - 3 views + 1 controller + 1 service
 
 📊 Test Coverage Özet:
 - Toplam Servisler: 38
@@ -372,7 +346,6 @@ await axios.post('/upload', formData, {
 ### ⏳ Devam Eden
 - [ ] Background Jobs (Hangfire)
 - [ ] CORS Policy Hardening
-- [ ] Payment Tracking Module
 - [ ] Stock Management Enhancement
 - [ ] File Upload Enhancement
 
