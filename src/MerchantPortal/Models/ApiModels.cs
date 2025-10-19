@@ -457,6 +457,9 @@ public class BulkUpdateStockRequest
 {
     public List<UpdateStockRequest> StockUpdates { get; set; } = new();
     public string? Reason { get; set; }
+    public List<BulkStockUpdateModel> Updates { get; set; } = new();
+
+
 }
 
 public class StockSummaryResponse

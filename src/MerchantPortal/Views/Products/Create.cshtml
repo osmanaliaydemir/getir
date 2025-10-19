@@ -79,12 +79,12 @@
                 <div class="mb-4">
                     <label class="form-label">Ürün Görselleri</label>
                     <partial name="_ImageUploadPartial" 
-                             model="new { 
+                             model="@(new { 
                                  FieldName = nameof(Model.ImageUrl),
                                  MaxFiles = 5,
                                  AcceptedTypes = new string[] { "image/jpeg", "image/png", "image/webp" },
                                  MaxFileSize = 5242880
-                             }" />
+                             })" />
                     <input asp-for="ImageUrl" type="hidden" id="imageUrlField" />
                     <span asp-validation-for="ImageUrl" class="text-danger"></span>
                 </div>

@@ -67,14 +67,6 @@ public class BulkStockUpdateModel
     public string? Reason { get; set; }
 }
 
-/// <summary>
-/// Bulk update request wrapper
-/// </summary>
-public class BulkUpdateStockRequest
-{
-    public List<BulkStockUpdateModel> Updates { get; set; } = new();
-    public string? Reason { get; set; }
-}
 
 /// <summary>
 /// Stock history timeline item

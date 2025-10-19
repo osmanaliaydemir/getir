@@ -327,23 +327,39 @@ public class StockManagementService : BaseService, IStockManagementService
                 .ListAsync(a => a.MerchantId == merchantId && a.IsActive,
                     orderBy: a => a.CreatedAt,
                     ascending: false,
-                    include: "Product,ProductVariant",
                     cancellationToken: cancellationToken);
 
-            var responses = alerts.Select(a => new StockAlertResponse(
-                a.Id,
-                a.ProductId,
-                a.ProductVariantId,
-                a.Product.Name,
-                a.ProductVariant?.Name,
-                a.CurrentStock,
-                a.MinimumStock,
-                a.MaximumStock,
-                a.AlertType,
-                a.Message,
-                a.CreatedAt,
-                a.IsResolved,
-                a.ResolvedAt)).ToList();
+            var responses = new List<StockAlertResponse>();
+            
+            foreach (var alert in alerts)
+            {
+                // Get product info separately
+                var product = await _unitOfWork.ReadRepository<Product>()
+                    .FirstOrDefaultAsync(p => p.Id == alert.ProductId, cancellationToken: cancellationToken);
+                
+                string? productVariantName = null;
+                if (alert.ProductVariantId.HasValue)
+                {
+                    var variant = await _unitOfWork.ReadRepository<MarketProductVariant>()
+                        .FirstOrDefaultAsync(v => v.Id == alert.ProductVariantId.Value, cancellationToken: cancellationToken);
+                    productVariantName = variant?.Name;
+                }
+                
+                responses.Add(new StockAlertResponse(
+                    alert.Id,
+                    alert.ProductId,
+                    alert.ProductVariantId,
+                    product?.Name ?? "Unknown Product",
+                    productVariantName,
+                    alert.CurrentStock,
+                    alert.MinimumStock,
+                    alert.MaximumStock,
+                    alert.AlertType,
+                    alert.Message,
+                    alert.CreatedAt,
+                    alert.IsResolved,
+                    alert.ResolvedAt));
+            }
 
             return Result.Ok(responses);
         }
