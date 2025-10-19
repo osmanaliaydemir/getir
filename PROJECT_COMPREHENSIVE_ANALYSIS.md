@@ -108,25 +108,6 @@ class NotificationService {
 
 ---
 
-**Mevcut Durum:**
-```dart
-// ✅ test/unit/usecases/ klasörü BOŞ (eski UseCase'ler silinmiş)
-// ✅ Service test'leri mevcut (36 dosya)
-// ✅ BLoC test'leri mevcut (9 dosya)
-// ✅ Repository test'leri mevcut (9 dosya)
-```
-
-**Çözüm Uygulandı:**
-1. ✅ `test/unit/usecases/` klasörü boş (eski UseCase'ler silinmiş)
-2. ✅ Service test'leri güncel (Service pattern'e geçiş yapılmış)
-3. ✅ `flutter test` çalışıyor (exit code: 0)
-4. ✅ Coverage raporu hazır (`flutter test --coverage`)
-
-**Risk:** 🟢 DÜŞÜK - CI/CD güvenilirliği  
-**Süre:** 0 saat (TAMAMLANDI)  
-
----
-
 ### 🟢 ORTA ÖNCELİKLİ
 
 
@@ -409,33 +390,9 @@ RecurringJob.AddOrUpdate<OrderBackgroundJobs>(
 
 ---
 
-#### 5. **Health Checks Kapsamlı Değil** ⚠️
-**Mevcut Durum:**
-- Basic health check var
-- Database, Redis, external API check yok
-
-**Çözüm:**
-```csharp
-builder.Services.AddHealthChecks()
-    .AddSqlServer(connectionString, name: "database")
-    .AddRedis(redisConnection, name: "redis")
-    .AddSignalR(name: "signalr")
-    .AddCheck<ExternalApiHealthCheck>("external-api");
-
-app.MapHealthChecks("/health", new HealthCheckOptions
-{
-    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-});
-```
-
-**Risk:** 🟢 DÜŞÜK - Monitoring  
-**Süre:** 4 saat  
-
----
-
 ### 🟢 ORTA ÖNCELİKLİ
 
-#### 6. **CORS Policy Geniş** 💡
+#### 5. **CORS Policy Geniş** 💡
 **Mevcut Durum:**
 ```csharp
 policy.SetIsOriginAllowed(_ => true) // Allow all origins
@@ -463,43 +420,7 @@ options.AddPolicy("SignalRCorsPolicy", policy =>
 
 ---
 
-#### 7. **API Versioning Strategy** 💡
-**Mevcut Durum:**
-- `/api/v1/...` hard-coded
-- Version deprecation strategy yok
-
-**Çözüm:**
-```csharp
-builder.Services.AddApiVersioning(options =>
-{
-    options.AssumeDefaultVersionWhenUnspecified = true;
-    options.DefaultApiVersion = new ApiVersion(1, 0);
-    options.ReportApiVersions = true;
-    options.ApiVersionReader = new UrlSegmentApiVersionReader();
-});
-
-[ApiController]
-[ApiVersion("1.0")]
-[ApiVersion("2.0")]
-[Route("api/v{version:apiVersion}/[controller]")]
-public class OrderController : ControllerBase
-{
-    [HttpGet]
-    [MapToApiVersion("1.0")]
-    public async Task<IActionResult> GetOrdersV1() { }
-    
-    [HttpGet]
-    [MapToApiVersion("2.0")]
-    public async Task<IActionResult> GetOrdersV2() { }
-}
-```
-
-**Risk:** 🟢 DÜŞÜK - Future proofing  
-**Süre:** 4 saat  
-
----
-
-#### 8. **Request/Response Logging Detaylı Değil** 💡
+#### 6. **Request/Response Logging Detaylı Değil** 💡
 **Mevcut Durum:**
 - Serilog var ama request body loglama yok
 
@@ -543,16 +464,16 @@ public class RequestResponseLoggingMiddleware
 | Kategori | Kritik | Yüksek | Orta | Toplam |
 |----------|--------|--------|------|--------|
 | Test | 1 | 0 | 0 | 1 |
-| Monitoring | 1 | 1 | 1 | 3 |
+| Monitoring | 1 | 0 | 1 | 2 |
 | Performance | 0 | 2 | 0 | 2 |
 | Security | 0 | 0 | 1 | 1 |
-| **TOPLAM** | **2** | **3** | **3** | **8** |
+| **TOPLAM** | **2** | **2** | **2** | **6** |
 
 ### Tahmini Süre:
 - 🔴 Kritik: 42-62 saat
-- 🟡 Yüksek: 18-24 saat
-- 🟢 Orta: 11 saat
-- **TOPLAM: 71-97 saat (9-12 gün)**
+- 🟡 Yüksek: 14-20 saat
+- 🟢 Orta: 3 saat
+- **TOPLAM: 59-85 saat (7-11 gün)**
 
 ---
 
@@ -736,43 +657,20 @@ public async Task<IActionResult> SaveWorkingHours([FromForm] List<WorkingHoursRe
 
 ---
 
-#### 6. ~~**Multi-language Support**~~ ✅ **ÇÖZÜLDÜ**
-**Yapılan:**
-- ✅ 3 dil için resource files (.resx) eklendi (tr, en, ar)
-- ✅ ASP.NET Core Localization middleware konfigüre edildi
-- ✅ LanguageController oluşturuldu (SetLanguage, GetCurrentCulture)
-- ✅ Language switcher UI eklendi (navbar dropdown)
-- ✅ Cookie-based culture persistence (1 yıl)
-- ✅ RTL support (rtl-support.css - 114 satır)
-- ✅ Sidebar menü localized
-- ✅ User menü localized
-- ✅ Dynamic lang ve dir attributes
-
-**Desteklenen Diller:**
-- 🇹🇷 Türkçe (tr-TR) - Default
-- 🇬🇧 English (en-US)
-- 🇸🇦 العربية (ar-SA) - Full RTL
-
-**Sonuç:** ✅ Multi-language %100 çalışır durumda!  
-**Tamamlanma:** 18 Ekim 2025  
-**Build:** 0 error ✅  
-
----
-
 ## 📊 Merchant Portal - Eksiklik Özeti
 
 | Kategori | Kritik | Yüksek | Orta | Toplam |
 |----------|--------|--------|------|--------|
 | Backend Integration | 0 | 1 | 0 | 1 |
 | Features | 0 | 1 | 0 | 1 |
-| Enhancements | 0 | 0 | 3 | 3 |
-| **TOPLAM** | **0** | **2** | **3** | **5** |
+| Enhancements | 0 | 0 | 2 | 2 |
+| **TOPLAM** | **0** | **2** | **2** | **4** |
 
 ### Tahmini Süre:
 - 🔴 Kritik: 0 saat
 - 🟡 Yüksek: 7-11 saat
-- 🟢 Orta: 7-10 saat
-- **TOPLAM: 14-21 saat (2-3 gün)**
+- 🟢 Orta: 4-6 saat
+- **TOPLAM: 11-17 saat (1-2 gün)**
 
 ---
 
@@ -782,19 +680,19 @@ public async Task<IActionResult> SaveWorkingHours([FromForm] List<WorkingHoursRe
 
 | Modül | 🔴 Kritik | 🟡 Yüksek | 🟢 Orta | Toplam Eksik |
 |-------|----------|----------|---------|--------------|
-| **Mobile App** | 1 | 2 | 2 | 5 |
-| **Web API** | 2 | 3 | 3 | 8 |
-| **Merchant Portal** | 0 | 2 | 3 | 5 |
-| **TOPLAM** | **3** | **7** | **8** | **18** |
+| **Mobile App** | 0 | 0 | 0 | 0 |
+| **Web API** | 2 | 2 | 2 | 6 |
+| **Merchant Portal** | 0 | 2 | 2 | 4 |
+| **TOPLAM** | **2** | **4** | **4** | **10** |
 
 ## Tahmini Süre Dağılımı
 
 | Öncelik | Toplam Süre | Tavsiye Edilen Timeline |
 |---------|-------------|------------------------|
-| 🔴 **Kritik** | 43-63 saat | **Hemen (1 hafta)** |
-| 🟡 **Yüksek** | 32-46 saat | **Bu ay (2-3 hafta)** |
-| 🟢 **Orta** | 19 saat 10 dakika | **Gelecek ay (1 ay)** |
-| **TOPLAM** | **94-128 saat** | **12-16 iş günü** |
+| 🔴 **Kritik** | 42-62 saat | **Hemen (1 hafta)** |
+| 🟡 **Yüksek** | 21-31 saat | **Bu ay (2-3 hafta)** |
+| 🟢 **Orta** | 7-9 saat | **Gelecek ay (1 ay)** |
+| **TOPLAM** | **70-102 saat** | **9-13 iş günü** |
 
 ---
 
@@ -822,10 +720,10 @@ public async Task<IActionResult> SaveWorkingHours([FromForm] List<WorkingHoursRe
 
 ---
 
-## HAFTA 2-4: YÜKSEK ÖNCELİKLİ (18-24 saat)
+## HAFTA 2-4: YÜKSEK ÖNCELİKLİ (21-31 saat)
 
 
-### Web API (Yüksek - 18-24 saat)
+### Web API (Yüksek - 14-20 saat)
 ```
 [ ] 6. Caching Strategy (6-8 saat)
       - Redis integration
@@ -835,44 +733,36 @@ public async Task<IActionResult> SaveWorkingHours([FromForm] List<WorkingHoursRe
       - Hangfire setup
       - Order timeout jobs
       - Notification batch jobs
-      
-[ ] 8. Health Checks (4 saat)
-      - Database health
-      - Redis health
-      - External API health
 ```
 
 ### Merchant Portal (Yüksek - 7-11 saat)
 ```
-[ ] 9. Payment Tracking Module (4-5 saat)
+[ ] 8. Payment Tracking Module (4-5 saat)
       - Payment history
       - Settlement reports
       
-[ ] 10. Advanced Analytics (3-4 saat)
+[ ] 9. Advanced Analytics (3-4 saat)
       - Chart.js integration
       - Visual dashboards
       
-[ ] 11. Working Hours API Integration (1-2 saat)
+[ ] 10. Working Hours API Integration (1-2 saat)
 ```
 
 ---
 
-## AY 2: ORTA ÖNCELİKLİ (19 saat 10 dakika)
+## AY 2: ORTA ÖNCELİKLİ (7-9 saat)
 
 
-### Web API (Orta - 11 saat)
+### Web API (Orta - 3 saat)
 ```
-[ ] 14. CORS Policy Hardening (1 saat)
-[ ] 15. API Versioning Strategy (4 saat)
-[ ] 16. Request/Response Logging (2 saat)
-[ ] 17. Performance Profiling (4 saat)
+[ ] 11. CORS Policy Hardening (1 saat)
+[ ] 12. Request/Response Logging (2 saat)
 ```
 
-### Merchant Portal (Orta - 7-10 saat)
+### Merchant Portal (Orta - 4-6 saat)
 ```
-[ ] 18. Stock Management Enhancement (2-3 saat)
-[ ] 19. File Upload Enhancement (2-3 saat)
-[ ] 20. Multi-language Support (3-4 saat)
+[ ] 13. Stock Management Enhancement (2-3 saat)
+[ ] 14. File Upload Enhancement (2-3 saat)
 ```
 
 ---
@@ -1125,37 +1015,30 @@ Security:
 ## Kısa Vadeli (1-2 Hafta)
 
 ### MUST DO (Kritik)
-1. **Mobile Encryption güvenliğini düzelt** (2-4 saat) 🔥
-2. **Unit test coverage'ı artır** (40-60 saat) 🔥
-3. **Backend SignalR events ekle** (2 saat) 🔥
-4. **Application Insights enable et** (2 saat)
+1. **Unit test coverage'ı artır** (40-60 saat) 🔥
+2. **Application Insights enable et** (2 saat)
 
 ### SHOULD DO (Yüksek)
-5. Token refresh interceptor (4 saat)
-6. Firebase configuration (1 saat)
-7. API documentation (8-12 saat)
-8. Caching strategy (6-8 saat)
-9. Payment tracking module (4-5 saat)
+3. Caching strategy (6-8 saat)
+4. Background Jobs - Hangfire (8-12 saat)
+5. Payment tracking module (4-5 saat)
+6. Advanced Analytics (3-4 saat)
+7. Working Hours API Integration (1-2 saat)
 
-**Toplam Süre:** ~69-102 saat (9-13 gün)
+**Toplam Süre:** ~64-94 saat (8-12 gün)
 
 ---
 
 ## Orta Vadeli (1 Ay)
 
-### Performance
-- Redis cache integration
-- Pagination (mobile)
-- Background jobs (Hangfire)
-- Database optimization
-
-### Features
-- Advanced analytics dashboard
+### Polish & Enhancements
+- CORS Policy Hardening
+- Request/Response Logging
 - Stock management enhancement
 - File upload enhancement
-- Push notifications (mobile)
+- Database optimization
 
-**Toplam Süre:** ~40-55 saat (5-7 gün)
+**Toplam Süre:** ~10-15 saat (1-2 gün)
 
 ---
 
@@ -1338,31 +1221,29 @@ Bu Getir Clone projesi:
 **Full Production:** ⚠️ 3-4 hafta çalışma gerekli
 
 **Kritik Blocker'lar:**
-1. Mobile encryption güvenliği
-2. Unit test coverage
-3. Backend SignalR events
-4. Application Insights
+1. Unit test coverage (Web API)
+2. Application Insights (Web API)
 
 ### Tavsiye Edilen Timeline
 
 ```
-Hafta 1: Kritik sorunlar (51-73 saat)
-  → Mobile encryption, Unit tests, SignalR events
+Hafta 1: Kritik sorunlar (42-62 saat)
+  → Unit tests, Application Insights
 
-Hafta 2-4: Yüksek öncelikli (49-68 saat)
-  → Firebase, Caching, Payment module, Analytics
+Hafta 2-4: Yüksek öncelikli (21-31 saat)
+  → Caching, Background Jobs, Payment module, Analytics
 
-Ay 2: Orta öncelikli (24-29 saat)
-  → Enhancements, Optimizations, Polish
+Ay 2: Orta öncelikli (7-9 saat)
+  → CORS Policy, Request/Response Logging, Enhancements
 
-TOPLAM: 124-170 saat (15-21 iş günü)
+TOPLAM: 70-102 saat (9-13 iş günü)
 ```
 
 ---
 
 **Rapor Hazırlayan:** Senior .NET & Flutter Architect  
-**Tarih:** 18 Ekim 2025  
-**Versiyon:** 1.0
+**Tarih:** 19 Ekim 2025  
+**Versiyon:** 1.1 (Güncelleme: Tamamlanan maddeler temizlendi)
 
 ---
 
