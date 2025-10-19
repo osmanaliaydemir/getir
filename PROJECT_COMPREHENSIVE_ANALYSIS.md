@@ -298,36 +298,7 @@ builder.Services.AddApplicationInsightsTelemetry(options =>
 
 ### 🟡 YÜKSEK ÖNCELİKLİ
 
-#### 3. ~~**Caching Strategy**~~ ✅ **ZATEN VAR!**
-**Mevcut Durum:**
-- ✅ Redis cache infrastructure implement edilmiş (RedisCacheService.cs - 400+ satır)
-- ✅ Circuit breaker pattern ile fallback to MemoryCache
-- ✅ Double-layer caching strategy
-- ✅ 40 service'de aktif kullanımda (116 cache operation)
-- ✅ Centralized cache key management (CacheKeys class)
-- ✅ TTL strategy (Short: 5m, Medium: 15m, Long: 60m)
-- ✅ GetOrSetCacheAsync pattern (Cache-Aside)
-
-**Örnekler:**
-```csharp
-// ProductService.cs - Cache kullanımı
-var cacheKey = CacheKeys.ProductsByMerchant(merchantId, page, pageSize);
-return await GetOrSetCacheAsync(
-    cacheKey,
-    async () => await _unitOfWork.Repository<Product>().GetPagedAsync(...),
-    TimeSpan.FromMinutes(15),
-    cancellationToken);
-
-// MerchantService.cs - Cache invalidation
-await _cacheService.RemoveByPatternAsync($"merchants:{merchantId}:*");
-```
-
-**Sonuç:** ✅ Production-ready Redis cache sistemi mevcut!  
-**Tamamlanma:** Önceden implement edilmiş  
-
----
-
-#### 4. **Background Jobs (Hangfire) Eksik** ⚠️
+#### 3. **Background Jobs (Hangfire) Eksik** ⚠️
 **Mevcut Durum:**
 - Background task yok
 - Scheduled job yok
@@ -378,7 +349,7 @@ RecurringJob.AddOrUpdate<OrderBackgroundJobs>(
 
 ### 🟢 ORTA ÖNCELİKLİ
 
-#### 5. **CORS Policy Geniş** 💡
+#### 4. **CORS Policy Geniş** 💡
 **Mevcut Durum:**
 ```csharp
 policy.SetIsOriginAllowed(_ => true) // Allow all origins
@@ -406,7 +377,7 @@ options.AddPolicy("SignalRCorsPolicy", policy =>
 
 ---
 
-#### 6. **Request/Response Logging Detaylı Değil** 💡
+#### 5. **Request/Response Logging Detaylı Değil** 💡
 **Mevcut Durum:**
 - Serilog var ama request body loglama yok
 
@@ -453,7 +424,7 @@ public class RequestResponseLoggingMiddleware
 | Monitoring | 1 | 0 | 1 | 2 |
 | Performance | 0 | 1 | 0 | 1 |
 | Security | 0 | 0 | 1 | 1 |
-| **TOPLAM** | **2** | **1** | **2** | **5** |
+| **TOPLAM** | **2** | **1** | **2** | **4** |
 
 ### Tahmini Süre:
 - 🔴 Kritik: 42-62 saat
@@ -667,9 +638,9 @@ public async Task<IActionResult> SaveWorkingHours([FromForm] List<WorkingHoursRe
 | Modül | 🔴 Kritik | 🟡 Yüksek | 🟢 Orta | Toplam Eksik |
 |-------|----------|----------|---------|--------------|
 | **Mobile App** | 0 | 0 | 0 | 0 |
-| **Web API** | 2 | 1 | 2 | 5 |
+| **Web API** | 2 | 1 | 2 | 4 |
 | **Merchant Portal** | 0 | 2 | 2 | 4 |
-| **TOPLAM** | **2** | **3** | **4** | **9** |
+| **TOPLAM** | **2** | **3** | **4** | **8** |
 
 ## Tahmini Süre Dağılımı
 
@@ -711,7 +682,7 @@ public async Task<IActionResult> SaveWorkingHours([FromForm] List<WorkingHoursRe
 
 ### Web API (Yüksek - 8-12 saat)
 ```
-[ ] 6. Background Jobs (8-12 saat)
+[ ] 3. Background Jobs (8-12 saat)
       - Hangfire setup
       - Order timeout jobs
       - Notification batch jobs
@@ -719,15 +690,15 @@ public async Task<IActionResult> SaveWorkingHours([FromForm] List<WorkingHoursRe
 
 ### Merchant Portal (Yüksek - 7-11 saat)
 ```
-[ ] 7. Payment Tracking Module (4-5 saat)
+[ ] 4. Payment Tracking Module (4-5 saat)
       - Payment history
       - Settlement reports
       
-[ ] 8. Advanced Analytics (3-4 saat)
+[ ] 5. Advanced Analytics (3-4 saat)
       - Chart.js integration
       - Visual dashboards
       
-[ ] 9. Working Hours API Integration (1-2 saat)
+[ ] 6. Working Hours API Integration (1-2 saat)
 ```
 
 ---
@@ -737,14 +708,14 @@ public async Task<IActionResult> SaveWorkingHours([FromForm] List<WorkingHoursRe
 
 ### Web API (Orta - 3 saat)
 ```
-[ ] 11. CORS Policy Hardening (1 saat)
-[ ] 12. Request/Response Logging (2 saat)
+[ ] 7. CORS Policy Hardening (1 saat)
+[ ] 8. Request/Response Logging (2 saat)
 ```
 
 ### Merchant Portal (Orta - 4-6 saat)
 ```
-[ ] 13. Stock Management Enhancement (2-3 saat)
-[ ] 14. File Upload Enhancement (2-3 saat)
+[ ] 9. Stock Management Enhancement (2-3 saat)
+[ ] 10. File Upload Enhancement (2-3 saat)
 ```
 
 ---
@@ -1224,7 +1195,7 @@ TOPLAM: 64-94 saat (8-12 iş günü)
 
 **Rapor Hazırlayan:** Senior .NET & Flutter Architect  
 **Tarih:** 19 Ekim 2025  
-**Versiyon:** 1.2 (Güncelleme: Redis Cache zaten var - tespit edildi)
+**Versiyon:** 1.3 (Güncelleme: Tamamlanmış maddeler dokümandan çıkarıldı)
 
 ---
 
