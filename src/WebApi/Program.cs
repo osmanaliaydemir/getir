@@ -155,6 +155,12 @@ var app = builder.Build();
 app.UseMiddleware<GlobalExceptionMiddleware>();  // 1. Global exception handler (ApiResponse format)
 app.UseMiddleware<RequestIdMiddleware>();        // 2. Request ID tracking
 
+// Request/Response logging (detailed body logging with sensitive data masking)
+if (app.Configuration.GetValue<bool>("RequestResponseLogging:Enabled", true))
+{
+    app.UseMiddleware<RequestResponseLoggingMiddleware>();
+}
+
 app.UseSerilogRequestLogging();
 
 app.UseMiddleware<ValidationMiddleware>();       // 3. Validation (after logging)

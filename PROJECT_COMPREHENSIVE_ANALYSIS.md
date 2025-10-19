@@ -377,42 +377,42 @@ options.AddPolicy("SignalRCorsPolicy", policy =>
 
 ---
 
-#### 5. **Request/Response Logging Detaylı Değil** 💡
-**Mevcut Durum:**
-- Serilog var ama request body loglama yok
+#### 5. ~~**Request/Response Logging**~~ ✅ **TAMAMLANDI!**
 
-**Çözüm:**
-```csharp
-public class RequestResponseLoggingMiddleware
-{
-    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
-    {
-        // Log request
-        var requestBody = await ReadRequestBodyAsync(context.Request);
-        _logger.LogInformation("Request: {Method} {Path} {Body}", 
-            context.Request.Method, 
-            context.Request.Path, 
-            requestBody);
-        
-        // Log response
-        var originalBody = context.Response.Body;
-        using var newBody = new MemoryStream();
-        context.Response.Body = newBody;
-        
-        await next(context);
-        
-        var responseBody = await ReadResponseBodyAsync(context.Response);
-        _logger.LogInformation("Response: {StatusCode} {Body}", 
-            context.Response.StatusCode, 
-            responseBody);
-        
-        await newBody.CopyToAsync(originalBody);
-    }
-}
+**Yapılanlar:**
+- ✅ RequestResponseLoggingMiddleware implement edildi (320+ satır)
+- ✅ Sensitive data masking (password, token, apiKey, etc.)
+- ✅ Performance tracking (duration logging)
+- ✅ Slow request detection (configurable threshold)
+- ✅ Configurable body logging (dev: true, prod: false)
+- ✅ RecyclableMemoryStream kullanımı (memory efficient)
+- ✅ 3 ayrı log dosyası: api/, errors/, requests/
+- ✅ Retention policy: 30/90/7 gün
+- ✅ Production configuration (body logging disabled)
+
+**Log Hedefleri:**
+```
+Development:
+├── Console (terminal)
+├── logs/api/getir-api-YYYYMMDD.log (30 gün)
+├── logs/errors/getir-errors-YYYYMMDD.log (90 gün)
+└── logs/requests/getir-requests-YYYYMMDD.log (7 gün)
+
+Production:
+├── Console (Docker/K8s logs)
+├── logs/api/getir-api-YYYYMMDD.log (30 gün)
+└── logs/errors/getir-errors-YYYYMMDD.log (90 gün)
 ```
 
-**Risk:** 🟢 DÜŞÜK - Debugging  
-**Süre:** 2 saat  
+**Security:**
+- ✅ Sensitive data masking (8 regex pattern)
+- ✅ Header masking (Authorization, Cookie, API-Key)
+- ✅ Size limits (max 10KB body logging)
+- ✅ Excluded paths (/health, /metrics, /swagger)
+
+**Sonuç:** ✅ Production-ready logging sistemi mevcut!  
+**Tamamlanma:** 19 Ekim 2025  
+**Build:** 0 error ✅  
 
 ---
 
@@ -421,16 +421,16 @@ public class RequestResponseLoggingMiddleware
 | Kategori | Kritik | Yüksek | Orta | Toplam |
 |----------|--------|--------|------|--------|
 | Test | 1 | 0 | 0 | 1 |
-| Monitoring | 1 | 0 | 1 | 2 |
+| Monitoring | 1 | 0 | 0 | 1 |
 | Performance | 0 | 1 | 0 | 1 |
 | Security | 0 | 0 | 1 | 1 |
-| **TOPLAM** | **2** | **1** | **2** | **4** |
+| **TOPLAM** | **2** | **1** | **1** | **3** |
 
 ### Tahmini Süre:
 - 🔴 Kritik: 42-62 saat
 - 🟡 Yüksek: 8-12 saat
-- 🟢 Orta: 3 saat
-- **TOPLAM: 53-77 saat (7-10 gün)**
+- 🟢 Orta: 1 saat
+- **TOPLAM: 51-75 saat (6-9 gün)**
 
 ---
 
@@ -638,9 +638,9 @@ public async Task<IActionResult> SaveWorkingHours([FromForm] List<WorkingHoursRe
 | Modül | 🔴 Kritik | 🟡 Yüksek | 🟢 Orta | Toplam Eksik |
 |-------|----------|----------|---------|--------------|
 | **Mobile App** | 0 | 0 | 0 | 0 |
-| **Web API** | 2 | 1 | 2 | 4 |
+| **Web API** | 2 | 1 | 1 | 3 |
 | **Merchant Portal** | 0 | 2 | 2 | 4 |
-| **TOPLAM** | **2** | **3** | **4** | **8** |
+| **TOPLAM** | **2** | **3** | **3** | **7** |
 
 ## Tahmini Süre Dağılımı
 
@@ -648,8 +648,8 @@ public async Task<IActionResult> SaveWorkingHours([FromForm] List<WorkingHoursRe
 |---------|-------------|------------------------|
 | 🔴 **Kritik** | 42-62 saat | **Hemen (1 hafta)** |
 | 🟡 **Yüksek** | 15-23 saat | **Bu ay (2-3 hafta)** |
-| 🟢 **Orta** | 7-9 saat | **Gelecek ay (1 ay)** |
-| **TOPLAM** | **64-94 saat** | **8-12 iş günü** |
+| 🟢 **Orta** | 5-7 saat | **Gelecek ay (1 ay)** |
+| **TOPLAM** | **62-92 saat** | **8-12 iş günü** |
 
 ---
 
@@ -703,19 +703,18 @@ public async Task<IActionResult> SaveWorkingHours([FromForm] List<WorkingHoursRe
 
 ---
 
-## AY 2: ORTA ÖNCELİKLİ (7-9 saat)
+## AY 2: ORTA ÖNCELİKLİ (5-7 saat)
 
 
-### Web API (Orta - 3 saat)
+### Web API (Orta - 1 saat)
 ```
 [ ] 7. CORS Policy Hardening (1 saat)
-[ ] 8. Request/Response Logging (2 saat)
 ```
 
 ### Merchant Portal (Orta - 4-6 saat)
 ```
-[ ] 9. Stock Management Enhancement (2-3 saat)
-[ ] 10. File Upload Enhancement (2-3 saat)
+[ ] 8. Stock Management Enhancement (2-3 saat)
+[ ] 9. File Upload Enhancement (2-3 saat)
 ```
 
 ---
@@ -985,12 +984,11 @@ Security:
 
 ### Polish & Enhancements
 - CORS Policy Hardening
-- Request/Response Logging
 - Stock management enhancement
 - File upload enhancement
 - Database optimization
 
-**Toplam Süre:** ~10-15 saat (1-2 gün)
+**Toplam Süre:** ~8-13 saat (1-2 gün)
 
 ---
 
@@ -1185,17 +1183,17 @@ Hafta 1: Kritik sorunlar (42-62 saat)
 Hafta 2-4: Yüksek öncelikli (15-23 saat)
   → Background Jobs, Payment module, Analytics
 
-Ay 2: Orta öncelikli (7-9 saat)
-  → CORS Policy, Request/Response Logging, Enhancements
+Ay 2: Orta öncelikli (5-7 saat)
+  → CORS Policy, Enhancements
 
-TOPLAM: 64-94 saat (8-12 iş günü)
+TOPLAM: 62-92 saat (8-12 iş günü)
 ```
 
 ---
 
 **Rapor Hazırlayan:** Senior .NET & Flutter Architect  
 **Tarih:** 19 Ekim 2025  
-**Versiyon:** 1.3 (Güncelleme: Tamamlanmış maddeler dokümandan çıkarıldı)
+**Versiyon:** 1.4 (Güncelleme: Request/Response Logging tamamlandı)
 
 ---
 
