@@ -207,7 +207,7 @@ options.AddPolicy("SignalRCorsPolicy", policy =>
       "https://merchant.getir.com",
       "https://admin.getir.com"
     ]
-  }
+    }
 }
 ```
 
@@ -256,56 +256,6 @@ src/MerchantPortal/
 
 ---
 
-### 2. Advanced Analytics Dashboard (3-4 saat)
-
-**Eksik:**
-- Chart.js entegrasyonu
-- Visual graphs
-- Interactive charts
-
-**Yapılacaklar:**
-```html
-<!-- 1. Chart.js ekle -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<!-- 2. Sales Line Chart -->
-<canvas id="salesChart" height="100"></canvas>
-
-<!-- 3. Orders Bar Chart -->
-<canvas id="ordersChart" height="100"></canvas>
-
-<!-- 4. Category Pie Chart -->
-<canvas id="categoryChart" width="200" height="200"></canvas>
-
-<script>
-// Sales trend
-new Chart(ctx, {
-    type: 'line',
-    data: { /* from API */ }
-});
-
-// Orders by status
-new Chart(ctx, {
-    type: 'bar',
-    data: { /* from API */ }
-});
-
-// Categories breakdown
-new Chart(ctx, {
-    type: 'pie',
-    data: { /* from API */ }
-});
-</script>
-```
-
-**Özellikler:**
-- Sales line chart (30 gün)
-- Orders bar chart (status breakdown)
-- Category pie chart
-- Top products table
-- Customer insights
-
----
 
 ## 🟢 ORTA ÖNCELİKLİ
 
@@ -411,14 +361,13 @@ await axios.post('/upload', formData, {
 
 ### Gelecek Hafta (Yüksek Öncelik)
 3. **Payment Tracking Module** (4-5h) - Business critical
-4. **Advanced Analytics** (3-4h) - Dashboard enhancement
-5. **Background Jobs** (8-12h) - Büyük feature
+4. **Background Jobs** (8-12h) - Büyük feature
 
 ### Sonrası (Enhancement)
-6. **Stock Management Enhancement** (2-3h)
-7. **File Upload Enhancement** (2-3h)
+5. **Stock Management Enhancement** (2-3h)
+6. **File Upload Enhancement** (2-3h)
 
-**Toplam:** 21-30 saat
+**Toplam:** 17-26 saat
 
 ---
 
@@ -446,6 +395,12 @@ await axios.post('/upload', formData, {
   - DayOfWeek enum ↔ string conversion
   - TimeSpan ↔ string time parsing
   - IsOpen24Hours logic implementation
+- [x] Advanced Analytics Dashboard (3-4 saat)
+  - Chart.js 4.4.0 integration
+  - Sales Line Chart (dual Y-axis, 7/30 day toggle)
+  - Orders Bar Chart (status breakdown)
+  - Category Pie/Doughnut Chart
+  - 3 API endpoints (mock data ready)
 
 📊 Test Coverage Özet:
 - Toplam Servisler: 38
@@ -459,7 +414,6 @@ await axios.post('/upload', formData, {
 - [ ] Background Jobs (Hangfire)
 - [ ] CORS Policy Hardening
 - [ ] Payment Tracking Module
-- [ ] Advanced Analytics
 - [ ] Stock Management Enhancement
 - [ ] File Upload Enhancement
 
@@ -482,8 +436,8 @@ await axios.post('/upload', formData, {
 ---
 
 **Rapor Sahibi:** Senior .NET & Flutter Architect  
-**Son Güncelleme:** 19 Ekim 2025, Saat 23:45  
-**Durum:** 8 görev kaldı, 23-32 saat (3-4 gün)
+**Son Güncelleme:** 20 Ekim 2025, Saat 00:30  
+**Durum:** 6 görev kaldı, 17-26 saat (2-3 gün)
 
 ---
 
