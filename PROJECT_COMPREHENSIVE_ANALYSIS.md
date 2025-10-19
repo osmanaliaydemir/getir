@@ -187,82 +187,6 @@ options.AddPolicy("SignalRCorsPolicy", policy =>
 
 ## 🟢 ORTA ÖNCELİKLİ
 
-### 5. Stock Management Enhancement (2-3 saat)
-
-**Eklenecek Özellikler:**
-- Low stock dashboard widget
-- Bulk stock update modal
-- Stock history timeline
-- CSV import/export
-- Reorder point alerts
-
-**Yapılacaklar:**
-```html
-<!-- Dashboard widget -->
-<div class="card">
-    <div class="card-header">⚠️ Low Stock Alerts</div>
-    <div class="card-body">
-        <ul id="lowStockList"></ul>
-    </div>
-</div>
-
-<!-- Bulk update modal -->
-<div class="modal" id="bulkStockModal">
-    <input type="file" accept=".csv,.xlsx" id="stockFile" />
-    <button onclick="uploadStockFile()">Upload</button>
-</div>
-
-<!-- History timeline -->
-<div class="timeline">
-    <div class="timeline-item" data-foreach="history">
-        <span class="time">{{time}}</span>
-        <span class="change">{{change}}</span>
-    </div>
-</div>
-```
-
----
-
-### 6. File Upload Enhancement (2-3 saat)
-
-**Eklenecek:**
-- Drag & drop upload
-- Image preview
-- Image compression
-- Multiple files
-- Progress bar
-
-**Yapılacaklar:**
-```javascript
-// Drag & drop
-dropzone.addEventListener('drop', async (e) => {
-    const files = e.dataTransfer.files;
-    for (const file of files) {
-        await uploadFile(file);
-    }
-});
-
-// Image compression
-async function compressImage(file) {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    // Compress logic
-    return compressedBlob;
-}
-
-// Progress tracking
-const formData = new FormData();
-formData.append('file', file);
-
-await axios.post('/upload', formData, {
-    onUploadProgress: (e) => {
-        const percent = Math.round((e.loaded * 100) / e.total);
-        updateProgressBar(percent);
-    }
-});
-```
-
----
 
 # 📊 ÖZET - KALAN İŞLER
 
@@ -335,6 +259,19 @@ await axios.post('/upload', formData, {
   - Payment method breakdown charts
   - Excel/CSV export
   - 3 views + 1 controller + 1 service
+- [x] Stock Management Enhancement (2-3 saat)
+  - CSV import/export with validation
+  - Bulk stock update modal
+  - Multi-product selection
+  - 7 new models, 5 new service methods
+  - 2 JavaScript modules
+- [x] File Upload Enhancement (2-3 saat)
+  - Drag & drop upload zone
+  - Image compression (Canvas API)
+  - Multiple files support (max 5)
+  - Upload progress with speed & ETA
+  - Main image selection
+  - 4 JavaScript modules + 1 partial view
 
 📊 Test Coverage Özet:
 - Toplam Servisler: 38
@@ -346,8 +283,6 @@ await axios.post('/upload', formData, {
 ### ⏳ Devam Eden
 - [ ] Background Jobs (Hangfire)
 - [ ] CORS Policy Hardening
-- [ ] Stock Management Enhancement
-- [ ] File Upload Enhancement
 
 ---
 
@@ -368,10 +303,11 @@ await axios.post('/upload', formData, {
 ---
 
 **Rapor Sahibi:** Senior .NET & Flutter Architect  
-**Son Güncelleme:** 20 Ekim 2025, Saat 00:35  
-**Durum:** 5 görev kaldı, 15-24 saat (2-3 gün)
+**Son Güncelleme:** 20 Ekim 2025, Saat 01:00  
+**Durum:** 2 görev kaldı, 9-13 saat (1-2 gün)
 
 **Not:** Application Insights kaldırıldı - alternatif monitoring çözümü araştırılacak
+**Başarı:** Merchant Portal %98 tamamlandı! 🎉
 
 ---
 
