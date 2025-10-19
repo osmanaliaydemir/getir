@@ -1,9 +1,9 @@
 using Getir.Application.Abstractions;
+using Getir.Application.Common;
 using Getir.Application.Services.GeoLocation;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
-using FluentAssertions;
 
 namespace Getir.UnitTests.Services;
 
@@ -42,7 +42,7 @@ public class GeoLocationServiceTests
         var distance = _service.CalculateDistance(lat, lon, lat, lon);
 
         // Assert
-        distance.Should().Be(0);
+        Assert.Equal(0, distance);
     }
 
     [Fact]
@@ -58,8 +58,8 @@ public class GeoLocationServiceTests
         var distance = _service.CalculateDistance(istanbulLat, istanbulLon, ankaraLat, ankaraLon);
 
         // Assert - Should be approximately 350-400 km
-        distance.Should().BeGreaterThan(300);
-        distance.Should().BeLessThan(500);
+        Assert.True(distance > 300);
+        Assert.True(distance < 500);
     }
 
     [Fact]
@@ -75,8 +75,8 @@ public class GeoLocationServiceTests
         var distance = _service.CalculateDistance(lat1, lon1, lat2, lon2);
 
         // Assert - Should be approximately 1 km
-        distance.Should().BeGreaterThan(0.5);
-        distance.Should().BeLessThan(1.5);
+        Assert.True(distance > 0.5);
+        Assert.True(distance < 1.5);
     }
 
     #endregion

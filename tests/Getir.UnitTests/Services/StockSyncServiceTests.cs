@@ -94,7 +94,7 @@ public class StockSyncServiceTests
                 MerchantId = merchantId,
                 ExternalSystemId = "TEST",
                 SyncType = StockSyncType.Manual,
-                Status = StockSyncStatus.Completed,
+                Status = StockSyncStatus.Success,
                 StartedAt = DateTime.UtcNow.AddHours(-1),
                 CompletedAt = DateTime.UtcNow,
                 SyncedItemsCount = 10,
@@ -111,7 +111,7 @@ public class StockSyncServiceTests
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value.Should().HaveCount(1);
-        result.Value.First().Status.Should().Be(StockSyncStatus.Completed);
+        result.Value.First().Status.Should().Be(StockSyncStatus.Success);
     }
 
     #endregion
