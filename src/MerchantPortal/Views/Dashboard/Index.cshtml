@@ -226,11 +226,128 @@
     </div>
 </div>
 
-<!-- Recent Orders & Top Products -->
-<div class="row g-4">
-    <!-- Recent Orders -->
+<!-- Analytics Charts -->
+<div class="row g-4 mb-4">
+    <!-- Sales Line Chart -->
+    <div class="col-lg-8">
+        <div class="chart-container-modern fade-in" style="animation-delay: 0.9s;">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <i class="fas fa-chart-line"></i>
+                    Satış Trendi (Son 30 Gün)
+                </div>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary active" data-period="30">30 Gün</button>
+                    <button type="button" class="btn btn-outline-secondary" data-period="7">7 Gün</button>
+                </div>
+            </div>
+            <div class="p-3">
+                <canvas id="salesChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Bar Chart -->
+    <div class="col-lg-4">
+        <div class="chart-container-modern fade-in" style="animation-delay: 1.0s;">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <i class="fas fa-chart-bar"></i>
+                    Sipariş Durumu
+                </div>
+            </div>
+            <div class="p-3">
+                <canvas id="ordersChart" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Pie Chart & Top Products -->
+<div class="row g-4 mb-4">
+    <!-- Category Pie Chart -->
+    <div class="col-lg-5">
+        <div class="chart-container-modern fade-in" style="animation-delay: 1.1s;">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <i class="fas fa-chart-pie"></i>
+                    Kategori Dağılımı (Ciro)
+                </div>
+            </div>
+            <div class="p-3">
+                <canvas id="categoryChart" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Products (existing, moved here) -->
     <div class="col-lg-7">
-        <div class="chart-container-modern fade-in" style="animation-delay: 0.7s;">
+        <div class="chart-container-modern fade-in" style="animation-delay: 1.2s;">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <i class="fas fa-fire"></i>
+                    En Çok Satanlar
+                </div>
+                <a href="/Products/Index" class="btn btn-sm btn-outline-primary">
+                    Tümünü Gör <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+            
+            @if (topProducts.Any())
+            {
+                <div class="d-flex flex-column gap-3 p-3">
+                    @for (var i = 0; i < Math.Min(5, topProducts.Count); i++)
+                    {
+                        var product = topProducts[i];
+                        var medalColor = i switch
+                        {
+                            0 => "text-warning",
+                            1 => "text-secondary",
+                            2 => "text-danger",
+                            _ => "text-muted"
+                        };
+                        
+                        <div class="product-card-mini">
+                            <div class="position-relative">
+                                <img src="@(product.ImageUrl ?? "/images/product-placeholder.png")" 
+                                     alt="@product.Name" 
+                                     class="product-img-mini"
+                                     onerror="this.src='/images/product-placeholder.png'">
+                                <div class="position-absolute top-0 start-0 @medalColor" style="margin: -8px 0 0 -8px; font-size: 1.5rem;">
+                                    <i class="fas fa-medal"></i>
+                                </div>
+                            </div>
+                            <div class="product-info">
+                                <div class="product-name">@product.Name</div>
+                                <div class="product-sales">
+                                    <i class="fas fa-shopping-cart me-1"></i>
+                                    <span class="fw-bold">@product.OrderCount</span> satış
+                                    <span class="text-muted mx-2">•</span>
+                                    <span class="text-success fw-bold">₺@product.TotalRevenue.ToString("N2")</span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-success fw-bold">₺@product.TotalRevenue.ToString("N2")</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Henüz satış yok</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders -->
+<div class="row g-4">
+    <div class="col-12">
+        <div class="chart-container-modern fade-in" style="animation-delay: 1.3s;">
             <div class="chart-header">
                 <div class="chart-title">
                     <i class="fas fa-shopping-bag"></i>
@@ -316,69 +433,6 @@
                 <div class="text-center py-5">
                     <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
                     <p class="text-muted">Henüz sipariş yok</p>
-                </div>
-            }
-        </div>
-    </div>
-    
-    <!-- Top Products -->
-    <div class="col-lg-5">
-        <div class="chart-container-modern fade-in" style="animation-delay: 0.8s;">
-            <div class="chart-header">
-                <div class="chart-title">
-                    <i class="fas fa-fire"></i>
-                    En Çok Satanlar
-                </div>
-                <a href="/Products/Index" class="btn btn-sm btn-outline-primary">
-                    Tümünü Gör <i class="fas fa-arrow-right ms-1"></i>
-                </a>
-            </div>
-            
-            @if (topProducts.Any())
-            {
-                <div class="d-flex flex-column gap-3">
-                    @for (var i = 0; i < Math.Min(5, topProducts.Count); i++)
-                    {
-                        var product = topProducts[i];
-                        var medalColor = i switch
-                        {
-                            0 => "text-warning",
-                            1 => "text-secondary",
-                            2 => "text-danger",
-                            _ => "text-muted"
-                        };
-                        
-                        <div class="product-card-mini">
-                            <div class="position-relative">
-                                <img src="@(product.ImageUrl ?? "/images/product-placeholder.png")" 
-                                     alt="@product.Name" 
-                                     class="product-img-mini"
-                                     onerror="this.src='/images/product-placeholder.png'">
-                                <div class="position-absolute top-0 start-0 @medalColor" style="margin: -8px 0 0 -8px; font-size: 1.5rem;">
-                                    <i class="fas fa-medal"></i>
-                                </div>
-                            </div>
-                            <div class="product-info">
-                                <div class="product-name">@product.Name</div>
-                                <div class="product-sales">
-                                    <i class="fas fa-shopping-cart me-1"></i>
-                                    <span class="fw-bold">@product.OrderCount</span> satış
-                                    <span class="text-muted mx-2">•</span>
-                                    <span class="text-success fw-bold">₺@product.TotalRevenue.ToString("N2")</span>
-                                </div>
-                            </div>
-                            <div class="text-end">
-                                <div class="text-success fw-bold">₺@product.TotalRevenue.ToString("N2")</div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="text-center py-5">
-                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">Henüz satış yok</p>
                 </div>
             }
         </div>
