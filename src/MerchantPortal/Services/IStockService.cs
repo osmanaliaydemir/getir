@@ -66,5 +66,30 @@ public interface IStockService
     /// <returns>Başarılı olup olmadığı</returns>
     /// </summary>
     Task<bool> CheckStockLevelsAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Düşük stok ürünlerini getirir.
+    /// </summary>
+    Task<List<LowStockProductModel>> GetLowStockProductsAsync(Guid merchantId, int threshold = 10, CancellationToken ct = default);
+
+    /// <summary>
+    /// CSV'den stok import eder.
+    /// </summary>
+    Task<StockImportResult> ImportStockFromCsvAsync(Guid merchantId, Stream csvStream, CancellationToken ct = default);
+
+    /// <summary>
+    /// Stokları CSV'ye export eder.
+    /// </summary>
+    Task<byte[]> ExportStockToCsvAsync(Guid merchantId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Reorder point ayarlarını getirir.
+    /// </summary>
+    Task<List<ReorderPointModel>> GetReorderPointsAsync(Guid merchantId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Reorder point ayarını kaydeder.
+    /// </summary>
+    Task<bool> SetReorderPointAsync(Guid productId, int minStock, int maxStock, CancellationToken ct = default);
 }
 
