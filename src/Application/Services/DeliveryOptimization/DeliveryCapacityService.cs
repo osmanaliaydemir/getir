@@ -12,25 +12,18 @@ namespace Getir.Application.Services.DeliveryOptimization;
 /// </summary>
 public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
 {
-    public DeliveryCapacityService(
-        IUnitOfWork unitOfWork,
-        ILogger<DeliveryCapacityService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService) 
+    public DeliveryCapacityService(IUnitOfWork unitOfWork, ILogger<DeliveryCapacityService> logger, ILoggingService loggingService, ICacheService cacheService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
     }
-
-    public async Task<Result<DeliveryCapacityResponse>> CreateCapacityAsync(
-        DeliveryCapacityRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<DeliveryCapacityResponse>> CreateCapacityAsync(DeliveryCapacityRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
             // Mevcut kapasiteyi kontrol et
             var existingCapacity = await _unitOfWork.ReadRepository<DeliveryCapacity>()
                 .FirstOrDefaultAsync(
-                    filter: dc => dc.MerchantId == request.MerchantId && 
+                    filter: dc => dc.MerchantId == request.MerchantId &&
                                  dc.DeliveryZoneId == request.DeliveryZoneId &&
                                  dc.IsActive,
                     cancellationToken: cancellationToken);
@@ -38,7 +31,7 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             if (existingCapacity != null)
             {
                 return Result.Fail<DeliveryCapacityResponse>(
-                    "Delivery capacity already exists for this merchant and zone", 
+                    "Delivery capacity already exists for this merchant and zone",
                     "CAPACITY_ALREADY_EXISTS");
             }
 
@@ -88,11 +81,7 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail<DeliveryCapacityResponse>("Failed to create delivery capacity", "CREATE_CAPACITY_ERROR");
         }
     }
-
-    public async Task<Result<DeliveryCapacityResponse>> UpdateCapacityAsync(
-        Guid capacityId,
-        DeliveryCapacityRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<DeliveryCapacityResponse>> UpdateCapacityAsync(Guid capacityId, DeliveryCapacityRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -140,16 +129,13 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail<DeliveryCapacityResponse>("Failed to update delivery capacity", "UPDATE_CAPACITY_ERROR");
         }
     }
-
-    public async Task<Result<DeliveryCapacityCheckResponse>> CheckCapacityAsync(
-        DeliveryCapacityCheckRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<DeliveryCapacityCheckResponse>> CheckCapacityAsync(DeliveryCapacityCheckRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
             var capacity = await _unitOfWork.ReadRepository<DeliveryCapacity>()
                 .FirstOrDefaultAsync(
-                    filter: dc => dc.MerchantId == request.MerchantId && 
+                    filter: dc => dc.MerchantId == request.MerchantId &&
                                  dc.DeliveryZoneId == request.DeliveryZoneId &&
                                  dc.IsActive,
                     cancellationToken: cancellationToken);
@@ -195,7 +181,7 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             }
 
             // Mesafe kontrolü
-            if (request.DeliveryDistanceKm.HasValue && 
+            if (request.DeliveryDistanceKm.HasValue &&
                 capacity.MaxDeliveryDistanceKm.HasValue &&
                 request.DeliveryDistanceKm.Value > capacity.MaxDeliveryDistanceKm.Value)
             {
@@ -204,7 +190,7 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             }
 
             // Mesafeye göre ücret ayarlama
-            if (request.DeliveryDistanceKm.HasValue && 
+            if (request.DeliveryDistanceKm.HasValue &&
                 capacity.DistanceBasedFeeMultiplier.HasValue &&
                 capacity.DistanceBasedFeeMultiplier.Value != 1.0m)
             {
@@ -218,7 +204,7 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             {
                 var currentTime = DateTime.Now.TimeOfDay;
                 isPeakHour = IsWithinTimeRange(currentTime, capacity.PeakStartTime.Value, capacity.PeakEndTime.Value);
-                
+
                 if (isPeakHour && capacity.PeakHourCapacityReduction > 0)
                 {
                     availableCapacity = (int)(availableCapacity * (100 - capacity.PeakHourCapacityReduction) / 100.0);
@@ -243,17 +229,13 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail<DeliveryCapacityCheckResponse>("Failed to check delivery capacity", "CHECK_CAPACITY_ERROR");
         }
     }
-
-    public async Task<Result> IncrementActiveDeliveriesAsync(
-        Guid merchantId,
-        Guid? deliveryZoneId = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> IncrementActiveDeliveriesAsync(Guid merchantId, Guid? deliveryZoneId = null, CancellationToken cancellationToken = default)
     {
         try
         {
             var capacity = await _unitOfWork.ReadRepository<DeliveryCapacity>()
                 .FirstOrDefaultAsync(
-                    filter: dc => dc.MerchantId == merchantId && 
+                    filter: dc => dc.MerchantId == merchantId &&
                                  dc.DeliveryZoneId == deliveryZoneId &&
                                  dc.IsActive,
                     cancellationToken: cancellationToken);
@@ -282,17 +264,13 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail("Failed to increment active deliveries", "INCREMENT_ACTIVE_DELIVERIES_ERROR");
         }
     }
-
-    public async Task<Result> DecrementActiveDeliveriesAsync(
-        Guid merchantId,
-        Guid? deliveryZoneId = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DecrementActiveDeliveriesAsync(Guid merchantId, Guid? deliveryZoneId = null, CancellationToken cancellationToken = default)
     {
         try
         {
             var capacity = await _unitOfWork.ReadRepository<DeliveryCapacity>()
                 .FirstOrDefaultAsync(
-                    filter: dc => dc.MerchantId == merchantId && 
+                    filter: dc => dc.MerchantId == merchantId &&
                                  dc.DeliveryZoneId == deliveryZoneId &&
                                  dc.IsActive,
                     cancellationToken: cancellationToken);
@@ -321,17 +299,13 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail("Failed to decrement active deliveries", "DECREMENT_ACTIVE_DELIVERIES_ERROR");
         }
     }
-
-    public async Task<Result> IncrementDailyDeliveriesAsync(
-        Guid merchantId,
-        Guid? deliveryZoneId = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> IncrementDailyDeliveriesAsync(Guid merchantId, Guid? deliveryZoneId = null, CancellationToken cancellationToken = default)
     {
         try
         {
             var capacity = await _unitOfWork.ReadRepository<DeliveryCapacity>()
                 .FirstOrDefaultAsync(
-                    filter: dc => dc.MerchantId == merchantId && 
+                    filter: dc => dc.MerchantId == merchantId &&
                                  dc.DeliveryZoneId == deliveryZoneId &&
                                  dc.IsActive,
                     cancellationToken: cancellationToken);
@@ -362,17 +336,13 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail("Failed to increment daily deliveries", "INCREMENT_DAILY_DELIVERIES_ERROR");
         }
     }
-
-    public async Task<Result<DeliveryCapacityResponse>> GetCapacityAsync(
-        Guid merchantId,
-        Guid? deliveryZoneId = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<DeliveryCapacityResponse>> GetCapacityAsync(Guid merchantId, Guid? deliveryZoneId = null, CancellationToken cancellationToken = default)
     {
         try
         {
             var capacity = await _unitOfWork.ReadRepository<DeliveryCapacity>()
                 .FirstOrDefaultAsync(
-                    filter: dc => dc.MerchantId == merchantId && 
+                    filter: dc => dc.MerchantId == merchantId &&
                                  dc.DeliveryZoneId == deliveryZoneId &&
                                  dc.IsActive,
                     cancellationToken: cancellationToken);
@@ -391,16 +361,13 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail<DeliveryCapacityResponse>("Failed to get delivery capacity", "GET_CAPACITY_ERROR");
         }
     }
-
-    public async Task<Result> AdjustCapacityAsync(
-        DynamicCapacityAdjustmentRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> AdjustCapacityAsync(DynamicCapacityAdjustmentRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
             var capacity = await _unitOfWork.ReadRepository<DeliveryCapacity>()
                 .FirstOrDefaultAsync(
-                    filter: dc => dc.MerchantId == request.MerchantId && 
+                    filter: dc => dc.MerchantId == request.MerchantId &&
                                  dc.DeliveryZoneId == request.DeliveryZoneId &&
                                  dc.IsActive,
                     cancellationToken: cancellationToken);
@@ -443,10 +410,7 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail("Failed to adjust capacity", "ADJUST_CAPACITY_ERROR");
         }
     }
-
-    public Task<Result> SendCapacityAlertAsync(
-        CapacityAlertRequest request,
-        CancellationToken cancellationToken = default)
+    public Task<Result> SendCapacityAlertAsync(CapacityAlertRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -469,9 +433,7 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Task.FromResult(Result.Fail("Failed to send capacity alert", "SEND_ALERT_ERROR"));
         }
     }
-
-    public async Task<Result> ResetDailyCountersAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ResetDailyCountersAsync(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -506,9 +468,7 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail("Failed to reset daily counters", "RESET_DAILY_COUNTERS_ERROR");
         }
     }
-
-    public async Task<Result> ResetWeeklyCountersAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ResetWeeklyCountersAsync(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -543,9 +503,7 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail("Failed to reset weekly counters", "RESET_WEEKLY_COUNTERS_ERROR");
         }
     }
-
     #region Helper Methods
-
     private DeliveryCapacityResponse MapToResponse(DeliveryCapacity capacity)
     {
         return new DeliveryCapacityResponse(
@@ -568,7 +526,6 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             capacity.CreatedAt,
             capacity.UpdatedAt);
     }
-
     private bool IsWithinTimeRange(TimeSpan currentTime, TimeSpan startTime, TimeSpan endTime)
     {
         if (startTime <= endTime)
@@ -581,23 +538,20 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return currentTime >= startTime || currentTime <= endTime;
         }
     }
-
     private int CalculateWaitTime(DeliveryCapacity capacity)
     {
         // Basit bekleme süresi hesaplama
         var loadPercentage = (double)capacity.CurrentActiveDeliveries / capacity.MaxConcurrentDeliveries;
-        
+
         if (loadPercentage < 0.5) return 0;
         if (loadPercentage < 0.8) return 15;
         if (loadPercentage < 0.95) return 30;
         return 60;
     }
-
     private DateTime GetWeekStart(DateTime date)
     {
         var dayOfWeek = (int)date.DayOfWeek;
         return date.AddDays(-dayOfWeek).Date;
     }
-
     #endregion
 }

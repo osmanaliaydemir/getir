@@ -14,29 +14,20 @@ public class StockAlertService : BaseService, IStockAlertService
 {
     private new readonly ILogger<StockAlertService> _logger;
     private readonly ISignalRService? _signalRService;
-
-    public StockAlertService(
-        IUnitOfWork unitOfWork,
-        ILogger<StockAlertService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        ISignalRService? signalRService = null) 
+    public StockAlertService(IUnitOfWork unitOfWork, ILogger<StockAlertService> logger, ILoggingService loggingService, ICacheService cacheService, ISignalRService? signalRService = null)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _logger = logger;
         _signalRService = signalRService;
     }
-
-    public async Task<Result> CreateLowStockAlertsAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> CreateLowStockAlertsAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
             // Merchant existence check
             var merchant = await _unitOfWork.ReadRepository<Merchant>()
                 .FirstOrDefaultAsync(m => m.Id == merchantId, cancellationToken: cancellationToken);
-            
+
             if (merchant == null)
             {
                 return Result.Fail("Merchant not found", "MERCHANT_NOT_FOUND");
@@ -51,10 +42,10 @@ public class StockAlertService : BaseService, IStockAlertService
             }
 
             var products = await _unitOfWork.ReadRepository<Product>()
-                .ListAsync(p => p.MerchantId == merchantId && 
-                               p.IsActive && 
-                               p.StockQuantity > 0 && 
-                               p.StockQuantity <= settings.DefaultMinimumStock, 
+                .ListAsync(p => p.MerchantId == merchantId &&
+                               p.IsActive &&
+                               p.StockQuantity > 0 &&
+                               p.StockQuantity <= settings.DefaultMinimumStock,
                     cancellationToken: cancellationToken);
 
             var alerts = new List<StockAlert>();
@@ -63,9 +54,9 @@ public class StockAlertService : BaseService, IStockAlertService
             {
                 // Check if alert already exists
                 var existingAlert = await _unitOfWork.ReadRepository<StockAlert>()
-                    .FirstOrDefaultAsync(a => a.ProductId == product.Id && 
-                                             a.AlertType == Domain.Enums.StockAlertType.LowStock && 
-                                             !a.IsResolved, 
+                    .FirstOrDefaultAsync(a => a.ProductId == product.Id &&
+                                             a.AlertType == Domain.Enums.StockAlertType.LowStock &&
+                                             !a.IsResolved,
                         cancellationToken: cancellationToken);
 
                 if (existingAlert == null)
@@ -102,17 +93,14 @@ public class StockAlertService : BaseService, IStockAlertService
             return Result.Fail("Failed to create low stock alerts", "LOW_STOCK_ALERT_ERROR");
         }
     }
-
-    public async Task<Result> CreateOutOfStockAlertsAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> CreateOutOfStockAlertsAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
             // Merchant existence check
             var merchant = await _unitOfWork.ReadRepository<Merchant>()
                 .FirstOrDefaultAsync(m => m.Id == merchantId, cancellationToken: cancellationToken);
-            
+
             if (merchant == null)
             {
                 return Result.Fail("Merchant not found", "MERCHANT_NOT_FOUND");
@@ -127,9 +115,9 @@ public class StockAlertService : BaseService, IStockAlertService
             }
 
             var products = await _unitOfWork.ReadRepository<Product>()
-                .ListAsync(p => p.MerchantId == merchantId && 
-                               p.IsActive && 
-                               p.StockQuantity == 0, 
+                .ListAsync(p => p.MerchantId == merchantId &&
+                               p.IsActive &&
+                               p.StockQuantity == 0,
                     cancellationToken: cancellationToken);
 
             var alerts = new List<StockAlert>();
@@ -138,9 +126,9 @@ public class StockAlertService : BaseService, IStockAlertService
             {
                 // Check if alert already exists
                 var existingAlert = await _unitOfWork.ReadRepository<StockAlert>()
-                    .FirstOrDefaultAsync(a => a.ProductId == product.Id && 
-                                             a.AlertType == Domain.Enums.StockAlertType.OutOfStock && 
-                                             !a.IsResolved, 
+                    .FirstOrDefaultAsync(a => a.ProductId == product.Id &&
+                                             a.AlertType == Domain.Enums.StockAlertType.OutOfStock &&
+                                             !a.IsResolved,
                         cancellationToken: cancellationToken);
 
                 if (existingAlert == null)
@@ -177,17 +165,14 @@ public class StockAlertService : BaseService, IStockAlertService
             return Result.Fail("Failed to create out of stock alerts", "OUT_OF_STOCK_ALERT_ERROR");
         }
     }
-
-    public async Task<Result> CreateOverstockAlertsAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> CreateOverstockAlertsAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
             // Merchant existence check
             var merchant = await _unitOfWork.ReadRepository<Merchant>()
                 .FirstOrDefaultAsync(m => m.Id == merchantId, cancellationToken: cancellationToken);
-            
+
             if (merchant == null)
             {
                 return Result.Fail("Merchant not found", "MERCHANT_NOT_FOUND");
@@ -202,9 +187,9 @@ public class StockAlertService : BaseService, IStockAlertService
             }
 
             var products = await _unitOfWork.ReadRepository<Product>()
-                .ListAsync(p => p.MerchantId == merchantId && 
-                               p.IsActive && 
-                               p.StockQuantity >= settings.DefaultMaximumStock, 
+                .ListAsync(p => p.MerchantId == merchantId &&
+                               p.IsActive &&
+                               p.StockQuantity >= settings.DefaultMaximumStock,
                     cancellationToken: cancellationToken);
 
             var alerts = new List<StockAlert>();
@@ -213,9 +198,9 @@ public class StockAlertService : BaseService, IStockAlertService
             {
                 // Check if alert already exists
                 var existingAlert = await _unitOfWork.ReadRepository<StockAlert>()
-                    .FirstOrDefaultAsync(a => a.ProductId == product.Id && 
-                                             a.AlertType == Domain.Enums.StockAlertType.Overstock && 
-                                             !a.IsResolved, 
+                    .FirstOrDefaultAsync(a => a.ProductId == product.Id &&
+                                             a.AlertType == Domain.Enums.StockAlertType.Overstock &&
+                                             !a.IsResolved,
                         cancellationToken: cancellationToken);
 
                 if (existingAlert == null)
@@ -252,19 +237,14 @@ public class StockAlertService : BaseService, IStockAlertService
             return Result.Fail("Failed to create overstock alerts", "OVERSTOCK_ALERT_ERROR");
         }
     }
-
-    public async Task<Result> ResolveStockAlertAsync(
-        Guid alertId,
-        Guid resolvedBy,
-        string resolutionNotes,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ResolveStockAlertAsync(Guid alertId, Guid resolvedBy, string resolutionNotes, CancellationToken cancellationToken = default)
     {
         try
         {
             // User existence check
             var user = await _unitOfWork.ReadRepository<User>()
                 .FirstOrDefaultAsync(u => u.Id == resolvedBy, cancellationToken: cancellationToken);
-            
+
             if (user == null)
             {
                 return Result.Fail("User not found", "USER_NOT_FOUND");
@@ -295,19 +275,14 @@ public class StockAlertService : BaseService, IStockAlertService
             return Result.Fail("Failed to resolve stock alert", "RESOLVE_ALERT_ERROR");
         }
     }
-
-    public async Task<Result<StockAlertStatisticsResponse>> GetStockAlertStatisticsAsync(
-        Guid merchantId,
-        DateTime? fromDate = null,
-        DateTime? toDate = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<StockAlertStatisticsResponse>> GetStockAlertStatisticsAsync(Guid merchantId, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
     {
         try
         {
             // Merchant existence check
             var merchant = await _unitOfWork.ReadRepository<Merchant>()
                 .FirstOrDefaultAsync(m => m.Id == merchantId, cancellationToken: cancellationToken);
-            
+
             if (merchant == null)
             {
                 return Result.Fail<StockAlertStatisticsResponse>("Merchant not found", "MERCHANT_NOT_FOUND");
@@ -339,10 +314,7 @@ public class StockAlertService : BaseService, IStockAlertService
             return Result.Fail<StockAlertStatisticsResponse>("Failed to get stock alert statistics", "ALERT_STATISTICS_ERROR");
         }
     }
-
-    public async Task<Result> SendStockAlertNotificationsAsync(
-        List<Guid> alertIds,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> SendStockAlertNotificationsAsync(List<Guid> alertIds, CancellationToken cancellationToken = default)
     {
         if (_signalRService == null) return Result.Ok();
 
@@ -362,8 +334,8 @@ public class StockAlertService : BaseService, IStockAlertService
                     "StockAlert",
                     DateTime.UtcNow,
                     false,
-                    new Dictionary<string, object> 
-                    { 
+                    new Dictionary<string, object>
+                    {
                         { "AlertId", alert.Id },
                         { "ProductId", alert.ProductId },
                         { "ProductName", alert.Product.Name },
@@ -383,18 +355,14 @@ public class StockAlertService : BaseService, IStockAlertService
             return Result.Fail("Failed to send stock alert notifications", "SEND_NOTIFICATIONS_ERROR");
         }
     }
-
-    public async Task<Result> ConfigureStockAlertSettingsAsync(
-        StockAlertSettingsRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ConfigureStockAlertSettingsAsync(StockAlertSettingsRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
         {
             // User existence check
             var user = await _unitOfWork.ReadRepository<User>()
                 .FirstOrDefaultAsync(u => u.Id == merchantOwnerId, cancellationToken: cancellationToken);
-            
+
             if (user == null)
             {
                 return Result.Fail("User not found", "USER_NOT_FOUND");

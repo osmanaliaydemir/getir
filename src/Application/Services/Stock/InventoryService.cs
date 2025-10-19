@@ -13,21 +13,12 @@ namespace Getir.Application.Services.Stock;
 public class InventoryService : BaseService, IInventoryService
 {
     private new readonly ILogger<InventoryService> _logger;
-
-    public InventoryService(
-        IUnitOfWork unitOfWork,
-        ILogger<InventoryService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService) 
+    public InventoryService(IUnitOfWork unitOfWork, ILogger<InventoryService> logger, ILoggingService loggingService, ICacheService cacheService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _logger = logger;
     }
-
-    public async Task<Result> PerformInventoryCountAsync(
-        InventoryCountRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> PerformInventoryCountAsync(InventoryCountRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -136,12 +127,7 @@ public class InventoryService : BaseService, IInventoryService
             return Result.Fail("Failed to perform inventory count", "INVENTORY_COUNT_ERROR");
         }
     }
-
-    public async Task<Result<List<InventoryCountResponse>>> GetInventoryCountHistoryAsync(
-        Guid merchantId,
-        DateTime? fromDate = null,
-        DateTime? toDate = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<InventoryCountResponse>>> GetInventoryCountHistoryAsync(Guid merchantId, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -173,11 +159,7 @@ public class InventoryService : BaseService, IInventoryService
             return Result.Fail<List<InventoryCountResponse>>("Failed to get inventory count history", "INVENTORY_HISTORY_ERROR");
         }
     }
-
-    public async Task<Result<List<InventoryLevelResponse>>> GetCurrentInventoryLevelsAsync(
-        Guid merchantId,
-        bool includeVariants = true,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<InventoryLevelResponse>>> GetCurrentInventoryLevelsAsync(Guid merchantId, bool includeVariants = true, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -236,11 +218,7 @@ public class InventoryService : BaseService, IInventoryService
             return Result.Fail<List<InventoryLevelResponse>>("Failed to get inventory levels", "INVENTORY_LEVELS_ERROR");
         }
     }
-
-    public async Task<Result<List<InventoryDiscrepancyResponse>>> GetInventoryDiscrepanciesAsync(
-        Guid merchantId,
-        DateTime? fromDate = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<InventoryDiscrepancyResponse>>> GetInventoryDiscrepanciesAsync(Guid merchantId, DateTime? fromDate = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -275,12 +253,7 @@ public class InventoryService : BaseService, IInventoryService
             return Result.Fail<List<InventoryDiscrepancyResponse>>("Failed to get inventory discrepancies", "INVENTORY_DISCREPANCY_ERROR");
         }
     }
-
-    public async Task<Result> AdjustInventoryLevelsAsync(
-        List<InventoryAdjustmentRequest> adjustments,
-        Guid merchantOwnerId,
-        string reason,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> AdjustInventoryLevelsAsync(List<InventoryAdjustmentRequest> adjustments, Guid merchantOwnerId, string reason, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -371,12 +344,7 @@ public class InventoryService : BaseService, IInventoryService
             return Result.Fail("Failed to adjust inventory levels", "INVENTORY_ADJUSTMENT_ERROR");
         }
     }
-
-    public async Task<Result<InventoryTurnoverResponse>> GetInventoryTurnoverReportAsync(
-        Guid merchantId,
-        DateTime fromDate,
-        DateTime toDate,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<InventoryTurnoverResponse>> GetInventoryTurnoverReportAsync(Guid merchantId, DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -428,11 +396,7 @@ public class InventoryService : BaseService, IInventoryService
             return Result.Fail<InventoryTurnoverResponse>("Failed to get inventory turnover report", "INVENTORY_TURNOVER_ERROR");
         }
     }
-
-    public async Task<Result<List<SlowMovingInventoryResponse>>> GetSlowMovingInventoryAsync(
-        Guid merchantId,
-        int daysThreshold = 30,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<SlowMovingInventoryResponse>>> GetSlowMovingInventoryAsync(Guid merchantId, int daysThreshold = 30, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -451,7 +415,7 @@ public class InventoryService : BaseService, IInventoryService
 
                 if (lastMovement == null || lastMovement.ChangedAt < cutoffDate)
                 {
-                    var daysSinceLastMovement = lastMovement == null 
+                    var daysSinceLastMovement = lastMovement == null
                         ? (DateTime.UtcNow - product.CreatedAt).Days
                         : (DateTime.UtcNow - lastMovement.ChangedAt).Days;
 
@@ -474,11 +438,7 @@ public class InventoryService : BaseService, IInventoryService
             return Result.Fail<List<SlowMovingInventoryResponse>>("Failed to get slow moving inventory", "SLOW_MOVING_INVENTORY_ERROR");
         }
     }
-
-    public async Task<Result<InventoryValuationResponse>> GetInventoryValuationAsync(
-        Guid merchantId,
-        ValuationMethod method = ValuationMethod.FIFO,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<InventoryValuationResponse>> GetInventoryValuationAsync(Guid merchantId, ValuationMethod method = ValuationMethod.FIFO, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -518,17 +478,8 @@ public class InventoryService : BaseService, IInventoryService
             return Result.Fail<InventoryValuationResponse>("Failed to get inventory valuation", "INVENTORY_VALUATION_ERROR");
         }
     }
-
-    private async Task CreateStockHistoryAsync(
-        Guid productId,
-        Guid? productVariantId,
-        int previousQuantity,
-        int newQuantity,
-        Domain.Enums.StockChangeType changeType,
-        string? reason,
-        Guid? orderId,
-        string? referenceNumber,
-        CancellationToken cancellationToken)
+    private async Task CreateStockHistoryAsync(Guid productId, Guid? productVariantId, int previousQuantity, int newQuantity, Domain.Enums.StockChangeType changeType, string? reason,
+        Guid? orderId, string? referenceNumber, CancellationToken cancellationToken)
     {
         var history = new StockHistory
         {
@@ -547,7 +498,6 @@ public class InventoryService : BaseService, IInventoryService
 
         await _unitOfWork.Repository<StockHistory>().AddAsync(history, cancellationToken);
     }
-
     private StockStatus GetStockStatus(int stockQuantity)
     {
         return stockQuantity switch

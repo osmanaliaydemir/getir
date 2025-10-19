@@ -10,20 +10,12 @@ public class UserAddressService : BaseService, IUserAddressService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
 
-    public UserAddressService(
-        IUnitOfWork unitOfWork,
-        ILogger<UserAddressService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        IBackgroundTaskService backgroundTaskService) 
+    public UserAddressService(IUnitOfWork unitOfWork, ILogger<UserAddressService> logger, ILoggingService loggingService, ICacheService cacheService, IBackgroundTaskService backgroundTaskService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _backgroundTaskService = backgroundTaskService;
     }
-
-    public async Task<Result<List<AddressResponse>>> GetUserAddressesAsync(
-        Guid userId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<AddressResponse>>> GetUserAddressesAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var addresses = await _unitOfWork.ReadRepository<UserAddress>()
             .ListAsync(
@@ -46,11 +38,7 @@ public class UserAddressService : BaseService, IUserAddressService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result<AddressResponse>> AddAddressAsync(
-        Guid userId,
-        CreateAddressRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<AddressResponse>> AddAddressAsync(Guid userId, CreateAddressRequest request, CancellationToken cancellationToken = default)
     {
         var address = new UserAddress
         {
@@ -93,12 +81,7 @@ public class UserAddressService : BaseService, IUserAddressService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result<AddressResponse>> UpdateAddressAsync(
-        Guid userId,
-        Guid addressId,
-        UpdateAddressRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<AddressResponse>> UpdateAddressAsync(Guid userId, Guid addressId, UpdateAddressRequest request, CancellationToken cancellationToken = default)
     {
         var address = await _unitOfWork.Repository<UserAddress>()
             .GetAsync(a => a.Id == addressId && a.UserId == userId, cancellationToken: cancellationToken);
@@ -133,11 +116,7 @@ public class UserAddressService : BaseService, IUserAddressService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result> DeleteAddressAsync(
-        Guid userId,
-        Guid addressId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteAddressAsync(Guid userId, Guid addressId, CancellationToken cancellationToken = default)
     {
         var address = await _unitOfWork.Repository<UserAddress>()
             .GetAsync(a => a.Id == addressId && a.UserId == userId, cancellationToken: cancellationToken);
@@ -170,11 +149,7 @@ public class UserAddressService : BaseService, IUserAddressService
 
         return Result.Ok();
     }
-
-    public async Task<Result> SetDefaultAddressAsync(
-        Guid userId,
-        Guid addressId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> SetDefaultAddressAsync(Guid userId, Guid addressId, CancellationToken cancellationToken = default)
     {
         var address = await _unitOfWork.Repository<UserAddress>()
             .GetAsync(a => a.Id == addressId && a.UserId == userId && a.IsActive, cancellationToken: cancellationToken);
@@ -198,7 +173,7 @@ public class UserAddressService : BaseService, IUserAddressService
 
         address.IsDefault = true;
         _unitOfWork.Repository<UserAddress>().Update(address);
-        
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Ok();

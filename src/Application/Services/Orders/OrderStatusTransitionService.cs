@@ -13,27 +13,14 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
     private readonly ISignalRService? _signalRService;
     private new readonly ILogger<OrderStatusTransitionService> _logger;
 
-    public OrderStatusTransitionService(
-        IUnitOfWork unitOfWork,
-        ILogger<OrderStatusTransitionService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        IOrderStatusValidatorService validatorService,
-        ISignalRService? signalRService = null) 
+    public OrderStatusTransitionService(IUnitOfWork unitOfWork, ILogger<OrderStatusTransitionService> logger, ILoggingService loggingService, ICacheService cacheService, IOrderStatusValidatorService validatorService, ISignalRService? signalRService = null)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _validatorService = validatorService;
         _signalRService = signalRService;
         _logger = logger;
     }
-
-    public async Task<Result> ChangeOrderStatusAsync(
-        ChangeOrderStatusRequest request,
-        Guid userId,
-        string userRole,
-        string? ipAddress = null,
-        string? userAgent = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ChangeOrderStatusAsync(ChangeOrderStatusRequest request, Guid userId, string userRole, string? ipAddress = null, string? userAgent = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -114,13 +101,7 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
             return Result.Fail("Failed to change order status", "STATUS_CHANGE_ERROR");
         }
     }
-
-    public async Task<Result> RollbackLastStatusChangeAsync(
-        Guid orderId,
-        Guid userId,
-        string userRole,
-        string? reason = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> RollbackLastStatusChangeAsync(Guid orderId, Guid userId, string userRole, string? reason = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -200,10 +181,7 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
             return Result.Fail("Failed to rollback order status", "ROLLBACK_ERROR");
         }
     }
-
-    public async Task<Result<List<OrderStatusTransitionLogResponse>>> GetOrderStatusHistoryAsync(
-        Guid orderId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<OrderStatusTransitionLogResponse>>> GetOrderStatusHistoryAsync(Guid orderId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -238,12 +216,7 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
             return Result.Fail<List<OrderStatusTransitionLogResponse>>("Failed to get order status history", "ERROR");
         }
     }
-
-    public async Task<Result<List<OrderStatusTransitionResponse>>> GetAvailableTransitionsAsync(
-        Guid orderId,
-        Guid userId,
-        string userRole,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<OrderStatusTransitionResponse>>> GetAvailableTransitionsAsync(Guid orderId, Guid userId, string userRole, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -280,12 +253,7 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
             return Result.Fail<List<OrderStatusTransitionResponse>>("Failed to get available transitions", "ERROR");
         }
     }
-
-    private async Task UpdateOrderFieldsForStatusAsync(
-        Order order,
-        OrderStatus newStatus,
-        Dictionary<string, object>? additionalData,
-        CancellationToken cancellationToken)
+    private async Task UpdateOrderFieldsForStatusAsync(Order order, OrderStatus newStatus, Dictionary<string, object>? additionalData, CancellationToken cancellationToken)
     {
         switch (newStatus)
         {
@@ -319,19 +287,14 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
                 break;
         }
     }
-
-    private async Task SendStatusChangeNotificationsAsync(
-        Order order,
-        OrderStatus fromStatus,
-        OrderStatus toStatus,
-        CancellationToken cancellationToken)
+    private async Task SendStatusChangeNotificationsAsync(Order order, OrderStatus fromStatus, OrderStatus toStatus, CancellationToken cancellationToken)
     {
         if (_signalRService == null) return;
 
         try
         {
             var message = GetStatusChangeMessage(order, fromStatus, toStatus);
-            
+
             // Notify customer
             await _signalRService.SendOrderStatusUpdateAsync(
                 order.Id,
@@ -374,7 +337,6 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
             _logger.LogError(ex, "Error sending status change notifications");
         }
     }
-
     private string GetStatusChangeMessage(Order order, OrderStatus fromStatus, OrderStatus toStatus)
     {
         return toStatus switch
@@ -388,17 +350,14 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
             _ => $"Your order {order.OrderNumber} status has been updated"
         };
     }
-
     private bool ShouldNotifyMerchant(OrderStatus status)
     {
         return status is OrderStatus.Cancelled or OrderStatus.Delivered;
     }
-
     private bool ShouldNotifyCourier(OrderStatus status)
     {
         return status is OrderStatus.Ready or OrderStatus.Cancelled;
     }
-
     private string GetStatusDescription(OrderStatus status)
     {
         return status switch

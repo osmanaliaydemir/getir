@@ -11,21 +11,13 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
 
-    public MerchantDashboardService(
-        IUnitOfWork unitOfWork,
-        ILogger<MerchantDashboardService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        IBackgroundTaskService backgroundTaskService) 
+    public MerchantDashboardService(IUnitOfWork unitOfWork, ILogger<MerchantDashboardService> logger, ILoggingService loggingService, ICacheService cacheService, IBackgroundTaskService backgroundTaskService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _backgroundTaskService = backgroundTaskService;
     }
 
-    public async Task<Result<MerchantDashboardResponse>> GetDashboardAsync(
-        Guid merchantId,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MerchantDashboardResponse>> GetDashboardAsync(Guid merchantId, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         // Merchant ownership kontrolü
         var merchant = await _unitOfWork.ReadRepository<Merchant>()
@@ -52,11 +44,7 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
         return Result.Ok(response);
     }
 
-    public async Task<Result<List<RecentOrderResponse>>> GetRecentOrdersAsync(
-        Guid merchantId,
-        Guid merchantOwnerId,
-        int limit = ApplicationConstants.MaxRecentItems,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<RecentOrderResponse>>> GetRecentOrdersAsync(Guid merchantId, Guid merchantOwnerId, int limit = ApplicationConstants.MaxRecentItems, CancellationToken cancellationToken = default)
     {
         // Merchant ownership kontrolü
         var merchant = await _unitOfWork.ReadRepository<Merchant>()
@@ -88,11 +76,7 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
         return Result.Ok(response);
     }
 
-    public async Task<Result<List<TopProductResponse>>> GetTopProductsAsync(
-        Guid merchantId,
-        Guid merchantOwnerId,
-        int limit = ApplicationConstants.MaxRecentItems,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<TopProductResponse>>> GetTopProductsAsync(Guid merchantId, Guid merchantOwnerId, int limit = ApplicationConstants.MaxRecentItems, CancellationToken cancellationToken = default)
     {
         // Merchant ownership kontrolü
         var merchant = await _unitOfWork.ReadRepository<Merchant>()
@@ -108,7 +92,7 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
 
         var topProducts = await _unitOfWork.ReadRepository<OrderLine>()
             .ListAsync(
-                ol => ol.Order.MerchantId == merchantId && 
+                ol => ol.Order.MerchantId == merchantId &&
                       ol.Order.CreatedAt >= thirtyDaysAgo &&
                       ol.Order.Status != OrderStatus.Cancelled,
                 include: "Order,Product",
@@ -137,12 +121,7 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
         return Result.Ok(response);
     }
 
-    public async Task<Result<MerchantPerformanceMetrics>> GetPerformanceMetricsAsync(
-        Guid merchantId,
-        Guid merchantOwnerId,
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MerchantPerformanceMetrics>> GetPerformanceMetricsAsync(Guid merchantId, Guid merchantOwnerId, DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
     {
         // Merchant ownership kontrolü
         var merchant = await _unitOfWork.ReadRepository<Merchant>()
@@ -158,8 +137,8 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
 
         var orders = await _unitOfWork.ReadRepository<Order>()
             .ListAsync(
-                o => o.MerchantId == merchantId && 
-                     o.CreatedAt >= start && 
+                o => o.MerchantId == merchantId &&
+                     o.CreatedAt >= start &&
                      o.CreatedAt <= end,
                 cancellationToken: cancellationToken);
 
@@ -195,9 +174,7 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
         return Result.Ok(metrics);
     }
 
-    private async Task<Result<MerchantDashboardStats>> GetDashboardStatsAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<MerchantDashboardStats>> GetDashboardStatsAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         var merchant = await _unitOfWork.Repository<Merchant>()
             .GetAsync(m => m.Id == merchantId, cancellationToken: cancellationToken);
@@ -212,24 +189,24 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
 
         // Bugünkü siparişler
         var todayOrders = await _unitOfWork.ReadRepository<Order>()
-            .CountAsync(o => o.MerchantId == merchantId && 
-                           o.CreatedAt >= today && 
-                           o.CreatedAt < tomorrow, 
+            .CountAsync(o => o.MerchantId == merchantId &&
+                           o.CreatedAt >= today &&
+                           o.CreatedAt < tomorrow,
                        cancellationToken);
 
         // Bugünkü gelir
         var todayRevenue = await _unitOfWork.ReadRepository<Order>()
-            .ListAsync(o => o.MerchantId == merchantId && 
-                          o.CreatedAt >= today && 
+            .ListAsync(o => o.MerchantId == merchantId &&
+                          o.CreatedAt >= today &&
                           o.CreatedAt < tomorrow &&
-                          o.Status == OrderStatus.Delivered, 
+                          o.Status == OrderStatus.Delivered,
                       cancellationToken: cancellationToken);
 
         var todayRevenueSum = todayRevenue.Sum(o => o.Total);
 
         // Toplam gelir
         var totalRevenueOrders = await _unitOfWork.ReadRepository<Order>()
-            .ListAsync(o => o.MerchantId == merchantId && o.Status == OrderStatus.Delivered, 
+            .ListAsync(o => o.MerchantId == merchantId && o.Status == OrderStatus.Delivered,
                       cancellationToken: cancellationToken);
 
         var totalRevenueSum = totalRevenueOrders.Sum(o => o.Total);
@@ -243,8 +220,8 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
 
         // Bekleyen siparişler
         var pendingOrders = await _unitOfWork.ReadRepository<Order>()
-            .CountAsync(o => o.MerchantId == merchantId && 
-                           (o.Status == OrderStatus.Pending || o.Status == OrderStatus.Confirmed), 
+            .CountAsync(o => o.MerchantId == merchantId &&
+                           (o.Status == OrderStatus.Pending || o.Status == OrderStatus.Confirmed),
                        cancellationToken);
 
         // Toplam sipariş sayısı

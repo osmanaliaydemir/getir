@@ -42,6 +42,11 @@ public static class ErrorCodes
     public const string PRODUCT_ALREADY_IN_FAVORITES = "PRODUCT_ALREADY_IN_FAVORITES";
     public const string PRODUCT_NOT_IN_FAVORITES = "PRODUCT_NOT_IN_FAVORITES";
     
+    // Courier errors
+    public const string COURIER_NOT_FOUND = "COURIER_NOT_FOUND";
+    public const string COURIER_NOT_AVAILABLE = "COURIER_NOT_AVAILABLE";
+    public const string INVALID_STOCK_QUANTITY = "INVALID_STOCK_QUANTITY";
+    
     // System errors
     public const string EXTERNAL_SERVICE_ERROR = "EXTERNAL_SERVICE_ERROR";
     public const string RATE_LIMIT_EXCEEDED = "RATE_LIMIT_EXCEEDED";

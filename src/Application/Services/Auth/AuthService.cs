@@ -16,16 +16,7 @@ public class AuthService : BaseService, IAuthService
     private readonly IEmailService _emailService;
     private readonly int _accessTokenMinutes;
     private readonly int _refreshTokenMinutes;
-
-    public AuthService(
-        IUnitOfWork unitOfWork,
-        ILogger<AuthService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        IBackgroundTaskService backgroundTaskService,
-        IJwtTokenService jwtTokenService,
-        IPasswordHasher passwordHasher,
-        IEmailService emailService) 
+    public AuthService(IUnitOfWork unitOfWork, ILogger<AuthService> logger, ILoggingService loggingService, ICacheService cacheService, IBackgroundTaskService backgroundTaskService, IJwtTokenService jwtTokenService, IPasswordHasher passwordHasher, IEmailService emailService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _jwtTokenService = jwtTokenService;
@@ -35,10 +26,7 @@ public class AuthService : BaseService, IAuthService
         _accessTokenMinutes = 60; // Bu değerler configuration'dan gelecek şekilde iyileştirilebilir
         _refreshTokenMinutes = 10080; // 7 days
     }
-
-    public async Task<Result<AuthResponse>> RegisterAsync(
-        RegisterRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<AuthResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await RegisterInternalAsync(request, cancellationToken),
@@ -46,10 +34,7 @@ public class AuthService : BaseService, IAuthService
             new { Email = request.Email, Role = request.Role?.ToString() },
             cancellationToken);
     }
-
-    private async Task<Result<AuthResponse>> RegisterInternalAsync(
-        RegisterRequest request,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<AuthResponse>> RegisterInternalAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -127,22 +112,18 @@ public class AuthService : BaseService, IAuthService
             return ServiceResult.HandleException<AuthResponse>(ex, _logger, "UserRegistration");
         }
     }
-
-    public async Task<Result<AuthResponse>> LoginAsync(
-        LoginRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<AuthResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
-        return await ExecuteWithPerformanceTracking( async () => await LoginInternalAsync(request, cancellationToken),
+        return await ExecuteWithPerformanceTracking(async () => await LoginInternalAsync(request, cancellationToken),
             "UserLogin", new { Email = request.Email },
             cancellationToken);
     }
-
-    private async Task<Result<AuthResponse>> LoginInternalAsync(LoginRequest request,CancellationToken cancellationToken = default)
+    private async Task<Result<AuthResponse>> LoginInternalAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
             var user = await _unitOfWork.ReadRepository<User>()
-                .FirstOrDefaultAsync(u => u.Email == request.Email, 
+                .FirstOrDefaultAsync(u => u.Email == request.Email,
                     include: "OwnedMerchants",  // Load OwnedMerchants for MerchantOwner role
                     cancellationToken: cancellationToken);
 
@@ -193,9 +174,9 @@ public class AuthService : BaseService, IAuthService
             Guid? merchantId = null;
             if (user.Role > UserRole.Customer || user.Role > UserRole.Courier)
             {
-                _logger.LogInformation("MerchantOwner login - UserId: {UserId}, OwnedMerchants count: {Count}", 
+                _logger.LogInformation("MerchantOwner login - UserId: {UserId}, OwnedMerchants count: {Count}",
                     user.Id, user.OwnedMerchants?.Count ?? 0);
-                
+
                 if (user.OwnedMerchants?.Any() == true)
                 {
                     merchantId = user.OwnedMerchants.First().Id;
@@ -204,11 +185,11 @@ public class AuthService : BaseService, IAuthService
                 else
                 {
                     _logger.LogWarning("OwnedMerchants not loaded via Include. Querying directly...");
-                    
+
                     // Fallback: Direct query for MerchantId
                     var merchant = await _unitOfWork.ReadRepository<Merchant>()
                         .FirstOrDefaultAsync(m => m.OwnerId == user.Id && m.IsActive, cancellationToken: cancellationToken);
-                    
+
                     if (merchant != null)
                     {
                         merchantId = merchant.Id;
@@ -238,10 +219,7 @@ public class AuthService : BaseService, IAuthService
             return ServiceResult.HandleException<AuthResponse>(ex, _logger, "UserLogin");
         }
     }
-
-    public async Task<Result<AuthResponse>> RefreshAsync(
-        RefreshTokenRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<AuthResponse>> RefreshAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await RefreshInternalAsync(request, cancellationToken),
@@ -249,10 +227,7 @@ public class AuthService : BaseService, IAuthService
             new { RefreshToken = request.RefreshToken[..8] + "..." },
             cancellationToken);
     }
-
-    private async Task<Result<AuthResponse>> RefreshInternalAsync(
-        RefreshTokenRequest request,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<AuthResponse>> RefreshInternalAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -277,7 +252,7 @@ public class AuthService : BaseService, IAuthService
             // Eski token'ı iptal et
             var oldToken = await _unitOfWork.Repository<RefreshToken>()
                 .GetByIdAsync(refreshToken.Id, cancellationToken);
-            
+
             if (oldToken != null)
             {
                 oldToken.IsRevoked = true;
@@ -322,7 +297,6 @@ public class AuthService : BaseService, IAuthService
             return ServiceResult.HandleException<AuthResponse>(ex, _logger, "TokenRefresh");
         }
     }
-
     public async Task<Result> LogoutAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -331,7 +305,6 @@ public class AuthService : BaseService, IAuthService
             new { UserId = userId },
             cancellationToken);
     }
-
     private async Task<Result> LogoutInternalAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         try
@@ -345,7 +318,7 @@ public class AuthService : BaseService, IAuthService
                 {
                     var tokenToRevoke = await _unitOfWork.Repository<RefreshToken>()
                         .GetByIdAsync(token.Id, cancellationToken);
-                    
+
                     if (tokenToRevoke != null)
                     {
                         tokenToRevoke.IsRevoked = true;
@@ -368,10 +341,7 @@ public class AuthService : BaseService, IAuthService
             return ServiceResult.HandleException(ex, _logger, "UserLogout");
         }
     }
-
-    public async Task<Result> ForgotPasswordAsync(
-        ForgotPasswordRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await ForgotPasswordInternalAsync(request, cancellationToken),
@@ -379,17 +349,14 @@ public class AuthService : BaseService, IAuthService
             new { Email = request.Email },
             cancellationToken);
     }
-
-    private async Task<Result> ForgotPasswordInternalAsync(
-        ForgotPasswordRequest request,
-        CancellationToken cancellationToken = default)
+    private async Task<Result> ForgotPasswordInternalAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
             // Find user by email
             var userRepo = _unitOfWork.Repository<User>();
             var user = await userRepo.FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken: cancellationToken);
-            
+
             // Security: Don't reveal if user exists or not
             if (user == null)
             {
@@ -404,9 +371,9 @@ public class AuthService : BaseService, IAuthService
             // Store reset token in cache (expires in 15 minutes)
             var cacheKey = $"password_reset:{user.Id}";
             await _cacheService.SetAsync(
-                cacheKey, 
-                resetCode, 
-                TimeSpan.FromMinutes(15), 
+                cacheKey,
+                resetCode,
+                TimeSpan.FromMinutes(15),
                 cancellationToken);
 
             // Send reset code via email
@@ -447,10 +414,7 @@ public class AuthService : BaseService, IAuthService
             return ServiceResult.HandleException(ex, _logger, "ForgotPassword");
         }
     }
-
-    public async Task<Result> ResetPasswordAsync(
-        ResetPasswordRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await ResetPasswordInternalAsync(request, cancellationToken),
@@ -458,10 +422,7 @@ public class AuthService : BaseService, IAuthService
             new { Token = request.Token },
             cancellationToken);
     }
-
-    private async Task<Result> ResetPasswordInternalAsync(
-        ResetPasswordRequest request,
-        CancellationToken cancellationToken = default)
+    private async Task<Result> ResetPasswordInternalAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -522,14 +483,14 @@ public class AuthService : BaseService, IAuthService
             var refreshTokens = await refreshTokenRepo.ListAsync(
                 filter: t => t.UserId == userId && !t.IsRevoked,
                 cancellationToken: cancellationToken);
-            
+
             foreach (var token in refreshTokens)
             {
                 token.RevokedAt = DateTime.UtcNow;
                 token.IsRevoked = true;
                 refreshTokenRepo.Update(token);
             }
-            
+
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _loggingService.LogBusinessEvent(
@@ -562,11 +523,7 @@ public class AuthService : BaseService, IAuthService
             return ServiceResult.HandleException(ex, _logger, "ResetPassword");
         }
     }
-
-    public async Task<Result> ChangePasswordAsync(
-        Guid userId,
-        ChangePasswordRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await ChangePasswordInternalAsync(userId, request, cancellationToken),
@@ -574,18 +531,14 @@ public class AuthService : BaseService, IAuthService
             new { UserId = userId },
             cancellationToken);
     }
-
-    private async Task<Result> ChangePasswordInternalAsync(
-        Guid userId,
-        ChangePasswordRequest request,
-        CancellationToken cancellationToken = default)
+    private async Task<Result> ChangePasswordInternalAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
             // Get user
             var userRepo = _unitOfWork.Repository<User>();
             var user = await userRepo.GetByIdAsync(userId, cancellationToken);
-            
+
             if (user == null)
             {
                 return ServiceResult.Failure("Kullanıcı bulunamadı", ErrorCodes.NOT_FOUND);
@@ -621,14 +574,14 @@ public class AuthService : BaseService, IAuthService
             var refreshTokens = await refreshTokenRepo.ListAsync(
                 filter: t => t.UserId == userId && !t.IsRevoked,
                 cancellationToken: cancellationToken);
-            
+
             foreach (var token in refreshTokens)
             {
                 token.RevokedAt = DateTime.UtcNow;
                 token.IsRevoked = true;
                 refreshTokenRepo.Update(token);
             }
-            
+
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _loggingService.LogBusinessEvent(
@@ -651,7 +604,7 @@ public class AuthService : BaseService, IAuthService
                     <br/>
                     <p>Getir Ekibi</p>
                 </body>
-                </html>", null, 
+                </html>", null,
                 cancellationToken);
 
             return ServiceResult.Success();
@@ -662,10 +615,7 @@ public class AuthService : BaseService, IAuthService
             return ServiceResult.HandleException(ex, _logger, "ChangePassword");
         }
     }
-
-    public async Task<Result<UserProfileResponse>> GetUserProfileAsync(
-        Guid userId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<UserProfileResponse>> GetUserProfileAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetUserProfileInternalAsync(userId, cancellationToken),
@@ -673,10 +623,7 @@ public class AuthService : BaseService, IAuthService
             new { UserId = userId },
             cancellationToken);
     }
-
-    private async Task<Result<UserProfileResponse>> GetUserProfileInternalAsync(
-        Guid userId,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<UserProfileResponse>> GetUserProfileInternalAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -704,11 +651,7 @@ public class AuthService : BaseService, IAuthService
             return ServiceResult.HandleException<UserProfileResponse>(ex, _logger, "GetUserProfile");
         }
     }
-
-    public async Task<Result<UserProfileResponse>> UpdateUserProfileAsync(
-        Guid userId,
-        UpdateUserProfileRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<UserProfileResponse>> UpdateUserProfileAsync(Guid userId, UpdateUserProfileRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await UpdateUserProfileInternalAsync(userId, request, cancellationToken),
@@ -716,11 +659,7 @@ public class AuthService : BaseService, IAuthService
             new { UserId = userId, FirstName = request.FirstName, LastName = request.LastName },
             cancellationToken);
     }
-
-    private async Task<Result<UserProfileResponse>> UpdateUserProfileInternalAsync(
-        Guid userId,
-        UpdateUserProfileRequest request,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<UserProfileResponse>> UpdateUserProfileInternalAsync(Guid userId, UpdateUserProfileRequest request, CancellationToken cancellationToken = default)
     {
         try
         {

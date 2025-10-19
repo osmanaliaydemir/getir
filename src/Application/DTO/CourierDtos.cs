@@ -2,7 +2,21 @@ using Getir.Application.Common;
 
 namespace Getir.Application.DTO;
 
-// Existing DTOs (from previous implementation)
+// Courier Response DTOs
+public record CourierResponse(
+    Guid Id,
+    Guid UserId,
+    string VehicleType,
+    string? LicensePlate,
+    bool IsAvailable,
+    bool IsActive,
+    decimal? CurrentLatitude,
+    decimal? CurrentLongitude,
+    DateTime? LastLocationUpdate,
+    int TotalDeliveries,
+    decimal? Rating,
+    DateTime CreatedAt);
+
 public record CourierOrderResponse(
     Guid Id,
     string OrderNumber,

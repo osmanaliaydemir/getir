@@ -32,4 +32,9 @@ public interface ICourierService
     Task<Result<List<CourierLocationHistoryItem>>> GetLocationHistoryAsync(Guid courierId, Guid orderId, CancellationToken cancellationToken = default);
     Task<Result<List<CourierOrderResponse>>> GetAssignedOrdersAsync(Guid courierId, CancellationToken cancellationToken = default);
     Task<Result> UpdateAvailabilityAsync(Guid courierId, Domain.Enums.CourierAvailabilityStatus status, CancellationToken cancellationToken = default);
+    
+    // Additional methods for testing and admin panel
+    Task<Result<CourierResponse>> GetCourierByIdAsync(Guid courierId, CancellationToken cancellationToken = default);
+    Task<Result<PagedResult<CourierResponse>>> GetCouriersByAvailabilityAsync(bool isAvailable, PaginationQuery query, CancellationToken cancellationToken = default);
+    Task<Result> AssignCourierToOrderAsync(Guid orderId, Guid courierId, CancellationToken cancellationToken = default);
 }

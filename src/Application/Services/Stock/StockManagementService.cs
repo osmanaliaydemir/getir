@@ -11,22 +11,13 @@ public class StockManagementService : BaseService, IStockManagementService
 {
     private new readonly ILogger<StockManagementService> _logger;
     private readonly ISignalRService? _signalRService;
-
-    public StockManagementService(
-        IUnitOfWork unitOfWork,
-        ILogger<StockManagementService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        ISignalRService? signalRService = null) 
+    public StockManagementService(IUnitOfWork unitOfWork, ILogger<StockManagementService> logger, ILoggingService loggingService, ICacheService cacheService, ISignalRService? signalRService = null)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _logger = logger;
         _signalRService = signalRService;
     }
-
-    public async Task<Result> ReduceStockForOrderAsync(
-        Guid orderId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ReduceStockForOrderAsync(Guid orderId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -123,10 +114,7 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail("Failed to reduce stock for order", "STOCK_REDUCTION_ERROR");
         }
     }
-
-    public async Task<Result> RestoreStockForOrderAsync(
-        Guid orderId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> RestoreStockForOrderAsync(Guid orderId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -219,10 +207,7 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail("Failed to restore stock for order", "STOCK_RESTORATION_ERROR");
         }
     }
-
-    public async Task<Result> CheckStockLevelsAndAlertAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> CheckStockLevelsAndAlertAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -244,8 +229,8 @@ public class StockManagementService : BaseService, IStockManagementService
             {
                 if (product.StockQuantity <= settings.DefaultMinimumStock)
                 {
-                    var alertType = product.StockQuantity == 0 
-                        ? Domain.Enums.StockAlertType.OutOfStock 
+                    var alertType = product.StockQuantity == 0
+                        ? Domain.Enums.StockAlertType.OutOfStock
                         : Domain.Enums.StockAlertType.LowStock;
 
                     var message = product.StockQuantity == 0
@@ -254,8 +239,8 @@ public class StockManagementService : BaseService, IStockManagementService
 
                     // Check if alert already exists
                     var existingAlert = await _unitOfWork.ReadRepository<StockAlert>()
-                        .FirstOrDefaultAsync(a => a.ProductId == product.Id && 
-                                                 a.AlertType == alertType && 
+                        .FirstOrDefaultAsync(a => a.ProductId == product.Id &&
+                                                 a.AlertType == alertType &&
                                                  !a.IsResolved, cancellationToken: cancellationToken);
 
                     if (existingAlert == null)
@@ -295,17 +280,12 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail("Failed to check stock levels", "STOCK_CHECK_ERROR");
         }
     }
-
-    public async Task<Result<List<StockHistoryResponse>>> GetStockHistoryAsync(
-        Guid productId,
-        DateTime? fromDate = null,
-        DateTime? toDate = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<StockHistoryResponse>>> GetStockHistoryAsync(Guid productId, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
     {
         try
         {
             var histories = await _unitOfWork.ReadRepository<StockHistory>()
-                .ListAsync(h => h.ProductId == productId && 
+                .ListAsync(h => h.ProductId == productId &&
                                (!fromDate.HasValue || h.ChangedAt >= fromDate.Value) &&
                                (!toDate.HasValue || h.ChangedAt <= toDate.Value),
                     orderBy: h => h.ChangedAt,
@@ -339,10 +319,7 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail<List<StockHistoryResponse>>("Failed to get stock history", "STOCK_HISTORY_ERROR");
         }
     }
-
-    public async Task<Result<List<StockAlertResponse>>> GetStockAlertsAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<StockAlertResponse>>> GetStockAlertsAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -376,11 +353,7 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail<List<StockAlertResponse>>("Failed to get stock alerts", "STOCK_ALERTS_ERROR");
         }
     }
-
-    public async Task<Result> UpdateStockLevelAsync(
-        UpdateStockRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateStockLevelAsync(UpdateStockRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -466,11 +439,7 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail("Failed to update stock level", "STOCK_UPDATE_ERROR");
         }
     }
-
-    public async Task<Result> BulkUpdateStockLevelsAsync(
-        List<UpdateStockRequest> requests,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> BulkUpdateStockLevelsAsync(List<UpdateStockRequest> requests, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -503,11 +472,7 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail("Failed to bulk update stock levels", "BULK_STOCK_UPDATE_ERROR");
         }
     }
-
-    public async Task<Result<StockReportResponse>> GetStockReportAsync(
-        StockReportRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<StockReportResponse>> GetStockReportAsync(StockReportRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -563,10 +528,7 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail<StockReportResponse>("Failed to generate stock report", "STOCK_REPORT_ERROR");
         }
     }
-
-    public async Task<Result> SynchronizeStockAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> SynchronizeStockAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -594,17 +556,8 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail("Failed to synchronize stock", "STOCK_SYNC_ERROR");
         }
     }
-
-    private async Task CreateStockHistoryAsync(
-        Guid productId,
-        Guid? productVariantId,
-        int previousQuantity,
-        int newQuantity,
-        Domain.Enums.StockChangeType changeType,
-        string? reason,
-        Guid? orderId,
-        string? referenceNumber,
-        CancellationToken cancellationToken)
+    private async Task CreateStockHistoryAsync(Guid productId, Guid? productVariantId, int previousQuantity, int newQuantity, Domain.Enums.StockChangeType changeType,
+        string? reason, Guid? orderId, string? referenceNumber, CancellationToken cancellationToken)
     {
         var history = new StockHistory
         {
@@ -623,11 +576,7 @@ public class StockManagementService : BaseService, IStockManagementService
 
         await _unitOfWork.Repository<StockHistory>().AddAsync(history, cancellationToken);
     }
-
-    private async Task SendStockAlertsAsync(
-        Guid merchantId,
-        List<StockAlert> alerts,
-        CancellationToken cancellationToken)
+    private async Task SendStockAlertsAsync(Guid merchantId, List<StockAlert> alerts, CancellationToken cancellationToken)
     {
         if (_signalRService == null) return;
 
@@ -642,8 +591,8 @@ public class StockManagementService : BaseService, IStockManagementService
                     "StockAlert",
                     DateTime.UtcNow,
                     false,
-                    new Dictionary<string, object> 
-                    { 
+                    new Dictionary<string, object>
+                    {
                         { "AlertId", alert.Id },
                         { "ProductId", alert.ProductId },
                         { "AlertType", alert.AlertType.ToString() }
@@ -657,7 +606,6 @@ public class StockManagementService : BaseService, IStockManagementService
             _logger.LogError(ex, "Error sending stock alerts");
         }
     }
-
     private StockStatus GetStockStatus(int stockQuantity)
     {
         return stockQuantity switch

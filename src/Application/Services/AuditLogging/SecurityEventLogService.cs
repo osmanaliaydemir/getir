@@ -11,20 +11,13 @@ public class SecurityEventLogService : ISecurityEventLogService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILoggingService _loggingService;
     private readonly ILogger<SecurityEventLogService> _logger;
-
-    public SecurityEventLogService(
-        IUnitOfWork unitOfWork,
-        ILoggingService loggingService,
-        ILogger<SecurityEventLogService> logger)
+    public SecurityEventLogService(IUnitOfWork unitOfWork, ILoggingService loggingService, ILogger<SecurityEventLogService> logger)
     {
         _unitOfWork = unitOfWork;
         _loggingService = loggingService;
         _logger = logger;
     }
-
-    public async Task<Result<SecurityEventLogResponse>> CreateSecurityEventLogAsync(
-        CreateSecurityEventLogRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<SecurityEventLogResponse>> CreateSecurityEventLogAsync(CreateSecurityEventLogRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -71,10 +64,7 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<SecurityEventLogResponse>("Failed to create security event log", "CREATE_SECURITY_EVENT_LOG_FAILED");
         }
     }
-
-    public async Task<Result<SecurityEventLogResponse>> GetSecurityEventLogByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<SecurityEventLogResponse>> GetSecurityEventLogByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -97,10 +87,7 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<SecurityEventLogResponse>("Failed to get security event log", "GET_SECURITY_EVENT_LOG_FAILED");
         }
     }
-
-    public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetSecurityEventLogsAsync(
-        SecurityEventQueryRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetSecurityEventLogsAsync(SecurityEventQueryRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -171,15 +158,7 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<IEnumerable<SecurityEventLogResponse>>("Failed to get security event logs", "GET_SECURITY_EVENT_LOGS_FAILED");
         }
     }
-
-    public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetUnresolvedSecurityEventsAsync(
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        string? severity = null,
-        string? riskLevel = null,
-        int pageNumber = 1,
-        int pageSize = 50,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetUnresolvedSecurityEventsAsync(DateTime? startDate = null, DateTime? endDate = null, string? severity = null, string? riskLevel = null, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -215,13 +194,7 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<IEnumerable<SecurityEventLogResponse>>("Failed to get unresolved security events", "GET_UNRESOLVED_SECURITY_EVENTS_FAILED");
         }
     }
-
-    public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetSecurityEventsRequiringInvestigationAsync(
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        int pageNumber = 1,
-        int pageSize = 50,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetSecurityEventsRequiringInvestigationAsync(DateTime? startDate = null, DateTime? endDate = null, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -251,12 +224,7 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<IEnumerable<SecurityEventLogResponse>>("Failed to get security events requiring investigation", "GET_SECURITY_EVENTS_REQUIRING_INVESTIGATION_FAILED");
         }
     }
-
-    public async Task<Result<SecurityEventLogResponse>> ResolveSecurityEventAsync(
-        Guid id,
-        string resolvedBy,
-        string resolutionNotes,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<SecurityEventLogResponse>> ResolveSecurityEventAsync(Guid id, string resolvedBy, string resolutionNotes, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -287,12 +255,7 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<SecurityEventLogResponse>("Failed to resolve security event", "RESOLVE_SECURITY_EVENT_FAILED");
         }
     }
-
-    public async Task<Result<SecurityEventLogResponse>> MarkAsFalsePositiveAsync(
-        Guid id,
-        string resolvedBy,
-        string resolutionNotes,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<SecurityEventLogResponse>> MarkAsFalsePositiveAsync(Guid id, string resolvedBy, string resolutionNotes, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -324,13 +287,7 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<SecurityEventLogResponse>("Failed to mark security event as false positive", "MARK_SECURITY_EVENT_FALSE_POSITIVE_FAILED");
         }
     }
-
-    public async Task<Result<Dictionary<string, int>>> GetSecurityEventStatisticsAsync(
-        DateTime startDate,
-        DateTime endDate,
-        string? severity = null,
-        string? riskLevel = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<Dictionary<string, int>>> GetSecurityEventStatisticsAsync(DateTime startDate, DateTime endDate, string? severity = null, string? riskLevel = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -358,13 +315,7 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<Dictionary<string, int>>("Failed to get security event statistics", "GET_SECURITY_EVENT_STATISTICS_FAILED");
         }
     }
-
-    public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetHighRiskSecurityEventsAsync(
-        DateTime startDate,
-        DateTime endDate,
-        int pageNumber = 1,
-        int pageSize = 50,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetHighRiskSecurityEventsAsync(DateTime startDate, DateTime endDate, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -387,14 +338,7 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<IEnumerable<SecurityEventLogResponse>>("Failed to get high risk security events", "GET_HIGH_RISK_SECURITY_EVENTS_FAILED");
         }
     }
-
-    public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetSecurityEventsByUserAsync(
-        Guid userId,
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        int pageNumber = 1,
-        int pageSize = 50,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetSecurityEventsByUserAsync(Guid userId, DateTime? startDate = null, DateTime? endDate = null, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -424,14 +368,7 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<IEnumerable<SecurityEventLogResponse>>("Failed to get security events", "GET_SECURITY_EVENTS_BY_USER_FAILED");
         }
     }
-
-    public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetSecurityEventsByIpAddressAsync(
-        string ipAddress,
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        int pageNumber = 1,
-        int pageSize = 50,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetSecurityEventsByIpAddressAsync(string ipAddress, DateTime? startDate = null, DateTime? endDate = null, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -461,10 +398,7 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<IEnumerable<SecurityEventLogResponse>>("Failed to get security events", "GET_SECURITY_EVENTS_BY_IP_FAILED");
         }
     }
-
-    public async Task<Result> DeleteOldSecurityEventLogsAsync(
-        DateTime cutoffDate,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteOldSecurityEventLogsAsync(DateTime cutoffDate, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -486,7 +420,6 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail("Failed to delete old security event logs", "DELETE_OLD_SECURITY_EVENT_LOGS_FAILED");
         }
     }
-
     private static SecurityEventLogResponse MapToResponse(SecurityEventLog securityEventLog)
     {
         return new SecurityEventLogResponse(

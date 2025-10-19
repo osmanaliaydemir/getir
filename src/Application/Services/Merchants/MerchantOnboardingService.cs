@@ -15,21 +15,19 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         ILogger<MerchantOnboardingService> logger,
         ILoggingService loggingService,
         ICacheService cacheService,
-        IBackgroundTaskService backgroundTaskService) 
+        IBackgroundTaskService backgroundTaskService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _backgroundTaskService = backgroundTaskService;
     }
 
-    public async Task<Result<MerchantOnboardingResponse>> CreateOnboardingAsync(
-        CreateMerchantOnboardingRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MerchantOnboardingResponse>> CreateOnboardingAsync(CreateMerchantOnboardingRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         // Merchant var mı kontrol et
         var merchant = await _unitOfWork.ReadRepository<Merchant>()
-            .FirstOrDefaultAsync(m => m.Id == request.MerchantId && m.OwnerId == request.OwnerId, 
+            .FirstOrDefaultAsync(m => m.Id == request.MerchantId && m.OwnerId == request.OwnerId,
                 cancellationToken: cancellationToken);
 
         if (merchant == null)
@@ -39,7 +37,7 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
 
         // Zaten onboarding var mı kontrol et
         var existingOnboarding = await _unitOfWork.ReadRepository<MerchantOnboarding>()
-            .FirstOrDefaultAsync(o => o.MerchantId == request.MerchantId, 
+            .FirstOrDefaultAsync(o => o.MerchantId == request.MerchantId,
                 cancellationToken: cancellationToken);
 
         if (existingOnboarding != null)
@@ -93,13 +91,11 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         return Result.Ok(response);
     }
 
-    public async Task<Result<MerchantOnboardingResponse>> GetOnboardingStatusAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MerchantOnboardingResponse>> GetOnboardingStatusAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         var onboarding = await _unitOfWork.ReadRepository<MerchantOnboarding>()
-            .FirstOrDefaultAsync(o => o.MerchantId == merchantId, 
-                include: "Merchant,Owner", 
+            .FirstOrDefaultAsync(o => o.MerchantId == merchantId,
+                include: "Merchant,Owner",
                 cancellationToken: cancellationToken);
 
         if (onboarding == null)
@@ -131,12 +127,10 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         return Result.Ok(response);
     }
 
-    public async Task<Result<OnboardingProgressResponse>> GetOnboardingProgressAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<OnboardingProgressResponse>> GetOnboardingProgressAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         var onboarding = await _unitOfWork.ReadRepository<MerchantOnboarding>()
-            .FirstOrDefaultAsync(o => o.MerchantId == merchantId, 
+            .FirstOrDefaultAsync(o => o.MerchantId == merchantId,
                 cancellationToken: cancellationToken);
 
         if (onboarding == null)
@@ -146,17 +140,17 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
 
         var steps = new List<OnboardingStepResponse>
         {
-            new("BasicInfo", "Temel Bilgiler", "İşletme adı, adres ve iletişim bilgileri", 
+            new("BasicInfo", "Temel Bilgiler", "İşletme adı, adres ve iletişim bilgileri",
                 onboarding.BasicInfoCompleted, true, "BusinessInfo"),
-            new("BusinessInfo", "İş Bilgileri", "Açıklama, kategori ve teslimat bilgileri", 
+            new("BusinessInfo", "İş Bilgileri", "Açıklama, kategori ve teslimat bilgileri",
                 onboarding.BusinessInfoCompleted, true, "WorkingHours"),
-            new("WorkingHours", "Çalışma Saatleri", "Haftalık çalışma saatlerini belirle", 
+            new("WorkingHours", "Çalışma Saatleri", "Haftalık çalışma saatlerini belirle",
                 onboarding.WorkingHoursCompleted, true, "DeliveryZones"),
-            new("DeliveryZones", "Teslimat Bölgeleri", "Hizmet verilecek bölgeleri tanımla", 
+            new("DeliveryZones", "Teslimat Bölgeleri", "Hizmet verilecek bölgeleri tanımla",
                 onboarding.DeliveryZonesCompleted, true, "Products"),
-            new("Products", "Ürün Ekleme", "En az 5 ürün ekle", 
+            new("Products", "Ürün Ekleme", "En az 5 ürün ekle",
                 onboarding.ProductsAdded, true, "Documents"),
-            new("Documents", "Belgeler", "Gerekli belgeleri yükle", 
+            new("Documents", "Belgeler", "Gerekli belgeleri yükle",
                 onboarding.DocumentsUploaded, true)
         };
 
@@ -178,9 +172,7 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         return Result.Ok(response);
     }
 
-    public async Task<Result<MerchantOnboardingResponse>> UpdateOnboardingStepAsync(
-        UpdateOnboardingStepRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MerchantOnboardingResponse>> UpdateOnboardingStepAsync(UpdateOnboardingStepRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -256,9 +248,7 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         return Result.Ok(response);
     }
 
-    public async Task<Result> CompleteOnboardingAsync(
-        CompleteOnboardingRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> CompleteOnboardingAsync(CompleteOnboardingRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -285,9 +275,7 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         return Result.Ok();
     }
 
-    public async Task<Result<PagedResult<MerchantOnboardingResponse>>> GetPendingApprovalsAsync(
-        GetPendingApprovalsQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<MerchantOnboardingResponse>>> GetPendingApprovalsAsync(GetPendingApprovalsQuery query, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
 
@@ -333,15 +321,13 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         return Result.Ok(pagedResult);
     }
 
-    public async Task<Result> ApproveMerchantAsync(
-        ApproveMerchantRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ApproveMerchantAsync(ApproveMerchantRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         var onboarding = await _unitOfWork.ReadRepository<MerchantOnboarding>()
-            .FirstOrDefaultAsync(o => o.Id == request.OnboardingId, 
-                include: "Merchant", 
+            .FirstOrDefaultAsync(o => o.Id == request.OnboardingId,
+                include: "Merchant",
                 cancellationToken: cancellationToken);
 
         if (onboarding == null)
@@ -372,8 +358,7 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         return Result.Ok();
     }
 
-    public async Task<Result<List<OnboardingStepResponse>>> GetOnboardingStepsAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<OnboardingStepResponse>>> GetOnboardingStepsAsync(CancellationToken cancellationToken = default)
     {
         var steps = new List<OnboardingStepResponse>
         {
@@ -387,10 +372,7 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
 
         return Result.Ok(steps);
     }
-
-    public async Task<Result<bool>> CanMerchantStartTradingAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<bool>> CanMerchantStartTradingAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         var onboarding = await _unitOfWork.ReadRepository<MerchantOnboarding>()
             .FirstOrDefaultAsync(o => o.MerchantId == merchantId, cancellationToken: cancellationToken);
@@ -418,11 +400,7 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
 
     #region Additional Controller Methods
 
-    public async Task<Result<OnboardingStepResponse>> CompleteOnboardingStepAsync(
-        Guid merchantId,
-        Guid stepId,
-        CompleteOnboardingStepRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<OnboardingStepResponse>> CompleteOnboardingStepAsync(Guid merchantId, Guid stepId, CompleteOnboardingStepRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await CompleteOnboardingStepInternalAsync(merchantId, stepId, request, cancellationToken),
@@ -431,11 +409,7 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
             cancellationToken);
     }
 
-    private async Task<Result<OnboardingStepResponse>> CompleteOnboardingStepInternalAsync(
-        Guid merchantId,
-        Guid stepId,
-        CompleteOnboardingStepRequest request,
-        CancellationToken cancellationToken)
+    private async Task<Result<OnboardingStepResponse>> CompleteOnboardingStepInternalAsync(Guid merchantId, Guid stepId, CompleteOnboardingStepRequest request, CancellationToken cancellationToken)
     {
         var onboarding = await _unitOfWork.ReadRepository<MerchantOnboarding>()
             .FirstOrDefaultAsync(o => o.MerchantId == merchantId, cancellationToken: cancellationToken);
@@ -457,9 +431,7 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         return Result.Ok(response);
     }
 
-    public async Task<Result> SubmitOnboardingAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> SubmitOnboardingAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await SubmitOnboardingInternalAsync(merchantId, cancellationToken),
@@ -468,9 +440,7 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
             cancellationToken);
     }
 
-    private async Task<Result> SubmitOnboardingInternalAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken)
+    private async Task<Result> SubmitOnboardingInternalAsync(Guid merchantId, CancellationToken cancellationToken)
     {
         var onboarding = await _unitOfWork.ReadRepository<MerchantOnboarding>()
             .FirstOrDefaultAsync(o => o.MerchantId == merchantId, cancellationToken: cancellationToken);
@@ -488,9 +458,7 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         return Result.Ok();
     }
 
-    public async Task<Result<OnboardingChecklistResponse>> GetOnboardingChecklistAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<OnboardingChecklistResponse>> GetOnboardingChecklistAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetOnboardingChecklistInternalAsync(merchantId, cancellationToken),
@@ -499,9 +467,7 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
             cancellationToken);
     }
 
-    private async Task<Result<OnboardingChecklistResponse>> GetOnboardingChecklistInternalAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken)
+    private async Task<Result<OnboardingChecklistResponse>> GetOnboardingChecklistInternalAsync(Guid merchantId, CancellationToken cancellationToken)
     {
         var onboarding = await _unitOfWork.ReadRepository<MerchantOnboarding>()
             .FirstOrDefaultAsync(o => o.MerchantId == merchantId, cancellationToken: cancellationToken);

@@ -15,21 +15,12 @@ namespace Getir.Application.Services.Payments;
 public class PaymentService : BaseService, IPaymentService
 {
     private readonly ISignalRService? _signalRService;
-
-    public PaymentService(
-        IUnitOfWork unitOfWork,
-        ILogger<PaymentService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        ISignalRService? signalRService = null) 
+    public PaymentService(IUnitOfWork unitOfWork, ILogger<PaymentService> logger, ILoggingService loggingService, ICacheService cacheService, ISignalRService? signalRService = null)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _signalRService = signalRService;
     }
-
-    public async Task<Result<PaymentResponse>> CreatePaymentAsync(
-        CreatePaymentRequest request, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PaymentResponse>> CreatePaymentAsync(CreatePaymentRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await CreatePaymentInternalAsync(request, cancellationToken),
@@ -37,10 +28,7 @@ public class PaymentService : BaseService, IPaymentService
             new { OrderId = request.OrderId, PaymentMethod = request.PaymentMethod, Amount = request.Amount },
             cancellationToken);
     }
-
-    private async Task<Result<PaymentResponse>> CreatePaymentInternalAsync(
-        CreatePaymentRequest request, 
-        CancellationToken cancellationToken)
+    private async Task<Result<PaymentResponse>> CreatePaymentInternalAsync(CreatePaymentRequest request, CancellationToken cancellationToken)
     {
         // 1. Order validation
         var order = await _unitOfWork.ReadRepository<Order>()
@@ -55,7 +43,7 @@ public class PaymentService : BaseService, IPaymentService
         if (!IsPaymentMethodSupported(request.PaymentMethod))
         {
             return Result.Fail<PaymentResponse>(
-                $"Payment method {request.PaymentMethod.GetDisplayName()} is not supported yet", 
+                $"Payment method {request.PaymentMethod.GetDisplayName()} is not supported yet",
                 "PAYMENT_METHOD_NOT_SUPPORTED");
         }
 
@@ -84,15 +72,15 @@ public class PaymentService : BaseService, IPaymentService
 
         // 6. Send notification based on payment method
         await SendPaymentNotificationAsync(payment, order, cancellationToken);
-        
+
         // 7. Send SignalR notification
         if (_signalRService != null)
         {
             await _signalRService.SendPaymentCreatedNotificationAsync(
-                payment.Id, 
-                order.Id, 
-                order.UserId, 
-                payment.PaymentMethod, 
+                payment.Id,
+                order.Id,
+                order.UserId,
+                payment.PaymentMethod,
                 payment.Amount);
         }
 
@@ -100,11 +88,7 @@ public class PaymentService : BaseService, IPaymentService
         var response = await MapToPaymentResponseAsync(payment, cancellationToken);
         return Result.Ok(response);
     }
-
-    public async Task<Result> UpdatePaymentStatusAsync(
-        Guid paymentId, 
-        PaymentStatusUpdateRequest request, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> UpdatePaymentStatusAsync(Guid paymentId, PaymentStatusUpdateRequest request, CancellationToken cancellationToken = default)
     {
         var payment = await _unitOfWork.Repository<Payment>()
             .GetByIdAsync(paymentId, cancellationToken);
@@ -150,7 +134,7 @@ public class PaymentService : BaseService, IPaymentService
         // Update order payment status
         var order = await _unitOfWork.Repository<Order>()
             .GetByIdAsync(payment.OrderId, cancellationToken);
-        
+
         if (order != null)
         {
             order.PaymentStatus = request.Status.ToString();
@@ -163,19 +147,16 @@ public class PaymentService : BaseService, IPaymentService
         if (_signalRService != null)
         {
             await _signalRService.SendPaymentStatusUpdateAsync(
-                payment.Id, 
-                payment.OrderId, 
-                order?.UserId ?? Guid.Empty, 
-                request.Status, 
+                payment.Id,
+                payment.OrderId,
+                order?.UserId ?? Guid.Empty,
+                request.Status,
                 request.Notes ?? "Payment status updated");
         }
 
         return Result.Ok();
     }
-
-    public async Task<Result<PaymentResponse>> GetPaymentByIdAsync(
-        Guid paymentId, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PaymentResponse>> GetPaymentByIdAsync(Guid paymentId, CancellationToken cancellationToken = default)
     {
         var payment = await _unitOfWork.ReadRepository<Payment>()
             .FirstOrDefaultAsync(p => p.Id == paymentId, cancellationToken: cancellationToken);
@@ -188,11 +169,7 @@ public class PaymentService : BaseService, IPaymentService
         var response = await MapToPaymentResponseAsync(payment, cancellationToken);
         return Result.Ok(response);
     }
-
-    public async Task<Result<PagedResult<PaymentResponse>>> GetOrderPaymentsAsync(
-        Guid orderId, 
-        PaginationQuery query, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<PaymentResponse>>> GetOrderPaymentsAsync(Guid orderId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         var payments = await _unitOfWork.ReadRepository<Payment>()
             .GetPagedAsync(
@@ -216,11 +193,7 @@ public class PaymentService : BaseService, IPaymentService
         var pagedResult = PagedResult<PaymentResponse>.Create(responses, total, query.Page, query.PageSize);
         return Result.Ok(pagedResult);
     }
-
-    public async Task<Result> CancelPaymentAsync(
-        Guid paymentId, 
-        string reason, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> CancelPaymentAsync(Guid paymentId, string reason, CancellationToken cancellationToken = default)
     {
         var payment = await _unitOfWork.Repository<Payment>()
             .GetByIdAsync(paymentId, cancellationToken);
@@ -244,7 +217,7 @@ public class PaymentService : BaseService, IPaymentService
         // Update order status
         var order = await _unitOfWork.Repository<Order>()
             .GetByIdAsync(payment.OrderId, cancellationToken);
-        
+
         if (order != null)
         {
             order.PaymentStatus = PaymentStatus.Cancelled.ToString();
@@ -255,12 +228,7 @@ public class PaymentService : BaseService, IPaymentService
 
         return Result.Ok();
     }
-
-    public async Task<Result> RefundPaymentAsync(
-        Guid paymentId, 
-        decimal amount, 
-        string reason, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> RefundPaymentAsync(Guid paymentId, decimal amount, string reason, CancellationToken cancellationToken = default)
     {
         var payment = await _unitOfWork.Repository<Payment>()
             .GetByIdAsync(paymentId, cancellationToken);
@@ -291,17 +259,12 @@ public class PaymentService : BaseService, IPaymentService
 
         return Result.Ok();
     }
-
     // === CASH PAYMENT SPECIFIC METHODS ===
-
-    public async Task<Result<PagedResult<PaymentResponse>>> GetPendingCashPaymentsAsync(
-        Guid courierId, 
-        PaginationQuery query, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<PaymentResponse>>> GetPendingCashPaymentsAsync(Guid courierId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         var payments = await _unitOfWork.ReadRepository<Payment>()
             .GetPagedAsync(
-                filter: p => p.PaymentMethod == PaymentMethod.Cash && 
+                filter: p => p.PaymentMethod == PaymentMethod.Cash &&
                            p.Status == PaymentStatus.Pending &&
                            p.Order.CourierId == courierId,
                 orderBy: p => p.CreatedAt,
@@ -311,9 +274,9 @@ public class PaymentService : BaseService, IPaymentService
                 cancellationToken: cancellationToken);
 
         var total = await _unitOfWork.ReadRepository<Payment>()
-            .CountAsync(p => p.PaymentMethod == PaymentMethod.Cash && 
+            .CountAsync(p => p.PaymentMethod == PaymentMethod.Cash &&
                            p.Status == PaymentStatus.Pending &&
-                           p.Order.CourierId == courierId, 
+                           p.Order.CourierId == courierId,
                        cancellationToken: cancellationToken);
 
         var responses = new List<PaymentResponse>();
@@ -326,12 +289,7 @@ public class PaymentService : BaseService, IPaymentService
         var pagedResult = PagedResult<PaymentResponse>.Create(responses, total, query.Page, query.PageSize);
         return Result.Ok(pagedResult);
     }
-
-    public async Task<Result> MarkCashPaymentAsCollectedAsync(
-        Guid paymentId, 
-        Guid courierId, 
-        CollectCashPaymentRequest request, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> MarkCashPaymentAsCollectedAsync(Guid paymentId, Guid courierId, CollectCashPaymentRequest request, CancellationToken cancellationToken = default)
     {
         var payment = await _unitOfWork.Repository<Payment>()
             .GetByIdAsync(paymentId, cancellationToken);
@@ -378,7 +336,7 @@ public class PaymentService : BaseService, IPaymentService
         // Update order status
         var order = await _unitOfWork.Repository<Order>()
             .GetByIdAsync(payment.OrderId, cancellationToken);
-        
+
         if (order != null)
         {
             order.PaymentStatus = PaymentStatus.Completed.ToString();
@@ -391,27 +349,22 @@ public class PaymentService : BaseService, IPaymentService
         if (_signalRService != null)
         {
             await _signalRService.SendPaymentCollectedNotificationAsync(
-                payment.Id, 
-                payment.OrderId, 
-                order?.UserId ?? Guid.Empty, 
-                request.CollectedAmount, 
+                payment.Id,
+                payment.OrderId,
+                order?.UserId ?? Guid.Empty,
+                request.CollectedAmount,
                 "Courier");
-                
+
             await _signalRService.SendMerchantPaymentNotificationAsync(
-                order?.MerchantId ?? Guid.Empty, 
-                payment.OrderId, 
-                request.CollectedAmount, 
+                order?.MerchantId ?? Guid.Empty,
+                payment.OrderId,
+                request.CollectedAmount,
                 "Collected");
         }
 
         return Result.Ok();
     }
-
-    public async Task<Result> MarkCashPaymentAsFailedAsync(
-        Guid paymentId, 
-        Guid courierId, 
-        string reason, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> MarkCashPaymentAsFailedAsync(Guid paymentId, Guid courierId, string reason, CancellationToken cancellationToken = default)
     {
         var payment = await _unitOfWork.Repository<Payment>()
             .GetByIdAsync(paymentId, cancellationToken);
@@ -441,7 +394,7 @@ public class PaymentService : BaseService, IPaymentService
         // Update order status
         var order = await _unitOfWork.Repository<Order>()
             .GetByIdAsync(payment.OrderId, cancellationToken);
-        
+
         if (order != null)
         {
             order.PaymentStatus = PaymentStatus.Failed.ToString();
@@ -454,19 +407,15 @@ public class PaymentService : BaseService, IPaymentService
         if (_signalRService != null)
         {
             await _signalRService.SendPaymentFailedNotificationAsync(
-                payment.Id, 
-                payment.OrderId, 
-                order?.UserId ?? Guid.Empty, 
+                payment.Id,
+                payment.OrderId,
+                order?.UserId ?? Guid.Empty,
                 reason);
         }
 
         return Result.Ok();
     }
-
-    public async Task<Result<CourierCashSummaryResponse>> GetCourierCashSummaryAsync(
-        Guid courierId, 
-        DateTime? date = null, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CourierCashSummaryResponse>> GetCourierCashSummaryAsync(Guid courierId, DateTime? date = null, CancellationToken cancellationToken = default)
     {
         var targetDate = date ?? DateTime.UtcNow.Date;
         var startDate = targetDate.Date;
@@ -482,8 +431,8 @@ public class PaymentService : BaseService, IPaymentService
 
         var collections = await _unitOfWork.ReadRepository<CourierCashCollection>()
             .ListAsync(
-                filter: c => c.CourierId == courierId && 
-                           c.CollectedAt >= startDate && 
+                filter: c => c.CourierId == courierId &&
+                           c.CollectedAt >= startDate &&
                            c.CollectedAt < endDate,
                 cancellationToken: cancellationToken);
 
@@ -518,14 +467,8 @@ public class PaymentService : BaseService, IPaymentService
 
         return Result.Ok(summary);
     }
-
     // === MERCHANT METHODS ===
-
-    public async Task<Result<MerchantCashSummaryResponse>> GetMerchantCashSummaryAsync(
-        Guid merchantId, 
-        DateTime? startDate = null, 
-        DateTime? endDate = null, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MerchantCashSummaryResponse>> GetMerchantCashSummaryAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
     {
         var start = startDate ?? DateTime.UtcNow.Date.AddDays(-30);
         var end = endDate ?? DateTime.UtcNow.Date.AddDays(1);
@@ -540,10 +483,10 @@ public class PaymentService : BaseService, IPaymentService
 
         var payments = await _unitOfWork.ReadRepository<Payment>()
             .ListAsync(
-                filter: p => p.PaymentMethod == PaymentMethod.Cash && 
+                filter: p => p.PaymentMethod == PaymentMethod.Cash &&
                            p.Status == PaymentStatus.Completed &&
                            p.Order.MerchantId == merchantId &&
-                           p.CompletedAt >= start && 
+                           p.CompletedAt >= start &&
                            p.CompletedAt < end,
                 cancellationToken: cancellationToken);
 
@@ -572,11 +515,7 @@ public class PaymentService : BaseService, IPaymentService
 
         return Result.Ok(summary);
     }
-
-    public async Task<Result<PagedResult<SettlementResponse>>> GetMerchantSettlementsAsync(
-        Guid merchantId, 
-        PaginationQuery query, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<SettlementResponse>>> GetMerchantSettlementsAsync(Guid merchantId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         var settlements = await _unitOfWork.ReadRepository<CashSettlement>()
             .GetPagedAsync(
@@ -615,16 +554,11 @@ public class PaymentService : BaseService, IPaymentService
         var pagedResult = PagedResult<SettlementResponse>.Create(responses, total, query.Page, query.PageSize);
         return Result.Ok(pagedResult);
     }
-
     // === ADMIN METHODS ===
-
-    public async Task<Result<PagedResult<PaymentResponse>>> GetAllCashPaymentsAsync(
-        PaginationQuery query, 
-        string? status = null, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<PaymentResponse>>> GetAllCashPaymentsAsync(PaginationQuery query, string? status = null, CancellationToken cancellationToken = default)
     {
         Expression<Func<Payment, bool>> filter = p => p.PaymentMethod == PaymentMethod.Cash;
-        
+
         if (!string.IsNullOrEmpty(status) && Enum.TryParse<PaymentStatus>(status, out var statusEnum))
         {
             filter = p => p.PaymentMethod == PaymentMethod.Cash && p.Status == statusEnum;
@@ -652,17 +586,12 @@ public class PaymentService : BaseService, IPaymentService
         var pagedResult = PagedResult<PaymentResponse>.Create(responses, total, query.Page, query.PageSize);
         return Result.Ok(pagedResult);
     }
-
-    public async Task<Result> ProcessSettlementAsync(
-        Guid merchantId, 
-        ProcessSettlementRequest request, 
-        Guid adminId, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ProcessSettlementAsync(Guid merchantId, ProcessSettlementRequest request, Guid adminId, CancellationToken cancellationToken = default)
     {
         // Get merchant's completed cash payments that haven't been settled
         var payments = await _unitOfWork.ReadRepository<Payment>()
             .ListAsync(
-                filter: p => p.PaymentMethod == PaymentMethod.Cash && 
+                filter: p => p.PaymentMethod == PaymentMethod.Cash &&
                            p.Status == PaymentStatus.Completed &&
                            p.Order.MerchantId == merchantId &&
                            p.SettledAt == null,
@@ -706,18 +635,15 @@ public class PaymentService : BaseService, IPaymentService
 
         return Result.Ok();
     }
-
     // === PRIVATE HELPER METHODS ===
-
     private bool IsPaymentMethodSupported(PaymentMethod method)
     {
         // Şu anda sadece Cash destekleniyor
         return method == PaymentMethod.Cash;
-        
+
         // Gelecekte diğer methodlar eklenecek:
         // return method is PaymentMethod.Cash or PaymentMethod.CreditCard or PaymentMethod.VodafonePay;
     }
-
     private async Task SendPaymentNotificationAsync(Payment payment, Order order, CancellationToken cancellationToken)
     {
         if (_signalRService == null) return;
@@ -735,18 +661,17 @@ public class PaymentService : BaseService, IPaymentService
                         "CashCollection");
                 }
                 break;
-                
+
             // Gelecekte diğer ödeme yöntemleri için bildirimler
             case PaymentMethod.CreditCard:
                 // Kredi kartı ödeme bildirimi
                 break;
-                
+
             case PaymentMethod.VodafonePay:
                 // Vodafone Pay ödeme bildirimi
                 break;
         }
     }
-
     private async Task<PaymentResponse> MapToPaymentResponseAsync(Payment payment, CancellationToken cancellationToken)
     {
         var courierName = "";

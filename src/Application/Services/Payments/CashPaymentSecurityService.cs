@@ -18,23 +18,13 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
 {
     private readonly IFileStorageService _fileStorageService;
     private readonly ICashPaymentAuditService _auditService;
-
-    public CashPaymentSecurityService(
-        IUnitOfWork unitOfWork,
-        ILogger<CashPaymentSecurityService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        IFileStorageService fileStorageService,
-        ICashPaymentAuditService auditService) 
-        : base(unitOfWork, logger, loggingService, cacheService)
+    public CashPaymentSecurityService(IUnitOfWork unitOfWork, ILogger<CashPaymentSecurityService> logger, ILoggingService loggingService, ICacheService cacheService, IFileStorageService fileStorageService, ICashPaymentAuditService auditService)
+    : base(unitOfWork, logger, loggingService, cacheService)
     {
         _fileStorageService = fileStorageService;
         _auditService = auditService;
     }
-
-    public async Task<Result<CashPaymentEvidenceResponse>> CreateEvidenceAsync(
-        CreateCashPaymentEvidenceRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CashPaymentEvidenceResponse>> CreateEvidenceAsync(CreateCashPaymentEvidenceRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -114,10 +104,7 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             return Result.Fail<CashPaymentEvidenceResponse>("Failed to create evidence", "CREATE_EVIDENCE_FAILED");
         }
     }
-
-    public async Task<Result<CashPaymentSecurityResponse>> CreateSecurityRecordAsync(
-        CreateCashPaymentSecurityRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CashPaymentSecurityResponse>> CreateSecurityRecordAsync(CreateCashPaymentSecurityRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -207,10 +194,7 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             return Result.Fail<CashPaymentSecurityResponse>("Failed to create security record", "CREATE_SECURITY_RECORD_FAILED");
         }
     }
-
-    public async Task<Result<CalculateChangeResponse>> CalculateChangeAsync(
-        CalculateChangeRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CalculateChangeResponse>> CalculateChangeAsync(CalculateChangeRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -233,12 +217,7 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             return Result.Fail<CalculateChangeResponse>("Failed to calculate change", "CALCULATE_CHANGE_FAILED");
         }
     }
-
-    public async Task<Result> CollectCashPaymentWithSecurityAsync(
-        Guid paymentId,
-        Guid courierId,
-        CollectCashPaymentWithSecurityRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> CollectCashPaymentWithSecurityAsync(Guid paymentId, Guid courierId, CollectCashPaymentWithSecurityRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -310,10 +289,7 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             return Result.Fail("Failed to collect cash payment with security", "COLLECT_CASH_PAYMENT_FAILED");
         }
     }
-
-    public async Task<Result<SecurityRiskLevel>> AssessSecurityRiskAsync(
-        Guid paymentId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<SecurityRiskLevel>> AssessSecurityRiskAsync(Guid paymentId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -334,7 +310,6 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             return Result.Fail<SecurityRiskLevel>("Failed to assess security risk", "ASSESS_SECURITY_RISK_FAILED");
         }
     }
-
     // Private helper methods
     private async Task<string> CalculateFileHashAsync(string fileUrl)
     {
@@ -350,14 +325,12 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             return string.Empty;
         }
     }
-
     private string HashIdentityNumber(string identityNumber)
     {
         using var sha256 = SHA256.Create();
         var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(identityNumber));
         return Convert.ToBase64String(hashBytes);
     }
-
     private async Task<SecurityRiskLevel> AssessRiskLevelAsync(CashPaymentSecurity security)
     {
         var riskFactors = new List<string>();
@@ -408,17 +381,8 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
 
         return riskLevel;
     }
-
-    private async Task CreateAuditLogAsync(
-        Guid paymentId,
-        Guid? courierId,
-        AuditEventType eventType,
-        AuditSeverityLevel severityLevel,
-        string title,
-        string description,
-        SecurityRiskLevel? riskLevel = null,
-        string? details = null,
-        CancellationToken cancellationToken = default)
+    private async Task CreateAuditLogAsync(Guid paymentId, Guid? courierId, AuditEventType eventType, AuditSeverityLevel severityLevel,
+        string title, string description, SecurityRiskLevel? riskLevel = null, string? details = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -443,14 +407,12 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             // Audit log hatası ana işlemi etkilememeli
         }
     }
-
     private string ComputeFileHash(byte[] fileData)
     {
         using var sha256 = SHA256.Create();
         var hashBytes = sha256.ComputeHash(fileData);
         return Convert.ToBase64String(hashBytes);
     }
-
     private string ComputeHash(string input)
     {
         using var sha256 = SHA256.Create();
@@ -458,12 +420,11 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
         var hashBytes = sha256.ComputeHash(inputBytes);
         return Convert.ToBase64String(hashBytes);
     }
-
     private async Task<bool> PerformIdentityVerification(string identityType, string identityNumber, CancellationToken cancellationToken)
     {
         // Basit kimlik doğrulama - gerçek implementasyonda external API kullanılabilir
         await Task.Delay(100, cancellationToken); // Simulate API call
-        
+
         // Basit validasyon kuralları
         return identityType.ToLower() switch
         {
@@ -473,7 +434,6 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             _ => false
         };
     }
-
     // Diğer metodlar için placeholder'lar (implementasyon devam edecek)
     public async Task<Result<CashPaymentEvidenceResponse>> UpdateEvidenceAsync(Guid evidenceId, UpdateCashPaymentEvidenceRequest request, CancellationToken cancellationToken = default)
     {
@@ -498,7 +458,7 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             if (request.FileData != null)
             {
                 var fileHash = ComputeFileHash(request.FileData);
-                
+
                 // Dosyayı storage'a yükle
                 var uploadRequest = new FileUploadRequest(
                     request.FileName ?? "evidence_update.jpg",
@@ -581,7 +541,6 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             return Result.Fail<CashPaymentEvidenceResponse>("Failed to update evidence", "UPDATE_EVIDENCE_FAILED");
         }
     }
-
     public async Task<Result<PagedResult<CashPaymentEvidenceResponse>>> GetPaymentEvidenceAsync(Guid paymentId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         try
@@ -644,7 +603,6 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             return Result.Fail<PagedResult<CashPaymentEvidenceResponse>>("Failed to get payment evidence", "GET_EVIDENCE_FAILED");
         }
     }
-
     public async Task<Result<CashPaymentSecurityResponse>> UpdateSecurityRecordAsync(Guid securityId, UpdateCashPaymentSecurityRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -740,7 +698,6 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             return Result.Fail<CashPaymentSecurityResponse>("Failed to update security record", "UPDATE_SECURITY_RECORD_FAILED");
         }
     }
-
     public async Task<Result<CashPaymentSecurityResponse>> GetPaymentSecurityAsync(Guid paymentId, CancellationToken cancellationToken = default)
     {
         try
@@ -791,7 +748,6 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             return Result.Fail<CashPaymentSecurityResponse>("Failed to get payment security", "GET_PAYMENT_SECURITY_FAILED");
         }
     }
-
     public async Task<Result<bool>> PerformFakeMoneyCheckAsync(Guid paymentId, string notes, CancellationToken cancellationToken = default)
     {
         try
@@ -816,8 +772,8 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
 
             // Sahte para kontrolü yapıldı olarak işaretle
             securityRecord.FakeMoneyCheckPerformed = true;
-            securityRecord.SecurityNotes = string.IsNullOrEmpty(securityRecord.SecurityNotes) 
-                ? notes 
+            securityRecord.SecurityNotes = string.IsNullOrEmpty(securityRecord.SecurityNotes)
+                ? notes
                 : $"{securityRecord.SecurityNotes}\nFake Money Check: {notes}";
             securityRecord.UpdatedAt = DateTime.UtcNow;
 
@@ -844,7 +800,6 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             return Result.Fail<bool>("Failed to perform fake money check", "FAKE_MONEY_CHECK_FAILED");
         }
     }
-
     public async Task<Result<bool>> VerifyCustomerIdentityAsync(Guid paymentId, string identityType, string identityNumber, CancellationToken cancellationToken = default)
     {
         try
@@ -877,8 +832,8 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             securityRecord.IdentityVerificationType = identityType;
             securityRecord.IdentityNumberHash = identityHash;
             securityRecord.CustomerIdentityVerified = isVerified;
-            securityRecord.SecurityNotes = string.IsNullOrEmpty(securityRecord.SecurityNotes) 
-                ? $"Identity verification: {identityType} - {(isVerified ? "Verified" : "Failed")}" 
+            securityRecord.SecurityNotes = string.IsNullOrEmpty(securityRecord.SecurityNotes)
+                ? $"Identity verification: {identityType} - {(isVerified ? "Verified" : "Failed")}"
                 : $"{securityRecord.SecurityNotes}\nIdentity verification: {identityType} - {(isVerified ? "Verified" : "Failed")}";
             securityRecord.UpdatedAt = DateTime.UtcNow;
 
@@ -905,7 +860,6 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             return Result.Fail<bool>("Failed to verify customer identity", "IDENTITY_VERIFICATION_FAILED");
         }
     }
-
     public async Task<Result<PagedResult<CashPaymentSecurityResponse>>> GetPaymentsRequiringApprovalAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         try
@@ -958,7 +912,6 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             return Result.Fail<PagedResult<CashPaymentSecurityResponse>>("Failed to get payments requiring approval", "GET_PAYMENTS_REQUIRING_APPROVAL_FAILED");
         }
     }
-
     public async Task<Result> ApproveSecurityRecordAsync(Guid securityId, Guid adminId, string notes, CancellationToken cancellationToken = default)
     {
         try
@@ -981,8 +934,8 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             // Security record'u onayla
             securityRecord.ApprovedByAdminId = adminId;
             securityRecord.ApprovedAt = DateTime.UtcNow;
-            securityRecord.SecurityNotes = string.IsNullOrEmpty(securityRecord.SecurityNotes) 
-                ? $"Approved by admin {adminId}: {notes}" 
+            securityRecord.SecurityNotes = string.IsNullOrEmpty(securityRecord.SecurityNotes)
+                ? $"Approved by admin {adminId}: {notes}"
                 : $"{securityRecord.SecurityNotes}\nApproved by admin {adminId}: {notes}";
             securityRecord.UpdatedAt = DateTime.UtcNow;
 
@@ -1009,7 +962,6 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             return Result.Fail("Failed to approve security record", "APPROVE_SECURITY_RECORD_FAILED");
         }
     }
-
     public async Task<Result> RejectSecurityRecordAsync(Guid securityId, Guid adminId, string reason, CancellationToken cancellationToken = default)
     {
         try
@@ -1032,8 +984,8 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             // Security record'u reddet - reddedilme durumu için özel bir field yok, sadece not ekleyebiliriz
             securityRecord.ApprovedByAdminId = adminId;
             securityRecord.ApprovedAt = DateTime.UtcNow;
-            securityRecord.SecurityNotes = string.IsNullOrEmpty(securityRecord.SecurityNotes) 
-                ? $"Rejected by admin {adminId}: {reason}" 
+            securityRecord.SecurityNotes = string.IsNullOrEmpty(securityRecord.SecurityNotes)
+                ? $"Rejected by admin {adminId}: {reason}"
                 : $"{securityRecord.SecurityNotes}\nRejected by admin {adminId}: {reason}";
             securityRecord.UpdatedAt = DateTime.UtcNow;
 

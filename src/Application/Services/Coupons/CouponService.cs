@@ -9,22 +9,12 @@ namespace Getir.Application.Services.Coupons;
 public class CouponService : BaseService, ICouponService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
-
-    public CouponService(
-        IUnitOfWork unitOfWork,
-        ILogger<CouponService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        IBackgroundTaskService backgroundTaskService) 
+    public CouponService(IUnitOfWork unitOfWork, ILogger<CouponService> logger, ILoggingService loggingService, ICacheService cacheService, IBackgroundTaskService backgroundTaskService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _backgroundTaskService = backgroundTaskService;
     }
-
-    public async Task<Result<CouponValidationResponse>> ValidateCouponAsync(
-        Guid userId,
-        ValidateCouponRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CouponValidationResponse>> ValidateCouponAsync(Guid userId, ValidateCouponRequest request, CancellationToken cancellationToken = default)
     {
         var coupon = await _unitOfWork.ReadRepository<Coupon>()
             .FirstOrDefaultAsync(c => c.Code == request.Code && c.IsActive, cancellationToken: cancellationToken);
@@ -78,10 +68,7 @@ public class CouponService : BaseService, ICouponService
 
         return Result.Ok(new CouponValidationResponse(true, null, discountAmount, request.Code));
     }
-
-    public async Task<Result<CouponResponse>> CreateCouponAsync(
-        CreateCouponRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CouponResponse>> CreateCouponAsync(CreateCouponRequest request, CancellationToken cancellationToken = default)
     {
         var existingCoupon = await _unitOfWork.ReadRepository<Coupon>()
             .FirstOrDefaultAsync(c => c.Code == request.Code, cancellationToken: cancellationToken);
@@ -130,10 +117,7 @@ public class CouponService : BaseService, ICouponService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result<PagedResult<CouponResponse>>> GetCouponsAsync(
-        PaginationQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<CouponResponse>>> GetCouponsAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         var coupons = await _unitOfWork.Repository<Coupon>().GetPagedAsync(
             filter: c => c.IsActive,
@@ -163,16 +147,10 @@ public class CouponService : BaseService, ICouponService
         )).ToList();
 
         var pagedResult = PagedResult<CouponResponse>.Create(response, total, query.Page, query.PageSize);
-        
+
         return Result.Ok(pagedResult);
     }
-
-    public async Task<Result> RecordCouponUsageAsync(
-        Guid couponId,
-        Guid userId,
-        Guid orderId,
-        decimal discountAmount,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> RecordCouponUsageAsync(Guid couponId, Guid userId, Guid orderId, decimal discountAmount, CancellationToken cancellationToken = default)
     {
         var couponUsage = new CouponUsage
         {

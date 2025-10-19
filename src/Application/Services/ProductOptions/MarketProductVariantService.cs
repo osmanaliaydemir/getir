@@ -8,19 +8,11 @@ namespace Getir.Application.Services.ProductOptions;
 
 public class MarketProductVariantService : BaseService, IMarketProductVariantService
 {
-    public MarketProductVariantService(
-        IUnitOfWork unitOfWork,
-        ILogger<MarketProductVariantService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService) 
+    public MarketProductVariantService(IUnitOfWork unitOfWork, ILogger<MarketProductVariantService> logger, ILoggingService loggingService, ICacheService cacheService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
     }
-
-    public async Task<Result<PagedResult<MarketProductVariantResponse>>> GetProductVariantsAsync(
-        Guid productId,
-        PaginationQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<MarketProductVariantResponse>>> GetProductVariantsAsync(Guid productId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetProductVariantsInternalAsync(productId, query, cancellationToken),
@@ -28,11 +20,7 @@ public class MarketProductVariantService : BaseService, IMarketProductVariantSer
             new { ProductId = productId, Page = query.Page, PageSize = query.PageSize },
             cancellationToken);
     }
-
-    private async Task<Result<PagedResult<MarketProductVariantResponse>>> GetProductVariantsInternalAsync(
-        Guid productId,
-        PaginationQuery query,
-        CancellationToken cancellationToken)
+    private async Task<Result<PagedResult<MarketProductVariantResponse>>> GetProductVariantsInternalAsync(Guid productId, PaginationQuery query, CancellationToken cancellationToken)
     {
         try
         {
@@ -67,10 +55,7 @@ public class MarketProductVariantService : BaseService, IMarketProductVariantSer
             return Result.Fail<PagedResult<MarketProductVariantResponse>>("Failed to get product variants", "GET_VARIANTS_ERROR");
         }
     }
-
-    public async Task<Result<MarketProductVariantResponse>> GetProductVariantAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MarketProductVariantResponse>> GetProductVariantAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetProductVariantInternalAsync(id, cancellationToken),
@@ -78,10 +63,7 @@ public class MarketProductVariantService : BaseService, IMarketProductVariantSer
             new { Id = id },
             cancellationToken);
     }
-
-    private async Task<Result<MarketProductVariantResponse>> GetProductVariantInternalAsync(
-        Guid id,
-        CancellationToken cancellationToken)
+    private async Task<Result<MarketProductVariantResponse>> GetProductVariantInternalAsync(Guid id, CancellationToken cancellationToken)
     {
         try
         {
@@ -102,11 +84,7 @@ public class MarketProductVariantService : BaseService, IMarketProductVariantSer
             return Result.Fail<MarketProductVariantResponse>("Failed to get product variant", "GET_VARIANT_ERROR");
         }
     }
-
-    public async Task<Result<MarketProductVariantResponse>> CreateProductVariantAsync(
-        CreateMarketProductVariantRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MarketProductVariantResponse>> CreateProductVariantAsync(CreateMarketProductVariantRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await CreateProductVariantInternalAsync(request, merchantOwnerId, cancellationToken),
@@ -114,17 +92,13 @@ public class MarketProductVariantService : BaseService, IMarketProductVariantSer
             new { ProductId = request.ProductId, Name = request.Name },
             cancellationToken);
     }
-
-    private async Task<Result<MarketProductVariantResponse>> CreateProductVariantInternalAsync(
-        CreateMarketProductVariantRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken)
+    private async Task<Result<MarketProductVariantResponse>> CreateProductVariantInternalAsync(CreateMarketProductVariantRequest request, Guid merchantOwnerId, CancellationToken cancellationToken)
     {
         try
         {
             // Verify product exists and user owns it
             var product = await _unitOfWork.ReadRepository<MarketProduct>()
-                .FirstOrDefaultAsync(p => p.Id == request.ProductId && p.Market.Merchant.OwnerId == merchantOwnerId, 
+                .FirstOrDefaultAsync(p => p.Id == request.ProductId && p.Market.Merchant.OwnerId == merchantOwnerId,
                     include: "Market.Merchant", cancellationToken: cancellationToken);
 
             if (product == null)
@@ -177,12 +151,7 @@ public class MarketProductVariantService : BaseService, IMarketProductVariantSer
             return Result.Fail<MarketProductVariantResponse>("Failed to create product variant", "CREATE_VARIANT_ERROR");
         }
     }
-
-    public async Task<Result<MarketProductVariantResponse>> UpdateProductVariantAsync(
-        Guid id,
-        UpdateMarketProductVariantRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MarketProductVariantResponse>> UpdateProductVariantAsync(Guid id, UpdateMarketProductVariantRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await UpdateProductVariantInternalAsync(id, request, merchantOwnerId, cancellationToken),
@@ -190,12 +159,7 @@ public class MarketProductVariantService : BaseService, IMarketProductVariantSer
             new { Id = id, Name = request.Name },
             cancellationToken);
     }
-
-    private async Task<Result<MarketProductVariantResponse>> UpdateProductVariantInternalAsync(
-        Guid id,
-        UpdateMarketProductVariantRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken)
+    private async Task<Result<MarketProductVariantResponse>> UpdateProductVariantInternalAsync(Guid id, UpdateMarketProductVariantRequest request, Guid merchantOwnerId, CancellationToken cancellationToken)
     {
         try
         {
@@ -252,11 +216,7 @@ public class MarketProductVariantService : BaseService, IMarketProductVariantSer
             return Result.Fail<MarketProductVariantResponse>("Failed to update product variant", "UPDATE_VARIANT_ERROR");
         }
     }
-
-    public async Task<Result> DeleteProductVariantAsync(
-        Guid id,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteProductVariantAsync(Guid id, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await DeleteProductVariantInternalAsync(id, merchantOwnerId, cancellationToken),
@@ -264,11 +224,7 @@ public class MarketProductVariantService : BaseService, IMarketProductVariantSer
             new { Id = id },
             cancellationToken);
     }
-
-    private async Task<Result> DeleteProductVariantInternalAsync(
-        Guid id,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken)
+    private async Task<Result> DeleteProductVariantInternalAsync(Guid id, Guid merchantOwnerId, CancellationToken cancellationToken)
     {
         try
         {
@@ -296,12 +252,7 @@ public class MarketProductVariantService : BaseService, IMarketProductVariantSer
             return Result.Fail("Failed to delete product variant", "DELETE_VARIANT_ERROR");
         }
     }
-
-    public async Task<Result> UpdateVariantStockAsync(
-        Guid id,
-        int newStockQuantity,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateVariantStockAsync(Guid id, int newStockQuantity, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await UpdateVariantStockInternalAsync(id, newStockQuantity, merchantOwnerId, cancellationToken),
@@ -309,12 +260,7 @@ public class MarketProductVariantService : BaseService, IMarketProductVariantSer
             new { Id = id, NewStock = newStockQuantity },
             cancellationToken);
     }
-
-    private async Task<Result> UpdateVariantStockInternalAsync(
-        Guid id,
-        int newStockQuantity,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken)
+    private async Task<Result> UpdateVariantStockInternalAsync(Guid id, int newStockQuantity, Guid merchantOwnerId, CancellationToken cancellationToken)
     {
         try
         {
@@ -346,11 +292,7 @@ public class MarketProductVariantService : BaseService, IMarketProductVariantSer
             return Result.Fail("Failed to update variant stock", "UPDATE_STOCK_ERROR");
         }
     }
-
-    public async Task<Result> BulkUpdateVariantStockAsync(
-        List<UpdateVariantStockRequest> requests,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> BulkUpdateVariantStockAsync(List<UpdateVariantStockRequest> requests, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await BulkUpdateVariantStockInternalAsync(requests, merchantOwnerId, cancellationToken),
@@ -358,18 +300,14 @@ public class MarketProductVariantService : BaseService, IMarketProductVariantSer
             new { RequestCount = requests.Count },
             cancellationToken);
     }
-
-    private async Task<Result> BulkUpdateVariantStockInternalAsync(
-        List<UpdateVariantStockRequest> requests,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken)
+    private async Task<Result> BulkUpdateVariantStockInternalAsync(List<UpdateVariantStockRequest> requests, Guid merchantOwnerId, CancellationToken cancellationToken)
     {
         try
         {
             var variantIds = requests.Select(r => r.VariantId).ToList();
             var variants = await _unitOfWork.ReadRepository<MarketProductVariant>()
-                .ListAsync(v => variantIds.Contains(v.Id), 
-                    include: "Product.Market.Merchant", 
+                .ListAsync(v => variantIds.Contains(v.Id),
+                    include: "Product.Market.Merchant",
                     cancellationToken: cancellationToken);
 
             if (variants.Count != requests.Count)
@@ -403,7 +341,6 @@ public class MarketProductVariantService : BaseService, IMarketProductVariantSer
             return Result.Fail("Failed to bulk update variant stock", "BULK_UPDATE_STOCK_ERROR");
         }
     }
-
     private static MarketProductVariantResponse MapToResponse(MarketProductVariant variant)
     {
         return new MarketProductVariantResponse(

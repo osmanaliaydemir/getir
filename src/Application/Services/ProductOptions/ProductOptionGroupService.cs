@@ -8,19 +8,11 @@ namespace Getir.Application.Services.ProductOptions;
 
 public class ProductOptionGroupService : BaseService, IProductOptionGroupService
 {
-    public ProductOptionGroupService(
-        IUnitOfWork unitOfWork,
-        ILogger<ProductOptionGroupService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService) 
+    public ProductOptionGroupService(IUnitOfWork unitOfWork, ILogger<ProductOptionGroupService> logger, ILoggingService loggingService, ICacheService cacheService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
     }
-
-    public async Task<Result<PagedResult<ProductOptionGroupResponse>>> GetProductOptionGroupsAsync(
-        Guid productId,
-        PaginationQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<ProductOptionGroupResponse>>> GetProductOptionGroupsAsync(Guid productId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetProductOptionGroupsInternalAsync(productId, query, cancellationToken),
@@ -28,11 +20,7 @@ public class ProductOptionGroupService : BaseService, IProductOptionGroupService
             new { ProductId = productId, Page = query.Page, PageSize = query.PageSize },
             cancellationToken);
     }
-
-    private async Task<Result<PagedResult<ProductOptionGroupResponse>>> GetProductOptionGroupsInternalAsync(
-        Guid productId,
-        PaginationQuery query,
-        CancellationToken cancellationToken)
+    private async Task<Result<PagedResult<ProductOptionGroupResponse>>> GetProductOptionGroupsInternalAsync(Guid productId, PaginationQuery query, CancellationToken cancellationToken)
     {
         try
         {
@@ -68,10 +56,7 @@ public class ProductOptionGroupService : BaseService, IProductOptionGroupService
             return Result.Fail<PagedResult<ProductOptionGroupResponse>>("Failed to get product option groups", "GET_OPTION_GROUPS_ERROR");
         }
     }
-
-    public async Task<Result<ProductOptionGroupResponse>> GetProductOptionGroupAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<ProductOptionGroupResponse>> GetProductOptionGroupAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetProductOptionGroupInternalAsync(id, cancellationToken),
@@ -79,10 +64,7 @@ public class ProductOptionGroupService : BaseService, IProductOptionGroupService
             new { Id = id },
             cancellationToken);
     }
-
-    private async Task<Result<ProductOptionGroupResponse>> GetProductOptionGroupInternalAsync(
-        Guid id,
-        CancellationToken cancellationToken)
+    private async Task<Result<ProductOptionGroupResponse>> GetProductOptionGroupInternalAsync(Guid id, CancellationToken cancellationToken)
     {
         try
         {
@@ -103,11 +85,7 @@ public class ProductOptionGroupService : BaseService, IProductOptionGroupService
             return Result.Fail<ProductOptionGroupResponse>("Failed to get product option group", "GET_OPTION_GROUP_ERROR");
         }
     }
-
-    public async Task<Result<ProductOptionGroupResponse>> CreateProductOptionGroupAsync(
-        CreateProductOptionGroupRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<ProductOptionGroupResponse>> CreateProductOptionGroupAsync(CreateProductOptionGroupRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await CreateProductOptionGroupInternalAsync(request, merchantOwnerId, cancellationToken),
@@ -115,17 +93,13 @@ public class ProductOptionGroupService : BaseService, IProductOptionGroupService
             new { ProductId = request.ProductId, Name = request.Name },
             cancellationToken);
     }
-
-    private async Task<Result<ProductOptionGroupResponse>> CreateProductOptionGroupInternalAsync(
-        CreateProductOptionGroupRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken)
+    private async Task<Result<ProductOptionGroupResponse>> CreateProductOptionGroupInternalAsync(CreateProductOptionGroupRequest request, Guid merchantOwnerId, CancellationToken cancellationToken)
     {
         try
         {
             // Verify product exists and user owns it
             var product = await _unitOfWork.ReadRepository<Product>()
-                .FirstOrDefaultAsync(p => p.Id == request.ProductId && p.Merchant.OwnerId == merchantOwnerId, 
+                .FirstOrDefaultAsync(p => p.Id == request.ProductId && p.Merchant.OwnerId == merchantOwnerId,
                     include: "Merchant", cancellationToken: cancellationToken);
 
             if (product == null)
@@ -159,12 +133,7 @@ public class ProductOptionGroupService : BaseService, IProductOptionGroupService
             return Result.Fail<ProductOptionGroupResponse>("Failed to create product option group", "CREATE_OPTION_GROUP_ERROR");
         }
     }
-
-    public async Task<Result<ProductOptionGroupResponse>> UpdateProductOptionGroupAsync(
-        Guid id,
-        UpdateProductOptionGroupRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<ProductOptionGroupResponse>> UpdateProductOptionGroupAsync(Guid id, UpdateProductOptionGroupRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await UpdateProductOptionGroupInternalAsync(id, request, merchantOwnerId, cancellationToken),
@@ -172,12 +141,7 @@ public class ProductOptionGroupService : BaseService, IProductOptionGroupService
             new { Id = id, Name = request.Name },
             cancellationToken);
     }
-
-    private async Task<Result<ProductOptionGroupResponse>> UpdateProductOptionGroupInternalAsync(
-        Guid id,
-        UpdateProductOptionGroupRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken)
+    private async Task<Result<ProductOptionGroupResponse>> UpdateProductOptionGroupInternalAsync(Guid id, UpdateProductOptionGroupRequest request, Guid merchantOwnerId, CancellationToken cancellationToken)
     {
         try
         {
@@ -215,11 +179,7 @@ public class ProductOptionGroupService : BaseService, IProductOptionGroupService
             return Result.Fail<ProductOptionGroupResponse>("Failed to update product option group", "UPDATE_OPTION_GROUP_ERROR");
         }
     }
-
-    public async Task<Result> DeleteProductOptionGroupAsync(
-        Guid id,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteProductOptionGroupAsync(Guid id, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await DeleteProductOptionGroupInternalAsync(id, merchantOwnerId, cancellationToken),
@@ -227,11 +187,7 @@ public class ProductOptionGroupService : BaseService, IProductOptionGroupService
             new { Id = id },
             cancellationToken);
     }
-
-    private async Task<Result> DeleteProductOptionGroupInternalAsync(
-        Guid id,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken)
+    private async Task<Result> DeleteProductOptionGroupInternalAsync(Guid id, Guid merchantOwnerId, CancellationToken cancellationToken)
     {
         try
         {
@@ -263,12 +219,7 @@ public class ProductOptionGroupService : BaseService, IProductOptionGroupService
             return Result.Fail("Failed to delete product option group", "DELETE_OPTION_GROUP_ERROR");
         }
     }
-
-    public async Task<Result> ReorderProductOptionGroupsAsync(
-        Guid productId,
-        List<Guid> orderedGroupIds,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ReorderProductOptionGroupsAsync(Guid productId, List<Guid> orderedGroupIds, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await ReorderProductOptionGroupsInternalAsync(productId, orderedGroupIds, merchantOwnerId, cancellationToken),
@@ -276,18 +227,13 @@ public class ProductOptionGroupService : BaseService, IProductOptionGroupService
             new { ProductId = productId, GroupCount = orderedGroupIds.Count },
             cancellationToken);
     }
-
-    private async Task<Result> ReorderProductOptionGroupsInternalAsync(
-        Guid productId,
-        List<Guid> orderedGroupIds,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken)
+    private async Task<Result> ReorderProductOptionGroupsInternalAsync(Guid productId, List<Guid> orderedGroupIds, Guid merchantOwnerId, CancellationToken cancellationToken)
     {
         try
         {
             // Verify product exists and user owns it
             var product = await _unitOfWork.ReadRepository<Product>()
-                .FirstOrDefaultAsync(p => p.Id == productId && p.Merchant.OwnerId == merchantOwnerId, 
+                .FirstOrDefaultAsync(p => p.Id == productId && p.Merchant.OwnerId == merchantOwnerId,
                     include: "Merchant", cancellationToken: cancellationToken);
 
             if (product == null)
@@ -318,7 +264,6 @@ public class ProductOptionGroupService : BaseService, IProductOptionGroupService
             return Result.Fail("Failed to reorder product option groups", "REORDER_OPTION_GROUPS_ERROR");
         }
     }
-
     private static ProductOptionGroupResponse MapToResponse(ProductOptionGroup optionGroup)
     {
         return new ProductOptionGroupResponse(
@@ -335,7 +280,6 @@ public class ProductOptionGroupService : BaseService, IProductOptionGroupService
             optionGroup.UpdatedAt,
             optionGroup.Options?.Select(MapOptionToResponse).ToList() ?? new List<ProductOptionResponse>());
     }
-
     private static ProductOptionResponse MapOptionToResponse(ProductOption option)
     {
         return new ProductOptionResponse(

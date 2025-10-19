@@ -13,26 +13,19 @@ namespace Getir.Application.Services.DeliveryOptimization;
 /// </summary>
 public class RouteOptimizationService : BaseService, IRouteOptimizationService
 {
-    public RouteOptimizationService(
-        IUnitOfWork unitOfWork,
-        ILogger<RouteOptimizationService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService) 
+    public RouteOptimizationService(IUnitOfWork unitOfWork, ILogger<RouteOptimizationService> logger, ILoggingService loggingService, ICacheService cacheService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
     }
-
-    public async Task<Result<RouteOptimizationResponse>> GetAlternativeRoutesAsync(
-        RouteOptimizationRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<RouteOptimizationResponse>> GetAlternativeRoutesAsync(RouteOptimizationRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
             // Gerçek uygulamada Google Maps Directions API kullanılacak
             // Şimdilik mock data ile alternatif rotalar oluşturuyoruz
-            
+
             var routes = new List<DeliveryRouteResponse>();
-            
+
             // Ana rota
             var primaryRoute = CreateMockRoute(
                 "Primary Route",
@@ -105,11 +98,7 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
             return Result.Fail<RouteOptimizationResponse>("Failed to generate alternative routes", "ROUTE_GENERATION_ERROR");
         }
     }
-
-    public async Task<Result<DeliveryRouteResponse>> SelectBestRouteAsync(
-        RouteOptimizationRequest request,
-        RoutePreferences? preferences = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<DeliveryRouteResponse>> SelectBestRouteAsync(RouteOptimizationRequest request, RoutePreferences? preferences = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -127,10 +116,10 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
 
             // En iyi rotayı seç (basit algoritma)
             DeliveryRouteResponse bestRoute;
-            
+
             if (preferences?.AvoidTollRoads == true)
             {
-                bestRoute = routes.Where(r => !r.HasTollRoads).OrderBy(r => r.EstimatedDurationMinutes).FirstOrDefault() 
+                bestRoute = routes.Where(r => !r.HasTollRoads).OrderBy(r => r.EstimatedDurationMinutes).FirstOrDefault()
                            ?? routes.First();
             }
             else if (preferences?.TravelMode == "WALKING")
@@ -161,10 +150,7 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
             return Result.Fail<DeliveryRouteResponse>("Failed to select best route", "SELECT_BEST_ROUTE_ERROR");
         }
     }
-
-    public async Task<Result> SelectRouteAsync(
-        RouteSelectionRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> SelectRouteAsync(RouteSelectionRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -216,10 +202,7 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
             return Result.Fail("Failed to select route", "SELECT_ROUTE_ERROR");
         }
     }
-
-    public async Task<Result> UpdateRouteStatusAsync(
-        RouteUpdateRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateRouteStatusAsync(RouteUpdateRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -283,11 +266,7 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
             return Result.Fail("Failed to update route status", "UPDATE_ROUTE_STATUS_ERROR");
         }
     }
-
-    public async Task<Result<DeliveryRouteResponse>> CreateRouteForOrderAsync(
-        Guid orderId,
-        RouteOptimizationRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<DeliveryRouteResponse>> CreateRouteForOrderAsync(Guid orderId, RouteOptimizationRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -365,10 +344,7 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
             return Result.Fail<DeliveryRouteResponse>("Failed to create route for order", "CREATE_ROUTE_ERROR");
         }
     }
-
-    public async Task<Result<List<DeliveryRouteResponse>>> GetRouteHistoryAsync(
-        Guid orderId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<DeliveryRouteResponse>>> GetRouteHistoryAsync(Guid orderId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -409,10 +385,7 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
             return Result.Fail<List<DeliveryRouteResponse>>("Failed to get route history", "GET_ROUTE_HISTORY_ERROR");
         }
     }
-
-    public async Task<Result<DeliveryPerformanceResponse>> AnalyzeRoutePerformanceAsync(
-        DeliveryPerformanceRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<DeliveryPerformanceResponse>> AnalyzeRoutePerformanceAsync(DeliveryPerformanceRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -445,20 +418,20 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
             // Basit zaman dilimi performansı
             var timeSlotPerformance = new List<DeliveryTimeSlotPerformance>
             {
-                new("06:00-12:00", 
+                new("06:00-12:00",
                     orders.Count(o => o.CreatedAt.TimeOfDay >= TimeSpan.FromHours(6) && o.CreatedAt.TimeOfDay < TimeSpan.FromHours(12)),
                     (decimal)orders.Where(o => o.CreatedAt.TimeOfDay >= TimeSpan.FromHours(6) && o.CreatedAt.TimeOfDay < TimeSpan.FromHours(12))
                         .Average(o => (o.UpdatedAt - o.CreatedAt)?.TotalMinutes ?? 0),
                     (decimal)orders.Where(o => o.CreatedAt.TimeOfDay >= TimeSpan.FromHours(6) && o.CreatedAt.TimeOfDay < TimeSpan.FromHours(12))
                         .Count(o => o.Status == Domain.Enums.OrderStatus.Delivered) / Math.Max(1, orders.Count(o => o.CreatedAt.TimeOfDay >= TimeSpan.FromHours(6) && o.CreatedAt.TimeOfDay < TimeSpan.FromHours(12))) * 100),
-                
+
                 new("12:00-18:00",
                     orders.Count(o => o.CreatedAt.TimeOfDay >= TimeSpan.FromHours(12) && o.CreatedAt.TimeOfDay < TimeSpan.FromHours(18)),
                     (decimal)orders.Where(o => o.CreatedAt.TimeOfDay >= TimeSpan.FromHours(12) && o.CreatedAt.TimeOfDay < TimeSpan.FromHours(18))
                         .Average(o => (o.UpdatedAt - o.CreatedAt)?.TotalMinutes ?? 0),
                     (decimal)orders.Where(o => o.CreatedAt.TimeOfDay >= TimeSpan.FromHours(12) && o.CreatedAt.TimeOfDay < TimeSpan.FromHours(18))
                         .Count(o => o.Status == Domain.Enums.OrderStatus.Delivered) / Math.Max(1, orders.Count(o => o.CreatedAt.TimeOfDay >= TimeSpan.FromHours(12) && o.CreatedAt.TimeOfDay < TimeSpan.FromHours(18))) * 100),
-                
+
                 new("18:00-24:00",
                     orders.Count(o => o.CreatedAt.TimeOfDay >= TimeSpan.FromHours(18)),
                     (decimal)orders.Where(o => o.CreatedAt.TimeOfDay >= TimeSpan.FromHours(18))
@@ -470,24 +443,24 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
             // Basit mesafe performansı (mock data)
             var distancePerformance = new List<DeliveryDistancePerformance>
             {
-                new("0-2km", 
+                new("0-2km",
                     orders.Count / 4,
                     15.0m,
                     averageDeliveryFee,
                     95.0m),
-                
+
                 new("2-5km",
                     orders.Count / 4,
                     25.0m,
                     averageDeliveryFee * 1.2m,
                     90.0m),
-                
+
                 new("5-10km",
                     orders.Count / 4,
                     35.0m,
                     averageDeliveryFee * 1.5m,
                     85.0m),
-                
+
                 new("10km+",
                     orders.Count / 4,
                     45.0m,
@@ -519,12 +492,7 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
             return Result.Fail<DeliveryPerformanceResponse>("Failed to analyze route performance", "ANALYZE_PERFORMANCE_ERROR");
         }
     }
-
-    public async Task<Result> UpdateRouteInRealTimeAsync(
-        Guid routeId,
-        double currentLatitude,
-        double currentLongitude,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateRouteInRealTimeAsync(Guid routeId, double currentLatitude, double currentLongitude, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -566,18 +534,15 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
             return Result.Fail("Failed to update route in real time", "UPDATE_ROUTE_REALTIME_ERROR");
         }
     }
-
-    public Task<Result<RouteOptimizationResponse>> GetTrafficOptimizedRoutesAsync(
-        RouteOptimizationRequest request,
-        CancellationToken cancellationToken = default)
+    public Task<Result<RouteOptimizationResponse>> GetTrafficOptimizedRoutesAsync(RouteOptimizationRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
             // Trafik durumuna göre rota optimizasyonu
             // Gerçek uygulamada Google Maps Traffic API kullanılacak
-            
+
             var routes = new List<DeliveryRouteResponse>();
-            
+
             // Trafik durumuna göre farklı rotalar
             var lowTrafficRoute = CreateMockRoute(
                 "Low Traffic Route",
@@ -620,11 +585,7 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
             return Task.FromResult(Result.Fail<RouteOptimizationResponse>("Failed to get traffic optimized routes", "TRAFFIC_ROUTES_ERROR"));
         }
     }
-
-    public Task<Result<RouteOptimizationResponse>> OptimizeMultiPointRouteAsync(
-        List<RouteWaypoint> waypoints,
-        RoutePreferences? preferences = null,
-        CancellationToken cancellationToken = default)
+    public Task<Result<RouteOptimizationResponse>> OptimizeMultiPointRouteAsync(List<RouteWaypoint> waypoints, RoutePreferences? preferences = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -635,9 +596,9 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
 
             // Çoklu nokta rota optimizasyonu
             // Gerçek uygulamada Traveling Salesman Problem (TSP) algoritması kullanılacak
-            
+
             var optimizedWaypoints = OptimizeWaypointOrder(waypoints);
-            
+
             var route = CreateMockRoute(
                 "Multi-Point Optimized Route",
                 "MultiPoint",
@@ -665,21 +626,9 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
     }
 
     #region Helper Methods
-
-    private DeliveryRouteResponse CreateMockRoute(
-        string routeName,
-        string routeType,
-        double startLat,
-        double startLon,
-        double endLat,
-        double endLon,
-        List<RouteWaypoint>? waypoints = null,
-        double distanceMultiplier = 1.0,
-        double durationMultiplier = 1.0,
-        int trafficDelay = 0,
-        bool hasTollRoads = false,
-        bool isHighwayPreferred = false,
-        bool isSelected = false)
+    private DeliveryRouteResponse CreateMockRoute(string routeName, string routeType, double startLat, double startLon,
+        double endLat, double endLon, List<RouteWaypoint>? waypoints = null, double distanceMultiplier = 1.0, double durationMultiplier = 1.0,
+        int trafficDelay = 0, bool hasTollRoads = false, bool isHighwayPreferred = false, bool isSelected = false)
     {
         // Basit mesafe hesaplama (Haversine formula)
         var distance = CalculateDistance(startLat, startLon, endLat, endLon) * distanceMultiplier;
@@ -714,7 +663,7 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
     private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
     {
         const double EarthRadiusKm = 6371.0;
-        
+
         var lat1Rad = DegreesToRadians(lat1);
         var lon1Rad = DegreesToRadians(lon1);
         var lat2Rad = DegreesToRadians(lat2);
@@ -726,37 +675,34 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
         var a = Math.Sin(deltaLat / 2) * Math.Sin(deltaLat / 2) +
                 Math.Cos(lat1Rad) * Math.Cos(lat2Rad) *
                 Math.Sin(deltaLon / 2) * Math.Sin(deltaLon / 2);
-        
+
         var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
         return EarthRadiusKm * c;
     }
-
     private double DegreesToRadians(double degrees)
     {
         return degrees * Math.PI / 180.0;
     }
-
     private decimal CalculateRouteScore(double distance, int duration, bool hasTollRoads, bool isHighwayPreferred)
     {
         var score = 100m;
-        
+
         // Mesafe faktörü (daha kısa mesafe = daha yüksek skor)
         if (distance > 10) score -= 20;
         else if (distance > 5) score -= 10;
-        
+
         // Süre faktörü (daha kısa süre = daha yüksek skor)
         if (duration > 60) score -= 20;
         else if (duration > 30) score -= 10;
-        
+
         // Ücretli yol faktörü
         if (hasTollRoads) score -= 15;
-        
+
         // Otoyol tercihi
         if (isHighwayPreferred) score += 5;
-        
+
         return Math.Max(0, Math.Min(100, score));
     }
-
     private List<RouteWaypoint> OptimizeWaypointOrder(List<RouteWaypoint> waypoints)
     {
         // Basit TSP implementasyonu (Nearest Neighbor)
@@ -764,7 +710,7 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
 
         var optimized = new List<RouteWaypoint>();
         var remaining = new List<RouteWaypoint>(waypoints);
-        
+
         // İlk noktayı seç
         var current = remaining.First();
         optimized.Add(current);
@@ -776,7 +722,7 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
             var nearest = remaining
                 .OrderBy(w => CalculateDistance(current.Latitude, current.Longitude, w.Latitude, w.Longitude))
                 .First();
-            
+
             optimized.Add(nearest);
             remaining.Remove(nearest);
             current = nearest;
@@ -784,14 +730,8 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
 
         return optimized;
     }
-
     // SignalR Hub-specific methods
-
-    public async Task<Result<int>> CalculateETAAsync(
-        Guid orderId,
-        double latitude,
-        double longitude,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<int>> CalculateETAAsync(Guid orderId, double latitude, double longitude, CancellationToken cancellationToken = default)
     {
         var order = await _unitOfWork.ReadRepository<Order>()
             .FirstOrDefaultAsync(o => o.Id == orderId, cancellationToken: cancellationToken);
@@ -823,10 +763,7 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
 
         return Result.Ok(estimatedMinutes);
     }
-
-    public async Task<Result> UpdateETAAsync(
-        UpdateETARequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateETAAsync(UpdateETARequest request, CancellationToken cancellationToken = default)
     {
         var order = await _unitOfWork.Repository<Order>()
             .FirstOrDefaultAsync(o => o.Id == request.OrderId, null, cancellationToken);
@@ -852,17 +789,14 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
 
         return Result.Ok();
     }
-
-    public async Task<Result<RouteOptimizationResponse>> GetOptimizedRouteForCourierAsync(
-        Guid courierId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<RouteOptimizationResponse>> GetOptimizedRouteForCourierAsync(Guid courierId, CancellationToken cancellationToken = default)
     {
         // Get courier's assigned orders
         var orders = await _unitOfWork.Repository<Order>()
             .GetPagedAsync(
-                filter: o => o.CourierId == courierId && 
-                            (o.Status == OrderStatus.Ready || 
-                             o.Status == OrderStatus.PickedUp || 
+                filter: o => o.CourierId == courierId &&
+                            (o.Status == OrderStatus.Ready ||
+                             o.Status == OrderStatus.PickedUp ||
                              o.Status == OrderStatus.OnTheWay),
                 orderBy: o => o.CreatedAt,
                 ascending: true,
@@ -889,11 +823,11 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
                 cancellationToken: cancellationToken);
 
         var currentLocation = latestLocation.FirstOrDefault();
-        
+
         if (currentLocation == null)
         {
             return Result.Fail<RouteOptimizationResponse>(
-                "Courier location not found", 
+                "Courier location not found",
                 "LOCATION_NOT_FOUND");
         }
 
@@ -914,12 +848,12 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
 
         for (int i = 0; i < optimizedWaypoints.Count; i++)
         {
-            var start = i == 0 
+            var start = i == 0
                 ? new { Lat = currentLocation.Latitude, Lon = currentLocation.Longitude }
                 : new { Lat = optimizedWaypoints[i - 1].Latitude, Lon = optimizedWaypoints[i - 1].Longitude };
-            
+
             var end = optimizedWaypoints[i];
-            
+
             var distance = CalculateDistance(start.Lat, start.Lon, end.Latitude, end.Longitude);
             totalDistance += distance;
             totalDuration += (int)(distance / 30.0 * 60.0); // 30 km/h average speed
@@ -963,6 +897,5 @@ public class RouteOptimizationService : BaseService, IRouteOptimizationService
 
         return Result.Ok(response);
     }
-
     #endregion
 }

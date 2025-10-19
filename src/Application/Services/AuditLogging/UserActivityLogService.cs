@@ -11,20 +11,13 @@ public class UserActivityLogService : IUserActivityLogService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILoggingService _loggingService;
     private readonly ILogger<UserActivityLogService> _logger;
-
-    public UserActivityLogService(
-        IUnitOfWork unitOfWork,
-        ILoggingService loggingService,
-        ILogger<UserActivityLogService> logger)
+    public UserActivityLogService(IUnitOfWork unitOfWork, ILoggingService loggingService, ILogger<UserActivityLogService> logger)
     {
         _unitOfWork = unitOfWork;
         _loggingService = loggingService;
         _logger = logger;
     }
-
-    public async Task<Result<UserActivityLogResponse>> CreateUserActivityLogAsync(
-        CreateUserActivityLogRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<UserActivityLogResponse>> CreateUserActivityLogAsync(CreateUserActivityLogRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -67,10 +60,7 @@ public class UserActivityLogService : IUserActivityLogService
             return Result.Fail<UserActivityLogResponse>("Failed to create user activity log", "CREATE_USER_ACTIVITY_LOG_FAILED");
         }
     }
-
-    public async Task<Result<UserActivityLogResponse>> GetUserActivityLogByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<UserActivityLogResponse>> GetUserActivityLogByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -93,10 +83,7 @@ public class UserActivityLogService : IUserActivityLogService
             return Result.Fail<UserActivityLogResponse>("Failed to get user activity log", "GET_USER_ACTIVITY_LOG_FAILED");
         }
     }
-
-    public async Task<Result<IEnumerable<UserActivityLogResponse>>> GetUserActivityLogsAsync(
-        UserActivityQueryRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<UserActivityLogResponse>>> GetUserActivityLogsAsync(UserActivityQueryRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -159,14 +146,7 @@ public class UserActivityLogService : IUserActivityLogService
             return Result.Fail<IEnumerable<UserActivityLogResponse>>("Failed to get user activity logs", "GET_USER_ACTIVITY_LOGS_FAILED");
         }
     }
-
-    public async Task<Result<IEnumerable<UserActivityLogResponse>>> GetUserActivityLogsByUserIdAsync(
-        Guid userId,
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        int pageNumber = 1,
-        int pageSize = 50,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<UserActivityLogResponse>>> GetUserActivityLogsByUserIdAsync(Guid userId, DateTime? startDate = null, DateTime? endDate = null, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -196,14 +176,7 @@ public class UserActivityLogService : IUserActivityLogService
             return Result.Fail<IEnumerable<UserActivityLogResponse>>("Failed to get user activity logs", "GET_USER_ACTIVITY_LOGS_BY_USER_FAILED");
         }
     }
-
-    public async Task<Result<IEnumerable<UserActivityLogResponse>>> GetUserActivityLogsByActivityTypeAsync(
-        string activityType,
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        int pageNumber = 1,
-        int pageSize = 50,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<UserActivityLogResponse>>> GetUserActivityLogsByActivityTypeAsync(string activityType, DateTime? startDate = null, DateTime? endDate = null, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -233,12 +206,7 @@ public class UserActivityLogService : IUserActivityLogService
             return Result.Fail<IEnumerable<UserActivityLogResponse>>("Failed to get user activity logs", "GET_USER_ACTIVITY_LOGS_BY_ACTIVITY_TYPE_FAILED");
         }
     }
-
-    public async Task<Result<Dictionary<string, int>>> GetUserActivityStatisticsAsync(
-        DateTime startDate,
-        DateTime endDate,
-        Guid? userId = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<Dictionary<string, int>>> GetUserActivityStatisticsAsync(DateTime startDate, DateTime endDate, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -263,12 +231,7 @@ public class UserActivityLogService : IUserActivityLogService
             return Result.Fail<Dictionary<string, int>>("Failed to get user activity statistics", "GET_USER_ACTIVITY_STATISTICS_FAILED");
         }
     }
-
-    public async Task<Result<IEnumerable<UserActivityLogResponse>>> GetSuspiciousActivitiesAsync(
-        DateTime startDate,
-        DateTime endDate,
-        int threshold = 10,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<UserActivityLogResponse>>> GetSuspiciousActivitiesAsync(DateTime startDate, DateTime endDate, int threshold = 10, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -295,10 +258,7 @@ public class UserActivityLogService : IUserActivityLogService
             return Result.Fail<IEnumerable<UserActivityLogResponse>>("Failed to get suspicious activities", "GET_SUSPICIOUS_ACTIVITIES_FAILED");
         }
     }
-
-    public async Task<Result> DeleteOldUserActivityLogsAsync(
-        DateTime cutoffDate,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteOldUserActivityLogsAsync(DateTime cutoffDate, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -320,7 +280,6 @@ public class UserActivityLogService : IUserActivityLogService
             return Result.Fail("Failed to delete old user activity logs", "DELETE_OLD_USER_ACTIVITY_LOGS_FAILED");
         }
     }
-
     private static UserActivityLogResponse MapToResponse(UserActivityLog userActivityLog)
     {
         return new UserActivityLogResponse(

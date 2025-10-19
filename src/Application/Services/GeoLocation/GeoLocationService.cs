@@ -11,15 +11,10 @@ public class GeoLocationService : BaseService, IGeoLocationService
 {
     private const double EarthRadiusKm = 6371.0; // Dünya yarıçapı (km)
 
-    public GeoLocationService(
-        IUnitOfWork unitOfWork,
-        ILogger<GeoLocationService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService) 
+    public GeoLocationService(IUnitOfWork unitOfWork, ILogger<GeoLocationService> logger, ILoggingService loggingService, ICacheService cacheService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
     }
-
     /// <summary>
     /// Haversine formula ile iki koordinat arasındaki mesafeyi hesaplar
     /// </summary>
@@ -39,21 +34,16 @@ public class GeoLocationService : BaseService, IGeoLocationService
         var a = Math.Sin(deltaLat / 2) * Math.Sin(deltaLat / 2) +
                 Math.Cos(lat1Rad) * Math.Cos(lat2Rad) *
                 Math.Sin(deltaLon / 2) * Math.Sin(deltaLon / 2);
-        
+
         var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
         var distance = EarthRadiusKm * c;
 
         return Math.Round(distance, 2); // 2 ondalık basamak
     }
-
     /// <summary>
     /// Belirtilen yarıçap içindeki merchantları bulur
     /// </summary>
-    public async Task<Result<IEnumerable<NearbyMerchantResponse>>> GetNearbyMerchantsAsync(
-        double userLatitude, 
-        double userLongitude, 
-        double radiusKm = 10.0,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<NearbyMerchantResponse>>> GetNearbyMerchantsAsync(double userLatitude, double userLongitude, double radiusKm = 10.0, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -68,26 +58,26 @@ public class GeoLocationService : BaseService, IGeoLocationService
             foreach (var merchant in merchants)
             {
                 var distance = CalculateDistance(
-                    userLatitude, 
-                    userLongitude, 
-                    (double)merchant.Latitude, 
+                    userLatitude,
+                    userLongitude,
+                    (double)merchant.Latitude,
                     (double)merchant.Longitude);
 
                 if (distance <= radiusKm)
                 {
                     // Delivery zone kontrolü
                     var isInDeliveryZone = await IsInDeliveryZoneAsync(
-                        merchant.Id, 
-                        userLatitude, 
-                        userLongitude, 
+                        merchant.Id,
+                        userLatitude,
+                        userLongitude,
                         cancellationToken);
 
                     if (isInDeliveryZone.Success && isInDeliveryZone.Value)
                     {
                         var deliveryEstimate = await CalculateDeliveryEstimateAsync(
-                            merchant.Id, 
-                            userLatitude, 
-                            userLongitude, 
+                            merchant.Id,
+                            userLatitude,
+                            userLongitude,
                             cancellationToken);
 
                         nearbyMerchants.Add(new NearbyMerchantResponse(
@@ -114,30 +104,25 @@ public class GeoLocationService : BaseService, IGeoLocationService
                 .ThenByDescending(m => m.Rating ?? 0)
                 .ToList();
 
-            _loggingService.LogBusinessEvent("NearbyMerchantsFound", new { 
-                sortedMerchants.Count, 
-                radiusKm 
+            _loggingService.LogBusinessEvent("NearbyMerchantsFound", new
+            {
+                sortedMerchants.Count,
+                radiusKm
             });
 
             return Result.Ok(sortedMerchants.AsEnumerable());
         }
         catch (Exception ex)
         {
-            _loggingService.LogError("Error getting nearby merchants", ex, 
+            _loggingService.LogError("Error getting nearby merchants", ex,
                 new { userLatitude, userLongitude, radiusKm });
             return Result.Fail<IEnumerable<NearbyMerchantResponse>>("Error getting nearby merchants", "GEO_LOCATION_ERROR");
         }
     }
-
     /// <summary>
     /// Belirtilen yarıçap ve kategori tipine göre merchantları bulur
     /// </summary>
-    public async Task<Result<IEnumerable<NearbyMerchantResponse>>> GetNearbyMerchantsByCategoryAsync(
-        double userLatitude,
-        double userLongitude,
-        ServiceCategoryType categoryType,
-        double radiusKm = 10.0,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<NearbyMerchantResponse>>> GetNearbyMerchantsByCategoryAsync(double userLatitude, double userLongitude, ServiceCategoryType categoryType, double radiusKm = 10.0, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -145,21 +130,21 @@ public class GeoLocationService : BaseService, IGeoLocationService
             if (userLatitude < -90 || userLatitude > 90)
             {
                 return Result.Fail<IEnumerable<NearbyMerchantResponse>>(
-                    "Invalid latitude. Must be between -90 and 90", 
+                    "Invalid latitude. Must be between -90 and 90",
                     "INVALID_LATITUDE");
             }
 
             if (userLongitude < -180 || userLongitude > 180)
             {
                 return Result.Fail<IEnumerable<NearbyMerchantResponse>>(
-                    "Invalid longitude. Must be between -180 and 180", 
+                    "Invalid longitude. Must be between -180 and 180",
                     "INVALID_LONGITUDE");
             }
 
             if (radiusKm <= 0 || radiusKm > 50)
             {
                 return Result.Fail<IEnumerable<NearbyMerchantResponse>>(
-                    "Radius must be between 0 and 50 km", 
+                    "Radius must be between 0 and 50 km",
                     "INVALID_RADIUS");
             }
 
@@ -175,26 +160,26 @@ public class GeoLocationService : BaseService, IGeoLocationService
             foreach (var merchant in merchants)
             {
                 var distance = CalculateDistance(
-                    userLatitude, 
-                    userLongitude, 
-                    (double)merchant.Latitude, 
+                    userLatitude,
+                    userLongitude,
+                    (double)merchant.Latitude,
                     (double)merchant.Longitude);
 
                 if (distance <= radiusKm)
                 {
                     // Delivery zone kontrolü
                     var isInDeliveryZone = await IsInDeliveryZoneAsync(
-                        merchant.Id, 
-                        userLatitude, 
-                        userLongitude, 
+                        merchant.Id,
+                        userLatitude,
+                        userLongitude,
                         cancellationToken);
 
                     if (isInDeliveryZone.Success && isInDeliveryZone.Value)
                     {
                         var deliveryEstimate = await CalculateDeliveryEstimateAsync(
-                            merchant.Id, 
-                            userLatitude, 
-                            userLongitude, 
+                            merchant.Id,
+                            userLatitude,
+                            userLongitude,
                             cancellationToken);
 
                         nearbyMerchants.Add(new NearbyMerchantResponse(
@@ -220,32 +205,28 @@ public class GeoLocationService : BaseService, IGeoLocationService
                 .ThenByDescending(m => m.Rating ?? 0)
                 .ToList();
 
-            _loggingService.LogBusinessEvent("NearbyMerchantsByCategoryFound", new { 
-                sortedMerchants.Count, 
+            _loggingService.LogBusinessEvent("NearbyMerchantsByCategoryFound", new
+            {
+                sortedMerchants.Count,
                 categoryType = categoryType.ToString(),
-                radiusKm 
+                radiusKm
             });
 
             return Result.Ok(sortedMerchants.AsEnumerable());
         }
         catch (Exception ex)
         {
-            _loggingService.LogError("Error getting nearby merchants by category", ex, 
+            _loggingService.LogError("Error getting nearby merchants by category", ex,
                 new { userLatitude, userLongitude, categoryType = categoryType.ToString(), radiusKm });
             return Result.Fail<IEnumerable<NearbyMerchantResponse>>(
-                "Error getting nearby merchants by category", 
+                "Error getting nearby merchants by category",
                 "GEO_LOCATION_ERROR");
         }
     }
-
     /// <summary>
     /// Kullanıcının belirtilen merchant'ın teslimat alanında olup olmadığını kontrol eder
     /// </summary>
-    public async Task<Result<bool>> IsInDeliveryZoneAsync(
-        Guid merchantId, 
-        double userLatitude, 
-        double userLongitude,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<bool>> IsInDeliveryZoneAsync(Guid merchantId, double userLatitude, double userLongitude, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -267,9 +248,9 @@ public class GeoLocationService : BaseService, IGeoLocationService
                 }
 
                 var distance = CalculateDistance(
-                    userLatitude, 
-                    userLongitude, 
-                    (double)merchant.Latitude, 
+                    userLatitude,
+                    userLongitude,
+                    (double)merchant.Latitude,
                     (double)merchant.Longitude);
 
                 return Result.Ok(distance <= 10.0); // 10km default radius
@@ -293,20 +274,15 @@ public class GeoLocationService : BaseService, IGeoLocationService
         }
         catch (Exception ex)
         {
-            _loggingService.LogError("Error checking delivery zone", ex, 
+            _loggingService.LogError("Error checking delivery zone", ex,
                 new { merchantId, userLatitude, userLongitude });
             return Result.Fail<bool>("Error checking delivery zone", "GEO_LOCATION_ERROR");
         }
     }
-
     /// <summary>
     /// Kullanıcı konumuna göre teslimat süresini hesaplar
     /// </summary>
-    public async Task<Result<DeliveryEstimateResponse>> CalculateDeliveryEstimateAsync(
-        Guid merchantId, 
-        double userLatitude, 
-        double userLongitude,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<DeliveryEstimateResponse>> CalculateDeliveryEstimateAsync(Guid merchantId, double userLatitude, double userLongitude, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -319,13 +295,13 @@ public class GeoLocationService : BaseService, IGeoLocationService
             }
 
             var distance = CalculateDistance(
-                userLatitude, 
-                userLongitude, 
-                (double)merchant.Latitude, 
+                userLatitude,
+                userLongitude,
+                (double)merchant.Latitude,
                 (double)merchant.Longitude);
 
             var isInDeliveryZone = await IsInDeliveryZoneAsync(merchantId, userLatitude, userLongitude, cancellationToken);
-            
+
             if (!isInDeliveryZone.Success)
             {
                 return Result.Fail<DeliveryEstimateResponse>(isInDeliveryZone.Error ?? "Unknown error", isInDeliveryZone.ErrorCode);
@@ -334,7 +310,7 @@ public class GeoLocationService : BaseService, IGeoLocationService
             if (!isInDeliveryZone.Value)
             {
                 return Result.Fail<DeliveryEstimateResponse>(
-                    "Location is outside delivery zone", 
+                    "Location is outside delivery zone",
                     "OUTSIDE_DELIVERY_ZONE");
             }
 
@@ -381,23 +357,18 @@ public class GeoLocationService : BaseService, IGeoLocationService
         }
         catch (Exception ex)
         {
-            _loggingService.LogError("Error calculating delivery estimate", ex, 
+            _loggingService.LogError("Error calculating delivery estimate", ex,
                 new { merchantId, userLatitude, userLongitude });
             return Result.Fail<DeliveryEstimateResponse>("Error calculating delivery estimate", "GEO_LOCATION_ERROR");
         }
     }
-
     /// <summary>
     /// Kullanıcı konumuna göre teslimat ücretini hesaplar
     /// </summary>
-    public async Task<Result<decimal>> CalculateDeliveryFeeAsync(
-        Guid merchantId, 
-        double userLatitude, 
-        double userLongitude,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<decimal>> CalculateDeliveryFeeAsync(Guid merchantId, double userLatitude, double userLongitude, CancellationToken cancellationToken = default)
     {
         var estimate = await CalculateDeliveryEstimateAsync(merchantId, userLatitude, userLongitude, cancellationToken);
-        
+
         if (!estimate.Success)
         {
             return Result.Fail<decimal>(estimate.Error ?? "Unknown error", estimate.ErrorCode);
@@ -405,13 +376,10 @@ public class GeoLocationService : BaseService, IGeoLocationService
 
         return Result.Ok(estimate.Value?.DeliveryFee ?? 0);
     }
-
     /// <summary>
     /// Belirtilen alan içindeki tüm merchantları bulur
     /// </summary>
-    public async Task<Result<IEnumerable<NearbyMerchantResponse>>> GetMerchantsInAreaAsync(
-        IEnumerable<GeoPoint> areaPoints,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<NearbyMerchantResponse>>> GetMerchantsInAreaAsync(IEnumerable<GeoPoint> areaPoints, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -451,15 +419,10 @@ public class GeoLocationService : BaseService, IGeoLocationService
             return Result.Fail<IEnumerable<NearbyMerchantResponse>>("Error getting merchants in area", "GEO_LOCATION_ERROR");
         }
     }
-
     /// <summary>
     /// Konum tabanlı otomatik tamamlama önerileri
     /// </summary>
-    public Task<Result<IEnumerable<LocationSuggestionResponse>>> GetLocationSuggestionsAsync(
-        string query, 
-        double? latitude = null, 
-        double? longitude = null,
-        CancellationToken cancellationToken = default)
+    public Task<Result<IEnumerable<LocationSuggestionResponse>>> GetLocationSuggestionsAsync(string query, double? latitude = null, double? longitude = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -485,7 +448,8 @@ public class GeoLocationService : BaseService, IGeoLocationService
             if (latitude.HasValue && longitude.HasValue)
             {
                 filteredSuggestions = filteredSuggestions
-                    .Select(addr => addr with { 
+                    .Select(addr => addr with
+                    {
                         DistanceKm = CalculateDistance(latitude.Value, longitude.Value, addr.Latitude, addr.Longitude)
                     })
                     .OrderBy(addr => addr.DistanceKm)
@@ -541,11 +505,7 @@ public class GeoLocationService : BaseService, IGeoLocationService
     #endregion
 
     #region Additional GeoLocationController Methods
-
-    public async Task<Result> SaveUserLocationAsync(
-        SaveUserLocationRequest request,
-        Guid userId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> SaveUserLocationAsync(SaveUserLocationRequest request, Guid userId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await SaveUserLocationInternalAsync(request, userId, cancellationToken),
@@ -553,11 +513,7 @@ public class GeoLocationService : BaseService, IGeoLocationService
             new { userId, request.Latitude, request.Longitude },
             cancellationToken);
     }
-
-    private async Task<Result> SaveUserLocationInternalAsync(
-        SaveUserLocationRequest request,
-        Guid userId,
-        CancellationToken cancellationToken)
+    private async Task<Result> SaveUserLocationInternalAsync(SaveUserLocationRequest request, Guid userId, CancellationToken cancellationToken)
     {
         try
         {
@@ -571,11 +527,7 @@ public class GeoLocationService : BaseService, IGeoLocationService
             return Result.Fail("Error saving user location");
         }
     }
-
-    public async Task<Result<PagedResult<UserLocationResponse>>> GetUserLocationHistoryAsync(
-        Guid userId,
-        PaginationQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<UserLocationResponse>>> GetUserLocationHistoryAsync(Guid userId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetUserLocationHistoryInternalAsync(userId, query, cancellationToken),
@@ -583,11 +535,7 @@ public class GeoLocationService : BaseService, IGeoLocationService
             new { userId, query.Page, query.PageSize },
             cancellationToken);
     }
-
-    private async Task<Result<PagedResult<UserLocationResponse>>> GetUserLocationHistoryInternalAsync(
-        Guid userId,
-        PaginationQuery query,
-        CancellationToken cancellationToken)
+    private async Task<Result<PagedResult<UserLocationResponse>>> GetUserLocationHistoryInternalAsync(Guid userId, PaginationQuery query, CancellationToken cancellationToken)
     {
         try
         {
@@ -607,10 +555,7 @@ public class GeoLocationService : BaseService, IGeoLocationService
             return Result.Fail<PagedResult<UserLocationResponse>>("Error getting user location history");
         }
     }
-
-    public async Task<Result<IEnumerable<MerchantInAreaResponse>>> GetMerchantsInAreaAsync(
-        GetMerchantsInAreaRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<MerchantInAreaResponse>>> GetMerchantsInAreaAsync(GetMerchantsInAreaRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetMerchantsInAreaInternalAsync(request, cancellationToken),
@@ -618,10 +563,7 @@ public class GeoLocationService : BaseService, IGeoLocationService
             new { request.LatitudeMin, request.LongitudeMin, request.LatitudeMax, request.LongitudeMax },
             cancellationToken);
     }
-
-    private async Task<Result<IEnumerable<MerchantInAreaResponse>>> GetMerchantsInAreaInternalAsync(
-        GetMerchantsInAreaRequest request,
-        CancellationToken cancellationToken)
+    private async Task<Result<IEnumerable<MerchantInAreaResponse>>> GetMerchantsInAreaInternalAsync(GetMerchantsInAreaRequest request, CancellationToken cancellationToken)
     {
         try
         {
@@ -635,11 +577,7 @@ public class GeoLocationService : BaseService, IGeoLocationService
             return Result.Fail<IEnumerable<MerchantInAreaResponse>>("Error getting merchants in area");
         }
     }
-
-    public async Task<Result<LocationAnalyticsResponse>> GetLocationAnalyticsAsync(
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<LocationAnalyticsResponse>> GetLocationAnalyticsAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetLocationAnalyticsInternalAsync(startDate, endDate, cancellationToken),
@@ -647,11 +585,7 @@ public class GeoLocationService : BaseService, IGeoLocationService
             new { startDate, endDate },
             cancellationToken);
     }
-
-    private async Task<Result<LocationAnalyticsResponse>> GetLocationAnalyticsInternalAsync(
-        DateTime? startDate,
-        DateTime? endDate,
-        CancellationToken cancellationToken)
+    private async Task<Result<LocationAnalyticsResponse>> GetLocationAnalyticsInternalAsync(DateTime? startDate, DateTime? endDate, CancellationToken cancellationToken)
     {
         try
         {
@@ -670,9 +604,7 @@ public class GeoLocationService : BaseService, IGeoLocationService
             return Result.Fail<LocationAnalyticsResponse>("Error getting location analytics");
         }
     }
-
-    public async Task<Result<DeliveryZoneCoverageResponse>> GetDeliveryZoneCoverageAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<Result<DeliveryZoneCoverageResponse>> GetDeliveryZoneCoverageAsync(CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetDeliveryZoneCoverageInternalAsync(cancellationToken),
@@ -680,9 +612,7 @@ public class GeoLocationService : BaseService, IGeoLocationService
             new { },
             cancellationToken);
     }
-
-    private async Task<Result<DeliveryZoneCoverageResponse>> GetDeliveryZoneCoverageInternalAsync(
-        CancellationToken cancellationToken)
+    private async Task<Result<DeliveryZoneCoverageResponse>> GetDeliveryZoneCoverageInternalAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -700,6 +630,5 @@ public class GeoLocationService : BaseService, IGeoLocationService
             return Result.Fail<DeliveryZoneCoverageResponse>("Error getting delivery zone coverage");
         }
     }
-
     #endregion
 }

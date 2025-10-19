@@ -17,13 +17,7 @@ public class AdminService : BaseService, IAdminService
     private readonly ISignalRService? _signalRService;
     private readonly IBackgroundTaskService _backgroundTaskService;
 
-    public AdminService(
-        IUnitOfWork unitOfWork,
-        ILogger<AdminService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        IBackgroundTaskService backgroundTaskService,
-        ISignalRService? signalRService = null) 
+    public AdminService(IUnitOfWork unitOfWork, ILogger<AdminService> logger, ILoggingService loggingService, ICacheService cacheService, IBackgroundTaskService backgroundTaskService, ISignalRService? signalRService = null)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _signalRService = signalRService;
@@ -35,19 +29,19 @@ public class AdminService : BaseService, IAdminService
         // Get basic statistics
         var totalUsers = await _unitOfWork.ReadRepository<User>()
             .CountAsync(cancellationToken: cancellationToken);
-        
+
         var totalMerchants = await _unitOfWork.ReadRepository<User>()
             .CountAsync(u => u.Role == UserRole.MerchantOwner, cancellationToken: cancellationToken);
-        
+
         var totalCouriers = await _unitOfWork.ReadRepository<User>()
             .CountAsync(u => u.Role == UserRole.Courier, cancellationToken: cancellationToken);
-        
+
         var totalOrders = await _unitOfWork.ReadRepository<Order>()
             .CountAsync(cancellationToken: cancellationToken);
-        
+
         var pendingApplications = await _unitOfWork.ReadRepository<MerchantOnboarding>()
             .CountAsync(m => !m.IsApproved && m.RejectionReason == null, cancellationToken: cancellationToken);
-        
+
         var activeOrders = await _unitOfWork.ReadRepository<Order>()
             .CountAsync(o => o.Status == OrderStatus.Confirmed || o.Status == OrderStatus.Preparing, cancellationToken: cancellationToken);
 
@@ -109,13 +103,13 @@ public class AdminService : BaseService, IAdminService
         // User Statistics
         var totalUsers = await _unitOfWork.ReadRepository<User>()
             .CountAsync(cancellationToken: cancellationToken);
-        
+
         var activeUsers = await _unitOfWork.ReadRepository<User>()
             .CountAsync(u => u.IsActive, cancellationToken: cancellationToken);
-        
+
         var newUsersThisMonth = await _unitOfWork.ReadRepository<User>()
             .CountAsync(u => u.CreatedAt >= DateTime.UtcNow.AddDays(-30), cancellationToken: cancellationToken);
-        
+
         var newUsersToday = await _unitOfWork.ReadRepository<User>()
             .CountAsync(u => u.CreatedAt >= DateTime.UtcNow.AddDays(-1), cancellationToken: cancellationToken);
 
@@ -130,13 +124,13 @@ public class AdminService : BaseService, IAdminService
         // Merchant Statistics
         var totalMerchants = await _unitOfWork.ReadRepository<User>()
             .CountAsync(u => u.Role == UserRole.MerchantOwner, cancellationToken: cancellationToken);
-        
+
         var activeMerchants = await _unitOfWork.ReadRepository<User>()
             .CountAsync(u => u.Role == UserRole.MerchantOwner && u.IsActive, cancellationToken: cancellationToken);
-        
+
         var pendingApplications = await _unitOfWork.ReadRepository<MerchantOnboarding>()
             .CountAsync(m => !m.IsApproved && m.RejectionReason == null, cancellationToken: cancellationToken);
-        
+
         var approvedThisMonth = await _unitOfWork.ReadRepository<MerchantOnboarding>()
             .CountAsync(m => m.IsApproved && m.ApprovedAt.HasValue && m.ApprovedAt.Value >= DateTime.UtcNow.AddDays(-30), cancellationToken: cancellationToken);
 
@@ -151,19 +145,19 @@ public class AdminService : BaseService, IAdminService
         // Order Statistics
         var totalOrders = await _unitOfWork.ReadRepository<Order>()
             .CountAsync(cancellationToken: cancellationToken);
-        
+
         var completedOrders = await _unitOfWork.ReadRepository<Order>()
             .CountAsync(o => o.Status == OrderStatus.Delivered, cancellationToken: cancellationToken);
-        
+
         var cancelledOrders = await _unitOfWork.ReadRepository<Order>()
             .CountAsync(o => o.Status == OrderStatus.Cancelled, cancellationToken: cancellationToken);
-        
+
         var pendingOrders = await _unitOfWork.ReadRepository<Order>()
             .CountAsync(o => o.Status == OrderStatus.Confirmed || o.Status == OrderStatus.Preparing, cancellationToken: cancellationToken);
 
         var allOrders = await _unitOfWork.ReadRepository<Order>()
             .ListAsync(cancellationToken: cancellationToken);
-        
+
         var averageOrderValue = allOrders.Any() ? allOrders.Average(o => o.Total) : 0m;
 
         var orderStats = new AdminOrderStatisticsResponse(

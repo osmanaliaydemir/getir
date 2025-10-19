@@ -5,7 +5,6 @@ namespace Getir.Application.Services.RealtimeTracking;
 public class ETAEstimationService : IETAEstimationService
 {
     private readonly List<ETAEstimationDto> _mockETAEstimations;
-
     public ETAEstimationService()
     {
         // Mock ETA estimations
@@ -41,7 +40,6 @@ public class ETAEstimationService : IETAEstimationService
             }
         };
     }
-
     public Task<ETAEstimationDto?> GetCurrentETAAsync(Guid orderTrackingId)
     {
         var eta = _mockETAEstimations
@@ -51,7 +49,6 @@ public class ETAEstimationService : IETAEstimationService
 
         return Task.FromResult(eta);
     }
-
     public Task<ETAEstimationDto> CreateETAEstimationAsync(CreateETAEstimationRequest request)
     {
         var eta = new ETAEstimationDto
@@ -72,7 +69,6 @@ public class ETAEstimationService : IETAEstimationService
         _mockETAEstimations.Add(eta);
         return Task.FromResult(eta);
     }
-
     public Task<ETAEstimationDto> UpdateETAEstimationAsync(Guid id, UpdateETAEstimationRequest request)
     {
         var eta = _mockETAEstimations.FirstOrDefault(e => e.Id == id);
@@ -91,7 +87,6 @@ public class ETAEstimationService : IETAEstimationService
 
         return Task.FromResult(eta);
     }
-
     public Task<bool> DeleteETAEstimationAsync(Guid id)
     {
         var eta = _mockETAEstimations.FirstOrDefault(e => e.Id == id);
@@ -102,7 +97,6 @@ public class ETAEstimationService : IETAEstimationService
         }
         return Task.FromResult(false);
     }
-
     public Task<List<ETAEstimationDto>> GetETAHistoryAsync(Guid orderTrackingId)
     {
         var history = _mockETAEstimations
@@ -112,7 +106,6 @@ public class ETAEstimationService : IETAEstimationService
 
         return Task.FromResult(history);
     }
-
     public Task<ETAEstimationDto> CalculateETAAsync(Guid orderTrackingId, double? currentLatitude = null, double? currentLongitude = null)
     {
         // Mock ETA calculation
@@ -142,7 +135,6 @@ public class ETAEstimationService : IETAEstimationService
         _mockETAEstimations.Add(eta);
         return Task.FromResult(eta);
     }
-
     public Task<bool> ValidateETAAsync(Guid orderTrackingId, DateTime estimatedArrivalTime)
     {
         // Mock validation - check if ETA is reasonable
@@ -152,13 +144,11 @@ public class ETAEstimationService : IETAEstimationService
         // ETA should be between 5 minutes and 2 hours from now
         return Task.FromResult(timeDifference.TotalMinutes >= 5 && timeDifference.TotalMinutes <= 120);
     }
-
     public Task<List<ETAEstimationDto>> GetActiveETAEstimationsAsync()
     {
         var activeETAs = _mockETAEstimations.Where(e => e.IsActive).ToList();
         return Task.FromResult(activeETAs);
     }
-
     public Task<double> CalculateDistanceAsync(double lat1, double lon1, double lat2, double lon2)
     {
         // Haversine formula for calculating distance between two points
@@ -171,19 +161,16 @@ public class ETAEstimationService : IETAEstimationService
         var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
         return Task.FromResult(R * c);
     }
-
     public Task<int> CalculateEstimatedMinutesAsync(double distanceKm, double? averageSpeed = null)
     {
         var speed = averageSpeed ?? 25.0; // Default speed 25 km/h
         var minutes = (int)(distanceKm / speed * 60);
         return Task.FromResult(Math.Max(minutes, 5)); // Minimum 5 minutes
     }
-
     private double ToRadians(double degrees)
     {
         return degrees * (Math.PI / 180);
     }
-
     private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
     {
         // Haversine formula for calculating distance between two points

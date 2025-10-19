@@ -9,18 +9,11 @@ namespace Getir.Application.Services.Cart;
 public class CartService : BaseService, ICartService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
-
-    public CartService(
-        IUnitOfWork unitOfWork,
-        ILogger<CartService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        IBackgroundTaskService backgroundTaskService) 
+    public CartService(IUnitOfWork unitOfWork, ILogger<CartService> logger, ILoggingService loggingService, ICacheService cacheService, IBackgroundTaskService backgroundTaskService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _backgroundTaskService = backgroundTaskService;
     }
-
     public async Task<Result<CartResponse>> GetCartAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var cartItems = await _unitOfWork.ReadRepository<CartItem>()
@@ -63,11 +56,7 @@ public class CartService : BaseService, ICartService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result<CartItemResponse>> AddItemAsync(
-        Guid userId,
-        AddToCartRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CartItemResponse>> AddItemAsync(Guid userId, AddToCartRequest request, CancellationToken cancellationToken = default)
     {
         // Sepette başka merchanttan ürün var mı kontrol et
         var existingCartItems = await _unitOfWork.ReadRepository<CartItem>()
@@ -137,12 +126,7 @@ public class CartService : BaseService, ICartService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result<CartItemResponse>> UpdateItemAsync(
-        Guid userId,
-        Guid itemId,
-        UpdateCartItemRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CartItemResponse>> UpdateItemAsync(Guid userId, Guid itemId, UpdateCartItemRequest request, CancellationToken cancellationToken = default)
     {
         var cartItem = await _unitOfWork.Repository<CartItem>()
             .GetAsync(c => c.Id == itemId && c.UserId == userId, include: "Product", cancellationToken: cancellationToken);
@@ -173,11 +157,7 @@ public class CartService : BaseService, ICartService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result> RemoveItemAsync(
-        Guid userId,
-        Guid itemId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> RemoveItemAsync(Guid userId, Guid itemId, CancellationToken cancellationToken = default)
     {
         var cartItem = await _unitOfWork.Repository<CartItem>()
             .GetAsync(c => c.Id == itemId && c.UserId == userId, cancellationToken: cancellationToken);
@@ -192,10 +172,7 @@ public class CartService : BaseService, ICartService
 
         return Result.Ok();
     }
-
-    public async Task<Result> ClearCartAsync(
-        Guid userId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ClearCartAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var cartItems = await _unitOfWork.Repository<CartItem>()
             .GetPagedAsync(filter: c => c.UserId == userId, cancellationToken: cancellationToken);

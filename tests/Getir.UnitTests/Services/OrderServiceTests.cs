@@ -52,6 +52,8 @@ public class OrderServiceTests
         var merchant = TestDataGenerator.CreateMerchant();
         var product = TestDataGenerator.CreateProduct(merchant.Id, stockQuantity: 100);
         product.Price = 50;
+        var user = TestDataGenerator.CreateUser();
+        user.Id = userId;
 
         var request = new CreateOrderRequest(
             merchant.Id,
@@ -65,6 +67,7 @@ public class OrderServiceTests
             "CreditCard",
             null);
 
+        SetupUserMock(user);
         SetupMerchantMock(merchant);
         SetupProductMock(product);
         SetupOrderRepositories();
@@ -86,7 +89,7 @@ public class OrderServiceTests
         
         _unitOfWorkMock.Verify(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
         _unitOfWorkMock.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.AtLeastOnce); // Stok güncellemesi için birden fazla çağrılabilir
     }
 
     [Fact]
@@ -94,6 +97,9 @@ public class OrderServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
+        var user = TestDataGenerator.CreateUser();
+        user.Id = userId;
+        
         var merchant = TestDataGenerator.CreateMerchant();
         merchant.MinimumOrderAmount = 100; // Minimum 100 TL
         
@@ -109,8 +115,10 @@ public class OrderServiceTests
             "CreditCard",
             null);
 
+        SetupUserMock(user);
         SetupMerchantMock(merchant);
         SetupProductMock(product);
+        SetupOrderRepositories();
 
         // Act
         var result = await _orderService.CreateOrderAsync(userId, request);
@@ -128,6 +136,9 @@ public class OrderServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
+        var user = TestDataGenerator.CreateUser();
+        user.Id = userId;
+        
         var merchant = TestDataGenerator.CreateMerchant();
         var product = TestDataGenerator.CreateProduct(merchant.Id, stockQuantity: 5);
 
@@ -140,8 +151,10 @@ public class OrderServiceTests
             "CreditCard",
             null);
 
+        SetupUserMock(user);
         SetupMerchantMock(merchant);
         SetupProductMock(product);
+        SetupOrderRepositories();
 
         // Act
         var result = await _orderService.CreateOrderAsync(userId, request);
@@ -159,6 +172,9 @@ public class OrderServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
+        var user = TestDataGenerator.CreateUser();
+        user.Id = userId;
+        
         var merchant = TestDataGenerator.CreateMerchant();
         merchant.DeliveryFee = 20;
         
@@ -183,6 +199,7 @@ public class OrderServiceTests
             "CreditCard",
             null);
 
+        SetupUserMock(user);
         SetupMerchantMock(merchant);
         SetupMultipleProductsMock(new[] { product1, product2 });
         SetupOrderRepositories();
@@ -298,6 +315,12 @@ public class OrderServiceTests
 
         _unitOfWorkMock.Setup(u => u.Repository<Order>()).Returns(orderRepoMock.Object);
         _unitOfWorkMock.Setup(u => u.Repository<OrderLine>()).Returns(orderLineRepoMock.Object);
+
+        // Setup transaction methods to prevent null reference exceptions
+        _unitOfWorkMock.Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.CommitAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.RollbackAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).Returns(Task.FromResult(1));
     }
 
     private void SetupPaymentServiceMock()
@@ -325,5 +348,17 @@ public class OrderServiceTests
                 RefundedAt: null,
                 RefundReason: null,
                 CreatedAt: DateTime.UtcNow)));
+    }
+
+    private void SetupUserMock(User user)
+    {
+        var readRepoMock = new Mock<IReadOnlyRepository<User>>();
+        readRepoMock.Setup(r => r.FirstOrDefaultAsync(
+            It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>(),
+            It.IsAny<string>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        _unitOfWorkMock.Setup(u => u.ReadRepository<User>()).Returns(readRepoMock.Object);
     }
 }

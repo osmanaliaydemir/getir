@@ -12,25 +12,16 @@ public class LogAnalysisService : ILogAnalysisService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILoggingService _loggingService;
     private readonly ILogger<LogAnalysisService> _logger;
-
-    public LogAnalysisService(
-        IUnitOfWork unitOfWork,
-        ILoggingService loggingService,
-        ILogger<LogAnalysisService> logger)
+    public LogAnalysisService(IUnitOfWork unitOfWork, ILoggingService loggingService, ILogger<LogAnalysisService> logger)
     {
-        _unitOfWork = unitOfWork;
-        _loggingService = loggingService;
-        _logger = logger;
+        _unitOfWork = unitOfWork; _loggingService = loggingService; _logger = logger;
     }
-
-    public async Task<Result<LogAnalysisReportResponse>> CreateLogAnalysisReportAsync(
-        CreateLogAnalysisReportRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<LogAnalysisReportResponse>> CreateLogAnalysisReportAsync(CreateLogAnalysisReportRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
             var startTime = DateTime.UtcNow;
-            
+
             var report = new LogAnalysisReport
             {
                 Id = Guid.NewGuid(),
@@ -55,7 +46,7 @@ public class LogAnalysisService : ILogAnalysisService
 
             // Generate report data
             var reportData = await GenerateReportDataAsync(request, cancellationToken);
-            
+
             var endTime = DateTime.UtcNow;
             report.ReportData = JsonSerializer.Serialize(reportData);
             report.Summary = JsonSerializer.Serialize(GenerateSummary(reportData));
@@ -78,10 +69,7 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<LogAnalysisReportResponse>("Failed to create log analysis report", "CREATE_LOG_ANALYSIS_REPORT_FAILED");
         }
     }
-
-    public async Task<Result<LogAnalysisReportResponse>> GetLogAnalysisReportByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<LogAnalysisReportResponse>> GetLogAnalysisReportByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -104,16 +92,7 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<LogAnalysisReportResponse>("Failed to get log analysis report", "GET_LOG_ANALYSIS_REPORT_FAILED");
         }
     }
-
-    public async Task<Result<IEnumerable<LogAnalysisReportResponse>>> GetLogAnalysisReportsAsync(
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        string? reportType = null,
-        string? status = null,
-        Guid? generatedByUserId = null,
-        int pageNumber = 1,
-        int pageSize = 50,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<LogAnalysisReportResponse>>> GetLogAnalysisReportsAsync(DateTime? startDate = null, DateTime? endDate = null, string? reportType = null, string? status = null, Guid? generatedByUserId = null, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -152,10 +131,7 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<IEnumerable<LogAnalysisReportResponse>>("Failed to get log analysis reports", "GET_LOG_ANALYSIS_REPORTS_FAILED");
         }
     }
-
-    public async Task<Result<AuditLogAnalyticsResponse>> GenerateAuditLogAnalyticsAsync(
-        AuditLogAnalyticsRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<AuditLogAnalyticsResponse>> GenerateAuditLogAnalyticsAsync(AuditLogAnalyticsRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -194,13 +170,7 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<AuditLogAnalyticsResponse>("Failed to generate audit log analytics", "GENERATE_AUDIT_LOG_ANALYTICS_FAILED");
         }
     }
-
-    public async Task<Result<Dictionary<string, object>>> GenerateUserActivityAnalyticsAsync(
-        DateTime startDate,
-        DateTime endDate,
-        Guid? userId = null,
-        string? activityType = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<Dictionary<string, object>>> GenerateUserActivityAnalyticsAsync(DateTime startDate, DateTime endDate, Guid? userId = null, string? activityType = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -232,8 +202,8 @@ public class LogAnalysisService : ILogAnalysisService
                 ["OperatingSystems"] = userActivityLogs.Where(x => !string.IsNullOrEmpty(x.OperatingSystem))
                     .GroupBy(x => x.OperatingSystem)
                     .ToDictionary(g => g.Key!, g => g.Count()),
-                ["SuccessRate"] = userActivityLogs.Count > 0 
-                    ? (double)userActivityLogs.Count(x => x.IsSuccess) / userActivityLogs.Count * 100 
+                ["SuccessRate"] = userActivityLogs.Count > 0
+                    ? (double)userActivityLogs.Count(x => x.IsSuccess) / userActivityLogs.Count * 100
                     : 0,
                 ["AverageDuration"] = userActivityLogs.Where(x => x.Duration > 0)
                     .Select(x => x.Duration)
@@ -250,13 +220,7 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<Dictionary<string, object>>("Failed to generate user activity analytics", "GENERATE_USER_ACTIVITY_ANALYTICS_FAILED");
         }
     }
-
-    public async Task<Result<Dictionary<string, object>>> GenerateSystemChangeAnalyticsAsync(
-        DateTime startDate,
-        DateTime endDate,
-        string? entityType = null,
-        string? changeType = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<Dictionary<string, object>>> GenerateSystemChangeAnalyticsAsync(DateTime startDate, DateTime endDate, string? entityType = null, string? changeType = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -286,8 +250,8 @@ public class LogAnalysisService : ILogAnalysisService
                 ["SeverityLevels"] = systemChangeLogs.Where(x => !string.IsNullOrEmpty(x.Severity))
                     .GroupBy(x => x.Severity)
                     .ToDictionary(g => g.Key!, g => g.Count()),
-                ["SuccessRate"] = systemChangeLogs.Count > 0 
-                    ? (double)systemChangeLogs.Count(x => x.IsSuccess) / systemChangeLogs.Count * 100 
+                ["SuccessRate"] = systemChangeLogs.Count > 0
+                    ? (double)systemChangeLogs.Count(x => x.IsSuccess) / systemChangeLogs.Count * 100
                     : 0,
                 ["TopChangedEntities"] = systemChangeLogs.GroupBy(x => new { x.EntityType, x.EntityId })
                     .OrderByDescending(g => g.Count())
@@ -304,13 +268,7 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<Dictionary<string, object>>("Failed to generate system change analytics", "GENERATE_SYSTEM_CHANGE_ANALYTICS_FAILED");
         }
     }
-
-    public async Task<Result<Dictionary<string, object>>> GenerateSecurityEventAnalyticsAsync(
-        DateTime startDate,
-        DateTime endDate,
-        string? severity = null,
-        string? riskLevel = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<Dictionary<string, object>>> GenerateSecurityEventAnalyticsAsync(DateTime startDate, DateTime endDate, string? severity = null, string? riskLevel = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -342,11 +300,11 @@ public class LogAnalysisService : ILogAnalysisService
                 ["Categories"] = securityEventLogs.Where(x => !string.IsNullOrEmpty(x.Category))
                     .GroupBy(x => x.Category)
                     .ToDictionary(g => g.Key!, g => g.Count()),
-                ["ResolvedRate"] = securityEventLogs.Count > 0 
-                    ? (double)securityEventLogs.Count(x => x.IsResolved) / securityEventLogs.Count * 100 
+                ["ResolvedRate"] = securityEventLogs.Count > 0
+                    ? (double)securityEventLogs.Count(x => x.IsResolved) / securityEventLogs.Count * 100
                     : 0,
-                ["FalsePositiveRate"] = securityEventLogs.Count > 0 
-                    ? (double)securityEventLogs.Count(x => x.IsFalsePositive) / securityEventLogs.Count * 100 
+                ["FalsePositiveRate"] = securityEventLogs.Count > 0
+                    ? (double)securityEventLogs.Count(x => x.IsFalsePositive) / securityEventLogs.Count * 100
                     : 0,
                 ["RequiresInvestigation"] = securityEventLogs.Count(x => x.RequiresInvestigation),
                 ["TopIpAddresses"] = securityEventLogs.Where(x => !string.IsNullOrEmpty(x.IpAddress))
@@ -365,9 +323,7 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<Dictionary<string, object>>("Failed to generate security event analytics", "GENERATE_SECURITY_EVENT_ANALYTICS_FAILED");
         }
     }
-
-    public async Task<Result<IEnumerable<LogAnalysisReportResponse>>> GetScheduledReportsAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<LogAnalysisReportResponse>>> GetScheduledReportsAsync(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -388,16 +344,14 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<IEnumerable<LogAnalysisReportResponse>>("Failed to get scheduled reports", "GET_SCHEDULED_REPORTS_FAILED");
         }
     }
-
-    public async Task<Result> ExecuteScheduledReportsAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ExecuteScheduledReportsAsync(CancellationToken cancellationToken = default)
     {
         try
         {
             var now = DateTime.UtcNow;
             var allReports = await _unitOfWork.ReadRepository<LogAnalysisReport>()
-                .ListAsync(x => x.IsScheduled && 
-                               x.NextScheduledRun.HasValue && 
+                .ListAsync(x => x.IsScheduled &&
+                               x.NextScheduledRun.HasValue &&
                                x.NextScheduledRun <= now &&
                                x.Status == "GENERATED", cancellationToken: cancellationToken);
 
@@ -423,9 +377,7 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail("Failed to execute scheduled reports", "EXECUTE_SCHEDULED_REPORTS_FAILED");
         }
     }
-
-    public async Task<Result> DeleteExpiredReportsAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteExpiredReportsAsync(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -448,10 +400,7 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail("Failed to delete expired reports", "DELETE_EXPIRED_REPORTS_FAILED");
         }
     }
-
-    public async Task<Result<LogAnalysisReportResponse>> RegenerateReportAsync(
-        Guid reportId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<LogAnalysisReportResponse>> RegenerateReportAsync(Guid reportId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -483,7 +432,7 @@ public class LogAnalysisService : ILogAnalysisService
                 report.SchedulePattern);
 
             var reportData = await GenerateReportDataAsync(request, cancellationToken);
-            
+
             report.ReportData = JsonSerializer.Serialize(reportData);
             report.Summary = JsonSerializer.Serialize(GenerateSummary(reportData));
             report.Insights = JsonSerializer.Serialize(GenerateInsights(reportData));
@@ -505,11 +454,7 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<LogAnalysisReportResponse>("Failed to regenerate report", "REGENERATE_REPORT_FAILED");
         }
     }
-
-    public async Task<Result<byte[]>> ExportReportAsync(
-        Guid reportId,
-        string format = "PDF",
-        CancellationToken cancellationToken = default)
+    public async Task<Result<byte[]>> ExportReportAsync(Guid reportId, string format = "PDF", CancellationToken cancellationToken = default)
     {
         try
         {
@@ -541,10 +486,7 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<byte[]>("Failed to export report", "EXPORT_REPORT_FAILED");
         }
     }
-
-    private async Task<Dictionary<string, object>> GenerateReportDataAsync(
-        CreateLogAnalysisReportRequest request,
-        CancellationToken cancellationToken)
+    private async Task<Dictionary<string, object>> GenerateReportDataAsync(CreateLogAnalysisReportRequest request, CancellationToken cancellationToken)
     {
         var reportData = new Dictionary<string, object>();
 
@@ -575,7 +517,6 @@ public class LogAnalysisService : ILogAnalysisService
 
         return reportData;
     }
-
     private static Dictionary<string, object> GenerateSummary(Dictionary<string, object> reportData)
     {
         return new Dictionary<string, object>
@@ -585,7 +526,6 @@ public class LogAnalysisService : ILogAnalysisService
             ["Status"] = "COMPLETED"
         };
     }
-
     private static Dictionary<string, object> GenerateInsights(Dictionary<string, object> reportData)
     {
         return new Dictionary<string, object>
@@ -594,7 +534,6 @@ public class LogAnalysisService : ILogAnalysisService
             ["Recommendations"] = new[] { "Continue monitoring", "Review user activity patterns" }
         };
     }
-
     private static Dictionary<string, object> GenerateAlerts(Dictionary<string, object> reportData)
     {
         return new Dictionary<string, object>
@@ -604,7 +543,6 @@ public class LogAnalysisService : ILogAnalysisService
             ["InfoAlerts"] = 1
         };
     }
-
     private static Dictionary<string, object> GenerateCharts(Dictionary<string, object> reportData)
     {
         return new Dictionary<string, object>
@@ -613,18 +551,16 @@ public class LogAnalysisService : ILogAnalysisService
             ["DataPoints"] = reportData.Count
         };
     }
-
     private static List<AuditLogAnalyticsData> GroupAuditLogsByPeriod(List<AuditLog> auditLogs, string groupBy)
     {
         // Simplified grouping - would implement proper period grouping
         return new List<AuditLogAnalyticsData>
         {
-            new("2024-01-01", auditLogs.Count, auditLogs.Count(x => x.IsSuccess), 
+            new("2024-01-01", auditLogs.Count, auditLogs.Count(x => x.IsSuccess),
                 auditLogs.Count(x => !x.IsSuccess), auditLogs.Select(x => x.UserId).Distinct().Count(),
                 new Dictionary<string, int>(), new Dictionary<string, int>())
         };
     }
-
     private static AuditLogAnalyticsSummary GenerateAuditLogSummary(List<AuditLog> auditLogs)
     {
         return new AuditLogAnalyticsSummary(
@@ -638,17 +574,15 @@ public class LogAnalysisService : ILogAnalysisService
             new Dictionary<string, int>(),
             new List<string>());
     }
-
     private static List<string> GenerateAuditLogAlerts(List<AuditLog> auditLogs)
     {
         var alerts = new List<string>();
-        
+
         if (auditLogs.Count(x => !x.IsSuccess) > auditLogs.Count * 0.1)
             alerts.Add("High failure rate detected");
-            
+
         return alerts;
     }
-
     private static LogAnalysisReportResponse MapToResponse(LogAnalysisReport report)
     {
         return new LogAnalysisReportResponse(

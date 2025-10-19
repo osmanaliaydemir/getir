@@ -9,22 +9,12 @@ namespace Getir.Application.Services.ProductOptions;
 public class ProductOptionService : BaseService, IProductOptionService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
-
-    public ProductOptionService(
-        IUnitOfWork unitOfWork,
-        ILogger<ProductOptionService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        IBackgroundTaskService backgroundTaskService) 
+    public ProductOptionService(IUnitOfWork unitOfWork, ILogger<ProductOptionService> logger, ILoggingService loggingService, ICacheService cacheService, IBackgroundTaskService backgroundTaskService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _backgroundTaskService = backgroundTaskService;
     }
-
-    public async Task<Result<PagedResult<ProductOptionResponse>>> GetProductOptionsAsync(
-        Guid productOptionGroupId,
-        PaginationQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<ProductOptionResponse>>> GetProductOptionsAsync(Guid productOptionGroupId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
 
@@ -59,10 +49,7 @@ public class ProductOptionService : BaseService, IProductOptionService
 
         return Result.Ok(pagedResult);
     }
-
-    public async Task<Result<ProductOptionResponse>> GetProductOptionAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<ProductOptionResponse>> GetProductOptionAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var option = await _unitOfWork.ReadRepository<ProductOption>()
             .FirstOrDefaultAsync(po => po.Id == id, cancellationToken: cancellationToken);
@@ -86,11 +73,7 @@ public class ProductOptionService : BaseService, IProductOptionService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result<ProductOptionResponse>> CreateProductOptionAsync(
-        CreateProductOptionRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<ProductOptionResponse>> CreateProductOptionAsync(CreateProductOptionRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -154,12 +137,7 @@ public class ProductOptionService : BaseService, IProductOptionService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result<ProductOptionResponse>> UpdateProductOptionAsync(
-        Guid id,
-        UpdateProductOptionRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<ProductOptionResponse>> UpdateProductOptionAsync(Guid id, UpdateProductOptionRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -218,11 +196,7 @@ public class ProductOptionService : BaseService, IProductOptionService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result> DeleteProductOptionAsync(
-        Guid id,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteProductOptionAsync(Guid id, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         var option = await _unitOfWork.ReadRepository<ProductOption>()
             .FirstOrDefaultAsync(po => po.Id == id,
@@ -245,11 +219,7 @@ public class ProductOptionService : BaseService, IProductOptionService
 
         return Result.Ok();
     }
-
-    public async Task<Result> BulkCreateProductOptionsAsync(
-        BulkCreateProductOptionsRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> BulkCreateProductOptionsAsync(BulkCreateProductOptionsRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -297,11 +267,7 @@ public class ProductOptionService : BaseService, IProductOptionService
 
         return Result.Ok();
     }
-
-    public async Task<Result> BulkUpdateProductOptionsAsync(
-        BulkUpdateProductOptionsRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> BulkUpdateProductOptionsAsync(BulkUpdateProductOptionsRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 

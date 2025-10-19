@@ -14,18 +14,11 @@ namespace Getir.Application.Services.Payments;
 /// </summary>
 public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
 {
-    public CashPaymentAuditService(
-        IUnitOfWork unitOfWork,
-        ILogger<CashPaymentAuditService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService)
+    public CashPaymentAuditService(IUnitOfWork unitOfWork, ILogger<CashPaymentAuditService> logger, ILoggingService loggingService, ICacheService cacheService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
     }
-
-    public async Task<Result<CashPaymentAuditLogResponse>> CreateAuditLogAsync(
-        CreateAuditLogRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CashPaymentAuditLogResponse>> CreateAuditLogAsync(CreateAuditLogRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -65,11 +58,7 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail<CashPaymentAuditLogResponse>("Failed to create audit log", "CREATE_AUDIT_LOG_FAILED");
         }
     }
-
-    public async Task<Result<CashPaymentAuditLogResponse>> UpdateAuditLogAsync(
-        Guid auditLogId,
-        UpdateAuditLogRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CashPaymentAuditLogResponse>> UpdateAuditLogAsync(Guid auditLogId, UpdateAuditLogRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -104,10 +93,7 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail<CashPaymentAuditLogResponse>("Failed to update audit log", "UPDATE_AUDIT_LOG_FAILED");
         }
     }
-
-    public async Task<Result<PagedResult<CashPaymentAuditLogResponse>>> GetAuditLogsAsync(
-        CashPaymentAuditLogQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<CashPaymentAuditLogResponse>>> GetAuditLogsAsync(CashPaymentAuditLogQuery query, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -139,10 +125,7 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail<PagedResult<CashPaymentAuditLogResponse>>("Failed to get audit logs", "GET_AUDIT_LOGS_FAILED");
         }
     }
-
-    public async Task<Result<CashPaymentAuditLogResponse>> GetAuditLogByIdAsync(
-        Guid auditLogId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CashPaymentAuditLogResponse>> GetAuditLogByIdAsync(Guid auditLogId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -163,10 +146,7 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail<CashPaymentAuditLogResponse>("Failed to get audit log", "GET_AUDIT_LOG_FAILED");
         }
     }
-
-    public async Task<Result<IEnumerable<CashPaymentAuditLogResponse>>> GetAuditLogsByPaymentIdAsync(
-        Guid paymentId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<CashPaymentAuditLogResponse>>> GetAuditLogsByPaymentIdAsync(Guid paymentId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -186,10 +166,7 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail<IEnumerable<CashPaymentAuditLogResponse>>("Failed to get audit logs by payment ID", "GET_AUDIT_LOGS_BY_PAYMENT_FAILED");
         }
     }
-
-    public async Task<Result<IEnumerable<CashPaymentAuditLogResponse>>> GetAuditLogsByCourierIdAsync(
-        Guid courierId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<CashPaymentAuditLogResponse>>> GetAuditLogsByCourierIdAsync(Guid courierId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -209,16 +186,12 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail<IEnumerable<CashPaymentAuditLogResponse>>("Failed to get audit logs by courier ID", "GET_AUDIT_LOGS_BY_COURIER_FAILED");
         }
     }
-
-    public async Task<Result<AuditLogStatisticsResponse>> GetAuditLogStatisticsAsync(
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<AuditLogStatisticsResponse>> GetAuditLogStatisticsAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
     {
         try
         {
             var predicate = BuildDateRangePredicate(startDate, endDate);
-            
+
             var auditLogs = await _unitOfWork.Repository<CashPaymentAuditLog>()
                 .ListAsync(filter: predicate, cancellationToken: cancellationToken);
 
@@ -244,21 +217,17 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail<AuditLogStatisticsResponse>("Failed to get audit log statistics", "GET_AUDIT_LOG_STATISTICS_FAILED");
         }
     }
-
-    public async Task<Result<RiskAnalysisResponse>> PerformRiskAnalysisAsync(
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<RiskAnalysisResponse>> PerformRiskAnalysisAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
     {
         try
         {
             var predicate = BuildDateRangePredicate(startDate, endDate);
-            
+
             var auditLogs = await _unitOfWork.Repository<CashPaymentAuditLog>()
                 .ListAsync(filter: predicate, cancellationToken: cancellationToken);
 
             var riskLogs = auditLogs.Where(x => x.RiskLevel.HasValue).ToList();
-            
+
             var overallRiskLevel = CalculateOverallRiskLevel(riskLogs);
             var totalRisks = riskLogs.Count;
             var highRiskEvents = riskLogs.Count(x => x.RiskLevel == SecurityRiskLevel.High);
@@ -299,16 +268,12 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail<RiskAnalysisResponse>("Failed to perform risk analysis", "RISK_ANALYSIS_FAILED");
         }
     }
-
-    public async Task<Result<ComplianceReportResponse>> GenerateComplianceReportAsync(
-        DateTime startDate,
-        DateTime endDate,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<ComplianceReportResponse>> GenerateComplianceReportAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
     {
         try
         {
             var predicate = BuildDateRangePredicate(startDate, endDate);
-            
+
             var auditLogs = await _unitOfWork.Repository<CashPaymentAuditLog>()
                 .ListAsync(filter: predicate, cancellationToken: cancellationToken);
 
@@ -342,17 +307,12 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail<ComplianceReportResponse>("Failed to generate compliance report", "COMPLIANCE_REPORT_FAILED");
         }
     }
-
-    public async Task<Result<IEnumerable<CashPaymentAuditLogResponse>>> GetSecurityIncidentsAsync(
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        SecurityRiskLevel? minRiskLevel = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<CashPaymentAuditLogResponse>>> GetSecurityIncidentsAsync(DateTime? startDate = null, DateTime? endDate = null, SecurityRiskLevel? minRiskLevel = null, CancellationToken cancellationToken = default)
     {
         try
         {
             var predicate = BuildSecurityIncidentPredicate(startDate, endDate, minRiskLevel);
-            
+
             var auditLogs = await _unitOfWork.Repository<CashPaymentAuditLog>()
                 .ListAsync(
                     filter: predicate,
@@ -367,16 +327,12 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail<IEnumerable<CashPaymentAuditLogResponse>>("Failed to get security incidents", "GET_SECURITY_INCIDENTS_FAILED");
         }
     }
-
-    public async Task<Result<IEnumerable<CashPaymentAuditLogResponse>>> GetCriticalEventsAsync(
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<CashPaymentAuditLogResponse>>> GetCriticalEventsAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
     {
         try
         {
             var predicate = BuildCriticalEventPredicate(startDate, endDate);
-            
+
             var auditLogs = await _unitOfWork.Repository<CashPaymentAuditLog>()
                 .ListAsync(
                     filter: predicate,
@@ -391,10 +347,7 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail<IEnumerable<CashPaymentAuditLogResponse>>("Failed to get critical events", "GET_CRITICAL_EVENTS_FAILED");
         }
     }
-
-    public async Task<Result> DeleteAuditLogAsync(
-        Guid auditLogId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteAuditLogAsync(Guid auditLogId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -421,10 +374,7 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail("Failed to delete audit log", "DELETE_AUDIT_LOG_FAILED");
         }
     }
-
-    public async Task<Result<int>> CleanupOldAuditLogsAsync(
-        DateTime cutoffDate,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<int>> CleanupOldAuditLogsAsync(DateTime cutoffDate, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -432,7 +382,7 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
                 .ListAsync(filter: x => x.CreatedAt < cutoffDate && !x.IsDeleted, cancellationToken: cancellationToken);
 
             var count = oldAuditLogs.Count();
-            
+
             foreach (var auditLog in oldAuditLogs)
             {
                 auditLog.IsDeleted = true;
@@ -450,17 +400,14 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail<int>("Failed to cleanup old audit logs", "CLEANUP_AUDIT_LOGS_FAILED");
         }
     }
-
-    public async Task<Result> ArchiveAuditLogsAsync(
-        DateTime cutoffDate,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ArchiveAuditLogsAsync(DateTime cutoffDate, CancellationToken cancellationToken = default)
     {
         try
         {
             // Bu method gelecekte arşivleme sistemi implementasyonu için placeholder
             // Şimdilik sadece log yazıyoruz
             _logger.LogInformation("Archive audit logs requested for date: {CutoffDate}", cutoffDate);
-            
+
             return Result.Ok();
         }
         catch (Exception ex)
@@ -469,7 +416,6 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail("Failed to archive audit logs", "ARCHIVE_AUDIT_LOGS_FAILED");
         }
     }
-
     // Private helper methods
     private static CashPaymentAuditLogResponse MapToResponse(CashPaymentAuditLog auditLog)
     {
@@ -497,7 +443,6 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             auditLog.UpdatedAt
         );
     }
-
     private static System.Linq.Expressions.Expression<Func<CashPaymentAuditLog, bool>> BuildAuditLogPredicate(CashPaymentAuditLogQuery query)
     {
         return x => !x.IsDeleted &&
@@ -510,18 +455,16 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
                    (query.RiskLevel == null || x.RiskLevel == query.RiskLevel) &&
                    (query.StartDate == null || x.CreatedAt >= query.StartDate) &&
                    (query.EndDate == null || x.CreatedAt <= query.EndDate) &&
-                   (string.IsNullOrEmpty(query.SearchTerm) || 
-                    x.Title.Contains(query.SearchTerm) || 
+                   (string.IsNullOrEmpty(query.SearchTerm) ||
+                    x.Title.Contains(query.SearchTerm) ||
                     x.Description.Contains(query.SearchTerm));
     }
-
     private static System.Linq.Expressions.Expression<Func<CashPaymentAuditLog, bool>> BuildDateRangePredicate(DateTime? startDate, DateTime? endDate)
     {
         return x => !x.IsDeleted &&
                    (startDate == null || x.CreatedAt >= startDate) &&
                    (endDate == null || x.CreatedAt <= endDate);
     }
-
     private static System.Linq.Expressions.Expression<Func<CashPaymentAuditLog, bool>> BuildSecurityIncidentPredicate(DateTime? startDate, DateTime? endDate, SecurityRiskLevel? minRiskLevel)
     {
         return x => !x.IsDeleted &&
@@ -530,7 +473,6 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
                    (endDate == null || x.CreatedAt <= endDate) &&
                    (minRiskLevel == null || (x.RiskLevel.HasValue && x.RiskLevel >= minRiskLevel));
     }
-
     private static System.Linq.Expressions.Expression<Func<CashPaymentAuditLog, bool>> BuildCriticalEventPredicate(DateTime? startDate, DateTime? endDate)
     {
         return x => !x.IsDeleted &&
@@ -538,7 +480,6 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
                    (startDate == null || x.CreatedAt >= startDate) &&
                    (endDate == null || x.CreatedAt <= endDate);
     }
-
     private static SecurityRiskLevel CalculateOverallRiskLevel(List<CashPaymentAuditLog> riskLogs)
     {
         if (!riskLogs.Any()) return SecurityRiskLevel.Low;
@@ -552,7 +493,6 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
         if (highCount > 0) return SecurityRiskLevel.Medium;
         return SecurityRiskLevel.Low;
     }
-
     private static List<RiskTrend> CalculateRiskTrends(List<CashPaymentAuditLog> riskLogs)
     {
         var trends = new List<RiskTrend>();
@@ -573,7 +513,6 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
 
         return trends;
     }
-
     private static List<string> GenerateRiskRecommendations(List<CashPaymentAuditLog> riskLogs)
     {
         var recommendations = new List<string>();
@@ -609,7 +548,6 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
 
         return recommendations;
     }
-
     private static List<ComplianceViolation> IdentifyComplianceViolations(IEnumerable<CashPaymentAuditLog> auditLogs)
     {
         var violations = new List<ComplianceViolation>();
@@ -652,7 +590,6 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
 
         return violations;
     }
-
     private static ComplianceScore CalculateComplianceScore(IEnumerable<CashPaymentAuditLog> auditLogs, List<ComplianceViolation> violations)
     {
         var totalLogs = auditLogs.Count();

@@ -14,22 +14,14 @@ public class MerchantDocumentService : IMerchantDocumentService
     private readonly IFileStorageService _fileStorageService;
     private readonly ILogger<MerchantDocumentService> _logger;
 
-    public MerchantDocumentService(
-        IUnitOfWork unitOfWork,
-        IFileStorageService fileStorageService,
-        ILogger<MerchantDocumentService> logger)
+    public MerchantDocumentService(IUnitOfWork unitOfWork, IFileStorageService fileStorageService, ILogger<MerchantDocumentService> logger)
     {
         _unitOfWork = unitOfWork;
         _fileStorageService = fileStorageService;
         _logger = logger;
     }
 
-    public async Task<Result<MerchantDocumentResponse>> UploadDocumentAsync(
-        UploadMerchantDocumentRequest request,
-        Stream fileStream,
-        string fileName,
-        string mimeType,
-        Guid uploadedBy,
+    public async Task<Result<MerchantDocumentResponse>> UploadDocumentAsync(UploadMerchantDocumentRequest request, Stream fileStream, string fileName, string mimeType, Guid uploadedBy,
         CancellationToken cancellationToken = default)
     {
         try
@@ -51,9 +43,9 @@ public class MerchantDocumentService : IMerchantDocumentService
             // Check if document type already exists for this merchant
             var existingDocument = await _unitOfWork.Repository<MerchantDocument>()
                 .ListAsync(
-                    filter: x => x.MerchantId == request.MerchantId && 
+                    filter: x => x.MerchantId == request.MerchantId &&
                                  x.DocumentType == request.DocumentType.ToString() &&
-                                 x.Status != DocumentStatus.Rejected, 
+                                 x.Status != DocumentStatus.Rejected,
                     cancellationToken: cancellationToken);
 
             if (existingDocument.Any())
@@ -65,7 +57,7 @@ public class MerchantDocumentService : IMerchantDocumentService
             var fileContent = new byte[fileStream.Length];
             fileStream.Position = 0;
             await fileStream.ReadAsync(fileContent, 0, fileContent.Length, cancellationToken);
-            
+
             var uploadRequest = new FileUploadRequest(
                 fileName,
                 fileContent,
@@ -75,7 +67,7 @@ public class MerchantDocumentService : IMerchantDocumentService
                 request.Description,
                 request.MerchantId,
                 "Merchant");
-                
+
             var uploadResult = await _fileStorageService.UploadFileAsync(uploadRequest, cancellationToken);
             if (!uploadResult.Success || uploadResult.Value == null)
             {
@@ -122,9 +114,7 @@ public class MerchantDocumentService : IMerchantDocumentService
         }
     }
 
-    public async Task<Result<PagedResult<MerchantDocumentResponse>>> GetDocumentsAsync(
-        GetMerchantDocumentsRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<MerchantDocumentResponse>>> GetDocumentsAsync(GetMerchantDocumentsRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -159,9 +149,7 @@ public class MerchantDocumentService : IMerchantDocumentService
         }
     }
 
-    public async Task<Result<MerchantDocumentResponse>> GetDocumentByIdAsync(
-        Guid documentId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MerchantDocumentResponse>> GetDocumentByIdAsync(Guid documentId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -183,10 +171,7 @@ public class MerchantDocumentService : IMerchantDocumentService
         }
     }
 
-    public async Task<Result<MerchantDocumentResponse>> VerifyDocumentAsync(
-        VerifyMerchantDocumentRequest request,
-        Guid verifiedBy,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MerchantDocumentResponse>> VerifyDocumentAsync(VerifyMerchantDocumentRequest request, Guid verifiedBy, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -224,10 +209,7 @@ public class MerchantDocumentService : IMerchantDocumentService
         }
     }
 
-    public async Task<Result> DeleteDocumentAsync(
-        Guid documentId,
-        Guid deletedBy,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteDocumentAsync(Guid documentId, Guid deletedBy, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -259,9 +241,7 @@ public class MerchantDocumentService : IMerchantDocumentService
         }
     }
 
-    public async Task<Result<DocumentUploadProgressResponse>> GetUploadProgressAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<DocumentUploadProgressResponse>> GetUploadProgressAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -280,9 +260,9 @@ public class MerchantDocumentService : IMerchantDocumentService
                 ApprovedDocuments = documents.Count(x => x.IsApproved),
                 RejectedDocuments = documents.Count(x => x.Status == DocumentStatus.Rejected),
                 ExpiredDocumentsCount = documents.Count(x => x.ExpiryDate < DateTime.UtcNow),
-                CompletionPercentage = requiredTypesList.Count > 0 ? 
+                CompletionPercentage = requiredTypesList.Count > 0 ?
                     (decimal)documents.Count(x => x.IsApproved) / requiredTypesList.Count * 100 : 0,
-                MissingDocuments = requiredTypesList.Where(x => 
+                MissingDocuments = requiredTypesList.Where(x =>
                     !documents.Any(d => d.DocumentType == x.ToString() && d.IsApproved)).ToList(),
                 ExpiredDocumentTypes = documents.Where(x => x.ExpiryDate < DateTime.UtcNow)
                     .Select(x => Enum.Parse<DocumentType>(x.DocumentType)).ToList(),
@@ -298,8 +278,7 @@ public class MerchantDocumentService : IMerchantDocumentService
         }
     }
 
-    public async Task<Result<List<DocumentTypeConfig>>> GetRequiredDocumentTypesAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<DocumentTypeConfig>>> GetRequiredDocumentTypesAsync(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -348,10 +327,7 @@ public class MerchantDocumentService : IMerchantDocumentService
             return Result.Fail<List<DocumentTypeConfig>>("Failed to get document types");
         }
     }
-
-    public async Task<Result<bool>> HasAllRequiredDocumentsAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<bool>> HasAllRequiredDocumentsAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -365,8 +341,7 @@ public class MerchantDocumentService : IMerchantDocumentService
         }
     }
 
-    public async Task<Result<List<MerchantDocumentResponse>>> GetExpiredDocumentsAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<MerchantDocumentResponse>>> GetExpiredDocumentsAsync(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -389,16 +364,14 @@ public class MerchantDocumentService : IMerchantDocumentService
         }
     }
 
-    public async Task<Result<List<MerchantDocumentResponse>>> GetDocumentsExpiringSoonAsync(
-        int daysAhead = 30,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<MerchantDocumentResponse>>> GetDocumentsExpiringSoonAsync(int daysAhead = 30, CancellationToken cancellationToken = default)
     {
         try
         {
             var expiryDate = DateTime.UtcNow.AddDays(daysAhead);
             var documents = await _unitOfWork.Repository<MerchantDocument>()
                 .ListAsync(
-                    filter: x => x.ExpiryDate <= expiryDate && x.ExpiryDate > DateTime.UtcNow, 
+                    filter: x => x.ExpiryDate <= expiryDate && x.ExpiryDate > DateTime.UtcNow,
                     cancellationToken: cancellationToken);
 
             var responses = new List<MerchantDocumentResponse>();
@@ -417,11 +390,7 @@ public class MerchantDocumentService : IMerchantDocumentService
         }
     }
 
-    public async Task<Result<MerchantDocumentResponse>> UpdateExpiryDateAsync(
-        Guid documentId,
-        DateTime newExpiryDate,
-        Guid updatedBy,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MerchantDocumentResponse>> UpdateExpiryDateAsync(Guid documentId, DateTime newExpiryDate, Guid updatedBy, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -459,9 +428,7 @@ public class MerchantDocumentService : IMerchantDocumentService
         return Convert.ToBase64String(hashBytes);
     }
 
-    private async Task<MerchantDocumentResponse> MapToResponseAsync(
-        MerchantDocument document,
-        CancellationToken cancellationToken)
+    private async Task<MerchantDocumentResponse> MapToResponseAsync(MerchantDocument document, CancellationToken cancellationToken)
     {
         var uploadedByUser = await _unitOfWork.Repository<User>()
             .GetByIdAsync(document.UploadedBy, cancellationToken);
@@ -498,15 +465,14 @@ public class MerchantDocumentService : IMerchantDocumentService
             CreatedAt = document.CreatedAt,
             UpdatedAt = document.UpdatedAt,
             UploadedByUserName = uploadedByUser?.FirstName + " " + uploadedByUser?.LastName,
-            VerifiedByUserName = verifiedByUser != null ? 
+            VerifiedByUserName = verifiedByUser != null ?
                 verifiedByUser.FirstName + " " + verifiedByUser.LastName : null,
             IsExpired = isExpired,
             DaysUntilExpiry = daysUntilExpiry
         };
     }
 
-    private static System.Linq.Expressions.Expression<Func<MerchantDocument, bool>> BuildDocumentFilter(
-        GetMerchantDocumentsRequest request)
+    private static System.Linq.Expressions.Expression<Func<MerchantDocument, bool>> BuildDocumentFilter(GetMerchantDocumentsRequest request)
     {
         return x =>
             (request.MerchantId == null || x.MerchantId == request.MerchantId) &&
@@ -518,9 +484,7 @@ public class MerchantDocumentService : IMerchantDocumentService
             (request.IsExpired == null || (request.IsExpired.Value ? x.ExpiryDate < DateTime.UtcNow : x.ExpiryDate >= DateTime.UtcNow));
     }
 
-    private async Task UpdateMerchantOnboardingProgressAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken)
+    private async Task UpdateMerchantOnboardingProgressAsync(Guid merchantId, CancellationToken cancellationToken)
     {
         try
         {
@@ -560,9 +524,7 @@ public class MerchantDocumentService : IMerchantDocumentService
 
     #region Additional Controller Methods
 
-    public async Task<Result<MerchantDocumentStatisticsResponse>> GetDocumentStatisticsAsync(
-        Guid? merchantId = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MerchantDocumentStatisticsResponse>> GetDocumentStatisticsAsync(Guid? merchantId = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -585,10 +547,7 @@ public class MerchantDocumentService : IMerchantDocumentService
         }
     }
 
-    public async Task<Result<BulkVerifyDocumentsResponse>> BulkVerifyDocumentsAsync(
-        BulkVerifyDocumentsRequest request,
-        Guid adminId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<BulkVerifyDocumentsResponse>> BulkVerifyDocumentsAsync(BulkVerifyDocumentsRequest request, Guid adminId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -610,9 +569,7 @@ public class MerchantDocumentService : IMerchantDocumentService
         }
     }
 
-    public async Task<Result<PagedResult<MerchantDocumentResponse>>> GetPendingDocumentsAsync(
-        PaginationQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<MerchantDocumentResponse>>> GetPendingDocumentsAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -633,9 +590,7 @@ public class MerchantDocumentService : IMerchantDocumentService
         }
     }
 
-    public async Task<Result<Stream>> DownloadDocumentAsync(
-        Guid documentId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<Stream>> DownloadDocumentAsync(Guid documentId, CancellationToken cancellationToken = default)
     {
         try
         {

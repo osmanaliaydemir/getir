@@ -15,18 +15,12 @@ namespace Getir.Application.Services.Notifications;
 /// </summary>
 public class NotificationHistoryService : BaseService, INotificationHistoryService
 {
-    public NotificationHistoryService(
-        IUnitOfWork unitOfWork,
-        ILogger<NotificationHistoryService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService) 
+    public NotificationHistoryService(IUnitOfWork unitOfWork, ILogger<NotificationHistoryService> logger, ILoggingService loggingService, ICacheService cacheService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
     }
 
-    public async Task<Result<Guid>> LogNotificationAsync(
-        LogNotificationRequest request, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<Guid>> LogNotificationAsync(LogNotificationRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -77,12 +71,7 @@ public class NotificationHistoryService : BaseService, INotificationHistoryServi
         }
     }
 
-    public async Task<Result> UpdateNotificationStatusAsync(
-        Guid historyId, 
-        Domain.Entities.NotificationStatus status, 
-        string? errorMessage = null,
-        string? errorCode = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateNotificationStatusAsync(Guid historyId, Domain.Entities.NotificationStatus status, string? errorMessage = null, string? errorCode = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -112,7 +101,7 @@ public class NotificationHistoryService : BaseService, INotificationHistoryServi
                     history.ErrorMessage = errorMessage;
                     history.ErrorCode = errorCode;
                     break;
-                // Read status is tracked via ReadAt timestamp, not as a separate status
+                    // Read status is tracked via ReadAt timestamp, not as a separate status
             }
 
             _unitOfWork.Repository<NotificationHistory>().Update(history);
@@ -135,10 +124,7 @@ public class NotificationHistoryService : BaseService, INotificationHistoryServi
         }
     }
 
-    public async Task<Result<PagedResult<NotificationHistoryResponse>>> GetNotificationHistoryAsync(
-        Guid userId, 
-        NotificationHistoryQuery query, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<NotificationHistoryResponse>>> GetNotificationHistoryAsync(Guid userId, NotificationHistoryQuery query, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -190,7 +176,7 @@ public class NotificationHistoryService : BaseService, INotificationHistoryServi
             )).ToList();
 
             var pagedResult = PagedResult<NotificationHistoryResponse>.Create(response, total, query.Page, query.PageSize);
-            
+
             return Result.Ok(pagedResult);
         }
         catch (Exception ex)
@@ -201,11 +187,7 @@ public class NotificationHistoryService : BaseService, INotificationHistoryServi
         }
     }
 
-    public async Task<Result<NotificationStatistics>> GetNotificationStatisticsAsync(
-        Guid userId, 
-        DateTime? fromDate = null, 
-        DateTime? toDate = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<NotificationStatistics>> GetNotificationStatisticsAsync(Guid userId, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -241,9 +223,7 @@ public class NotificationHistoryService : BaseService, INotificationHistoryServi
         }
     }
 
-    public async Task<Result> RetryFailedNotificationAsync(
-        Guid historyId, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> RetryFailedNotificationAsync(Guid historyId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -283,14 +263,12 @@ public class NotificationHistoryService : BaseService, INotificationHistoryServi
         }
     }
 
-    public async Task<Result> CleanupOldNotificationsAsync(
-        int daysToKeep = 90, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> CleanupOldNotificationsAsync(int daysToKeep = 90, CancellationToken cancellationToken = default)
     {
         try
         {
             var cutoffDate = DateTime.UtcNow.AddDays(-daysToKeep);
-            
+
             var oldHistories = await _unitOfWork.ReadRepository<NotificationHistory>()
                 .ListAsync(
                     filter: h => h.CreatedAt < cutoffDate,
@@ -343,8 +321,8 @@ public class NotificationHistoryService : BaseService, INotificationHistoryServi
         if (totalNotifications == 0)
             return 0;
 
-        var successfulNotifications = historyList.Count(h => 
-            h.Status == Domain.Entities.NotificationStatus.Sent || 
+        var successfulNotifications = historyList.Count(h =>
+            h.Status == Domain.Entities.NotificationStatus.Sent ||
             h.Status == Domain.Entities.NotificationStatus.Delivered);
 
         return Math.Round((decimal)successfulNotifications / totalNotifications * 100, 2);

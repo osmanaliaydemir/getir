@@ -16,15 +16,8 @@ public class OrderService : BaseService, IOrderService
     private readonly IBackgroundTaskService _backgroundTaskService;
     private readonly IPaymentService _paymentService;
 
-    public OrderService(
-        IUnitOfWork unitOfWork,
-        ILogger<OrderService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        IBackgroundTaskService backgroundTaskService,
-        IPaymentService paymentService,
-        ISignalRService? signalRService = null,
-        ISignalROrderSender? signalROrderSender = null) 
+    public OrderService(IUnitOfWork unitOfWork, ILogger<OrderService> logger, ILoggingService loggingService, ICacheService cacheService, IBackgroundTaskService backgroundTaskService, IPaymentService paymentService,
+        ISignalRService? signalRService = null, ISignalROrderSender? signalROrderSender = null)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _signalRService = signalRService;
@@ -33,10 +26,7 @@ public class OrderService : BaseService, IOrderService
         _paymentService = paymentService;
     }
 
-    public async Task<Result<OrderResponse>> CreateOrderAsync(
-        Guid userId,
-        CreateOrderRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<OrderResponse>> CreateOrderAsync(Guid userId, CreateOrderRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await CreateOrderInternalAsync(userId, request, cancellationToken),
@@ -44,11 +34,7 @@ public class OrderService : BaseService, IOrderService
             new { userId, request.MerchantId, ItemCount = request.Items.Count },
             cancellationToken);
     }
-
-    private async Task<Result<OrderResponse>> CreateOrderInternalAsync(
-        Guid userId,
-        CreateOrderRequest request,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<OrderResponse>> CreateOrderInternalAsync(Guid userId, CreateOrderRequest request, CancellationToken cancellationToken = default)
     {
         // Transaction başlat
         await _unitOfWork.BeginTransactionAsync(cancellationToken);
@@ -99,23 +85,23 @@ public class OrderService : BaseService, IOrderService
                 // Check if this is a market product with variant
                 decimal unitPrice;
                 string? variantName = null;
-                
+
                 if (item.ProductVariantId.HasValue)
                 {
                     // Get variant price for market products
                     var variant = await _unitOfWork.ReadRepository<MarketProductVariant>()
                         .FirstOrDefaultAsync(v => v.Id == item.ProductVariantId.Value && v.ProductId == item.ProductId,
                             cancellationToken: cancellationToken);
-                    
+
                     if (variant == null)
                     {
                         await _unitOfWork.RollbackAsync(cancellationToken);
                         return ServiceResult.Failure<OrderResponse>($"Product variant not found", ErrorCodes.PRODUCT_VARIANT_NOT_FOUND);
                     }
-                    
+
                     unitPrice = variant.DiscountedPrice ?? variant.Price;
                     variantName = variant.Name;
-                    
+
                     // Check variant stock
                     if (variant.StockQuantity < item.Quantity)
                     {
@@ -128,7 +114,7 @@ public class OrderService : BaseService, IOrderService
                     // Use product base price
                     unitPrice = product.DiscountedPrice ?? product.Price;
                 }
-                
+
                 var optionsTotal = 0m;
                 var orderLineOptions = new List<OrderLineOption>();
 
@@ -188,7 +174,7 @@ public class OrderService : BaseService, IOrderService
                     // Variant stok güncelle
                     var variantToUpdate = await _unitOfWork.Repository<MarketProductVariant>()
                         .GetByIdAsync(item.ProductVariantId.Value, cancellationToken);
-                    
+
                     if (variantToUpdate != null)
                     {
                         variantToUpdate.StockQuantity -= item.Quantity;
@@ -202,7 +188,7 @@ public class OrderService : BaseService, IOrderService
                     // Product stok güncelle
                     var productToUpdate = await _unitOfWork.Repository<Product>()
                         .GetByIdAsync(product.Id, cancellationToken);
-                    
+
                     if (productToUpdate != null)
                     {
                         productToUpdate.StockQuantity -= item.Quantity;
@@ -358,11 +344,7 @@ public class OrderService : BaseService, IOrderService
             return ServiceResult.HandleException<OrderResponse>(ex, _logger, "CreateOrder");
         }
     }
-
-    public async Task<Result<OrderResponse>> GetOrderByIdAsync(
-        Guid orderId,
-        Guid userId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<OrderResponse>> GetOrderByIdAsync(Guid orderId, Guid userId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetOrderByIdInternalAsync(orderId, userId, cancellationToken),
@@ -370,11 +352,7 @@ public class OrderService : BaseService, IOrderService
             new { OrderId = orderId, UserId = userId },
             cancellationToken);
     }
-
-    private async Task<Result<OrderResponse>> GetOrderByIdInternalAsync(
-        Guid orderId,
-        Guid userId,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<OrderResponse>> GetOrderByIdInternalAsync(Guid orderId, Guid userId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -434,11 +412,7 @@ public class OrderService : BaseService, IOrderService
             return ServiceResult.HandleException<OrderResponse>(ex, _logger, "GetOrderById");
         }
     }
-
-    public async Task<Result<PagedResult<OrderResponse>>> GetUserOrdersAsync(
-        Guid userId,
-        PaginationQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<OrderResponse>>> GetUserOrdersAsync(Guid userId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetUserOrdersInternalAsync(userId, query, cancellationToken),
@@ -446,11 +420,7 @@ public class OrderService : BaseService, IOrderService
             new { userId, query.Page, query.PageSize },
             cancellationToken);
     }
-
-    private async Task<Result<PagedResult<OrderResponse>>> GetUserOrdersInternalAsync(
-        Guid userId,
-        PaginationQuery query,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<PagedResult<OrderResponse>>> GetUserOrdersInternalAsync(Guid userId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -469,7 +439,7 @@ public class OrderService : BaseService, IOrderService
             var response = orders.Select(MapToOrderResponse).ToList();
 
             var pagedResult = PagedResult<OrderResponse>.Create(response, total, query.Page, query.PageSize);
-            
+
             return ServiceResult.Success(pagedResult);
         }
         catch (Exception ex)
@@ -478,18 +448,12 @@ public class OrderService : BaseService, IOrderService
             return ServiceResult.HandleException<PagedResult<OrderResponse>>(ex, _logger, "GetUserOrders");
         }
     }
-
     private static string GenerateOrderNumber()
     {
         return $"ORD-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}";
     }
-
     // Merchant-specific methods
-    public async Task<Result<PagedResult<OrderResponse>>> GetMerchantOrdersAsync(
-        Guid merchantOwnerId,
-        PaginationQuery query,
-        string? status = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<OrderResponse>>> GetMerchantOrdersAsync(Guid merchantOwnerId, PaginationQuery query, string? status = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
 
@@ -564,15 +528,11 @@ public class OrderService : BaseService, IOrderService
 
         return ServiceResult.Success(pagedResult);
     }
-
-    public async Task<Result<OrderResponse>> AcceptOrderAsync(
-        Guid orderId,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<OrderResponse>> AcceptOrderAsync(Guid orderId, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         var order = await _unitOfWork.ReadRepository<Order>()
-            .FirstOrDefaultAsync(o => o.Id == orderId, 
-                include: "Merchant,User,OrderLines", 
+            .FirstOrDefaultAsync(o => o.Id == orderId,
+                include: "Merchant,User,OrderLines",
                 cancellationToken: cancellationToken);
 
         if (order == null)
@@ -622,16 +582,11 @@ public class OrderService : BaseService, IOrderService
 
         return ServiceResult.Success(response);
     }
-
-    public async Task<Result> RejectOrderAsync(
-        Guid orderId,
-        Guid merchantOwnerId,
-        string? reason = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> RejectOrderAsync(Guid orderId, Guid merchantOwnerId, string? reason = null, CancellationToken cancellationToken = default)
     {
         var order = await _unitOfWork.ReadRepository<Order>()
-            .FirstOrDefaultAsync(o => o.Id == orderId, 
-                include: "Merchant,User", 
+            .FirstOrDefaultAsync(o => o.Id == orderId,
+                include: "Merchant,User",
                 cancellationToken: cancellationToken);
 
         if (order == null)
@@ -680,15 +635,11 @@ public class OrderService : BaseService, IOrderService
 
         return ServiceResult.Success();
     }
-
-    public async Task<Result> StartPreparingOrderAsync(
-        Guid orderId,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> StartPreparingOrderAsync(Guid orderId, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         var order = await _unitOfWork.ReadRepository<Order>()
-            .FirstOrDefaultAsync(o => o.Id == orderId, 
-                include: "Merchant,User", 
+            .FirstOrDefaultAsync(o => o.Id == orderId,
+                include: "Merchant,User",
                 cancellationToken: cancellationToken);
 
         if (order == null)
@@ -736,15 +687,11 @@ public class OrderService : BaseService, IOrderService
 
         return ServiceResult.Success();
     }
-
-    public async Task<Result> MarkOrderAsReadyAsync(
-        Guid orderId,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> MarkOrderAsReadyAsync(Guid orderId, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         var order = await _unitOfWork.ReadRepository<Order>()
-            .FirstOrDefaultAsync(o => o.Id == orderId, 
-                include: "Merchant,User", 
+            .FirstOrDefaultAsync(o => o.Id == orderId,
+                include: "Merchant,User",
                 cancellationToken: cancellationToken);
 
         if (order == null)
@@ -792,18 +739,13 @@ public class OrderService : BaseService, IOrderService
 
         return ServiceResult.Success();
     }
-
-    public async Task<Result> CancelOrderAsync(
-        Guid orderId,
-        Guid merchantOwnerId,
-        string reason,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> CancelOrderAsync(Guid orderId, Guid merchantOwnerId, string reason, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(reason);
 
         var order = await _unitOfWork.ReadRepository<Order>()
-            .FirstOrDefaultAsync(o => o.Id == orderId, 
-                include: "Merchant,User", 
+            .FirstOrDefaultAsync(o => o.Id == orderId,
+                include: "Merchant,User",
                 cancellationToken: cancellationToken);
 
         if (order == null)
@@ -853,11 +795,7 @@ public class OrderService : BaseService, IOrderService
         return ServiceResult.Success();
     }
 
-    public async Task<Result<OrderStatisticsResponse>> GetOrderStatisticsAsync(
-        Guid merchantOwnerId,
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<OrderStatisticsResponse>> GetOrderStatisticsAsync(Guid merchantOwnerId, DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
     {
         // Get merchant owned by this user
         var merchant = await _unitOfWork.ReadRepository<Merchant>()
@@ -928,7 +866,7 @@ public class OrderService : BaseService, IOrderService
             );
 
             var paymentResult = await _paymentService.CreatePaymentAsync(paymentRequest, cancellationToken);
-            
+
             if (paymentResult.Success)
             {
                 // Order'ın payment status'unu güncelle
@@ -936,7 +874,7 @@ public class OrderService : BaseService, IOrderService
                 _unitOfWork.Repository<Order>().Update(order);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-                _logger.LogInformation("Payment created successfully for order {OrderId}: {PaymentId}", 
+                _logger.LogInformation("Payment created successfully for order {OrderId}: {PaymentId}",
                     order.Id, paymentResult.Value?.Id);
             }
 
@@ -968,7 +906,7 @@ public class OrderService : BaseService, IOrderService
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
                 await _unitOfWork.CommitAsync(cancellationToken);
 
-                _logger.LogWarning("Order {OrderId} cancelled due to payment failure: {PaymentError}", 
+                _logger.LogWarning("Order {OrderId} cancelled due to payment failure: {PaymentError}",
                     orderId, paymentError);
 
                 // SignalR notification
@@ -993,10 +931,7 @@ public class OrderService : BaseService, IOrderService
 
     #region Additional Merchant Order Methods
 
-    public async Task<Result<OrderDetailsResponse>> GetMerchantOrderDetailsAsync(
-        Guid orderId,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<OrderDetailsResponse>> GetMerchantOrderDetailsAsync(Guid orderId, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetMerchantOrderDetailsInternalAsync(orderId, merchantOwnerId, cancellationToken),
@@ -1004,11 +939,7 @@ public class OrderService : BaseService, IOrderService
             new { orderId, merchantOwnerId },
             cancellationToken);
     }
-
-    private async Task<Result<OrderDetailsResponse>> GetMerchantOrderDetailsInternalAsync(
-        Guid orderId,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken)
+    private async Task<Result<OrderDetailsResponse>> GetMerchantOrderDetailsInternalAsync(Guid orderId, Guid merchantOwnerId, CancellationToken cancellationToken)
     {
         var order = await _unitOfWork.ReadRepository<Order>()
             .FirstOrDefaultAsync(o => o.Id == orderId && o.Merchant.OwnerId == merchantOwnerId, cancellationToken: cancellationToken);
@@ -1085,12 +1016,7 @@ public class OrderService : BaseService, IOrderService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result> UpdateOrderStatusAsync(
-        Guid orderId,
-        UpdateOrderStatusRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateOrderStatusAsync(Guid orderId, UpdateOrderStatusRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await UpdateOrderStatusInternalAsync(orderId, request, merchantOwnerId, cancellationToken),
@@ -1098,12 +1024,7 @@ public class OrderService : BaseService, IOrderService
             new { orderId, merchantOwnerId, request.NewStatus },
             cancellationToken);
     }
-
-    private async Task<Result> UpdateOrderStatusInternalAsync(
-        Guid orderId,
-        UpdateOrderStatusRequest _,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken)
+    private async Task<Result> UpdateOrderStatusInternalAsync(Guid orderId, UpdateOrderStatusRequest _, Guid merchantOwnerId, CancellationToken cancellationToken)
     {
         var order = await _unitOfWork.ReadRepository<Order>()
             .FirstOrDefaultAsync(o => o.Id == orderId && o.Merchant.OwnerId == merchantOwnerId, cancellationToken: cancellationToken);
@@ -1117,12 +1038,7 @@ public class OrderService : BaseService, IOrderService
         // This is a simplified implementation
         return Result.Ok();
     }
-
-    public async Task<Result<OrderAnalyticsResponse>> GetOrderAnalyticsAsync(
-        Guid merchantOwnerId,
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<OrderAnalyticsResponse>> GetOrderAnalyticsAsync(Guid merchantOwnerId, DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetOrderAnalyticsInternalAsync(merchantOwnerId, startDate, endDate, cancellationToken),
@@ -1130,12 +1046,7 @@ public class OrderService : BaseService, IOrderService
             new { merchantOwnerId, startDate, endDate },
             cancellationToken);
     }
-
-    private Task<Result<OrderAnalyticsResponse>> GetOrderAnalyticsInternalAsync(
-        Guid _merchantOwnerId,
-        DateTime? _startDate,
-        DateTime? _endDate,
-        CancellationToken _cancellationToken)
+    private Task<Result<OrderAnalyticsResponse>> GetOrderAnalyticsInternalAsync(Guid _merchantOwnerId, DateTime? _startDate, DateTime? _endDate, CancellationToken _cancellationToken)
     {
         // Simplified analytics implementation
         var response = new OrderAnalyticsResponse(
@@ -1149,11 +1060,7 @@ public class OrderService : BaseService, IOrderService
 
         return Task.FromResult(Result.Ok(response));
     }
-
-    public async Task<Result<PagedResult<OrderResponse>>> GetPendingOrdersAsync(
-        Guid merchantOwnerId,
-        PaginationQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<OrderResponse>>> GetPendingOrdersAsync(Guid merchantOwnerId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetPendingOrdersInternalAsync(merchantOwnerId, query, cancellationToken),
@@ -1161,11 +1068,7 @@ public class OrderService : BaseService, IOrderService
             new { merchantOwnerId, query.Page, query.PageSize },
             cancellationToken);
     }
-
-    private Task<Result<PagedResult<OrderResponse>>> GetPendingOrdersInternalAsync(
-        Guid _merchantOwnerId,
-        PaginationQuery query,
-        CancellationToken _cancellationToken)
+    private Task<Result<PagedResult<OrderResponse>>> GetPendingOrdersInternalAsync(Guid _merchantOwnerId, PaginationQuery query, CancellationToken _cancellationToken)
     {
         // Simplified pending orders implementation
         var response = new PagedResult<OrderResponse>
@@ -1177,11 +1080,7 @@ public class OrderService : BaseService, IOrderService
 
         return Task.FromResult(Result.Ok(response));
     }
-
-    public async Task<Result<OrderTimelineResponse>> GetOrderTimelineAsync(
-        Guid orderId,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<OrderTimelineResponse>> GetOrderTimelineAsync(Guid orderId, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetOrderTimelineInternalAsync(orderId, merchantOwnerId, cancellationToken),
@@ -1189,11 +1088,7 @@ public class OrderService : BaseService, IOrderService
             new { orderId, merchantOwnerId },
             cancellationToken);
     }
-
-    private async Task<Result<OrderTimelineResponse>> GetOrderTimelineInternalAsync(
-        Guid orderId,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken)
+    private async Task<Result<OrderTimelineResponse>> GetOrderTimelineInternalAsync(Guid orderId, Guid merchantOwnerId, CancellationToken cancellationToken)
     {
         var order = await _unitOfWork.ReadRepository<Order>()
             .FirstOrDefaultAsync(o => o.Id == orderId && o.Merchant.OwnerId == merchantOwnerId, cancellationToken: cancellationToken);
@@ -1213,12 +1108,8 @@ public class OrderService : BaseService, IOrderService
 
         return Result.Ok(response);
     }
-
     // SignalR Hub-specific methods
-
-    public async Task<Result<OrderResponse>> GetOrderByIdAsync(
-        Guid orderId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<OrderResponse>> GetOrderByIdAsync(Guid orderId, CancellationToken cancellationToken = default)
     {
         var order = await _unitOfWork.ReadRepository<Order>()
             .FirstOrDefaultAsync(
@@ -1234,17 +1125,14 @@ public class OrderService : BaseService, IOrderService
         var response = MapToOrderResponse(order);
         return Result.Ok(response);
     }
-
-    public async Task<Result<List<OrderResponse>>> GetUserActiveOrdersAsync(
-        Guid userId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<OrderResponse>>> GetUserActiveOrdersAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var activeStatuses = new[] 
-        { 
-            OrderStatus.Pending, 
-            OrderStatus.Confirmed, 
-            OrderStatus.Preparing, 
-            OrderStatus.Ready, 
+        var activeStatuses = new[]
+        {
+            OrderStatus.Pending,
+            OrderStatus.Confirmed,
+            OrderStatus.Preparing,
+            OrderStatus.Ready,
             OrderStatus.PickedUp,
             OrderStatus.OnTheWay
         };
@@ -1261,10 +1149,7 @@ public class OrderService : BaseService, IOrderService
         var response = orders.Select(MapToOrderResponse).ToList();
         return Result.Ok(response);
     }
-
-    public async Task<Result<OrderResponse>> UpdateOrderStatusAsync(
-        UpdateOrderStatusRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<OrderResponse>> UpdateOrderStatusAsync(UpdateOrderStatusRequest request, CancellationToken cancellationToken = default)
     {
         var order = await _unitOfWork.Repository<Order>()
             .FirstOrDefaultAsync(
@@ -1320,10 +1205,7 @@ public class OrderService : BaseService, IOrderService
         var response = MapToOrderResponse(order);
         return Result.Ok(response);
     }
-
-    public async Task<Result<OrderResponse>> CancelOrderAsync(
-        CancelOrderRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<OrderResponse>> CancelOrderAsync(CancelOrderRequest request, CancellationToken cancellationToken = default)
     {
         var order = await _unitOfWork.Repository<Order>()
             .FirstOrDefaultAsync(
@@ -1378,10 +1260,7 @@ public class OrderService : BaseService, IOrderService
         var response = MapToOrderResponse(order);
         return Result.Ok(response);
     }
-
-    public async Task<Result<OrderResponse>> RateOrderAsync(
-        RateOrderRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<OrderResponse>> RateOrderAsync(RateOrderRequest request, CancellationToken cancellationToken = default)
     {
         var order = await _unitOfWork.Repository<Order>()
             .FirstOrDefaultAsync(
@@ -1433,9 +1312,7 @@ public class OrderService : BaseService, IOrderService
         return Result.Ok(response);
     }
 
-    public async Task<Result<List<OrderResponse>>> GetMerchantPendingOrdersAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<OrderResponse>>> GetMerchantPendingOrdersAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         var orders = await _unitOfWork.Repository<Order>()
             .GetPagedAsync(

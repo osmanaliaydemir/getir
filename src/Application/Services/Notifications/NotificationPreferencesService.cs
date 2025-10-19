@@ -13,18 +13,11 @@ namespace Getir.Application.Services.Notifications;
 /// </summary>
 public class NotificationPreferencesService : BaseService, INotificationPreferencesService
 {
-    public NotificationPreferencesService(
-        IUnitOfWork unitOfWork,
-        ILogger<NotificationPreferencesService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService) 
+    public NotificationPreferencesService(IUnitOfWork unitOfWork, ILogger<NotificationPreferencesService> logger, ILoggingService loggingService, ICacheService cacheService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
     }
-
-    public async Task<Result<NotificationPreferencesResponse>> GetUserPreferencesAsync(
-        Guid userId, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<NotificationPreferencesResponse>> GetUserPreferencesAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -81,11 +74,7 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
             return Result.Fail<NotificationPreferencesResponse>("Failed to get notification preferences", "GET_PREFERENCES_ERROR");
         }
     }
-
-    public async Task<Result> UpdateUserPreferencesAsync(
-        Guid userId, 
-        UpdateNotificationPreferencesRequest request, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateUserPreferencesAsync(Guid userId, UpdateNotificationPreferencesRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -143,10 +132,7 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
             return Result.Fail("Failed to update notification preferences", "UPDATE_PREFERENCES_ERROR");
         }
     }
-
-    public async Task<Result> ResetToDefaultsAsync(
-        Guid userId, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ResetToDefaultsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -199,10 +185,7 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
             return Result.Fail("Failed to reset notification preferences", "RESET_PREFERENCES_ERROR");
         }
     }
-
-    public async Task<Result> CreateDefaultPreferencesAsync(
-        Guid userId, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> CreateDefaultPreferencesAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -256,10 +239,7 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
             return Result.Fail("Failed to create default notification preferences", "CREATE_PREFERENCES_ERROR");
         }
     }
-
-    public async Task<Result<NotificationPreferencesSummary>> GetPreferencesSummaryAsync(
-        Guid userId, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<NotificationPreferencesSummary>> GetPreferencesSummaryAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -290,12 +270,7 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
             return Result.Fail<NotificationPreferencesSummary>("Failed to get notification preferences summary", "GET_PREFERENCES_SUMMARY_ERROR");
         }
     }
-
-    public async Task<Result<bool>> CanReceiveNotificationAsync(
-        Guid userId, 
-        NotificationType type, 
-        NotificationChannel channel,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<bool>> CanReceiveNotificationAsync(Guid userId, NotificationType type, NotificationChannel channel, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -363,10 +338,7 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
             return Result.Fail<bool>("Failed to check notification eligibility", "CHECK_ELIGIBILITY_ERROR");
         }
     }
-
-    public async Task<Result<bool>> IsWithinQuietHoursAsync(
-        Guid userId, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<bool>> IsWithinQuietHoursAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -403,15 +375,12 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
             return Result.Fail<bool>("Failed to check quiet hours", "CHECK_QUIET_HOURS_ERROR");
         }
     }
-
-    public async Task<Result> BulkUpdatePreferencesAsync(
-        BulkNotificationPreferencesRequest request, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> BulkUpdatePreferencesAsync(BulkNotificationPreferencesRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
             var results = new List<Result>();
-            
+
             foreach (var userId in request.UserIds)
             {
                 var result = await UpdateUserPreferencesAsync(userId, request.Preferences, cancellationToken);
@@ -442,11 +411,7 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
             return Result.Fail("Failed to bulk update notification preferences", "BULK_UPDATE_PREFERENCES_ERROR");
         }
     }
-
-    public async Task<Result<IEnumerable<Guid>>> GetEligibleUsersAsync(
-        NotificationType type, 
-        NotificationChannel channel,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<Guid>>> GetEligibleUsersAsync(NotificationType type, NotificationChannel channel, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -473,13 +438,11 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
             return Result.Fail<IEnumerable<Guid>>("Failed to get eligible users", "GET_ELIGIBLE_USERS_ERROR");
         }
     }
-
     #region Helper Methods
-
     private List<string> GetUpdatedFields(UpdateNotificationPreferencesRequest request)
     {
         var updatedFields = new List<string>();
-        
+
         if (request.EmailEnabled.HasValue) updatedFields.Add("EmailEnabled");
         if (request.EmailOrderUpdates.HasValue) updatedFields.Add("EmailOrderUpdates");
         if (request.EmailPromotions.HasValue) updatedFields.Add("EmailPromotions");
@@ -501,7 +464,6 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
 
         return updatedFields;
     }
-
     private int GetActiveChannelsCount(UserNotificationPreferences preferences)
     {
         var count = 0;
@@ -510,7 +472,6 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
         if (preferences.PushEnabled) count++;
         return count;
     }
-
     private bool IsEligibleForNotification(UserNotificationPreferences preferences, NotificationType type, NotificationChannel channel)
     {
         // Check if channel is enabled
@@ -542,14 +503,10 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
 
         return typeEnabled;
     }
-
     #endregion
 }
-
 
 /// <summary>
 /// Bulk notification preferences request
 /// </summary>
-public record BulkNotificationPreferencesRequest(
-    IEnumerable<Guid> UserIds,
-    UpdateNotificationPreferencesRequest Preferences);
+public record BulkNotificationPreferencesRequest(IEnumerable<Guid> UserIds, UpdateNotificationPreferencesRequest Preferences);

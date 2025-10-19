@@ -10,24 +10,13 @@ public class NotificationService : BaseService, INotificationService
 {
     private readonly ISignalRService? _signalRService;
     private readonly IBackgroundTaskService _backgroundTaskService;
-
-    public NotificationService(
-        IUnitOfWork unitOfWork,
-        ILogger<NotificationService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        IBackgroundTaskService backgroundTaskService,
-        ISignalRService? signalRService = null) 
+    public NotificationService(IUnitOfWork unitOfWork, ILogger<NotificationService> logger, ILoggingService loggingService, ICacheService cacheService, IBackgroundTaskService backgroundTaskService, ISignalRService? signalRService = null)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _signalRService = signalRService;
         _backgroundTaskService = backgroundTaskService;
     }
-
-    public async Task<Result<PagedResult<NotificationResponse>>> GetUserNotificationsAsync(
-        Guid userId,
-        PaginationQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<NotificationResponse>>> GetUserNotificationsAsync(Guid userId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         var notifications = await _unitOfWork.Repository<Notification>().GetPagedAsync(
             filter: n => n.UserId == userId,
@@ -54,14 +43,10 @@ public class NotificationService : BaseService, INotificationService
         )).ToList();
 
         var pagedResult = PagedResult<NotificationResponse>.Create(response, total, query.Page, query.PageSize);
-        
+
         return Result.Ok(pagedResult);
     }
-
-    public async Task<Result> MarkAsReadAsync(
-        Guid userId,
-        MarkAsReadRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> MarkAsReadAsync(Guid userId, MarkAsReadRequest request, CancellationToken cancellationToken = default)
     {
         var notifications = await _unitOfWork.Repository<Notification>().GetPagedAsync(
             filter: n => n.UserId == userId && request.NotificationIds.Contains(n.Id) && !n.IsRead,
@@ -78,10 +63,7 @@ public class NotificationService : BaseService, INotificationService
 
         return Result.Ok();
     }
-
-    public async Task<Result<NotificationResponse>> CreateNotificationAsync(
-        CreateNotificationRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<NotificationResponse>> CreateNotificationAsync(CreateNotificationRequest request, CancellationToken cancellationToken = default)
     {
         var notification = new Notification
         {
@@ -126,13 +108,8 @@ public class NotificationService : BaseService, INotificationService
 
         return Result.Ok(response);
     }
-
     // SignalR Hub-specific methods
-
-    public async Task<Result> MarkAsReadAsync(
-        Guid notificationId,
-        Guid userId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> MarkAsReadAsync(Guid notificationId, Guid userId, CancellationToken cancellationToken = default)
     {
         var notification = await _unitOfWork.Repository<Notification>()
             .FirstOrDefaultAsync(
@@ -153,7 +130,7 @@ public class NotificationService : BaseService, INotificationService
         notification.IsRead = true;
         notification.ReadAt = DateTime.UtcNow;
         _unitOfWork.Repository<Notification>().Update(notification);
-        
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         _loggingService.LogBusinessEvent("NotificationMarkedAsRead", new
@@ -164,10 +141,7 @@ public class NotificationService : BaseService, INotificationService
 
         return Result.Ok();
     }
-
-    public async Task<Result<int>> GetUnreadCountAsync(
-        Guid userId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<int>> GetUnreadCountAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var count = await _unitOfWork.ReadRepository<Notification>()
             .CountAsync(
@@ -176,11 +150,7 @@ public class NotificationService : BaseService, INotificationService
 
         return Result.Ok(count);
     }
-
-    public async Task<Result<List<NotificationResponse>>> GetUserNotificationsAsync(
-        Guid userId,
-        int count,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<NotificationResponse>>> GetUserNotificationsAsync(Guid userId, int count, CancellationToken cancellationToken = default)
     {
         var notifications = await _unitOfWork.Repository<Notification>()
             .GetPagedAsync(
@@ -206,10 +176,7 @@ public class NotificationService : BaseService, INotificationService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result> MarkAllAsReadAsync(
-        Guid userId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> MarkAllAsReadAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var unreadNotifications = await _unitOfWork.Repository<Notification>()
             .GetPagedAsync(
@@ -238,11 +205,7 @@ public class NotificationService : BaseService, INotificationService
 
         return Result.Ok();
     }
-
-    public async Task<Result> DeleteNotificationAsync(
-        Guid notificationId,
-        Guid userId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteNotificationAsync(Guid notificationId, Guid userId, CancellationToken cancellationToken = default)
     {
         var notification = await _unitOfWork.Repository<Notification>()
             .FirstOrDefaultAsync(
@@ -266,17 +229,12 @@ public class NotificationService : BaseService, INotificationService
 
         return Result.Ok();
     }
-
-    public async Task<Result> SendOrderStatusNotificationAsync(
-        Guid userId,
-        Guid orderId,
-        Domain.Enums.OrderStatus status,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> SendOrderStatusNotificationAsync(Guid userId, Guid orderId, Domain.Enums.OrderStatus status, CancellationToken cancellationToken = default)
     {
         // Create notification for order status change
         var title = $"Order Status Update";
         var message = $"Your order status has been updated to: {status}";
-        
+
         var notification = new Notification
         {
             Id = Guid.NewGuid(),

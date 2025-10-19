@@ -17,23 +17,13 @@ public class CourierService : BaseService, ICourierService
     private readonly ISignalRService? _signalRService;
     private readonly IBackgroundTaskService _backgroundTaskService;
 
-    public CourierService(
-        IUnitOfWork unitOfWork,
-        ILogger<CourierService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        IBackgroundTaskService backgroundTaskService,
-        ISignalRService? signalRService = null) 
+    public CourierService(IUnitOfWork unitOfWork, ILogger<CourierService> logger, ILoggingService loggingService, ICacheService cacheService, IBackgroundTaskService backgroundTaskService, ISignalRService? signalRService = null)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _signalRService = signalRService;
         _backgroundTaskService = backgroundTaskService;
     }
-
-    public async Task<Result<PagedResult<CourierOrderResponse>>> GetAssignedOrdersAsync(
-        Guid courierId,
-        PaginationQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<CourierOrderResponse>>> GetAssignedOrdersAsync(Guid courierId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         var orders = await _unitOfWork.Repository<Order>().GetPagedAsync(
             filter: o => o.CourierId == courierId && (o.Status == OrderStatus.Ready || o.Status == OrderStatus.OnTheWay),
@@ -59,14 +49,10 @@ public class CourierService : BaseService, ICourierService
         )).ToList();
 
         var pagedResult = PagedResult<CourierOrderResponse>.Create(response, total, query.Page, query.PageSize);
-        
+
         return Result.Ok(pagedResult);
     }
-
-    public async Task<Result> UpdateLocationAsync(
-        Guid courierId,
-        CourierLocationUpdateRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateLocationAsync(Guid courierId, CourierLocationUpdateRequest request, CancellationToken cancellationToken = default)
     {
         var courier = await _unitOfWork.Repository<Courier>()
             .GetByIdAsync(courierId, cancellationToken);
@@ -88,7 +74,7 @@ public class CourierService : BaseService, ICourierService
         {
             var activeOrders = await _unitOfWork.ReadRepository<Order>()
                 .ListAsync(
-                    filter: o => o.CourierId == courierId && 
+                    filter: o => o.CourierId == courierId &&
                                 (o.Status == OrderStatus.Ready || o.Status == OrderStatus.OnTheWay),
                     cancellationToken: cancellationToken);
 
@@ -103,11 +89,7 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok();
     }
-
-    public async Task<Result> SetAvailabilityAsync(
-        Guid courierId,
-        SetAvailabilityRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> SetAvailabilityAsync(Guid courierId, SetAvailabilityRequest request, CancellationToken cancellationToken = default)
     {
         var courier = await _unitOfWork.Repository<Courier>()
             .GetByIdAsync(courierId, cancellationToken);
@@ -124,11 +106,8 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok();
     }
-
     // Courier Panel methods
-    public async Task<Result<CourierDashboardResponse>> GetCourierDashboardAsync(
-        Guid courierId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CourierDashboardResponse>> GetCourierDashboardAsync(Guid courierId, CancellationToken cancellationToken = default)
     {
         var courier = await _unitOfWork.ReadRepository<Courier>()
             .FirstOrDefaultAsync(c => c.Id == courierId, cancellationToken: cancellationToken);
@@ -189,10 +168,7 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(dashboard);
     }
-
-    public async Task<Result<CourierStatsResponse>> GetCourierStatsAsync(
-        Guid courierId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CourierStatsResponse>> GetCourierStatsAsync(Guid courierId, CancellationToken cancellationToken = default)
     {
         var courier = await _unitOfWork.ReadRepository<Courier>()
             .FirstOrDefaultAsync(c => c.Id == courierId, cancellationToken: cancellationToken);
@@ -227,12 +203,7 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(stats);
     }
-
-    public async Task<Result<CourierEarningsResponse>> GetCourierEarningsAsync(
-        Guid courierId,
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CourierEarningsResponse>> GetCourierEarningsAsync(Guid courierId, DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
     {
         var courier = await _unitOfWork.ReadRepository<Courier>()
             .FirstOrDefaultAsync(c => c.Id == courierId, cancellationToken: cancellationToken);
@@ -277,11 +248,7 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(earnings);
     }
-
-    public async Task<Result> AcceptOrderAsync(
-        Guid courierId,
-        AcceptOrderRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> AcceptOrderAsync(Guid courierId, AcceptOrderRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -321,11 +288,7 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok();
     }
-
-    public async Task<Result> StartDeliveryAsync(
-        Guid courierId,
-        StartDeliveryRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> StartDeliveryAsync(Guid courierId, StartDeliveryRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -356,11 +319,7 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok();
     }
-
-    public async Task<Result> CompleteDeliveryAsync(
-        Guid courierId,
-        CompleteDeliveryRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> CompleteDeliveryAsync(Guid courierId, CompleteDeliveryRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -401,11 +360,8 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok();
     }
-
     // Order Assignment methods
-    public async Task<Result<CourierAssignmentResponse>> AssignOrderAsync(
-        AssignOrderRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CourierAssignmentResponse>> AssignOrderAsync(AssignOrderRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -475,15 +431,12 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result<FindNearestCouriersResponse>> FindNearestCouriersAsync(
-        FindNearestCouriersRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<FindNearestCouriersResponse>> FindNearestCouriersAsync(FindNearestCouriersRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         var availableCouriers = await _unitOfWork.ReadRepository<Courier>()
-            .ListAsync(c => c.IsAvailable && c.IsActive, 
+            .ListAsync(c => c.IsAvailable && c.IsActive,
                 include: "User",
                 cancellationToken: cancellationToken);
 
@@ -505,10 +458,7 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result<List<CourierPerformanceResponse>>> GetTopPerformersAsync(
-        int count = 10,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<CourierPerformanceResponse>>> GetTopPerformersAsync(int count = 10, CancellationToken cancellationToken = default)
     {
         var couriers = await _unitOfWork.ReadRepository<Courier>()
             .ListAsync(c => c.IsActive,
@@ -548,10 +498,7 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(topPerformers);
     }
-
-    public async Task<Result<CourierEarningsDetailResponse>> GetEarningsDetailAsync(
-        CourierEarningsQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CourierEarningsDetailResponse>> GetEarningsDetailAsync(CourierEarningsQuery query, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
 
@@ -559,9 +506,9 @@ public class CourierService : BaseService, ICourierService
         var endDate = query.EndDate ?? DateTime.UtcNow;
 
         var orders = await _unitOfWork.ReadRepository<Order>()
-            .ListAsync(o => o.CourierId == query.CourierId && 
-                           o.Status == OrderStatus.Delivered && 
-                           o.UpdatedAt >= startDate && 
+            .ListAsync(o => o.CourierId == query.CourierId &&
+                           o.Status == OrderStatus.Delivered &&
+                           o.UpdatedAt >= startDate &&
                            o.UpdatedAt <= endDate,
                 orderBy: o => o.UpdatedAt,
                 ascending: true,
@@ -591,12 +538,8 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(response);
     }
-
     // SignalR Hub-specific methods
-
-    public async Task<Result> UpdateLocationAsync(
-        CourierLocationUpdateWithOrderRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateLocationAsync(CourierLocationUpdateWithOrderRequest request, CancellationToken cancellationToken = default)
     {
         // Store location in database (assuming CourierLocation entity exists)
         var location = new CourierLocation
@@ -623,10 +566,7 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok();
     }
-
-    public async Task<Result<CourierLocationResponse>> GetCurrentLocationAsync(
-        Guid courierId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CourierLocationResponse>> GetCurrentLocationAsync(Guid courierId, CancellationToken cancellationToken = default)
     {
         // Get most recent location
         var locations = await _unitOfWork.Repository<CourierLocation>()
@@ -658,11 +598,7 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result<List<CourierLocationHistoryItem>>> GetLocationHistoryAsync(
-        Guid courierId,
-        Guid orderId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<CourierLocationHistoryItem>>> GetLocationHistoryAsync(Guid courierId, Guid orderId, CancellationToken cancellationToken = default)
     {
         var locations = await _unitOfWork.Repository<CourierLocation>()
             .GetPagedAsync(
@@ -686,16 +622,13 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result<List<CourierOrderResponse>>> GetAssignedOrdersAsync(
-        Guid courierId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<CourierOrderResponse>>> GetAssignedOrdersAsync(Guid courierId, CancellationToken cancellationToken = default)
     {
         var orders = await _unitOfWork.Repository<Order>()
             .GetPagedAsync(
-                filter: o => o.CourierId == courierId && 
-                            (o.Status == OrderStatus.Ready || 
-                             o.Status == OrderStatus.PickedUp || 
+                filter: o => o.CourierId == courierId &&
+                            (o.Status == OrderStatus.Ready ||
+                             o.Status == OrderStatus.PickedUp ||
                              o.Status == OrderStatus.OnTheWay),
                 orderBy: o => o.CreatedAt,
                 ascending: true,
@@ -717,11 +650,7 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result> UpdateAvailabilityAsync(
-        Guid courierId,
-        CourierAvailabilityStatus status,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateAvailabilityAsync(Guid courierId, CourierAvailabilityStatus status, CancellationToken cancellationToken = default)
     {
         var courier = await _unitOfWork.Repository<User>()
             .FirstOrDefaultAsync(
@@ -749,7 +678,6 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok();
     }
-
     // Helper methods
     private static decimal CalculateDistance(decimal lat1, decimal lon1, decimal lat2, decimal lon2)
     {
@@ -757,11 +685,103 @@ public class CourierService : BaseService, ICourierService
         // For now, return a simple calculation
         return Math.Abs((decimal)Math.Sqrt(Math.Pow((double)(lat2 - lat1), 2) + Math.Pow((double)(lon2 - lon1), 2))) * 111; // Rough km conversion
     }
-
     private static int CalculateEstimatedTime(decimal lat1, decimal lon1, decimal lat2, decimal lon2)
     {
         // Simple calculation based on distance
         var distance = CalculateDistance(lat1, lon1, lat2, lon2);
         return (int)(distance * 2); // Assume 30 km/h average speed
+    }
+    // Additional methods implementation
+    public async Task<Result<CourierResponse>> GetCourierByIdAsync(Guid courierId, CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetCourierByIdInternalAsync(courierId, cancellationToken),
+            "GetCourierById",
+            new { courierId },
+            cancellationToken);
+    }
+    public async Task<Result<PagedResult<CourierResponse>>> GetCouriersByAvailabilityAsync(bool isAvailable, PaginationQuery query, CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetCouriersByAvailabilityInternalAsync(isAvailable, query, cancellationToken),
+            "GetCouriersByAvailability",
+            new { isAvailable, query.Page, query.PageSize },
+            cancellationToken);
+    }
+    public async Task<Result> AssignCourierToOrderAsync(Guid orderId, Guid courierId, CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await AssignCourierToOrderInternalAsync(orderId, courierId, cancellationToken),
+            "AssignCourierToOrder",
+            new { orderId, courierId },
+            cancellationToken);
+    }
+    private async Task<Result<CourierResponse>> GetCourierByIdInternalAsync(Guid courierId, CancellationToken cancellationToken)
+    {
+        var courier = await _unitOfWork.ReadRepository<Courier>()
+            .FirstOrDefaultAsync(c => c.Id == courierId, cancellationToken: cancellationToken);
+
+        if (courier == null)
+            return ServiceResult.Failure<CourierResponse>("Courier not found", "NOT_FOUND_COURIER");
+
+        return Result.Ok(MapToCourierResponse(courier));
+    }
+    private async Task<Result<PagedResult<CourierResponse>>> GetCouriersByAvailabilityInternalAsync(bool isAvailable, PaginationQuery query, CancellationToken cancellationToken)
+    {
+        var couriers = await _unitOfWork.ReadRepository<Courier>()
+            .GetPagedAsync(
+                filter: c => c.IsAvailable == isAvailable && c.IsActive,
+                page: query.Page,
+                pageSize: query.PageSize,
+                orderBy: c => c.CreatedAt,
+                ascending: false,
+                cancellationToken: cancellationToken);
+
+        var totalCount = await _unitOfWork.ReadRepository<Courier>()
+            .CountAsync(c => c.IsAvailable == isAvailable && c.IsActive, cancellationToken);
+
+        var responses = (IReadOnlyList<CourierResponse>)couriers.Select(MapToCourierResponse).ToList();
+        return Result.Ok(PagedResult<CourierResponse>.Create(responses, totalCount, query.Page, query.PageSize));
+    }
+    private async Task<Result> AssignCourierToOrderInternalAsync(Guid orderId, Guid courierId, CancellationToken cancellationToken)
+    {
+        var courier = await _unitOfWork.ReadRepository<Courier>()
+            .FirstOrDefaultAsync(c => c.Id == courierId, cancellationToken: cancellationToken);
+
+        if (courier == null)
+            return ServiceResult.Failure("Courier not found", "NOT_FOUND_COURIER");
+
+        if (!courier.IsAvailable)
+            return ServiceResult.Failure("Courier is not available", "COURIER_NOT_AVAILABLE");
+
+        var order = await _unitOfWork.ReadRepository<Order>()
+            .FirstOrDefaultAsync(o => o.Id == orderId, cancellationToken: cancellationToken);
+
+        if (order == null)
+            return ServiceResult.Failure("Order not found", ErrorCodes.ORDER_NOT_FOUND);
+
+        order.CourierId = courierId;
+        order.Status = OrderStatus.Ready;
+
+        _unitOfWork.Repository<Order>().Update(order);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result.Ok();
+    }
+    private static CourierResponse MapToCourierResponse(Courier courier)
+    {
+        return new CourierResponse(
+            Id: courier.Id,
+            UserId: courier.UserId,
+            VehicleType: courier.VehicleType,
+            LicensePlate: courier.LicensePlate,
+            IsAvailable: courier.IsAvailable,
+            IsActive: courier.IsActive,
+            CurrentLatitude: courier.CurrentLatitude,
+            CurrentLongitude: courier.CurrentLongitude,
+            LastLocationUpdate: courier.LastLocationUpdate,
+            TotalDeliveries: courier.TotalDeliveries,
+            Rating: courier.Rating,
+            CreatedAt: courier.CreatedAt);
     }
 }

@@ -1,5 +1,6 @@
 using Bogus;
 using Getir.Domain.Entities;
+using Getir.Domain.Enums;
 
 namespace Getir.UnitTests.Helpers;
 
@@ -91,6 +92,61 @@ public static class TestDataGenerator
             MerchantId = merchantId,
             ProductId = productId,
             Quantity = quantity,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
+
+    public static Payment CreatePayment(Guid id, PaymentStatus status = PaymentStatus.Pending)
+    {
+        return new Payment
+        {
+            Id = id,
+            OrderId = Guid.NewGuid(),
+            PaymentMethod = PaymentMethod.CreditCard,
+            Status = status,
+            Amount = 100.00m,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
+
+    public static Courier CreateCourier(string vehicleType = "Motorcycle", bool isAvailable = true)
+    {
+        return new Courier
+        {
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            VehicleType = vehicleType,
+            LicensePlate = "34 TEST 123",
+            IsAvailable = isAvailable,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
+
+    public static Notification CreateNotification(Guid userId, string title, string type = "System")
+    {
+        return new Notification
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Title = title,
+            Message = "Test notification message",
+            Type = type,
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
+
+    public static Order CreateOrder()
+    {
+        return new Order
+        {
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            MerchantId = Guid.NewGuid(),
+            Status = OrderStatus.Pending,
+            SubTotal = 100.00m,
+            Total = 115.00m,
             CreatedAt = DateTime.UtcNow
         };
     }

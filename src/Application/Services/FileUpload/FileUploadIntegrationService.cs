@@ -10,21 +10,13 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IFileStorageService _fileStorageService;
     private readonly ILoggingService _loggingService;
-
-    public FileUploadIntegrationService(
-        IUnitOfWork unitOfWork,
-        IFileStorageService fileStorageService,
-        ILoggingService loggingService)
+    public FileUploadIntegrationService(IUnitOfWork unitOfWork, IFileStorageService fileStorageService, ILoggingService loggingService)
     {
         _unitOfWork = unitOfWork;
         _fileStorageService = fileStorageService;
         _loggingService = loggingService;
     }
-
-    public async Task<Result> UpdateMerchantLogoAsync(
-        Guid merchantId, 
-        string logoUrl, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateMerchantLogoAsync(Guid merchantId, string logoUrl, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -48,9 +40,10 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            _loggingService.LogBusinessEvent("MerchantLogoUpdated", new { 
-                merchantId, 
-                logoUrl 
+            _loggingService.LogBusinessEvent("MerchantLogoUpdated", new
+            {
+                merchantId,
+                logoUrl
             });
 
             return Result.Ok();
@@ -61,11 +54,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Failed to update merchant logo", "MERCHANT_LOGO_UPDATE_ERROR");
         }
     }
-
-    public async Task<Result> UpdateMerchantCoverAsync(
-        Guid merchantId, 
-        string coverImageUrl, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateMerchantCoverAsync(Guid merchantId, string coverImageUrl, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -89,9 +78,10 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            _loggingService.LogBusinessEvent("MerchantCoverUpdated", new { 
-                merchantId, 
-                coverImageUrl 
+            _loggingService.LogBusinessEvent("MerchantCoverUpdated", new
+            {
+                merchantId,
+                coverImageUrl
             });
 
             return Result.Ok();
@@ -102,11 +92,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Failed to update merchant cover", "MERCHANT_COVER_UPDATE_ERROR");
         }
     }
-
-    public async Task<Result> UpdateProductImageAsync(
-        Guid productId, 
-        string imageUrl, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateProductImageAsync(Guid productId, string imageUrl, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -130,9 +116,10 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            _loggingService.LogBusinessEvent("ProductImageUpdated", new { 
-                productId, 
-                imageUrl 
+            _loggingService.LogBusinessEvent("ProductImageUpdated", new
+            {
+                productId,
+                imageUrl
             });
 
             return Result.Ok();
@@ -143,10 +130,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Failed to update product image", "PRODUCT_IMAGE_UPDATE_ERROR");
         }
     }
-
-    public async Task<Result> DeleteMerchantLogoAsync(
-        Guid merchantId, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteMerchantLogoAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -161,7 +145,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             if (!string.IsNullOrEmpty(merchant.LogoUrl))
             {
                 await DeleteOldFileAsync(merchant.LogoUrl, FileContainers.MerchantLogos, cancellationToken);
-                
+
                 merchant.LogoUrl = null;
                 merchant.UpdatedAt = DateTime.UtcNow;
 
@@ -177,10 +161,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Failed to delete merchant logo", "MERCHANT_LOGO_DELETE_ERROR");
         }
     }
-
-    public async Task<Result> DeleteMerchantCoverAsync(
-        Guid merchantId, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteMerchantCoverAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -195,7 +176,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             if (!string.IsNullOrEmpty(merchant.CoverImageUrl))
             {
                 await DeleteOldFileAsync(merchant.CoverImageUrl, FileContainers.MerchantCovers, cancellationToken);
-                
+
                 merchant.CoverImageUrl = null;
                 merchant.UpdatedAt = DateTime.UtcNow;
 
@@ -211,10 +192,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Failed to delete merchant cover", "MERCHANT_COVER_DELETE_ERROR");
         }
     }
-
-    public async Task<Result> DeleteProductImageAsync(
-        Guid productId, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteProductImageAsync(Guid productId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -229,7 +207,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             if (!string.IsNullOrEmpty(product.ImageUrl))
             {
                 await DeleteOldFileAsync(product.ImageUrl, FileContainers.ProductImages, cancellationToken);
-                
+
                 product.ImageUrl = null;
                 product.UpdatedAt = DateTime.UtcNow;
 
@@ -245,10 +223,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Failed to delete product image", "PRODUCT_IMAGE_DELETE_ERROR");
         }
     }
-
-    public async Task<Result<string?>> GetMerchantLogoAsync(
-        Guid merchantId, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<string?>> GetMerchantLogoAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -268,10 +243,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<string?>("Failed to get merchant logo", "MERCHANT_LOGO_GET_ERROR");
         }
     }
-
-    public async Task<Result<string?>> GetMerchantCoverAsync(
-        Guid merchantId, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<string?>> GetMerchantCoverAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -291,10 +263,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<string?>("Failed to get merchant cover", "MERCHANT_COVER_GET_ERROR");
         }
     }
-
-    public async Task<Result<string?>> GetProductImageAsync(
-        Guid productId, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<string?>> GetProductImageAsync(Guid productId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -316,7 +285,6 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
     }
 
     #region Helper Methods
-
     private async Task DeleteOldFileAsync(string fileUrl, string containerName, CancellationToken cancellationToken)
     {
         try
@@ -335,15 +303,10 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             // The main operation should continue even if old file deletion fails
         }
     }
-
     #endregion
 
     #region Additional FileUploadController Methods
-
-    public async Task<Result<FileUploadResponse>> UploadFileAsync(
-        IUploadedFile file,
-        Guid userId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<FileUploadResponse>> UploadFileAsync(IUploadedFile file, Guid userId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -365,11 +328,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<FileUploadResponse>("Error uploading file");
         }
     }
-
-    public async Task<Result<IEnumerable<FileUploadResponse>>> UploadMultipleFilesAsync(
-        IUploadedFile[] files,
-        Guid userId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<FileUploadResponse>>> UploadMultipleFilesAsync(IUploadedFile[] files, Guid userId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -395,11 +354,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<IEnumerable<FileUploadResponse>>("Error uploading multiple files");
         }
     }
-
-    public async Task<Result<string>> GetFileUrlAsync(
-        string containerName,
-        string fileName,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<string>> GetFileUrlAsync(string containerName, string fileName, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -413,12 +368,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<string>("Error getting file URL");
         }
     }
-
-    public async Task<Result> DeleteFileAsync(
-        string containerName,
-        string fileName,
-        Guid userId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteFileAsync(string containerName, string fileName, Guid userId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -431,11 +381,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Error deleting file");
         }
     }
-
-    public async Task<Result<FileUploadResponse>> UploadMerchantFileAsync(
-        IUploadedFile file,
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<FileUploadResponse>> UploadMerchantFileAsync(IUploadedFile file, Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -457,11 +403,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<FileUploadResponse>("Error uploading merchant file");
         }
     }
-
-    public async Task<Result<PagedResult<FileUploadResponse>>> GetMerchantFilesAsync(
-        Guid merchantId,
-        PaginationQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<FileUploadResponse>>> GetMerchantFilesAsync(Guid merchantId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -481,12 +423,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<PagedResult<FileUploadResponse>>("Error getting merchant files");
         }
     }
-
-    public async Task<Result> DeleteMerchantFileAsync(
-        string containerName,
-        string fileName,
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteMerchantFileAsync(string containerName, string fileName, Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -499,10 +436,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Error deleting merchant file");
         }
     }
-
-    public async Task<Result<PagedResult<FileUploadResponse>>> GetAllFilesAsync(
-        PaginationQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<FileUploadResponse>>> GetAllFilesAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -522,11 +456,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<PagedResult<FileUploadResponse>>("Error getting all files");
         }
     }
-
-    public async Task<Result> DeleteAnyFileAsync(
-        string containerName,
-        string fileName,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteAnyFileAsync(string containerName, string fileName, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -539,9 +469,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Error deleting any file");
         }
     }
-
-    public async Task<Result<FileStatisticsResponse>> GetFileStatisticsAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<Result<FileStatisticsResponse>> GetFileStatisticsAsync(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -561,10 +489,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<FileStatisticsResponse>("Error getting file statistics");
         }
     }
-
-    public async Task<Result<int>> CleanupOldFilesAsync(
-        DateTime cutoffDate,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<int>> CleanupOldFilesAsync(DateTime cutoffDate, CancellationToken cancellationToken = default)
     {
         try
         {

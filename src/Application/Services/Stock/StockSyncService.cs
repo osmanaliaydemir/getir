@@ -13,20 +13,12 @@ namespace Getir.Application.Services.Stock;
 public class StockSyncService : BaseService, IStockSyncService
 {
     private new readonly ILogger<StockSyncService> _logger;
-
-    public StockSyncService(
-        IUnitOfWork unitOfWork,
-        ILogger<StockSyncService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService) 
+    public StockSyncService(IUnitOfWork unitOfWork, ILogger<StockSyncService> logger, ILoggingService loggingService, ICacheService cacheService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _logger = logger;
     }
-
-    public async Task<Result<StockSyncResponse>> SynchronizeWithExternalSystemAsync(
-        StockSyncRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<StockSyncResponse>> SynchronizeWithExternalSystemAsync(StockSyncRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -65,8 +57,8 @@ public class StockSyncService : BaseService, IStockSyncService
                     {
                         // Find matching product by external ID
                         var product = await FindProductByExternalIdAsync(
-                            request.MerchantId, 
-                            externalItem.ExternalProductId, 
+                            request.MerchantId,
+                            externalItem.ExternalProductId,
                             cancellationToken);
 
                         if (product == null)
@@ -120,7 +112,7 @@ public class StockSyncService : BaseService, IStockSyncService
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Error syncing product {ExternalProductId}", externalItem.ExternalProductId);
-                        
+
                         errors.Add(new StockSyncError(
                             externalItem.ExternalProductId,
                             externalItem.ExternalVariantId,
@@ -166,12 +158,7 @@ public class StockSyncService : BaseService, IStockSyncService
             return Result.Fail<StockSyncResponse>("Failed to synchronize stock", "STOCK_SYNC_ERROR");
         }
     }
-
-    public async Task<Result<List<StockSyncHistoryResponse>>> GetSynchronizationHistoryAsync(
-        Guid merchantId,
-        DateTime? fromDate = null,
-        DateTime? toDate = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<StockSyncHistoryResponse>>> GetSynchronizationHistoryAsync(Guid merchantId, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -202,10 +189,7 @@ public class StockSyncService : BaseService, IStockSyncService
             return Result.Fail<List<StockSyncHistoryResponse>>("Failed to get synchronization history", "SYNC_HISTORY_ERROR");
         }
     }
-
-    public async Task<Result<StockSyncStatusResponse>> GetSynchronizationStatusAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<StockSyncStatusResponse>> GetSynchronizationStatusAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -236,11 +220,7 @@ public class StockSyncService : BaseService, IStockSyncService
             return Result.Fail<StockSyncStatusResponse>("Failed to get synchronization status", "SYNC_STATUS_ERROR");
         }
     }
-
-    public async Task<Result> ConfigureExternalSystemAsync(
-        ExternalSystemConfigRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ConfigureExternalSystemAsync(ExternalSystemConfigRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -285,10 +265,7 @@ public class StockSyncService : BaseService, IStockSyncService
             return Result.Fail("Failed to configure external system", "EXTERNAL_SYSTEM_CONFIG_ERROR");
         }
     }
-
-    public async Task<Result<ConnectionTestResponse>> TestExternalSystemConnectionAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<ConnectionTestResponse>> TestExternalSystemConnectionAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -316,11 +293,7 @@ public class StockSyncService : BaseService, IStockSyncService
             return Result.Fail<ConnectionTestResponse>("Failed to test connection", "CONNECTION_TEST_ERROR");
         }
     }
-
-    public async Task<Result> ScheduleAutomaticSyncAsync(
-        Guid merchantId,
-        int intervalMinutes,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ScheduleAutomaticSyncAsync(Guid merchantId, int intervalMinutes, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -350,10 +323,7 @@ public class StockSyncService : BaseService, IStockSyncService
             return Result.Fail("Failed to schedule automatic sync", "SCHEDULE_SYNC_ERROR");
         }
     }
-
-    public async Task<Result> CancelAutomaticSyncAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> CancelAutomaticSyncAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -381,32 +351,19 @@ public class StockSyncService : BaseService, IStockSyncService
             return Result.Fail("Failed to cancel automatic sync", "CANCEL_SYNC_ERROR");
         }
     }
-
-    private async Task<Product?> FindProductByExternalIdAsync(
-        Guid merchantId, 
-        string externalProductId, 
-        CancellationToken cancellationToken)
+    private async Task<Product?> FindProductByExternalIdAsync(Guid merchantId, string externalProductId, CancellationToken cancellationToken)
     {
         // In a real implementation, you would have a mapping table or field
         // For now, we'll try to find by name or a custom field
         return await _unitOfWork.ReadRepository<Product>()
-            .FirstOrDefaultAsync(p => p.MerchantId == merchantId && 
+            .FirstOrDefaultAsync(p => p.MerchantId == merchantId &&
                                      p.IsActive &&
-                                     (p.Name.Contains(externalProductId) || 
-                                      p.ExternalId == externalProductId), 
+                                     (p.Name.Contains(externalProductId) ||
+                                      p.ExternalId == externalProductId),
                 cancellationToken: cancellationToken);
     }
-
-    private async Task CreateStockHistoryAsync(
-        Guid productId,
-        Guid? productVariantId,
-        int previousQuantity,
-        int newQuantity,
-        Domain.Enums.StockChangeType changeType,
-        string? reason,
-        Guid? orderId,
-        string? referenceNumber,
-        CancellationToken cancellationToken)
+    private async Task CreateStockHistoryAsync(Guid productId, Guid? productVariantId, int previousQuantity, int newQuantity,
+        Domain.Enums.StockChangeType changeType, string? reason, Guid? orderId, string? referenceNumber, CancellationToken cancellationToken)
     {
         var history = new StockHistory
         {

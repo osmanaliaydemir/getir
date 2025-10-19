@@ -9,24 +9,12 @@ namespace Getir.Application.Services.Orders;
 public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorService
 {
     private new readonly ILogger<OrderStatusValidatorService> _logger;
-
-    public OrderStatusValidatorService(
-        IUnitOfWork unitOfWork,
-        ILogger<OrderStatusValidatorService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService) 
+    public OrderStatusValidatorService(IUnitOfWork unitOfWork, ILogger<OrderStatusValidatorService> logger, ILoggingService loggingService, ICacheService cacheService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _logger = logger;
     }
-
-    public async Task<Result> ValidateStatusTransitionAsync(
-        Guid orderId,
-        OrderStatus fromStatus,
-        OrderStatus toStatus,
-        Guid userId,
-        string userRole,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ValidateStatusTransitionAsync(Guid orderId, OrderStatus fromStatus, OrderStatus toStatus, Guid userId, string userRole, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -77,12 +65,7 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
             return Result.Fail("Failed to validate status transition", "VALIDATION_ERROR");
         }
     }
-
-    public async Task<Result<List<OrderStatus>>> GetValidNextStatusesAsync(
-        Guid orderId,
-        Guid userId,
-        string userRole,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<OrderStatus>>> GetValidNextStatusesAsync(Guid orderId, Guid userId, string userRole, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -118,13 +101,7 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
             return Result.Fail<List<OrderStatus>>("Failed to get valid next statuses", "ERROR");
         }
     }
-
-    public async Task<Result> ValidateUserPermissionAsync(
-        Guid orderId,
-        OrderStatus toStatus,
-        Guid userId,
-        string userRole,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ValidateUserPermissionAsync(Guid orderId, OrderStatus toStatus, Guid userId, string userRole, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -154,11 +131,7 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
             return Result.Fail("Failed to validate user permission", "PERMISSION_ERROR");
         }
     }
-
-    public Task<Result<List<string>>> GetRequiredTransitionDataAsync(
-        OrderStatus fromStatus,
-        OrderStatus toStatus,
-        CancellationToken cancellationToken = default)
+    public Task<Result<List<string>>> GetRequiredTransitionDataAsync(OrderStatus fromStatus, OrderStatus toStatus, CancellationToken cancellationToken = default)
     {
         var requiredData = new List<string>();
 
@@ -188,12 +161,7 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
 
         return Task.FromResult(Result.Ok(requiredData));
     }
-
-    private Task<Result> ValidateBusinessRulesAsync(
-        Order order,
-        OrderStatus fromStatus,
-        OrderStatus toStatus,
-        CancellationToken cancellationToken)
+    private Task<Result> ValidateBusinessRulesAsync(Order order, OrderStatus fromStatus, OrderStatus toStatus, CancellationToken cancellationToken)
     {
         // Business rule validations
         switch ((fromStatus, toStatus))
@@ -216,7 +184,7 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
 
             case (OrderStatus.OnTheWay, OrderStatus.Delivered):
                 // Check if delivery time is reasonable
-                if (order.EstimatedDeliveryTime.HasValue && 
+                if (order.EstimatedDeliveryTime.HasValue &&
                     DateTime.UtcNow < order.EstimatedDeliveryTime.Value.AddMinutes(-30))
                 {
                     return Task.FromResult(Result.Fail("Cannot mark as delivered before estimated delivery time", "TOO_EARLY_DELIVERY"));
@@ -234,7 +202,6 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
 
         return Task.FromResult(Result.Ok());
     }
-
     private Result ValidateMerchantOwnerPermission(Order order, OrderStatus toStatus, Guid userId)
     {
         // Merchant owner can only change status for their own orders
@@ -252,7 +219,6 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
 
         return Result.Ok();
     }
-
     private Result ValidateCourierPermission(Order order, OrderStatus toStatus, Guid userId)
     {
         // Courier can only change status for assigned orders
@@ -270,7 +236,6 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
 
         return Result.Ok();
     }
-
     private Result ValidateCustomerPermission(Order order, OrderStatus toStatus, Guid userId)
     {
         // Customer can only change status for their own orders
