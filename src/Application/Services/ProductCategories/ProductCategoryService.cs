@@ -9,63 +9,102 @@ namespace Getir.Application.Services.ProductCategories;
 public class ProductCategoryService : BaseService, IProductCategoryService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
-
-    public ProductCategoryService(
-        IUnitOfWork unitOfWork,
-        ILogger<ProductCategoryService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        IBackgroundTaskService backgroundTaskService) 
+    public ProductCategoryService(IUnitOfWork unitOfWork, ILogger<ProductCategoryService> logger, ILoggingService loggingService, ICacheService cacheService, IBackgroundTaskService backgroundTaskService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _backgroundTaskService = backgroundTaskService;
     }
-
-    public async Task<Result<List<ProductCategoryResponse>>> GetMerchantCategoriesAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<ProductCategoryResponse>>> GetMerchantCategoriesAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
-        var categories = await _unitOfWork.ReadRepository<ProductCategory>()
-            .ListAsync(
-                c => c.MerchantId == merchantId && c.IsActive,
-                include: "ParentCategory,Products",
-                cancellationToken: cancellationToken);
-
-        var response = categories.Select(c => new ProductCategoryResponse(
-            c.Id,
-            c.MerchantId,
-            "", // MerchantName - optional
-            c.ParentCategoryId,
-            c.ParentCategory?.Name,
-            c.Name,
-            c.Description,
-            c.ImageUrl,
-            c.DisplayOrder,
-            c.IsActive,
-            c.SubCategories?.Count ?? 0,
-            c.Products?.Count ?? 0
-        )).ToList();
-
-        return Result.Ok(response);
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetMerchantCategoriesInternalAsync(merchantId, cancellationToken),
+            "GetMerchantCategories",
+            new { MerchantId = merchantId },
+            cancellationToken);
     }
-
-    public async Task<Result<List<ProductCategoryTreeResponse>>> GetMerchantCategoryTreeAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<List<ProductCategoryResponse>>> GetMerchantCategoriesInternalAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
-        var categories = await _unitOfWork.ReadRepository<ProductCategory>()
-            .ListAsync(
-                c => c.MerchantId == merchantId && c.IsActive,
-                cancellationToken: cancellationToken);
+        try
+        {
+            // Use centralized cache key strategy
+            var cacheKey = CacheKeys.CategoriesByMerchant(merchantId);
 
-        // Root categories (parent yok)
-        var rootCategories = categories.Where(c => !c.ParentCategoryId.HasValue).ToList();
+            return await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    var categories = await _unitOfWork.ReadRepository<ProductCategory>()
+                        .ListAsync(
+                            c => c.MerchantId == merchantId && c.IsActive,
+                            include: "ParentCategory,Products",
+                            cancellationToken: cancellationToken);
 
-        var tree = rootCategories.Select(root => BuildCategoryTree(root, categories.ToList())).ToList();
+                    var response = categories.Select(c => new ProductCategoryResponse(
+                        c.Id,
+                        c.MerchantId,
+                        "", // MerchantName - optional
+                        c.ParentCategoryId,
+                        c.ParentCategory?.Name,
+                        c.Name,
+                        c.Description,
+                        c.ImageUrl,
+                        c.DisplayOrder,
+                        c.IsActive,
+                        c.SubCategories?.Count ?? 0,
+                        c.Products?.Count ?? 0
+                    )).ToList();
 
-        return Result.Ok(tree);
+                    return ServiceResult.Success(response);
+                },
+                TimeSpan.FromMinutes(CacheKeys.TTL.VeryLong), // 1 hour TTL for categories
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting merchant categories: {MerchantId}", merchantId);
+            return ServiceResult.HandleException<List<ProductCategoryResponse>>(ex, _logger, "GetMerchantCategories");
+        }
     }
+    public async Task<Result<List<ProductCategoryTreeResponse>>> GetMerchantCategoryTreeAsync(Guid merchantId, CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetMerchantCategoryTreeInternalAsync(merchantId, cancellationToken),
+            "GetMerchantCategoryTree",
+            new { MerchantId = merchantId },
+            cancellationToken);
+    }
+    private async Task<Result<List<ProductCategoryTreeResponse>>> GetMerchantCategoryTreeInternalAsync(Guid merchantId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Use cache key for category tree
+            var cacheKey = $"{CacheKeys.CategoriesByMerchant(merchantId)}:tree";
 
+            return await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    var categories = await _unitOfWork.ReadRepository<ProductCategory>()
+                        .ListAsync(
+                            c => c.MerchantId == merchantId && c.IsActive,
+                            cancellationToken: cancellationToken);
+
+                    // Root categories (parent yok)
+                    var rootCategories = categories.Where(c => !c.ParentCategoryId.HasValue).ToList();
+
+                    var tree = rootCategories.Select(root => BuildCategoryTree(root, categories.ToList())).ToList();
+
+                    return ServiceResult.Success(tree);
+                },
+                TimeSpan.FromMinutes(CacheKeys.TTL.VeryLong), // 1 hour TTL for category tree
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting merchant category tree: {MerchantId}", merchantId);
+            return ServiceResult.HandleException<List<ProductCategoryTreeResponse>>(ex, _logger, "GetMerchantCategoryTree");
+        }
+    }
     private ProductCategoryTreeResponse BuildCategoryTree(ProductCategory category, List<ProductCategory> allCategories)
     {
         var subCategories = allCategories
@@ -83,44 +122,63 @@ public class ProductCategoryService : BaseService, IProductCategoryService
             subCategories
         );
     }
-
-    public async Task<Result<ProductCategoryResponse>> GetProductCategoryByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<ProductCategoryResponse>> GetProductCategoryByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var category = await _unitOfWork.Repository<ProductCategory>()
-            .GetAsync(
-                c => c.Id == id,
-                include: "Merchant,ParentCategory,SubCategories,Products",
-                cancellationToken: cancellationToken);
-
-        if (category == null)
-        {
-            return Result.Fail<ProductCategoryResponse>("Product category not found", "NOT_FOUND_PRODUCT_CATEGORY");
-        }
-
-        var response = new ProductCategoryResponse(
-            category.Id,
-            category.MerchantId,
-            category.Merchant.Name,
-            category.ParentCategoryId,
-            category.ParentCategory?.Name,
-            category.Name,
-            category.Description,
-            category.ImageUrl,
-            category.DisplayOrder,
-            category.IsActive,
-            category.SubCategories?.Count ?? 0,
-            category.Products?.Count ?? 0
-        );
-
-        return Result.Ok(response);
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetProductCategoryByIdInternalAsync(id, cancellationToken),
+            "GetProductCategoryById",
+            new { CategoryId = id },
+            cancellationToken);
     }
+    private async Task<Result<ProductCategoryResponse>> GetProductCategoryByIdInternalAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Use centralized cache key strategy
+            var cacheKey = CacheKeys.ProductCategory(id);
 
-    public async Task<Result<ProductCategoryResponse>> CreateProductCategoryAsync(
-        CreateProductCategoryRequest request,
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+            return await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    var category = await _unitOfWork.Repository<ProductCategory>()
+                        .GetAsync(
+                            c => c.Id == id,
+                            include: "Merchant,ParentCategory,SubCategories,Products",
+                            cancellationToken: cancellationToken);
+
+                    if (category == null)
+                    {
+                        return Result.Fail<ProductCategoryResponse>("Product category not found", "NOT_FOUND_PRODUCT_CATEGORY");
+                    }
+
+                    var response = new ProductCategoryResponse(
+                        category.Id,
+                        category.MerchantId,
+                        category.Merchant.Name,
+                        category.ParentCategoryId,
+                        category.ParentCategory?.Name,
+                        category.Name,
+                        category.Description,
+                        category.ImageUrl,
+                        category.DisplayOrder,
+                        category.IsActive,
+                        category.SubCategories?.Count ?? 0,
+                        category.Products?.Count ?? 0
+                    );
+
+                    return Result.Ok(response);
+                },
+                TimeSpan.FromMinutes(CacheKeys.TTL.VeryLong), // 1 hour TTL for single category
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting product category by id: {CategoryId}", id);
+            return ServiceResult.HandleException<ProductCategoryResponse>(ex, _logger, "GetProductCategoryById");
+        }
+    }
+    public async Task<Result<ProductCategoryResponse>> CreateProductCategoryAsync(CreateProductCategoryRequest request, Guid merchantId, CancellationToken cancellationToken = default)
     {
         // Merchant var mı kontrol et
         var merchantExists = await _unitOfWork.ReadRepository<Merchant>()
@@ -186,12 +244,7 @@ public class ProductCategoryService : BaseService, IProductCategoryService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result<ProductCategoryResponse>> UpdateProductCategoryAsync(
-        Guid id,
-        UpdateProductCategoryRequest request,
-        Guid currentUserId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<ProductCategoryResponse>> UpdateProductCategoryAsync(Guid id, UpdateProductCategoryRequest request, Guid currentUserId, CancellationToken cancellationToken = default)
     {
         var category = await _unitOfWork.Repository<ProductCategory>()
             .GetAsync(c => c.Id == id, include: "Merchant", cancellationToken: cancellationToken);
@@ -243,6 +296,15 @@ public class ProductCategoryService : BaseService, IProductCategoryService
         _unitOfWork.Repository<ProductCategory>().Update(category);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // ============= CACHE INVALIDATION =============
+        // Invalidate single category cache
+        await _cacheService.RemoveAsync(CacheKeys.ProductCategory(id), cancellationToken);
+
+        // Invalidate all category lists and tree for this merchant
+        await _cacheService.RemoveByPatternAsync(
+            CacheKeys.AllCategoriesPattern(),
+            cancellationToken);
+
         var updatedCategory = await _unitOfWork.Repository<ProductCategory>()
             .GetAsync(
                 c => c.Id == id,
@@ -266,11 +328,7 @@ public class ProductCategoryService : BaseService, IProductCategoryService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result> DeleteProductCategoryAsync(
-        Guid id,
-        Guid currentUserId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteProductCategoryAsync(Guid id, Guid currentUserId, CancellationToken cancellationToken = default)
     {
         var category = await _unitOfWork.Repository<ProductCategory>()
             .GetAsync(
@@ -311,6 +369,15 @@ public class ProductCategoryService : BaseService, IProductCategoryService
 
         _unitOfWork.Repository<ProductCategory>().Update(category);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // ============= CACHE INVALIDATION =============
+        // Invalidate single category cache
+        await _cacheService.RemoveAsync(CacheKeys.ProductCategory(id), cancellationToken);
+
+        // Invalidate all category lists and tree for this merchant
+        await _cacheService.RemoveByPatternAsync(
+            CacheKeys.AllCategoriesPattern(),
+            cancellationToken);
 
         return Result.Ok();
     }

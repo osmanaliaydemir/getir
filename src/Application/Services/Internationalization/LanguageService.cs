@@ -1,41 +1,74 @@
+using Getir.Application.Abstractions;
+using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Internationalization;
 
 public class LanguageService : ILanguageService
 {
-    public Task<List<LanguageDto>> GetAllLanguagesAsync()
+    private readonly ICacheService _cacheService;
+    private readonly ILogger<LanguageService> _logger;
+
+    public LanguageService(ICacheService cacheService, ILogger<LanguageService> logger)
     {
-        // Mock data for now
-        var languages = new List<LanguageDto>
+        _cacheService = cacheService;
+        _logger = logger;
+    }
+
+    public async Task<List<LanguageDto>> GetAllLanguagesAsync()
+    {
+        try
         {
-            new() { Id = Guid.NewGuid(), Code = LanguageCode.Turkish, Name = "Turkish", NativeName = "Türkçe", CultureCode = "tr-TR", IsRtl = false, IsActive = true, IsDefault = true, SortOrder = 1, FlagIcon = "🇹🇷" },
-            new() { Id = Guid.NewGuid(), Code = LanguageCode.English, Name = "English", NativeName = "English", CultureCode = "en-US", IsRtl = false, IsActive = true, IsDefault = false, SortOrder = 2, FlagIcon = "🇺🇸" },
-            new() { Id = Guid.NewGuid(), Code = LanguageCode.Arabic, Name = "Arabic", NativeName = "العربية", CultureCode = "ar-SA", IsRtl = true, IsActive = true, IsDefault = false, SortOrder = 3, FlagIcon = "🇸🇦" }
-        };
-        return Task.FromResult(languages);
+            // Use centralized cache key strategy
+            var cacheKey = CacheKeys.SupportedLanguages();
+
+            var cached = await _cacheService.GetAsync<List<LanguageDto>>(cacheKey);
+            if (cached != null)
+            {
+                return cached;
+            }
+
+            // Mock data for now (future: database lookup)
+            var languages = new List<LanguageDto>
+            {
+                new() { Id = Guid.NewGuid(), Code = LanguageCode.Turkish, Name = "Turkish", NativeName = "Türkçe", CultureCode = "tr-TR", IsRtl = false, IsActive = true, IsDefault = true, SortOrder = 1, FlagIcon = "🇹🇷" },
+                new() { Id = Guid.NewGuid(), Code = LanguageCode.English, Name = "English", NativeName = "English", CultureCode = "en-US", IsRtl = false, IsActive = true, IsDefault = false, SortOrder = 2, FlagIcon = "🇺🇸" },
+                new() { Id = Guid.NewGuid(), Code = LanguageCode.Arabic, Name = "Arabic", NativeName = "العربية", CultureCode = "ar-SA", IsRtl = true, IsActive = true, IsDefault = false, SortOrder = 3, FlagIcon = "🇸🇦" }
+            };
+
+            // Cache for 4 hours (very static data)
+            await _cacheService.SetAsync(cacheKey, languages, TimeSpan.FromMinutes(CacheKeys.TTL.ExtraLong));
+
+            return languages;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting all languages");
+            return new List<LanguageDto>();
+        }
     }
 
-    public Task<LanguageDto?> GetLanguageByIdAsync(Guid id)
+    public async Task<LanguageDto?> GetLanguageByIdAsync(Guid id)
     {
-        var languages = GetAllLanguagesAsync().Result;
-        return Task.FromResult(languages.FirstOrDefault(l => l.Id == id));
+        var languages = await GetAllLanguagesAsync();
+        return languages.FirstOrDefault(l => l.Id == id);
     }
 
-    public Task<LanguageDto?> GetLanguageByCodeAsync(LanguageCode code)
+    public async Task<LanguageDto?> GetLanguageByCodeAsync(LanguageCode code)
     {
-        var languages = GetAllLanguagesAsync().Result;
-        return Task.FromResult(languages.FirstOrDefault(l => l.Code == code));
+        var languages = await GetAllLanguagesAsync();
+        return languages.FirstOrDefault(l => l.Code == code);
     }
 
-    public Task<LanguageDto?> GetDefaultLanguageAsync()
+    public async Task<LanguageDto?> GetDefaultLanguageAsync()
     {
-        var languages = GetAllLanguagesAsync().Result;
-        return Task.FromResult(languages.FirstOrDefault(l => l.IsDefault));
+        var languages = await GetAllLanguagesAsync();
+        return languages.FirstOrDefault(l => l.IsDefault);
     }
 
-    public Task<LanguageDto> CreateLanguageAsync(CreateLanguageRequest request)
+    public async Task<LanguageDto> CreateLanguageAsync(CreateLanguageRequest request)
     {
         var language = new LanguageDto
         {
@@ -50,10 +83,15 @@ public class LanguageService : ILanguageService
             SortOrder = request.SortOrder,
             FlagIcon = request.FlagIcon
         };
-        return Task.FromResult(language);
+
+        // ============= CACHE INVALIDATION =============
+        await _cacheService.RemoveAsync(CacheKeys.SupportedLanguages());
+        await _cacheService.RemoveByPatternAsync(CacheKeys.AllTranslationsPattern());
+
+        return language;
     }
 
-    public Task<LanguageDto> UpdateLanguageAsync(Guid id, UpdateLanguageRequest request)
+    public async Task<LanguageDto> UpdateLanguageAsync(Guid id, UpdateLanguageRequest request)
     {
         var language = new LanguageDto
         {
@@ -68,12 +106,21 @@ public class LanguageService : ILanguageService
             SortOrder = request.SortOrder,
             FlagIcon = request.FlagIcon
         };
-        return Task.FromResult(language);
+
+        // ============= CACHE INVALIDATION =============
+        await _cacheService.RemoveAsync(CacheKeys.SupportedLanguages());
+        await _cacheService.RemoveByPatternAsync(CacheKeys.AllTranslationsPattern());
+
+        return language;
     }
 
-    public Task<bool> DeleteLanguageAsync(Guid id)
+    public async Task<bool> DeleteLanguageAsync(Guid id)
     {
-        return Task.FromResult(true);
+        // ============= CACHE INVALIDATION =============
+        await _cacheService.RemoveAsync(CacheKeys.SupportedLanguages());
+        await _cacheService.RemoveByPatternAsync(CacheKeys.AllTranslationsPattern());
+
+        return true;
     }
 
     public Task<bool> SetDefaultLanguageAsync(Guid id)

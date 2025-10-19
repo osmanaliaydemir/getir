@@ -29,12 +29,7 @@ public class MerchantService : BaseService, IMerchantService
     /// <param name="loggingService">The logging service for structured logging</param>
     /// <param name="cacheService">The cache service for caching operations</param>
     /// <param name="backgroundTaskService">The background task service for async operations</param>
-    public MerchantService(
-        IUnitOfWork unitOfWork,
-        ILogger<MerchantService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        IBackgroundTaskService backgroundTaskService) 
+    public MerchantService(IUnitOfWork unitOfWork, ILogger<MerchantService> logger, ILoggingService loggingService, ICacheService cacheService, IBackgroundTaskService backgroundTaskService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _backgroundTaskService = backgroundTaskService;
@@ -46,9 +41,7 @@ public class MerchantService : BaseService, IMerchantService
     /// <param name="query">The pagination query parameters</param>
     /// <param name="cancellationToken">The cancellation token</param>
     /// <returns>A result containing the paginated list of merchants</returns>
-    public async Task<Result<PagedResult<MerchantResponse>>> GetMerchantsAsync(
-        PaginationQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<MerchantResponse>>> GetMerchantsAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetMerchantsInternalAsync(query, cancellationToken),
@@ -56,16 +49,13 @@ public class MerchantService : BaseService, IMerchantService
             new { Page = query.Page, PageSize = query.PageSize },
             cancellationToken);
     }
-
-    private async Task<Result<PagedResult<MerchantResponse>>> GetMerchantsInternalAsync(
-        PaginationQuery query,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<PagedResult<MerchantResponse>>> GetMerchantsInternalAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         try
         {
-            // Cache key oluştur
-            var cacheKey = $"merchants_{query.Page}_{query.PageSize}_{query.IsAscending}";
-            
+            // Use centralized cache key strategy
+            var cacheKey = CacheKeys.ActiveMerchants(query.Page, query.PageSize);
+
             return await GetOrSetCacheAsync(
                 cacheKey,
                 async () =>
@@ -108,10 +98,10 @@ public class MerchantService : BaseService, IMerchantService
                     }).ToList();
 
                     var pagedResult = PagedResult<MerchantResponse>.Create(response, total, query.Page, query.PageSize);
-                    
+
                     return ServiceResult.Success(pagedResult);
                 },
-                TimeSpan.FromMinutes(15), // 15 dakika cache
+                TimeSpan.FromMinutes(CacheKeys.TTL.Long), // 30 minutes TTL for merchant lists
                 cancellationToken);
         }
         catch (Exception ex)
@@ -128,9 +118,7 @@ public class MerchantService : BaseService, IMerchantService
     /// <param name="cancellationToken">The cancellation token</param>
     /// <returns>A result containing the merchant details or an error if not found</returns>
     /// <exception cref="EntityNotFoundException">Thrown when the merchant is not found</exception>
-    public async Task<Result<MerchantResponse>> GetMerchantByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MerchantResponse>> GetMerchantByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetMerchantByIdInternalAsync(id, cancellationToken),
@@ -139,9 +127,7 @@ public class MerchantService : BaseService, IMerchantService
             cancellationToken);
     }
 
-    public async Task<Result<MerchantResponse>> GetMerchantByOwnerIdAsync(
-        Guid ownerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MerchantResponse>> GetMerchantByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetMerchantByOwnerIdInternalAsync(ownerId, cancellationToken),
@@ -150,14 +136,13 @@ public class MerchantService : BaseService, IMerchantService
             cancellationToken);
     }
 
-    private async Task<Result<MerchantResponse>> GetMerchantByIdInternalAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<MerchantResponse>> GetMerchantByIdInternalAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
         {
-            var cacheKey = $"merchant_{id}";
-            
+            // Use centralized cache key strategy
+            var cacheKey = CacheKeys.Merchant(id);
+
             return await GetOrSetCacheAsync(
                 cacheKey,
                 async () =>
@@ -201,7 +186,7 @@ public class MerchantService : BaseService, IMerchantService
 
                     return ServiceResult.Success(response);
                 },
-                TimeSpan.FromMinutes(ApplicationConstants.DefaultCacheMinutes), // Default cache duration
+                TimeSpan.FromMinutes(CacheKeys.TTL.Long), // 30 minutes TTL for merchant details
                 cancellationToken);
         }
         catch (Exception ex)
@@ -211,14 +196,13 @@ public class MerchantService : BaseService, IMerchantService
         }
     }
 
-    private async Task<Result<MerchantResponse>> GetMerchantByOwnerIdInternalAsync(
-        Guid ownerId,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<MerchantResponse>> GetMerchantByOwnerIdInternalAsync(Guid ownerId, CancellationToken cancellationToken = default)
     {
         try
         {
-            var cacheKey = $"merchant_owner_{ownerId}";
-            
+            // Use centralized cache key strategy
+            var cacheKey = CacheKeys.MerchantByOwner(ownerId);
+
             return await GetOrSetCacheAsync(
                 cacheKey,
                 async () =>
@@ -281,10 +265,7 @@ public class MerchantService : BaseService, IMerchantService
     /// <returns>A result containing the created merchant details or an error if creation fails</returns>
     /// <exception cref="EntityNotFoundException">Thrown when the owner or service category is not found</exception>
     /// <exception cref="BusinessRuleViolationException">Thrown when business rules are violated</exception>
-    public async Task<Result<MerchantResponse>> CreateMerchantAsync(
-        CreateMerchantRequest request,
-        Guid ownerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MerchantResponse>> CreateMerchantAsync(CreateMerchantRequest request, Guid ownerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await CreateMerchantInternalAsync(request, ownerId, cancellationToken),
@@ -293,10 +274,7 @@ public class MerchantService : BaseService, IMerchantService
             cancellationToken);
     }
 
-    private async Task<Result<MerchantResponse>> CreateMerchantInternalAsync(
-        CreateMerchantRequest request,
-        Guid ownerId,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<MerchantResponse>> CreateMerchantInternalAsync(CreateMerchantRequest request, Guid ownerId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -322,7 +300,7 @@ public class MerchantService : BaseService, IMerchantService
             if (request.MinimumOrderAmount < ApplicationConstants.MinOrderAmount)
             {
                 throw new BusinessRuleViolationException(
-                    "MinimumOrderAmount", 
+                    "MinimumOrderAmount",
                     $"Minimum order amount must be at least {ApplicationConstants.MinOrderAmount:C}");
             }
 
@@ -330,7 +308,7 @@ public class MerchantService : BaseService, IMerchantService
             if (request.DeliveryFee < 0)
             {
                 throw new BusinessRuleViolationException(
-                    "DeliveryFee", 
+                    "DeliveryFee",
                     "Delivery fee cannot be negative");
             }
 
@@ -410,11 +388,7 @@ public class MerchantService : BaseService, IMerchantService
         }
     }
 
-    public async Task<Result<MerchantResponse>> UpdateMerchantAsync(
-        Guid id,
-        UpdateMerchantRequest request,
-        Guid currentUserId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MerchantResponse>> UpdateMerchantAsync(Guid id, UpdateMerchantRequest request, Guid currentUserId, CancellationToken cancellationToken = default)
     {
         var merchant = await _unitOfWork.Repository<Merchant>()
             .GetAsync(m => m.Id == id, include: "Owner", cancellationToken: cancellationToken);
@@ -448,6 +422,17 @@ public class MerchantService : BaseService, IMerchantService
 
         _unitOfWork.Repository<Merchant>().Update(merchant);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // ============= CACHE INVALIDATION =============
+        // Invalidate single merchant caches
+        await _cacheService.RemoveAsync(CacheKeys.Merchant(id), cancellationToken);
+        await _cacheService.RemoveAsync(CacheKeys.MerchantByOwner(merchant.OwnerId), cancellationToken);
+
+        // Invalidate all merchant lists (pattern-based removal)
+        await _cacheService.RemoveByPatternAsync(CacheKeys.AllMerchants(), cancellationToken);
+
+        // Invalidate merchant's product lists
+        await _cacheService.RemoveByPatternAsync(CacheKeys.AllProductsByMerchant(id), cancellationToken);
 
         // ServiceCategory ve Owner bilgisi için yeniden çek
         var updatedMerchant = await _unitOfWork.Repository<Merchant>()
@@ -485,9 +470,7 @@ public class MerchantService : BaseService, IMerchantService
         return Result.Ok(response);
     }
 
-    public async Task<Result> DeleteMerchantAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteMerchantAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var merchant = await _unitOfWork.Repository<Merchant>()
             .GetByIdAsync(id, cancellationToken);
@@ -504,13 +487,21 @@ public class MerchantService : BaseService, IMerchantService
         _unitOfWork.Repository<Merchant>().Update(merchant);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // ============= CACHE INVALIDATION =============
+        // Invalidate single merchant caches
+        await _cacheService.RemoveAsync(CacheKeys.Merchant(id), cancellationToken);
+        await _cacheService.RemoveAsync(CacheKeys.MerchantByOwner(merchant.OwnerId), cancellationToken);
+
+        // Invalidate all merchant lists
+        await _cacheService.RemoveByPatternAsync(CacheKeys.AllMerchants(), cancellationToken);
+
+        // Invalidate merchant's product lists
+        await _cacheService.RemoveByPatternAsync(CacheKeys.AllProductsByMerchant(id), cancellationToken);
+
         return Result.Ok();
     }
 
-    public async Task<Result<PagedResult<MerchantResponse>>> GetMerchantsByCategoryTypeAsync(
-        ServiceCategoryType categoryType,
-        PaginationQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<MerchantResponse>>> GetMerchantsByCategoryTypeAsync(ServiceCategoryType categoryType, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetMerchantsByCategoryTypeInternalAsync(categoryType, query, cancellationToken),
@@ -519,15 +510,12 @@ public class MerchantService : BaseService, IMerchantService
             cancellationToken);
     }
 
-    private async Task<Result<PagedResult<MerchantResponse>>> GetMerchantsByCategoryTypeInternalAsync(
-        ServiceCategoryType categoryType,
-        PaginationQuery query,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<PagedResult<MerchantResponse>>> GetMerchantsByCategoryTypeInternalAsync(ServiceCategoryType categoryType, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         try
         {
             var cacheKey = $"merchants_by_type_{categoryType}_{query.Page}_{query.PageSize}";
-            
+
             return await GetOrSetCacheAsync(
                 cacheKey,
                 async () =>
@@ -570,7 +558,7 @@ public class MerchantService : BaseService, IMerchantService
                     }).ToList();
 
                     var pagedResult = PagedResult<MerchantResponse>.Create(response, total, query.Page, query.PageSize);
-                    
+
                     return ServiceResult.Success(pagedResult);
                 },
                 TimeSpan.FromMinutes(10), // 10 dakika cache
@@ -583,9 +571,7 @@ public class MerchantService : BaseService, IMerchantService
         }
     }
 
-    public async Task<Result<IEnumerable<MerchantResponse>>> GetActiveMerchantsByCategoryTypeAsync(
-        ServiceCategoryType categoryType,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<MerchantResponse>>> GetActiveMerchantsByCategoryTypeAsync(ServiceCategoryType categoryType, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetActiveMerchantsByCategoryTypeInternalAsync(categoryType, cancellationToken),
@@ -594,14 +580,12 @@ public class MerchantService : BaseService, IMerchantService
             cancellationToken);
     }
 
-    private async Task<Result<IEnumerable<MerchantResponse>>> GetActiveMerchantsByCategoryTypeInternalAsync(
-        ServiceCategoryType categoryType,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<IEnumerable<MerchantResponse>>> GetActiveMerchantsByCategoryTypeInternalAsync(ServiceCategoryType categoryType, CancellationToken cancellationToken = default)
     {
         try
         {
             var cacheKey = $"active_merchants_by_type_{categoryType}";
-            
+
             return await GetOrSetCacheAsync(
                 cacheKey,
                 async () =>
@@ -650,6 +634,108 @@ public class MerchantService : BaseService, IMerchantService
             _logger.LogException(ex, "GetActiveMerchantsByCategoryType", new { CategoryType = categoryType });
             return ServiceResult.HandleException<IEnumerable<MerchantResponse>>(ex, _logger, "GetActiveMerchantsByCategoryType");
         }
+    }
+
+    public async Task<Result<PagedResult<MerchantResponse>>> GetActiveMerchantsAsync(PaginationQuery query, CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetActiveMerchantsInternalAsync(query, cancellationToken),
+            "GetActiveMerchants",
+            new { query.Page, query.PageSize },
+            cancellationToken);
+    }
+
+    public async Task<Result<PagedResult<MerchantResponse>>> SearchMerchantsAsync(string searchQuery, PaginationQuery query, CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await SearchMerchantsInternalAsync(searchQuery, query, cancellationToken),
+            "SearchMerchants",
+            new { searchQuery, query.Page, query.PageSize },
+            cancellationToken);
+    }
+
+    private async Task<Result<PagedResult<MerchantResponse>>> GetActiveMerchantsInternalAsync(PaginationQuery query, CancellationToken cancellationToken)
+    {
+        var merchants = await _unitOfWork.ReadRepository<Merchant>()
+            .GetPagedAsync(
+                filter: m => m.IsActive && m.IsOpen,
+                page: query.Page,
+                pageSize: query.PageSize,
+                orderBy: m => m.Rating,
+                ascending: false,
+                cancellationToken: cancellationToken);
+
+        var totalCount = await _unitOfWork.ReadRepository<Merchant>()
+            .CountAsync(m => m.IsActive && m.IsOpen, cancellationToken);
+
+        var responses = merchants.Select(m => new MerchantResponse
+        {
+            Id = m.Id,
+            Name = m.Name,
+            Description = m.Description,
+            CreatedAt = m.CreatedAt,
+            UpdatedAt = m.UpdatedAt,
+            IsActive = m.IsActive,
+            IsDeleted = false,
+            Rating = m.Rating,
+            TotalReviews = m.TotalReviews,
+            OwnerId = m.OwnerId,
+            ServiceCategoryId = m.ServiceCategoryId,
+            Address = m.Address,
+            Latitude = m.Latitude,
+            Longitude = m.Longitude,
+            PhoneNumber = m.PhoneNumber,
+            Email = m.Email,
+            MinimumOrderAmount = m.MinimumOrderAmount,
+            DeliveryFee = m.DeliveryFee,
+            AverageDeliveryTime = m.AverageDeliveryTime,
+            IsOpen = m.IsOpen,
+            LogoUrl = m.LogoUrl
+        }).ToList();
+
+        return Result.Ok(PagedResult<MerchantResponse>.Create((IReadOnlyList<MerchantResponse>)responses, totalCount, query.Page, query.PageSize));
+    }
+
+    private async Task<Result<PagedResult<MerchantResponse>>> SearchMerchantsInternalAsync(string searchQuery, PaginationQuery query, CancellationToken cancellationToken)
+    {
+        var merchants = await _unitOfWork.ReadRepository<Merchant>()
+            .GetPagedAsync(
+                filter: m => m.IsActive && m.IsOpen && (m.Name.Contains(searchQuery) || (m.Description != null && m.Description.Contains(searchQuery))),
+                page: query.Page,
+                pageSize: query.PageSize,
+                orderBy: m => m.Rating,
+                ascending: false,
+                cancellationToken: cancellationToken);
+
+        var totalCount = await _unitOfWork.ReadRepository<Merchant>()
+            .CountAsync(m => m.IsActive && m.IsOpen && (m.Name.Contains(searchQuery) || (m.Description != null && m.Description.Contains(searchQuery))), cancellationToken);
+
+        var responses = merchants.Select(m => new MerchantResponse
+        {
+            Id = m.Id,
+            Name = m.Name,
+            Description = m.Description,
+            CreatedAt = m.CreatedAt,
+            UpdatedAt = m.UpdatedAt,
+            IsActive = m.IsActive,
+            IsDeleted = false,
+            Rating = m.Rating,
+            TotalReviews = m.TotalReviews,
+            OwnerId = m.OwnerId,
+            ServiceCategoryId = m.ServiceCategoryId,
+            Address = m.Address,
+            Latitude = m.Latitude,
+            Longitude = m.Longitude,
+            PhoneNumber = m.PhoneNumber,
+            Email = m.Email,
+            MinimumOrderAmount = m.MinimumOrderAmount,
+            DeliveryFee = m.DeliveryFee,
+            AverageDeliveryTime = m.AverageDeliveryTime,
+            IsOpen = m.IsOpen,
+            LogoUrl = m.LogoUrl
+        }).ToList();
+
+        return Result.Ok(PagedResult<MerchantResponse>.Create((IReadOnlyList<MerchantResponse>)responses, totalCount, query.Page, query.PageSize));
     }
 }
 

@@ -17,7 +17,10 @@ public static class HealthChecksConfig
             .AddSqlServer(connectionString, name: "database", tags: new[] { "db", "sqlserver" })
             .AddCheck<MemoryHealthCheck>("memory", tags: new[] { "memory" })
             .AddCheck<DiskSpaceHealthCheck>("disk_space", tags: new[] { "disk" })
-            .AddCheck<ExternalApiHealthCheck>("external_apis", tags: new[] { "external" });
+            .AddCheck<ExternalApiHealthCheck>("external_apis", tags: new[] { "external" })
+            .AddCheck<RedisHealthCheck>("redis_cache", 
+                failureStatus: HealthStatus.Degraded, // Degraded instead of Unhealthy (fallback to MemoryCache)
+                tags: new[] { "cache", "redis" });
 
         return services;
     }

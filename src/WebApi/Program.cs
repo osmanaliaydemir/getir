@@ -60,7 +60,7 @@ if (!builder.Environment.IsEnvironment("Testing"))
 
 // ============= DEPENDENCY INJECTION =============
 // Infrastructure Services (repositories, security, caching, file storage)
-builder.Services.AddInfrastructureServices();
+builder.Services.AddInfrastructureServices(builder.Configuration);
 
 // Application Services (business logic)
 builder.Services.AddApplicationServices();

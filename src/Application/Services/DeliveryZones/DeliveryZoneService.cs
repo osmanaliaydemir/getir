@@ -10,85 +10,127 @@ public class DeliveryZoneService : BaseService, IDeliveryZoneService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
 
-    public DeliveryZoneService(
-        IUnitOfWork unitOfWork,
-        ILogger<DeliveryZoneService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        IBackgroundTaskService backgroundTaskService) 
+    public DeliveryZoneService(IUnitOfWork unitOfWork, ILogger<DeliveryZoneService> logger, ILoggingService loggingService, ICacheService cacheService, IBackgroundTaskService backgroundTaskService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _backgroundTaskService = backgroundTaskService;
     }
 
-    public async Task<Result<List<DeliveryZoneResponse>>> GetDeliveryZonesByMerchantAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<DeliveryZoneResponse>>> GetDeliveryZonesByMerchantAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
-        var deliveryZones = await _unitOfWork.ReadRepository<DeliveryZone>()
-            .ListAsync(
-                filter: dz => dz.MerchantId == merchantId && dz.IsActive,
-                include: "Points",
-                cancellationToken: cancellationToken);
-
-        var response = deliveryZones.Select(dz => new DeliveryZoneResponse(
-            dz.Id,
-            dz.MerchantId,
-            dz.Name,
-            dz.Description,
-            dz.DeliveryFee,
-            dz.EstimatedDeliveryTime,
-            dz.IsActive,
-            dz.Points.OrderBy(p => p.Order).Select(p => new DeliveryZonePointResponse(
-                p.Id,
-                p.DeliveryZoneId,
-                p.Latitude,
-                p.Longitude,
-                p.Order
-            )).ToList(),
-            dz.CreatedAt
-        )).ToList();
-
-        return Result.Ok(response);
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetDeliveryZonesByMerchantInternalAsync(merchantId, cancellationToken),
+            "GetDeliveryZonesByMerchant",
+            new { MerchantId = merchantId },
+            cancellationToken);
     }
 
-    public async Task<Result<DeliveryZoneResponse>> GetDeliveryZoneByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    private async Task<Result<List<DeliveryZoneResponse>>> GetDeliveryZonesByMerchantInternalAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
-        var deliveryZone = await _unitOfWork.Repository<DeliveryZone>()
-            .GetAsync(dz => dz.Id == id, include: "Points,Merchant", cancellationToken: cancellationToken);
-
-        if (deliveryZone == null)
+        try
         {
-            return Result.Fail<DeliveryZoneResponse>("Delivery zone not found", "NOT_FOUND_DELIVERY_ZONE");
+            // Use centralized cache key strategy
+            var cacheKey = CacheKeys.DeliveryZonesByMerchant(merchantId);
+
+            return await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    var deliveryZones = await _unitOfWork.ReadRepository<DeliveryZone>()
+                        .ListAsync(
+                            filter: dz => dz.MerchantId == merchantId && dz.IsActive,
+                            include: "Points",
+                            cancellationToken: cancellationToken);
+
+                    var response = deliveryZones.Select(dz => new DeliveryZoneResponse(
+                        dz.Id,
+                        dz.MerchantId,
+                        dz.Name,
+                        dz.Description,
+                        dz.DeliveryFee,
+                        dz.EstimatedDeliveryTime,
+                        dz.IsActive,
+                        dz.Points.OrderBy(p => p.Order).Select(p => new DeliveryZonePointResponse(
+                            p.Id,
+                            p.DeliveryZoneId,
+                            p.Latitude,
+                            p.Longitude,
+                            p.Order
+                        )).ToList(),
+                        dz.CreatedAt
+                    )).ToList();
+
+                    return ServiceResult.Success(response);
+                },
+                TimeSpan.FromMinutes(CacheKeys.TTL.VeryLong), // 1 hour TTL - rarely changes
+                cancellationToken);
         }
-
-        var response = new DeliveryZoneResponse(
-            deliveryZone.Id,
-            deliveryZone.MerchantId,
-            deliveryZone.Name,
-            deliveryZone.Description,
-            deliveryZone.DeliveryFee,
-            deliveryZone.EstimatedDeliveryTime,
-            deliveryZone.IsActive,
-            deliveryZone.Points.OrderBy(p => p.Order).Select(p => new DeliveryZonePointResponse(
-                p.Id,
-                p.DeliveryZoneId,
-                p.Latitude,
-                p.Longitude,
-                p.Order
-            )).ToList(),
-            deliveryZone.CreatedAt
-        );
-
-        return Result.Ok(response);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting delivery zones by merchant: {MerchantId}", merchantId);
+            return ServiceResult.HandleException<List<DeliveryZoneResponse>>(ex, _logger, "GetDeliveryZonesByMerchant");
+        }
     }
 
-    public async Task<Result<DeliveryZoneResponse>> CreateDeliveryZoneAsync(
-        CreateDeliveryZoneRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<DeliveryZoneResponse>> GetDeliveryZoneByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetDeliveryZoneByIdInternalAsync(id, cancellationToken),
+            "GetDeliveryZoneById",
+            new { ZoneId = id },
+            cancellationToken);
+    }
+
+    private async Task<Result<DeliveryZoneResponse>> GetDeliveryZoneByIdInternalAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Use centralized cache key strategy
+            var cacheKey = CacheKeys.DeliveryZone(id);
+
+            return await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    var deliveryZone = await _unitOfWork.Repository<DeliveryZone>()
+                        .GetAsync(dz => dz.Id == id, include: "Points,Merchant", cancellationToken: cancellationToken);
+
+                    if (deliveryZone == null)
+                    {
+                        return Result.Fail<DeliveryZoneResponse>("Delivery zone not found", "NOT_FOUND_DELIVERY_ZONE");
+                    }
+
+                    var response = new DeliveryZoneResponse(
+                        deliveryZone.Id,
+                        deliveryZone.MerchantId,
+                        deliveryZone.Name,
+                        deliveryZone.Description,
+                        deliveryZone.DeliveryFee,
+                        deliveryZone.EstimatedDeliveryTime,
+                        deliveryZone.IsActive,
+                        deliveryZone.Points.OrderBy(p => p.Order).Select(p => new DeliveryZonePointResponse(
+                            p.Id,
+                            p.DeliveryZoneId,
+                            p.Latitude,
+                            p.Longitude,
+                            p.Order
+                        )).ToList(),
+                        deliveryZone.CreatedAt
+                    );
+
+                    return Result.Ok(response);
+                },
+                TimeSpan.FromMinutes(CacheKeys.TTL.VeryLong), // 1 hour TTL
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting delivery zone by id: {ZoneId}", id);
+            return ServiceResult.HandleException<DeliveryZoneResponse>(ex, _logger, "GetDeliveryZoneById");
+        }
+    }
+
+    public async Task<Result<DeliveryZoneResponse>> CreateDeliveryZoneAsync(CreateDeliveryZoneRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         // Merchant ownership kontrolü
         var merchant = await _unitOfWork.ReadRepository<Merchant>()
@@ -137,6 +179,11 @@ public class DeliveryZoneService : BaseService, IDeliveryZoneService
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // ============= CACHE INVALIDATION =============
+        // Invalidate delivery zones for this merchant
+        await _cacheService.RemoveAsync(CacheKeys.DeliveryZonesByMerchant(request.MerchantId), cancellationToken);
+        await _cacheService.RemoveByPatternAsync(CacheKeys.AllDeliveryZonesPattern(), cancellationToken);
+
         var response = new DeliveryZoneResponse(
             deliveryZone.Id,
             deliveryZone.MerchantId,
@@ -158,11 +205,7 @@ public class DeliveryZoneService : BaseService, IDeliveryZoneService
         return Result.Ok(response);
     }
 
-    public async Task<Result<DeliveryZoneResponse>> UpdateDeliveryZoneAsync(
-        Guid id,
-        UpdateDeliveryZoneRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<DeliveryZoneResponse>> UpdateDeliveryZoneAsync(Guid id, UpdateDeliveryZoneRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         var deliveryZone = await _unitOfWork.Repository<DeliveryZone>()
             .GetAsync(
@@ -220,6 +263,16 @@ public class DeliveryZoneService : BaseService, IDeliveryZoneService
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // ============= CACHE INVALIDATION =============
+        // Invalidate single zone cache
+        await _cacheService.RemoveAsync(CacheKeys.DeliveryZone(id), cancellationToken);
+
+        // Invalidate merchant's delivery zones
+        await _cacheService.RemoveAsync(CacheKeys.DeliveryZonesByMerchant(deliveryZone.MerchantId), cancellationToken);
+
+        // Invalidate all zones pattern
+        await _cacheService.RemoveByPatternAsync(CacheKeys.AllDeliveryZonesPattern(), cancellationToken);
+
         var response = new DeliveryZoneResponse(
             deliveryZone.Id,
             deliveryZone.MerchantId,
@@ -241,10 +294,7 @@ public class DeliveryZoneService : BaseService, IDeliveryZoneService
         return Result.Ok(response);
     }
 
-    public async Task<Result> DeleteDeliveryZoneAsync(
-        Guid id,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteDeliveryZoneAsync(Guid id, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         var deliveryZone = await _unitOfWork.Repository<DeliveryZone>()
             .GetAsync(
@@ -273,34 +323,77 @@ public class DeliveryZoneService : BaseService, IDeliveryZoneService
         _unitOfWork.Repository<DeliveryZone>().Delete(deliveryZone);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // ============= CACHE INVALIDATION =============
+        // Invalidate single zone cache
+        await _cacheService.RemoveAsync(CacheKeys.DeliveryZone(id), cancellationToken);
+
+        // Invalidate merchant's delivery zones
+        await _cacheService.RemoveAsync(CacheKeys.DeliveryZonesByMerchant(deliveryZone.MerchantId), cancellationToken);
+
+        // Invalidate all zones pattern
+        await _cacheService.RemoveByPatternAsync(CacheKeys.AllDeliveryZonesPattern(), cancellationToken);
+
         return Result.Ok();
     }
 
-    public async Task<Result<CheckDeliveryZoneResponse>> CheckDeliveryZoneAsync(
-        Guid merchantId,
-        CheckDeliveryZoneRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<CheckDeliveryZoneResponse>> CheckDeliveryZoneAsync(Guid merchantId, CheckDeliveryZoneRequest request, CancellationToken cancellationToken = default)
     {
-        var deliveryZones = await _unitOfWork.ReadRepository<DeliveryZone>()
-            .ListAsync(
-                filter: dz => dz.MerchantId == merchantId && dz.IsActive,
-                include: "Points",
-                cancellationToken: cancellationToken);
+        return await ExecuteWithPerformanceTracking(
+            async () => await CheckDeliveryZoneInternalAsync(merchantId, request, cancellationToken),
+            "CheckDeliveryZone",
+            new { MerchantId = merchantId, Lat = request.Latitude, Lon = request.Longitude },
+            cancellationToken);
+    }
 
-        foreach (var zone in deliveryZones)
+    private async Task<Result<CheckDeliveryZoneResponse>> CheckDeliveryZoneInternalAsync(Guid merchantId, CheckDeliveryZoneRequest request, CancellationToken cancellationToken = default)
+    {
+        try
         {
-            if (IsPointInPolygon(request.Latitude, request.Longitude, zone.Points.OrderBy(p => p.Order).ToList()))
-            {
-                return Result.Ok(new CheckDeliveryZoneResponse(
-                    true,
-                    zone.Id,
-                    zone.DeliveryFee,
-                    zone.EstimatedDeliveryTime
-                ));
-            }
-        }
+            // Cache delivery zones for this merchant (geo-spatial queries are expensive!)
+            var cacheKey = CacheKeys.DeliveryZonesByMerchant(merchantId);
 
-        return Result.Ok(new CheckDeliveryZoneResponse(false, null, null, null));
+            var zonesResult = await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    var zones = await _unitOfWork.ReadRepository<DeliveryZone>()
+                        .ListAsync(
+                            filter: dz => dz.MerchantId == merchantId && dz.IsActive,
+                            include: "Points",
+                            cancellationToken: cancellationToken);
+
+                    return ServiceResult.Success(zones);
+                },
+                TimeSpan.FromMinutes(CacheKeys.TTL.VeryLong), // 1 hour TTL
+                cancellationToken);
+
+            if (!zonesResult.Success || zonesResult.Data == null)
+            {
+                return Result.Ok(new CheckDeliveryZoneResponse(false, null, null, null));
+            }
+
+            var deliveryZones = zonesResult.Data;
+
+            foreach (var zone in deliveryZones)
+            {
+                if (IsPointInPolygon(request.Latitude, request.Longitude, zone.Points.OrderBy(p => p.Order).ToList()))
+                {
+                    return Result.Ok(new CheckDeliveryZoneResponse(
+                        true,
+                        zone.Id,
+                        zone.DeliveryFee,
+                        zone.EstimatedDeliveryTime
+                    ));
+                }
+            }
+
+            return Result.Ok(new CheckDeliveryZoneResponse(false, null, null, null));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking delivery zone: {MerchantId}", merchantId);
+            return ServiceResult.HandleException<CheckDeliveryZoneResponse>(ex, _logger, "CheckDeliveryZone");
+        }
     }
 
     /// <summary>

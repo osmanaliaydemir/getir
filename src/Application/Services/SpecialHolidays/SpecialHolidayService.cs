@@ -9,28 +9,40 @@ namespace Getir.Application.Services.SpecialHolidays;
 
 public class SpecialHolidayService : BaseService, ISpecialHolidayService
 {
-    public SpecialHolidayService(
-        IUnitOfWork unitOfWork,
-        ILogger<SpecialHolidayService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService)
+    public SpecialHolidayService(IUnitOfWork unitOfWork, ILogger<SpecialHolidayService> logger, ILoggingService loggingService, ICacheService cacheService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
     }
-
-    public async Task<Result<List<SpecialHolidayResponse>>> GetAllSpecialHolidaysAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<SpecialHolidayResponse>>> GetAllSpecialHolidaysAsync(CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetAllSpecialHolidaysInternalAsync(cancellationToken),
+            "GetAllSpecialHolidays",
+            null,
+            cancellationToken);
+    }
+    private async Task<Result<List<SpecialHolidayResponse>>> GetAllSpecialHolidaysInternalAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            var specialHolidays = await _unitOfWork.ReadRepository<SpecialHoliday>()
-                .ListAsync(
-                    filter: sh => sh.IsActive,
-                    orderBy: sh => sh.StartDate,
-                    cancellationToken: cancellationToken);
+            // Use centralized cache key strategy
+            var cacheKey = CacheKeys.AllSpecialHolidays();
 
-            var response = specialHolidays.Select(MapToResponse).ToList();
-            return Result.Ok(response);
+            return await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    var specialHolidays = await _unitOfWork.ReadRepository<SpecialHoliday>()
+                        .ListAsync(
+                            filter: sh => sh.IsActive,
+                            orderBy: sh => sh.StartDate,
+                            cancellationToken: cancellationToken);
+
+                    var response = specialHolidays.Select(MapToResponse).ToList();
+                    return ServiceResult.Success(response);
+                },
+                TimeSpan.FromMinutes(CacheKeys.TTL.ExtraLong), // 4 hours TTL - very static
+                cancellationToken);
         }
         catch (Exception ex)
         {
@@ -38,22 +50,36 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException<List<SpecialHolidayResponse>>(ex, _logger, "GetAllSpecialHolidays");
         }
     }
-
-    public async Task<Result<List<SpecialHolidayResponse>>> GetSpecialHolidaysByMerchantAsync(
-        Guid merchantId,
-        bool includeInactive = false,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<SpecialHolidayResponse>>> GetSpecialHolidaysByMerchantAsync(Guid merchantId, bool includeInactive = false, CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetSpecialHolidaysByMerchantInternalAsync(merchantId, includeInactive, cancellationToken),
+            "GetSpecialHolidaysByMerchant",
+            new { MerchantId = merchantId, IncludeInactive = includeInactive },
+            cancellationToken);
+    }
+    private async Task<Result<List<SpecialHolidayResponse>>> GetSpecialHolidaysByMerchantInternalAsync(Guid merchantId, bool includeInactive, CancellationToken cancellationToken = default)
     {
         try
         {
-            var specialHolidays = await _unitOfWork.ReadRepository<SpecialHoliday>()
-                .ListAsync(
-                    filter: sh => sh.MerchantId == merchantId && (includeInactive || sh.IsActive),
-                    orderBy: sh => sh.StartDate,
-                    cancellationToken: cancellationToken);
+            // Use centralized cache key strategy
+            var cacheKey = CacheKeys.SpecialHolidaysByMerchant(merchantId);
 
-            var response = specialHolidays.Select(MapToResponse).ToList();
-            return Result.Ok(response);
+            return await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    var specialHolidays = await _unitOfWork.ReadRepository<SpecialHoliday>()
+                        .ListAsync(
+                            filter: sh => sh.MerchantId == merchantId && (includeInactive || sh.IsActive),
+                            orderBy: sh => sh.StartDate,
+                            cancellationToken: cancellationToken);
+
+                    var response = specialHolidays.Select(MapToResponse).ToList();
+                    return ServiceResult.Success(response);
+                },
+                TimeSpan.FromMinutes(CacheKeys.TTL.ExtraLong), // 4 hours TTL
+                cancellationToken);
         }
         catch (Exception ex)
         {
@@ -61,26 +87,39 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException<List<SpecialHolidayResponse>>(ex, _logger, "GetSpecialHolidaysByMerchant");
         }
     }
-
-    public async Task<Result<List<SpecialHolidayResponse>>> GetSpecialHolidaysByDateRangeAsync(
-        Guid merchantId,
-        DateTime startDate,
-        DateTime endDate,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<SpecialHolidayResponse>>> GetSpecialHolidaysByDateRangeAsync(Guid merchantId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetSpecialHolidaysByDateRangeInternalAsync(merchantId, startDate, endDate, cancellationToken),
+            "GetSpecialHolidaysByDateRange",
+            new { MerchantId = merchantId, StartDate = startDate, EndDate = endDate },
+            cancellationToken);
+    }
+    private async Task<Result<List<SpecialHolidayResponse>>> GetSpecialHolidaysByDateRangeInternalAsync(Guid merchantId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
     {
         try
         {
-            var specialHolidays = await _unitOfWork.ReadRepository<SpecialHoliday>()
-                .ListAsync(
-                    filter: sh => sh.MerchantId == merchantId &&
-                                 sh.IsActive &&
-                                 sh.StartDate <= endDate &&
-                                 sh.EndDate >= startDate,
-                    orderBy: sh => sh.StartDate,
-                    cancellationToken: cancellationToken);
+            // Use centralized cache key strategy
+            var cacheKey = CacheKeys.SpecialHolidaysByDateRange(merchantId, startDate, endDate);
 
-            var response = specialHolidays.Select(MapToResponse).ToList();
-            return Result.Ok(response);
+            return await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    var specialHolidays = await _unitOfWork.ReadRepository<SpecialHoliday>()
+                        .ListAsync(
+                            filter: sh => sh.MerchantId == merchantId &&
+                                         sh.IsActive &&
+                                         sh.StartDate <= endDate &&
+                                         sh.EndDate >= startDate,
+                            orderBy: sh => sh.StartDate,
+                            cancellationToken: cancellationToken);
+
+                    var response = specialHolidays.Select(MapToResponse).ToList();
+                    return ServiceResult.Success(response);
+                },
+                TimeSpan.FromMinutes(CacheKeys.TTL.ExtraLong), // 4 hours TTL
+                cancellationToken);
         }
         catch (Exception ex)
         {
@@ -89,22 +128,37 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException<List<SpecialHolidayResponse>>(ex, _logger, "GetSpecialHolidaysByDateRange");
         }
     }
-
-    public async Task<Result<SpecialHolidayResponse>> GetSpecialHolidayByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<SpecialHolidayResponse>> GetSpecialHolidayByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetSpecialHolidayByIdInternalAsync(id, cancellationToken),
+            "GetSpecialHolidayById",
+            new { Id = id },
+            cancellationToken);
+    }
+    private async Task<Result<SpecialHolidayResponse>> GetSpecialHolidayByIdInternalAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
         {
-            var specialHoliday = await _unitOfWork.ReadRepository<SpecialHoliday>()
-                .FirstOrDefaultAsync(sh => sh.Id == id, cancellationToken: cancellationToken);
+            // Use centralized cache key strategy
+            var cacheKey = CacheKeys.SpecialHoliday(id);
 
-            if (specialHoliday == null)
-            {
-                return Result.Fail<SpecialHolidayResponse>("Özel tatil bulunamadı", ErrorCodes.NOT_FOUND);
-            }
+            return await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    var specialHoliday = await _unitOfWork.ReadRepository<SpecialHoliday>()
+                        .FirstOrDefaultAsync(sh => sh.Id == id, cancellationToken: cancellationToken);
 
-            return Result.Ok(MapToResponse(specialHoliday));
+                    if (specialHoliday == null)
+                    {
+                        return Result.Fail<SpecialHolidayResponse>("Özel tatil bulunamadı", ErrorCodes.NOT_FOUND);
+                    }
+
+                    return Result.Ok(MapToResponse(specialHoliday));
+                },
+                TimeSpan.FromMinutes(CacheKeys.TTL.ExtraLong), // 4 hours TTL
+                cancellationToken);
         }
         catch (Exception ex)
         {
@@ -112,11 +166,7 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException<SpecialHolidayResponse>(ex, _logger, "GetSpecialHolidayById");
         }
     }
-
-    public async Task<Result<SpecialHolidayResponse>> CreateSpecialHolidayAsync(
-        CreateSpecialHolidayRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<SpecialHolidayResponse>> CreateSpecialHolidayAsync(CreateSpecialHolidayRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -168,6 +218,10 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             await _unitOfWork.Repository<SpecialHoliday>().AddAsync(specialHoliday, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+            // ============= CACHE INVALIDATION =============
+            // Invalidate all holiday caches for this merchant
+            await _cacheService.RemoveByPatternAsync(CacheKeys.AllHolidaysPattern(), cancellationToken);
+
             _loggingService.LogBusinessEvent(
                 "SpecialHolidayCreated",
                 new
@@ -188,12 +242,7 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException<SpecialHolidayResponse>(ex, _logger, "CreateSpecialHoliday");
         }
     }
-
-    public async Task<Result<SpecialHolidayResponse>> UpdateSpecialHolidayAsync(
-        Guid id,
-        UpdateSpecialHolidayRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<SpecialHolidayResponse>> UpdateSpecialHolidayAsync(Guid id, UpdateSpecialHolidayRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -242,6 +291,13 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             _unitOfWork.Repository<SpecialHoliday>().Update(specialHoliday);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+            // ============= CACHE INVALIDATION =============
+            // Invalidate single holiday cache
+            await _cacheService.RemoveAsync(CacheKeys.SpecialHoliday(id), cancellationToken);
+
+            // Invalidate all holiday caches
+            await _cacheService.RemoveByPatternAsync(CacheKeys.AllHolidaysPattern(), cancellationToken);
+
             _loggingService.LogBusinessEvent(
                 "SpecialHolidayUpdated",
                 new { SpecialHolidayId = id, Request = request },
@@ -255,11 +311,7 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException<SpecialHolidayResponse>(ex, _logger, "UpdateSpecialHoliday");
         }
     }
-
-    public async Task<Result> DeleteSpecialHolidayAsync(
-        Guid id,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteSpecialHolidayAsync(Guid id, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -280,6 +332,13 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             _unitOfWork.Repository<SpecialHoliday>().Delete(specialHoliday);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+            // ============= CACHE INVALIDATION =============
+            // Invalidate single holiday cache
+            await _cacheService.RemoveAsync(CacheKeys.SpecialHoliday(id), cancellationToken);
+
+            // Invalidate all holiday caches
+            await _cacheService.RemoveByPatternAsync(CacheKeys.AllHolidaysPattern(), cancellationToken);
+
             _loggingService.LogBusinessEvent(
                 "SpecialHolidayDeleted",
                 new { SpecialHolidayId = id, MerchantId = specialHoliday.MerchantId },
@@ -293,11 +352,7 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException(ex, _logger, "DeleteSpecialHoliday");
         }
     }
-
-    public async Task<Result> ToggleSpecialHolidayStatusAsync(
-        Guid id,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> ToggleSpecialHolidayStatusAsync(Guid id, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -321,6 +376,13 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             _unitOfWork.Repository<SpecialHoliday>().Update(specialHoliday);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+            // ============= CACHE INVALIDATION =============
+            // Invalidate single holiday cache
+            await _cacheService.RemoveAsync(CacheKeys.SpecialHoliday(id), cancellationToken);
+
+            // Invalidate all holiday caches
+            await _cacheService.RemoveByPatternAsync(CacheKeys.AllHolidaysPattern(), cancellationToken);
+
             _loggingService.LogBusinessEvent(
                 "SpecialHolidayStatusToggled",
                 new { SpecialHolidayId = id, IsActive = specialHoliday.IsActive },
@@ -334,11 +396,7 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException(ex, _logger, "ToggleSpecialHolidayStatus");
         }
     }
-
-    public async Task<Result<MerchantAvailabilityResponse>> CheckMerchantAvailabilityAsync(
-        Guid merchantId,
-        DateTime checkDate,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<MerchantAvailabilityResponse>> CheckMerchantAvailabilityAsync(Guid merchantId, DateTime checkDate, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -409,24 +467,39 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException<MerchantAvailabilityResponse>(ex, _logger, "CheckMerchantAvailability");
         }
     }
-
-    public async Task<Result<List<SpecialHolidayResponse>>> GetUpcomingSpecialHolidaysAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<SpecialHolidayResponse>>> GetUpcomingSpecialHolidaysAsync(Guid merchantId, CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetUpcomingSpecialHolidaysInternalAsync(merchantId, cancellationToken),
+            "GetUpcomingSpecialHolidays",
+            new { MerchantId = merchantId },
+            cancellationToken);
+    }
+    private async Task<Result<List<SpecialHolidayResponse>>> GetUpcomingSpecialHolidaysInternalAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
         {
-            var now = DateTime.UtcNow;
-            var specialHolidays = await _unitOfWork.ReadRepository<SpecialHoliday>()
-                .ListAsync(
-                    filter: sh => sh.MerchantId == merchantId &&
-                                 sh.IsActive &&
-                                 sh.EndDate >= now,
-                    orderBy: sh => sh.StartDate,
-                    cancellationToken: cancellationToken);
+            // Use centralized cache key strategy
+            var cacheKey = CacheKeys.UpcomingHolidays(merchantId);
 
-            var response = specialHolidays.Select(MapToResponse).ToList();
-            return Result.Ok(response);
+            return await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    var now = DateTime.UtcNow;
+                    var specialHolidays = await _unitOfWork.ReadRepository<SpecialHoliday>()
+                        .ListAsync(
+                            filter: sh => sh.MerchantId == merchantId &&
+                                         sh.IsActive &&
+                                         sh.EndDate >= now,
+                            orderBy: sh => sh.StartDate,
+                            cancellationToken: cancellationToken);
+
+                    var response = specialHolidays.Select(MapToResponse).ToList();
+                    return ServiceResult.Success(response);
+                },
+                TimeSpan.FromMinutes(CacheKeys.TTL.VeryLong), // 1 hour TTL for upcoming holidays
+                cancellationToken);
         }
         catch (Exception ex)
         {
@@ -434,7 +507,6 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException<List<SpecialHolidayResponse>>(ex, _logger, "GetUpcomingSpecialHolidays");
         }
     }
-
     private static SpecialHolidayResponse MapToResponse(SpecialHoliday specialHoliday)
     {
         return new SpecialHolidayResponse(
@@ -454,4 +526,3 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
         );
     }
 }
-

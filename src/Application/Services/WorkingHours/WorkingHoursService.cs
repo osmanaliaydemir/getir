@@ -9,44 +9,58 @@ namespace Getir.Application.Services.WorkingHours;
 public class WorkingHoursService : BaseService, IWorkingHoursService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
-
-    public WorkingHoursService(
-        IUnitOfWork unitOfWork,
-        ILogger<WorkingHoursService> logger,
-        ILoggingService loggingService,
-        ICacheService cacheService,
-        IBackgroundTaskService backgroundTaskService) 
+    public WorkingHoursService(IUnitOfWork unitOfWork, ILogger<WorkingHoursService> logger, ILoggingService loggingService, ICacheService cacheService, IBackgroundTaskService backgroundTaskService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _backgroundTaskService = backgroundTaskService;
     }
-
-    public async Task<Result<List<WorkingHoursResponse>>> GetWorkingHoursByMerchantAsync(
-        Guid merchantId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<List<WorkingHoursResponse>>> GetWorkingHoursByMerchantAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
-        var workingHours = await _unitOfWork.ReadRepository<Domain.Entities.WorkingHours>()
-            .ListAsync(
-                filter: wh => wh.MerchantId == merchantId,
-                orderBy: wh => wh.DayOfWeek,
-                cancellationToken: cancellationToken);
-
-        var response = workingHours.Select(wh => new WorkingHoursResponse(
-            wh.Id,
-            wh.MerchantId,
-            wh.DayOfWeek,
-            wh.OpenTime,
-            wh.CloseTime,
-            wh.IsClosed,
-            wh.CreatedAt
-        )).ToList();
-
-        return Result.Ok(response);
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetWorkingHoursByMerchantInternalAsync(merchantId, cancellationToken),
+            "GetWorkingHoursByMerchant",
+            new { MerchantId = merchantId },
+            cancellationToken);
     }
+    private async Task<Result<List<WorkingHoursResponse>>> GetWorkingHoursByMerchantInternalAsync(Guid merchantId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Use centralized cache key strategy
+            var cacheKey = CacheKeys.WorkingHoursByMerchant(merchantId);
 
-    public async Task<Result<WorkingHoursResponse>> GetWorkingHoursByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+            return await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    var workingHours = await _unitOfWork.ReadRepository<Domain.Entities.WorkingHours>()
+                        .ListAsync(
+                            filter: wh => wh.MerchantId == merchantId,
+                            orderBy: wh => wh.DayOfWeek,
+                            cancellationToken: cancellationToken);
+
+                    var response = workingHours.Select(wh => new WorkingHoursResponse(
+                        wh.Id,
+                        wh.MerchantId,
+                        wh.DayOfWeek,
+                        wh.OpenTime,
+                        wh.CloseTime,
+                        wh.IsClosed,
+                        wh.CreatedAt
+                    )).ToList();
+
+                    return ServiceResult.Success(response);
+                },
+                TimeSpan.FromMinutes(CacheKeys.TTL.Long), // 30 minutes TTL
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting working hours by merchant: {MerchantId}", merchantId);
+            return ServiceResult.HandleException<List<WorkingHoursResponse>>(ex, _logger, "GetWorkingHoursByMerchant");
+        }
+    }
+    public async Task<Result<WorkingHoursResponse>> GetWorkingHoursByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var workingHours = await _unitOfWork.Repository<Domain.Entities.WorkingHours>()
             .GetAsync(wh => wh.Id == id, include: "Merchant", cancellationToken: cancellationToken);
@@ -68,11 +82,7 @@ public class WorkingHoursService : BaseService, IWorkingHoursService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result<WorkingHoursResponse>> CreateWorkingHoursAsync(
-        CreateWorkingHoursRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<WorkingHoursResponse>> CreateWorkingHoursAsync(CreateWorkingHoursRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         // Merchant ownership kontrolü
         var merchant = await _unitOfWork.ReadRepository<Merchant>()
@@ -108,6 +118,10 @@ public class WorkingHoursService : BaseService, IWorkingHoursService
         await _unitOfWork.Repository<Domain.Entities.WorkingHours>().AddAsync(workingHours, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // ============= CACHE INVALIDATION =============
+        await _cacheService.RemoveAsync(CacheKeys.WorkingHoursByMerchant(request.MerchantId), cancellationToken);
+        await _cacheService.RemoveAsync(CacheKeys.MerchantWorkingHours(request.MerchantId), cancellationToken);
+
         var response = new WorkingHoursResponse(
             workingHours.Id,
             workingHours.MerchantId,
@@ -120,12 +134,7 @@ public class WorkingHoursService : BaseService, IWorkingHoursService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result<WorkingHoursResponse>> UpdateWorkingHoursAsync(
-        Guid id,
-        UpdateWorkingHoursRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<WorkingHoursResponse>> UpdateWorkingHoursAsync(Guid id, UpdateWorkingHoursRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         var workingHours = await _unitOfWork.Repository<Domain.Entities.WorkingHours>()
             .GetAsync(
@@ -152,6 +161,10 @@ public class WorkingHoursService : BaseService, IWorkingHoursService
         _unitOfWork.Repository<Domain.Entities.WorkingHours>().Update(workingHours);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // ============= CACHE INVALIDATION =============
+        await _cacheService.RemoveAsync(CacheKeys.WorkingHoursByMerchant(workingHours.MerchantId), cancellationToken);
+        await _cacheService.RemoveAsync(CacheKeys.MerchantWorkingHours(workingHours.MerchantId), cancellationToken);
+
         var response = new WorkingHoursResponse(
             workingHours.Id,
             workingHours.MerchantId,
@@ -164,11 +177,7 @@ public class WorkingHoursService : BaseService, IWorkingHoursService
 
         return Result.Ok(response);
     }
-
-    public async Task<Result> DeleteWorkingHoursAsync(
-        Guid id,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteWorkingHoursAsync(Guid id, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         var workingHours = await _unitOfWork.Repository<Domain.Entities.WorkingHours>()
             .GetAsync(
@@ -190,14 +199,13 @@ public class WorkingHoursService : BaseService, IWorkingHoursService
         _unitOfWork.Repository<Domain.Entities.WorkingHours>().Delete(workingHours);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // ============= CACHE INVALIDATION =============
+        await _cacheService.RemoveAsync(CacheKeys.WorkingHoursByMerchant(workingHours.MerchantId), cancellationToken);
+        await _cacheService.RemoveAsync(CacheKeys.MerchantWorkingHours(workingHours.MerchantId), cancellationToken);
+
         return Result.Ok();
     }
-
-    public async Task<Result> BulkUpdateWorkingHoursAsync(
-        Guid merchantId,
-        BulkUpdateWorkingHoursRequest request,
-        Guid merchantOwnerId,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> BulkUpdateWorkingHoursAsync(Guid merchantId, BulkUpdateWorkingHoursRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         // Merchant ownership kontrolü
         var merchant = await _unitOfWork.ReadRepository<Merchant>()
@@ -215,7 +223,7 @@ public class WorkingHoursService : BaseService, IWorkingHoursService
         foreach (var dayRequest in request.WorkingHours)
         {
             var existing = existingWorkingHours.FirstOrDefault(wh => wh.DayOfWeek == dayRequest.DayOfWeek);
-            
+
             if (existing != null)
             {
                 // Güncelle
@@ -243,13 +251,14 @@ public class WorkingHoursService : BaseService, IWorkingHoursService
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // ============= CACHE INVALIDATION =============
+        await _cacheService.RemoveAsync(CacheKeys.WorkingHoursByMerchant(merchantId), cancellationToken);
+        await _cacheService.RemoveAsync(CacheKeys.MerchantWorkingHours(merchantId), cancellationToken);
+
         return Result.Ok();
     }
-
-    public async Task<Result<bool>> IsMerchantOpenAsync(
-        Guid merchantId,
-        DateTime? checkTime = null,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<bool>> IsMerchantOpenAsync(Guid merchantId, DateTime? checkTime = null, CancellationToken cancellationToken = default)
     {
         var timeToCheck = checkTime ?? DateTime.UtcNow;
         var dayOfWeek = timeToCheck.DayOfWeek;

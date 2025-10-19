@@ -1,36 +1,100 @@
+using Getir.Application.Abstractions;
+using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Domain.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Internationalization;
 
 public class TranslationService : ITranslationService
 {
-    public Task<TranslationDto?> GetTranslationAsync(string key, LanguageCode languageCode)
+    private readonly ICacheService _cacheService;
+    private readonly ILogger<TranslationService> _logger;
+
+    public TranslationService(ICacheService cacheService, ILogger<TranslationService> logger)
     {
-        // Mock translation data
-        var translations = GetMockTranslations();
-        return Task.FromResult(translations.FirstOrDefault(t => t.Key == key && t.LanguageCode == languageCode));
+        _cacheService = cacheService;
+        _logger = logger;
     }
 
-    public Task<GetTranslationsByKeysResponse> GetTranslationsByKeysAsync(GetTranslationsByKeysRequest request)
+    public async Task<TranslationDto?> GetTranslationAsync(string key, LanguageCode languageCode)
     {
-        var translations = GetMockTranslations();
-        var foundTranslations = translations
-            .Where(t => request.Keys.Contains(t.Key) && t.LanguageCode == request.LanguageCode)
-            .ToDictionary(t => t.Key, t => t.Value);
-
-        var missingKeys = request.Keys.Except(foundTranslations.Keys).ToList();
-
-        var response = new GetTranslationsByKeysResponse
+        try
         {
-            Translations = foundTranslations,
-            LanguageCode = request.LanguageCode,
-            FoundCount = foundTranslations.Count,
-            MissingCount = missingKeys.Count,
-            MissingKeys = missingKeys
-        };
+            // Use centralized cache key strategy
+            var cacheKey = CacheKeys.Translation(languageCode.ToString(), key);
 
-        return Task.FromResult(response);
+            var cached = await _cacheService.GetAsync<TranslationDto>(cacheKey);
+            if (cached != null)
+            {
+                return cached;
+            }
+
+            // Mock translation data (future: database lookup)
+            var translations = GetMockTranslations();
+            var translation = translations.FirstOrDefault(t => t.Key == key && t.LanguageCode == languageCode);
+
+            if (translation != null)
+            {
+                // Cache for 4 hours
+                await _cacheService.SetAsync(cacheKey, translation, TimeSpan.FromMinutes(CacheKeys.TTL.ExtraLong));
+            }
+
+            return translation;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting translation: {Key}, {LanguageCode}", key, languageCode);
+            return null;
+        }
+    }
+
+    public async Task<GetTranslationsByKeysResponse> GetTranslationsByKeysAsync(GetTranslationsByKeysRequest request)
+    {
+        try
+        {
+            // Use centralized cache key strategy
+            var cacheKey = CacheKeys.AllTranslations(request.LanguageCode.ToString());
+
+            var cached = await _cacheService.GetAsync<Dictionary<string, string>>(cacheKey);
+            
+            if (cached == null)
+            {
+                var translations = GetMockTranslations();
+                cached = translations
+                    .Where(t => t.LanguageCode == request.LanguageCode)
+                    .ToDictionary(t => t.Key, t => t.Value);
+
+                // Cache for 4 hours
+                await _cacheService.SetAsync(cacheKey, cached, TimeSpan.FromMinutes(CacheKeys.TTL.ExtraLong));
+            }
+
+            var foundTranslations = cached
+                .Where(t => request.Keys.Contains(t.Key))
+                .ToDictionary(t => t.Key, t => t.Value);
+
+            var missingKeys = request.Keys.Except(foundTranslations.Keys).ToList();
+
+            var response = new GetTranslationsByKeysResponse
+            {
+                Translations = foundTranslations,
+                LanguageCode = request.LanguageCode,
+                FoundCount = foundTranslations.Count,
+                MissingCount = missingKeys.Count,
+                MissingKeys = missingKeys
+            };
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting translations by keys: {LanguageCode}", request.LanguageCode);
+            return new GetTranslationsByKeysResponse 
+            { 
+                Translations = new Dictionary<string, string>(),
+                LanguageCode = request.LanguageCode 
+            };
+        }
     }
 
     public Task<TranslationSearchResponse> SearchTranslationsAsync(TranslationSearchRequest request)
@@ -64,7 +128,7 @@ public class TranslationService : ITranslationService
         return Task.FromResult(response);
     }
 
-    public Task<TranslationDto> CreateTranslationAsync(CreateTranslationRequest request)
+    public async Task<TranslationDto> CreateTranslationAsync(CreateTranslationRequest request)
     {
         var translation = new TranslationDto
         {
@@ -77,10 +141,14 @@ public class TranslationService : ITranslationService
             Description = request.Description,
             IsActive = true
         };
-        return Task.FromResult(translation);
+
+        // ============= CACHE INVALIDATION =============
+        await _cacheService.RemoveByPatternAsync(CacheKeys.AllTranslationsPattern());
+
+        return translation;
     }
 
-    public Task<TranslationDto> UpdateTranslationAsync(Guid id, UpdateTranslationRequest request)
+    public async Task<TranslationDto> UpdateTranslationAsync(Guid id, UpdateTranslationRequest request)
     {
         var translation = new TranslationDto
         {
@@ -93,37 +161,72 @@ public class TranslationService : ITranslationService
             Description = request.Description,
             IsActive = request.IsActive
         };
-        return Task.FromResult(translation);
+
+        // ============= CACHE INVALIDATION =============
+        await _cacheService.RemoveByPatternAsync(CacheKeys.AllTranslationsPattern());
+
+        return translation;
     }
 
-    public Task<bool> DeleteTranslationAsync(Guid id)
+    public async Task<bool> DeleteTranslationAsync(Guid id)
     {
-        return Task.FromResult(true);
+        // ============= CACHE INVALIDATION =============
+        await _cacheService.RemoveByPatternAsync(CacheKeys.AllTranslationsPattern());
+
+        return true;
     }
 
-    public Task<bool> BulkCreateTranslationsAsync(BulkTranslationRequest request)
+    public async Task<bool> BulkCreateTranslationsAsync(BulkTranslationRequest request)
     {
-        return Task.FromResult(true);
+        // ============= CACHE INVALIDATION =============
+        await _cacheService.RemoveByPatternAsync(CacheKeys.AllTranslationsPattern());
+
+        return true;
     }
 
-    public Task<bool> BulkUpdateTranslationsAsync(BulkTranslationRequest request)
+    public async Task<bool> BulkUpdateTranslationsAsync(BulkTranslationRequest request)
     {
-        return Task.FromResult(true);
+        // ============= CACHE INVALIDATION =============
+        await _cacheService.RemoveByPatternAsync(CacheKeys.AllTranslationsPattern());
+
+        return true;
     }
 
-    public Task<List<TranslationDto>> GetTranslationsByCategoryAsync(string category, LanguageCode languageCode)
+    public async Task<List<TranslationDto>> GetTranslationsByCategoryAsync(string category, LanguageCode languageCode)
     {
         var translations = GetMockTranslations();
         var filtered = translations.Where(t => t.Category == category && t.LanguageCode == languageCode).ToList();
-        return Task.FromResult(filtered);
+        return filtered;
     }
 
-    public Task<Dictionary<string, string>> GetTranslationsDictionaryAsync(LanguageCode languageCode, string? category = null)
+    public async Task<Dictionary<string, string>> GetTranslationsDictionaryAsync(LanguageCode languageCode, string? category = null)
     {
-        var translations = GetMockTranslations();
-        var filtered = translations.Where(t => t.LanguageCode == languageCode && (category == null || t.Category == category));
-        var dictionary = filtered.ToDictionary(t => t.Key, t => t.Value);
-        return Task.FromResult(dictionary);
+        try
+        {
+            // Use centralized cache key strategy
+            var cacheKey = CacheKeys.AllTranslations(languageCode.ToString());
+
+            var cached = await _cacheService.GetAsync<Dictionary<string, string>>(cacheKey);
+            if (cached != null)
+            {
+                return cached;
+            }
+
+            var translations = GetMockTranslations();
+            var dictionary = translations
+                .Where(t => t.LanguageCode == languageCode && (category == null || t.Category == category))
+                .ToDictionary(t => t.Key, t => t.Value);
+
+            // Cache for 4 hours
+            await _cacheService.SetAsync(cacheKey, dictionary, TimeSpan.FromMinutes(CacheKeys.TTL.ExtraLong));
+
+            return dictionary;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting translations dictionary: {LanguageCode}", languageCode);
+            return new Dictionary<string, string>();
+        }
     }
 
     public Task<List<string>> GetMissingTranslationsAsync(LanguageCode languageCode, string? category = null)
