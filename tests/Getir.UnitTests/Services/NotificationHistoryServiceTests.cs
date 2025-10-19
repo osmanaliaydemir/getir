@@ -9,6 +9,7 @@ using Moq;
 using Xunit;
 using DomainEntities = Getir.Domain.Entities;
 using DomainEnums = Getir.Domain.Enums;
+using DTO = Getir.Application.DTO;
 
 namespace Getir.UnitTests.Services;
 
@@ -43,20 +44,8 @@ public class NotificationHistoryServiceTests
             "Test",
             "Message",
             DomainEnums.NotificationType.OrderUpdate,
-            NotificationChannel.Push,
-            NotificationStatus.Sent,
-            null,
-            null,
-            null,
-            null,
-            null,
-            0,
-            null,
-            DateTime.UtcNow,
-            null,
-            null,
-            null,
-            null);
+            DTO.NotificationChannel.Push,
+            DTO.NotificationStatus.Sent);
 
         var repoMock = new Mock<IGenericRepository<NotificationHistory>>();
         repoMock.Setup(r => r.AddAsync(It.IsAny<NotificationHistory>(), It.IsAny<CancellationToken>()))
