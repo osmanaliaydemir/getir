@@ -21,11 +21,7 @@ public class CourierHub : Hub
     private readonly IOrderService _orderService;
     private readonly IRouteOptimizationService _routeService;
 
-    public CourierHub(
-        ILogger<CourierHub> logger,
-        ICourierService courierService,
-        IOrderService orderService,
-        IRouteOptimizationService routeService)
+    public CourierHub(ILogger<CourierHub> logger, ICourierService courierService, IOrderService orderService, IRouteOptimizationService routeService)
     {
         _logger = logger;
         _courierService = courierService;
@@ -87,10 +83,10 @@ public class CourierHub : Hub
                 DateTime.UtcNow);
 
             var result = await _courierService.UpdateLocationAsync(updateRequest, CancellationToken.None);
-            
+
             if (result.Success)
             {
-                _logger.LogInformation("Courier {UserId} updated location for order {OrderId}: {Lat}, {Lng}", 
+                _logger.LogInformation("Courier {UserId} updated location for order {OrderId}: {Lat}, {Lng}",
                     userId, orderId, latitude, longitude);
 
                 // Calculate ETA
@@ -142,33 +138,33 @@ public class CourierHub : Hub
         try
         {
             var userId = GetUserId();
-            
+
             // Verify permission if authenticated
             if (userId != null)
             {
                 var orderResult = await _orderService.GetOrderByIdAsync(orderId, CancellationToken.None);
-                
+
                 if (orderResult.Success && orderResult.Value != null)
                 {
                     var order = orderResult.Value;
-                    
+
                     // Allow customer, merchant, courier, or admin
-                    if (order.UserId == userId.Value || 
-                        order.MerchantId == userId.Value || 
+                    if (order.UserId == userId.Value ||
+                        order.MerchantId == userId.Value ||
                         order.CourierId == userId.Value ||
                         IsUserInRole("Admin"))
                     {
                         await Groups.AddToGroupAsync(Context.ConnectionId, $"order_{orderId}");
-                        _logger.LogInformation("User {UserId} subscribed to courier tracking for order {OrderId}", 
+                        _logger.LogInformation("User {UserId} subscribed to courier tracking for order {OrderId}",
                             userId, orderId);
 
                         // Send current courier location if available
                         if (order.CourierId.HasValue)
                         {
                             var locationResult = await _courierService.GetCurrentLocationAsync(
-                                order.CourierId.Value, 
+                                order.CourierId.Value,
                                 CancellationToken.None);
-                            
+
                             if (locationResult.Success && locationResult.Value != null)
                             {
                                 await Clients.Caller.SendAsync("CurrentCourierLocation", locationResult.Value);
@@ -240,24 +236,24 @@ public class CourierHub : Hub
             }
 
             var orderResult = await _orderService.GetOrderByIdAsync(orderId, CancellationToken.None);
-            
+
             if (orderResult.Success && orderResult.Value != null && orderResult.Value.CourierId.HasValue)
             {
                 // Verify permission
-                if (orderResult.Value.UserId == userId.Value || 
-                    orderResult.Value.CourierId == userId.Value || 
+                if (orderResult.Value.UserId == userId.Value ||
+                    orderResult.Value.CourierId == userId.Value ||
                     IsUserInRole("Admin"))
                 {
                     var historyResult = await _courierService.GetLocationHistoryAsync(
-                        orderResult.Value.CourierId.Value, 
+                        orderResult.Value.CourierId.Value,
                         orderId,
                         CancellationToken.None);
-                    
+
                     if (historyResult.Success)
                     {
-                        _logger.LogInformation("User {UserId} requested location history for order {OrderId}", 
+                        _logger.LogInformation("User {UserId} requested location history for order {OrderId}",
                             userId, orderId);
-                        
+
                         await Clients.Caller.SendAsync("LocationHistory", new
                         {
                             orderId,
@@ -303,12 +299,12 @@ public class CourierHub : Hub
 
             // Verify courier is assigned to this order
             var orderResult = await _orderService.GetOrderByIdAsync(orderId, CancellationToken.None);
-            
+
             if (orderResult.Success && orderResult.Value != null)
             {
                 if (orderResult.Value.CourierId == userId.Value || IsUserInRole("Admin"))
                 {
-                    _logger.LogInformation("Courier {UserId} sent estimated arrival for order {OrderId}: {Minutes} minutes", 
+                    _logger.LogInformation("Courier {UserId} sent estimated arrival for order {OrderId}: {Minutes} minutes",
                         userId, orderId, estimatedMinutes);
 
                     // Update ETA in database
@@ -319,10 +315,10 @@ public class CourierHub : Hub
                         DateTime.UtcNow);
 
                     var etaUpdateResult = await _routeService.UpdateETAAsync(etaRequest, CancellationToken.None);
-                    
+
                     if (!etaUpdateResult.Success)
                     {
-                        _logger.LogWarning("Failed to update ETA for order {OrderId}: {Error}", 
+                        _logger.LogWarning("Failed to update ETA for order {OrderId}: {Error}",
                             orderId, etaUpdateResult.Error);
                     }
 
@@ -372,11 +368,11 @@ public class CourierHub : Hub
                 "Order picked up by courier");
 
             var result = await _orderService.UpdateOrderStatusAsync(request, CancellationToken.None);
-            
+
             if (result.Success)
             {
                 _logger.LogInformation("Courier {UserId} marked order {OrderId} as picked up", userId, orderId);
-                
+
                 await Clients.Group($"order_{orderId}")
                     .SendAsync("OrderPickedUp", new
                     {
@@ -417,11 +413,11 @@ public class CourierHub : Hub
                 deliveryProof != null ? $"Delivered. Proof: {deliveryProof}" : "Delivered");
 
             var result = await _orderService.UpdateOrderStatusAsync(request, CancellationToken.None);
-            
+
             if (result.Success)
             {
                 _logger.LogInformation("Courier {UserId} marked order {OrderId} as delivered", userId, orderId);
-                
+
                 await Clients.Group($"order_{orderId}")
                     .SendAsync("OrderDelivered", new
                     {
@@ -433,13 +429,13 @@ public class CourierHub : Hub
 
                 // Update courier availability
                 var availabilityResult = await _courierService.UpdateAvailabilityAsync(
-                    userId.Value, 
-                    CourierAvailabilityStatus.Available, 
+                    userId.Value,
+                    CourierAvailabilityStatus.Available,
                     CancellationToken.None);
-                
+
                 if (!availabilityResult.Success)
                 {
-                    _logger.LogWarning("Failed to update courier {UserId} availability after delivery: {Error}", 
+                    _logger.LogWarning("Failed to update courier {UserId} availability after delivery: {Error}",
                         userId, availabilityResult.Error);
                 }
             }
@@ -470,7 +466,7 @@ public class CourierHub : Hub
             }
 
             var ordersResult = await _courierService.GetAssignedOrdersAsync(userId.Value, CancellationToken.None);
-            
+
             if (ordersResult.Success)
             {
                 _logger.LogInformation("Courier {UserId} requested assigned orders", userId);
@@ -503,11 +499,11 @@ public class CourierHub : Hub
             }
 
             var result = await _courierService.UpdateAvailabilityAsync(userId.Value, status, CancellationToken.None);
-            
+
             if (result.Success)
             {
                 _logger.LogInformation("Courier {UserId} updated availability to {Status}", userId, status);
-                
+
                 await Clients.Caller.SendAsync("AvailabilityUpdated", new
                 {
                     status = status.ToString(),
@@ -550,7 +546,7 @@ public class CourierHub : Hub
             }
 
             var routeResult = await _routeService.GetOptimizedRouteForCourierAsync(userId.Value, CancellationToken.None);
-            
+
             if (routeResult.Success)
             {
                 _logger.LogInformation("Courier {UserId} requested optimized route", userId);
@@ -571,8 +567,8 @@ public class CourierHub : Hub
     private Guid? GetUserId()
     {
         var userIdClaim = Context.User?.FindFirst(ClaimTypes.NameIdentifier);
-        return userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId) 
-            ? userId 
+        return userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId)
+            ? userId
             : null;
     }
 

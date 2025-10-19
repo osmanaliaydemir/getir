@@ -17,10 +17,7 @@ public class NotificationHub : Hub
     private readonly INotificationService _notificationService;
     private readonly INotificationPreferencesService _preferencesService;
 
-    public NotificationHub(
-        ILogger<NotificationHub> logger,
-        INotificationService notificationService,
-        INotificationPreferencesService preferencesService)
+    public NotificationHub(ILogger<NotificationHub> logger, INotificationService notificationService, INotificationPreferencesService preferencesService)
     {
         _logger = logger;
         _notificationService = notificationService;
@@ -31,7 +28,7 @@ public class NotificationHub : Hub
     {
         try
         {
-            _logger.LogInformation("NotificationHub connection attempt. ConnectionId: {ConnectionId}, User: {User}", 
+            _logger.LogInformation("NotificationHub connection attempt. ConnectionId: {ConnectionId}, User: {User}",
                 Context.ConnectionId, Context.User?.Identity?.Name ?? "Anonymous");
 
             var userId = GetUserId();
@@ -39,34 +36,33 @@ public class NotificationHub : Hub
             {
                 // Add user to their personal group
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"user_{userId}");
-                _logger.LogInformation("User {UserId} connected to NotificationHub. ConnectionId: {ConnectionId}", 
+                _logger.LogInformation("User {UserId} connected to NotificationHub. ConnectionId: {ConnectionId}",
                     userId, Context.ConnectionId);
             }
             else
             {
-                _logger.LogWarning("User connected to NotificationHub without valid userId. ConnectionId: {ConnectionId}", 
+                _logger.LogWarning("User connected to NotificationHub without valid userId. ConnectionId: {ConnectionId}",
                     Context.ConnectionId);
             }
 
             await base.OnConnectedAsync();
-            _logger.LogInformation("NotificationHub.OnConnectedAsync completed successfully. ConnectionId: {ConnectionId}", 
+            _logger.LogInformation("NotificationHub.OnConnectedAsync completed successfully. ConnectionId: {ConnectionId}",
                 Context.ConnectionId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in NotificationHub.OnConnectedAsync. ConnectionId: {ConnectionId}", 
+            _logger.LogError(ex, "Error in NotificationHub.OnConnectedAsync. ConnectionId: {ConnectionId}",
                 Context.ConnectionId);
             throw; // Rethrow to signal connection failure
         }
     }
-
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var userId = GetUserId();
         if (userId != null)
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"user_{userId}");
-            _logger.LogInformation("User {UserId} disconnected from NotificationHub. ConnectionId: {ConnectionId}", 
+            _logger.LogInformation("User {UserId} disconnected from NotificationHub. ConnectionId: {ConnectionId}",
                 userId, Context.ConnectionId);
         }
 
@@ -89,12 +85,12 @@ public class NotificationHub : Hub
 
             // Update notification status in database
             var result = await _notificationService.MarkAsReadAsync(notificationId, userId.Value);
-            
+
             if (result.Success)
             {
-                _logger.LogInformation("User {UserId} marked notification {NotificationId} as read", 
+                _logger.LogInformation("User {UserId} marked notification {NotificationId} as read",
                     userId, notificationId);
-                
+
                 // Broadcast to user's other devices
                 await Clients.Group($"user_{userId}")
                     .SendAsync("NotificationRead", notificationId);
@@ -122,7 +118,7 @@ public class NotificationHub : Hub
     public async Task SubscribeToNotificationTypes(List<string> notificationTypes)
     {
         ArgumentNullException.ThrowIfNull(notificationTypes);
-        
+
         var userId = GetUserId();
         if (userId != null)
         {
@@ -130,8 +126,8 @@ public class NotificationHub : Hub
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"notification_{type}_{userId}");
             }
-            
-            _logger.LogInformation("User {UserId} subscribed to notification types: {Types}", 
+
+            _logger.LogInformation("User {UserId} subscribed to notification types: {Types}",
                 userId, string.Join(", ", notificationTypes));
         }
     }
@@ -143,11 +139,11 @@ public class NotificationHub : Hub
     {
         var userId = GetUserId();
         var userRole = GetUserRole();
-        
+
         if (userId != null && !string.IsNullOrEmpty(userRole))
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, $"role_{userRole}");
-            _logger.LogInformation("User {UserId} with role {Role} subscribed to role notifications", 
+            _logger.LogInformation("User {UserId} with role {Role} subscribed to role notifications",
                 userId, userRole);
         }
     }
@@ -167,15 +163,15 @@ public class NotificationHub : Hub
             }
 
             var result = await _notificationService.GetUnreadCountAsync(userId.Value);
-            
+
             if (!result.Success)
             {
                 await Clients.Caller.SendAsync("Error", result.Error ?? "Failed to get unread count");
                 return;
             }
-            
+
             _logger.LogInformation("User {UserId} has {Count} unread notifications", userId, result.Data);
-            
+
             await Clients.Caller.SendAsync("UnreadCount", new
             {
                 count = result.Data,
@@ -205,16 +201,16 @@ public class NotificationHub : Hub
             }
 
             var result = await _notificationService.GetUserNotificationsAsync(userId.Value, count);
-            
+
             if (!result.Success)
             {
                 await Clients.Caller.SendAsync("Error", result.Error ?? "Failed to get notifications");
                 return;
             }
-            
-            _logger.LogInformation("User {UserId} requested {Count} recent notifications, found {Found}", 
+
+            _logger.LogInformation("User {UserId} requested {Count} recent notifications, found {Found}",
                 userId, count, result.Data?.Count ?? 0);
-            
+
             await Clients.Caller.SendAsync("RecentNotifications", new
             {
                 notifications = result.Data,
@@ -245,11 +241,11 @@ public class NotificationHub : Hub
             }
 
             var result = await _notificationService.MarkAllAsReadAsync(userId.Value);
-            
+
             if (result.Success)
             {
                 _logger.LogInformation("User {UserId} marked all notifications as read", userId);
-                
+
                 // Broadcast to user's other devices
                 await Clients.Group($"user_{userId}")
                     .SendAsync("AllNotificationsRead");
@@ -285,11 +281,11 @@ public class NotificationHub : Hub
             }
 
             var result = await _notificationService.DeleteNotificationAsync(notificationId, userId.Value);
-            
+
             if (result.Success)
             {
                 _logger.LogInformation("User {UserId} deleted notification {NotificationId}", userId, notificationId);
-                
+
                 // Broadcast to user's other devices
                 await Clients.Group($"user_{userId}")
                     .SendAsync("NotificationDeleted", notificationId);
@@ -326,7 +322,7 @@ public class NotificationHub : Hub
             }
 
             var result = await _preferencesService.UpdateUserPreferencesAsync(userId.Value, request, CancellationToken.None);
-            
+
             if (result.Success)
             {
                 _logger.LogInformation("User {UserId} updated notification preferences", userId);
@@ -359,13 +355,13 @@ public class NotificationHub : Hub
             }
 
             var result = await _preferencesService.GetUserPreferencesAsync(userId.Value);
-            
+
             if (!result.Success)
             {
                 await Clients.Caller.SendAsync("Error", result.Error ?? "Failed to get preferences");
                 return;
             }
-            
+
             _logger.LogInformation("User {UserId} requested notification preferences", userId);
             await Clients.Caller.SendAsync("NotificationPreferences", result.Data);
         }
@@ -397,8 +393,8 @@ public class NotificationHub : Hub
     private Guid? GetUserId()
     {
         var userIdClaim = Context.User?.FindFirst(ClaimTypes.NameIdentifier);
-        return userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId) 
-            ? userId 
+        return userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId)
+            ? userId
             : null;
     }
 }

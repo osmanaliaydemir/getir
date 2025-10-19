@@ -19,10 +19,7 @@ public class OrderHub : Hub
     private readonly IOrderService _orderService;
     private readonly INotificationService _notificationService;
 
-    public OrderHub(
-        ILogger<OrderHub> logger,
-        IOrderService orderService,
-        INotificationService notificationService)
+    public OrderHub(ILogger<OrderHub> logger, IOrderService orderService, INotificationService notificationService)
     {
         _logger = logger;
         _orderService = orderService;
@@ -37,12 +34,12 @@ public class OrderHub : Hub
             if (userId != null)
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"user_{userId}");
-                _logger.LogInformation("User {UserId} connected to OrderHub. ConnectionId: {ConnectionId}", 
+                _logger.LogInformation("User {UserId} connected to OrderHub. ConnectionId: {ConnectionId}",
                     userId, Context.ConnectionId);
             }
             else
             {
-                _logger.LogWarning("User connected to OrderHub without valid userId. ConnectionId: {ConnectionId}", 
+                _logger.LogWarning("User connected to OrderHub without valid userId. ConnectionId: {ConnectionId}",
                     Context.ConnectionId);
             }
 
@@ -50,12 +47,11 @@ public class OrderHub : Hub
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in OrderHub.OnConnectedAsync. ConnectionId: {ConnectionId}", 
+            _logger.LogError(ex, "Error in OrderHub.OnConnectedAsync. ConnectionId: {ConnectionId}",
                 Context.ConnectionId);
             throw; // Rethrow to signal connection failure
         }
     }
-
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var userId = GetUserId();
@@ -84,26 +80,26 @@ public class OrderHub : Hub
 
             // Verify user has permission to subscribe to this order
             var orderResult = await _orderService.GetOrderByIdAsync(orderId, CancellationToken.None);
-            
+
             if (orderResult.Success && orderResult.Value != null)
             {
                 var order = orderResult.Value;
-                
+
                 // Allow customer, merchant, courier, or admin
-                if (order.UserId == userId.Value || 
-                    order.MerchantId == userId.Value || 
+                if (order.UserId == userId.Value ||
+                    order.MerchantId == userId.Value ||
                     order.CourierId == userId.Value ||
                     IsUserInRole("Admin"))
                 {
                     await Groups.AddToGroupAsync(Context.ConnectionId, $"order_{orderId}");
                     _logger.LogInformation("User {UserId} subscribed to order {OrderId}", userId, orderId);
-                    
+
                     // Send current order status
                     await Clients.Caller.SendAsync("OrderSubscribed", order);
                 }
                 else
                 {
-                    _logger.LogWarning("User {UserId} attempted unauthorized subscription to order {OrderId}", 
+                    _logger.LogWarning("User {UserId} attempted unauthorized subscription to order {OrderId}",
                         userId, orderId);
                     await Clients.Caller.SendAsync("Error", "You don't have permission to subscribe to this order");
                 }
@@ -126,7 +122,7 @@ public class OrderHub : Hub
     public async Task UnsubscribeFromOrder(Guid orderId)
     {
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"order_{orderId}");
-        _logger.LogInformation("Connection {ConnectionId} unsubscribed from order {OrderId}", 
+        _logger.LogInformation("Connection {ConnectionId} unsubscribed from order {OrderId}",
             Context.ConnectionId, orderId);
     }
 
@@ -148,12 +144,12 @@ public class OrderHub : Hub
             if (userId.Value == merchantId || IsUserInRole("Admin"))
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"merchant_{merchantId}");
-                _logger.LogInformation("User {UserId} subscribed to merchant {MerchantId} orders", 
+                _logger.LogInformation("User {UserId} subscribed to merchant {MerchantId} orders",
                     userId, merchantId);
 
                 // Send current pending orders for merchant
                 var pendingOrdersResult = await _orderService.GetMerchantPendingOrdersAsync(merchantId, CancellationToken.None);
-                
+
                 if (pendingOrdersResult.Success)
                 {
                     await Clients.Caller.SendAsync("MerchantPendingOrders", new
@@ -166,14 +162,14 @@ public class OrderHub : Hub
                 }
                 else
                 {
-                    _logger.LogWarning("Failed to get pending orders for merchant {MerchantId}: {Error}", 
+                    _logger.LogWarning("Failed to get pending orders for merchant {MerchantId}: {Error}",
                         merchantId, pendingOrdersResult.Error);
                     await Clients.Caller.SendAsync("Error", pendingOrdersResult.Error ?? "Failed to get pending orders");
                 }
             }
             else
             {
-                _logger.LogWarning("User {UserId} attempted unauthorized subscription to merchant {MerchantId}", 
+                _logger.LogWarning("User {UserId} attempted unauthorized subscription to merchant {MerchantId}",
                     userId, merchantId);
                 await Clients.Caller.SendAsync("Error", "You don't have permission to subscribe to this merchant");
             }
@@ -210,14 +206,14 @@ public class OrderHub : Hub
 
             // Fetch order details from service
             var orderResult = await _orderService.GetOrderByIdAsync(orderId, CancellationToken.None);
-            
+
             if (orderResult.Success && orderResult.Value != null)
             {
                 // Verify user has permission to view this order
                 if (orderResult.Value.UserId == userId.Value || IsUserInRole("Admin") || IsUserInRole("Merchant"))
                 {
                     _logger.LogInformation("User {UserId} requested tracking for order {OrderId}", userId, orderId);
-                    
+
                     await Clients.Caller.SendAsync("OrderTrackingInfo", orderResult.Value);
                 }
                 else
@@ -258,12 +254,12 @@ public class OrderHub : Hub
                 notes);
 
             var result = await _orderService.UpdateOrderStatusAsync(updateRequest, CancellationToken.None);
-            
+
             if (result.Success)
             {
-                _logger.LogInformation("User {UserId} updated order {OrderId} status to {Status}", 
+                _logger.LogInformation("User {UserId} updated order {OrderId} status to {Status}",
                     userId, orderId, newStatus);
-                
+
                 // Broadcast to all subscribers of this order
                 await Clients.Group($"order_{orderId}")
                     .SendAsync("OrderStatusUpdated", new
@@ -279,14 +275,14 @@ public class OrderHub : Hub
                 if (order != null)
                 {
                     var notificationResult = await _notificationService.SendOrderStatusNotificationAsync(
-                        order.UserId, 
-                        orderId, 
+                        order.UserId,
+                        orderId,
                         newStatus,
                         CancellationToken.None);
-                    
+
                     if (!notificationResult.Success)
                     {
-                        _logger.LogWarning("Failed to send order status notification for order {OrderId}: {Error}", 
+                        _logger.LogWarning("Failed to send order status notification for order {OrderId}: {Error}",
                             orderId, notificationResult.Error);
                     }
 
@@ -328,12 +324,12 @@ public class OrderHub : Hub
             }
 
             var activeOrdersResult = await _orderService.GetUserActiveOrdersAsync(userId.Value, CancellationToken.None);
-            
+
             if (activeOrdersResult.Success)
             {
-                _logger.LogInformation("User {UserId} requested active orders, found {Count}", 
+                _logger.LogInformation("User {UserId} requested active orders, found {Count}",
                     userId, activeOrdersResult.Data?.Count ?? 0);
-                    
+
                 await Clients.Caller.SendAsync("ActiveOrders", new
                 {
                     orders = activeOrdersResult.Data,
@@ -344,7 +340,7 @@ public class OrderHub : Hub
             }
             else
             {
-                _logger.LogWarning("Failed to get active orders for user {UserId}: {Error}", 
+                _logger.LogWarning("Failed to get active orders for user {UserId}: {Error}",
                     userId, activeOrdersResult.Error);
                 await Clients.Caller.SendAsync("Error", activeOrdersResult.Error ?? "Failed to get active orders");
             }
@@ -375,11 +371,11 @@ public class OrderHub : Hub
                 reason);
 
             var result = await _orderService.CancelOrderAsync(cancelRequest, CancellationToken.None);
-            
+
             if (result.Success)
             {
                 _logger.LogInformation("User {UserId} cancelled order {OrderId}", userId, orderId);
-                
+
                 // Broadcast to order subscribers
                 await Clients.Group($"order_{orderId}")
                     .SendAsync("OrderCancelled", new
@@ -444,12 +440,12 @@ public class OrderHub : Hub
                 DateTime.UtcNow);
 
             var result = await _orderService.RateOrderAsync(ratingRequest, CancellationToken.None);
-            
+
             if (result.Success)
             {
-                _logger.LogInformation("User {UserId} rated order {OrderId} with {Rating} stars", 
+                _logger.LogInformation("User {UserId} rated order {OrderId} with {Rating} stars",
                     userId, orderId, rating);
-                
+
                 await Clients.Caller.SendAsync("OrderRatedSuccess", new
                 {
                     orderId,
@@ -486,8 +482,8 @@ public class OrderHub : Hub
     private Guid? GetUserId()
     {
         var userIdClaim = Context.User?.FindFirst(ClaimTypes.NameIdentifier);
-        return userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId) 
-            ? userId 
+        return userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId)
+            ? userId
             : null;
     }
 

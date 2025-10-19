@@ -11,17 +11,13 @@ public class RedisHealthCheck : IHealthCheck
     private readonly IConnectionMultiplexer? _redis;
     private readonly ILogger<RedisHealthCheck> _logger;
 
-    public RedisHealthCheck(
-        IConnectionMultiplexer? redis,
-        ILogger<RedisHealthCheck> logger)
+    public RedisHealthCheck(IConnectionMultiplexer? redis, ILogger<RedisHealthCheck> logger)
     {
         _redis = redis;
         _logger = logger;
     }
 
-    public async Task<HealthCheckResult> CheckHealthAsync(
-        HealthCheckContext context,
-        CancellationToken cancellationToken = default)
+    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -95,7 +91,7 @@ public class RedisHealthCheck : IHealthCheck
         catch (RedisConnectionException ex)
         {
             _logger.LogWarning(ex, "Redis health check failed: connection error");
-            
+
             return HealthCheckResult.Degraded(
                 "Redis connection error. Using MemoryCache fallback.",
                 exception: ex,
@@ -109,7 +105,7 @@ public class RedisHealthCheck : IHealthCheck
         catch (Exception ex)
         {
             _logger.LogError(ex, "Redis health check failed: unexpected error");
-            
+
             return HealthCheckResult.Unhealthy(
                 "Redis health check failed unexpectedly.",
                 exception: ex,

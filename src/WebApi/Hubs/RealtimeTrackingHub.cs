@@ -13,11 +13,7 @@ public class RealtimeTrackingHub : Hub
     private readonly ITrackingNotificationService _notificationService;
     private readonly ILogger<RealtimeTrackingHub> _logger;
 
-    public RealtimeTrackingHub(
-        IRealtimeTrackingService realtimeTrackingService,
-        IOrderTrackingService orderTrackingService,
-        ITrackingNotificationService notificationService,
-        ILogger<RealtimeTrackingHub> logger)
+    public RealtimeTrackingHub(IRealtimeTrackingService realtimeTrackingService, IOrderTrackingService orderTrackingService, ITrackingNotificationService notificationService, ILogger<RealtimeTrackingHub> logger)
     {
         _realtimeTrackingService = realtimeTrackingService;
         _orderTrackingService = orderTrackingService;
@@ -109,7 +105,7 @@ public class RealtimeTrackingHub : Hub
             };
 
             var response = await _orderTrackingService.UpdateLocationAsync(request);
-            
+
             if (response.Success)
             {
                 // Get updated tracking data
@@ -151,7 +147,7 @@ public class RealtimeTrackingHub : Hub
             };
 
             var response = await _orderTrackingService.UpdateStatusAsync(request);
-            
+
             if (response.Success)
             {
                 // Get updated tracking data
