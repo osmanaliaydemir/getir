@@ -409,16 +409,15 @@ await axios.post('/upload', formData, {
 2. **Application Insights** (2h) - Production monitoring
 
 ### Gelecek Hafta (Yüksek Öncelik)
-3. **Working Hours Integration** (1-2h) - Kolay, UI hazır
-4. **Payment Tracking Module** (4-5h) - Business critical
-5. **Advanced Analytics** (3-4h) - Dashboard enhancement
-6. **Background Jobs** (8-12h) - Büyük feature
+3. **Payment Tracking Module** (4-5h) - Business critical
+4. **Advanced Analytics** (3-4h) - Dashboard enhancement
+5. **Background Jobs** (8-12h) - Büyük feature
 
 ### Sonrası (Enhancement)
 6. **Stock Management Enhancement** (2-3h)
 7. **File Upload Enhancement** (2-3h)
 
-**Toplam:** 23-32 saat
+**Toplam:** 21-30 saat
 
 ---
 
