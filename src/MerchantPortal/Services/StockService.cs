@@ -1,4 +1,5 @@
 using Getir.MerchantPortal.Models;
+using System.Text;
 
 namespace Getir.MerchantPortal.Services;
 
@@ -202,6 +203,199 @@ public class StockService : IStockService
             _logger.LogError(ex, "Error checking stock levels");
             return false;
         }
+    }
+
+    /// <summary>
+    /// Düşük stoklu ürünleri getirir.
+    /// </summary>
+    public async Task<List<LowStockProductModel>> GetLowStockProductsAsync(Guid merchantId, int threshold = 10, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _apiClient.GetAsync<ApiResponse<List<LowStockProductModel>>>(
+                $"api/StockManagement/low-stock?threshold={threshold}",
+                ct);
+
+            return response?.Data ?? new List<LowStockProductModel>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting low stock products");
+            return new List<LowStockProductModel>();
+        }
+    }
+
+    /// <summary>
+    /// Stok verilerini CSV olarak export eder.
+    /// </summary>
+    public async Task<byte[]> ExportStockToCsvAsync(Guid merchantId, CancellationToken ct = default)
+    {
+        try
+        {
+            // Get all products with stock info
+            var products = await GetLowStockProductsAsync(merchantId, 999999, ct); // Get all products
+
+            var csv = new StringBuilder();
+            csv.AppendLine("ProductId,ProductName,SKU,CurrentStock,MinStock,MaxStock,Status");
+
+            foreach (var product in products)
+            {
+                csv.AppendLine($"{product.ProductId},{EscapeCsv(product.ProductName)},{EscapeCsv(product.SKU)},{product.CurrentStock},{product.MinStock},{product.MaxStock},{product.Status}");
+            }
+
+            return Encoding.UTF8.GetBytes(csv.ToString());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error exporting stock to CSV");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// CSV dosyasından stok verilerini import eder.
+    /// </summary>
+    public async Task<StockImportResult> ImportStockFromCsvAsync(Guid merchantId, Stream csvStream, CancellationToken ct = default)
+    {
+        var result = new StockImportResult
+        {
+            TotalRows = 0,
+            SuccessCount = 0,
+            ErrorCount = 0,
+            Errors = new List<string>()
+        };
+
+        try
+        {
+            using var reader = new StreamReader(csvStream);
+            
+            // Skip header
+            await reader.ReadLineAsync();
+            
+            var updates = new List<BulkStockUpdateModel>();
+            var lineNumber = 1;
+
+            while (!reader.EndOfStream)
+            {
+                lineNumber++;
+                result.TotalRows++;
+
+                var line = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                var values = line.Split(',');
+                
+                if (values.Length < 4)
+                {
+                    result.ErrorCount++;
+                    result.Errors.Add($"Line {lineNumber}: Invalid format");
+                    continue;
+                }
+
+                if (!Guid.TryParse(values[0], out var productId))
+                {
+                    result.ErrorCount++;
+                    result.Errors.Add($"Line {lineNumber}: Invalid ProductId");
+                    continue;
+                }
+
+                if (!int.TryParse(values[3], out var stock))
+                {
+                    result.ErrorCount++;
+                    result.Errors.Add($"Line {lineNumber}: Invalid stock value");
+                    continue;
+                }
+
+                updates.Add(new BulkStockUpdateModel
+                {
+                    ProductId = productId,
+                    NewStockLevel = stock
+                });
+            }
+
+            // Send bulk update to API
+            if (updates.Any())
+            {
+                var bulkRequest = new BulkUpdateStockRequest
+                {
+                    Updates = updates
+                };
+
+                var success = await BulkUpdateStockLevelsAsync(bulkRequest, ct);
+                
+                if (success)
+                {
+                    result.SuccessCount = updates.Count;
+                }
+                else
+                {
+                    result.ErrorCount += updates.Count;
+                    result.Errors.Add("Bulk update failed");
+                }
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error importing stock from CSV");
+            result.Errors.Add($"Import error: {ex.Message}");
+            return result;
+        }
+    }
+
+    /// <summary>
+    /// Reorder point ayarlar.
+    /// </summary>
+    public async Task<bool> SetReorderPointAsync(Guid productId, int minStock, int maxStock, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _apiClient.PutAsync<ApiResponse<object>>(
+                $"api/StockManagement/reorder-point/{productId}",
+                new { MinStock = minStock, MaxStock = maxStock },
+                ct);
+
+            return response?.isSuccess == true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting reorder point");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Reorder points listesi getirir.
+    /// </summary>
+    public async Task<List<ReorderPointModel>> GetReorderPointsAsync(Guid merchantId, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _apiClient.GetAsync<ApiResponse<List<ReorderPointModel>>>(
+                "api/StockManagement/reorder-points",
+                ct);
+
+            return response?.Data ?? new List<ReorderPointModel>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting reorder points");
+            return new List<ReorderPointModel>();
+        }
+    }
+
+    private string EscapeCsv(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        if (value.Contains(",") || value.Contains("\"") || value.Contains("\n"))
+        {
+            return $"\"{value.Replace("\"", "\"\"")}\"";
+        }
+
+        return value;
     }
 }
 

@@ -1,0 +1,336 @@
+@model List<ProductResponse>
+@{
+    ViewData["Title"] = "Stok Yönetimi";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-boxes me-2"></i>Stok Yönetimi</h2>
+        <div class="btn-group">
+            <button type="button" class="btn btn-success" onclick="bulkUpdateManager.openModal()">
+                <i class="fas fa-edit me-1"></i>Toplu Güncelle
+            </button>
+            <button type="button" class="btn btn-primary" onclick="csvImporter.downloadTemplate()">
+                <i class="fas fa-download me-1"></i>Şablon İndir
+            </button>
+            <button type="button" class="btn btn-info" onclick="csvImporter.openImportModal()">
+                <i class="fas fa-upload me-1"></i>CSV İçe Aktar
+            </button>
+            <a href="/Stock/ExportToCSV" class="btn btn-secondary">
+                <i class="fas fa-file-export me-1"></i>CSV Dışa Aktar
+            </a>
+        </div>
+    </div>
+
+    <!-- Stock Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h6 class="text-success"><i class="fas fa-check-circle me-1"></i>Normal Stok</h6>
+                    <h3 id="normalStockCount">-</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h6 class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>Düşük Stok</h6>
+                    <h3 id="lowStockCount">-</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <h6 class="text-danger"><i class="fas fa-times-circle me-1"></i>Tükenen</h6>
+                    <h3 id="outOfStockCount">-</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <h6 class="text-info"><i class="fas fa-boxes me-1"></i>Toplam Ürün</h6>
+                    <h3 id="totalProductCount">@Model.Count</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Table -->
+    <div class="card">
+        <div class="card-body">
+            <table id="stockTable" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll"></th>
+                        <th>Ürün</th>
+                        <th>SKU</th>
+                        <th>Stok</th>
+                        <th>Min</th>
+                        <th>Max</th>
+                        <th>Durum</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var product in Model)
+                    {
+                        <tr data-product-id="@product.Id">
+                            <td><input type="checkbox" class="product-checkbox" value="@product.Id"></td>
+                            <td>@product.Name</td>
+                            <td>@product.SKU</td>
+                            <td>
+                                <span class="badge bg-@(product.StockQuantity > 10 ? "success" : product.StockQuantity > 0 ? "warning" : "danger")">
+                                    @product.StockQuantity
+                                </span>
+                            </td>
+                            <td>@(product.MinStock ?? 0)</td>
+                            <td>@(product.MaxStock ?? 999)</td>
+                            <td>
+                                @if (product.StockQuantity == 0)
+                                {
+                                    <span class="badge bg-danger">Tükendi</span>
+                                }
+                                else if (product.StockQuantity < (product.MinStock ?? 10))
+                                {
+                                    <span class="badge bg-warning">Düşük</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Normal</span>
+                                }
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="openUpdateModal('@product.Id', '@product.Name', @product.StockQuantity)">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <a href="/Stock/History?productId=@product.Id" class="btn btn-sm btn-info">
+                                    <i class="fas fa-history"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Update Modal -->
+<div class="modal fade" id="bulkUpdateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Toplu Stok Güncelleme</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <strong id="selectedCount">0</strong> ürün seçildi
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">İşlem Türü</label>
+                    <select id="bulkOperationType" class="form-select">
+                        <option value="set">Stoku Ayarla (=)</option>
+                        <option value="add">Stok Ekle (+)</option>
+                        <option value="subtract">Stok Çıkar (-)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Miktar</label>
+                    <input type="number" id="bulkAmount" class="form-control" min="0" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Not</label>
+                    <textarea id="bulkNote" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="bulkUpdateManager.applyUpdate()">
+                    <i class="fas fa-check me-1"></i>Uygula
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSV Import Modal -->
+<div class="modal fade" id="csvImportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-upload me-2"></i>CSV İçe Aktar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">CSV Dosyası</label>
+                    <input type="file" id="csvFileInput" class="form-control" accept=".csv">
+                    <small class="text-muted">Format: ProductId,ProductName,SKU,CurrentStock,MinStock,MaxStock,Status</small>
+                </div>
+
+                <div id="importPreview" class="mt-3" style="display:none;">
+                    <h6>Önizleme</h6>
+                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Ürün</th>
+                                    <th>SKU</th>
+                                    <th>Yeni Stok</th>
+                                    <th>Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody id="importPreviewBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="importResult" class="alert" style="display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" id="btnImport" class="btn btn-primary" onclick="csvImporter.importData()">
+                    <i class="fas fa-upload me-1"></i>İçe Aktar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Single Update Modal -->
+<div class="modal fade" id="updateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Stok Güncelle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="updateProductId">
+                <div class="mb-3">
+                    <label class="form-label">Ürün</label>
+                    <input type="text" id="updateProductName" class="form-control" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Mevcut Stok</label>
+                    <input type="number" id="updateCurrentStock" class="form-control" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Yeni Stok</label>
+                    <input type="number" id="updateNewStock" class="form-control" min="0" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="updateStock()">Güncelle</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/modules/stock/csvImport.js"></script>
+    <script src="~/js/modules/stock/bulkUpdate.js"></script>
+    <script>
+        // Initialize managers
+        const csvImporter = new CSVImporter('/Stock');
+        const bulkUpdateManager = new BulkUpdateManager('/Stock');
+
+        // DataTable initialization
+        $(document).ready(function() {
+            $('#stockTable').DataTable({
+                pageLength: 25,
+                order: [[3, 'asc']], // Sort by stock quantity
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/tr.json'
+                }
+            });
+
+            // Select all checkbox
+            $('#selectAll').on('change', function() {
+                $('.product-checkbox').prop('checked', this.checked);
+                updateSelectedCount();
+            });
+
+            $('.product-checkbox').on('change', updateSelectedCount);
+
+            // Calculate stock summary
+            calculateStockSummary();
+        });
+
+        function updateSelectedCount() {
+            const count = $('.product-checkbox:checked').length;
+            $('#selectedCount').text(count);
+        }
+
+        function calculateStockSummary() {
+            let normal = 0, low = 0, out = 0;
+            
+            @foreach (var product in Model)
+            {
+                if (product.StockQuantity == 0)
+                {
+                    <text>out++;</text>
+                }
+                else if (product.StockQuantity < (product.MinStock ?? 10))
+                {
+                    <text>low++;</text>
+                }
+                else
+                {
+                    <text>normal++;</text>
+                }
+            }
+
+            $('#normalStockCount').text(normal);
+            $('#lowStockCount').text(low);
+            $('#outOfStockCount').text(out);
+        }
+
+        function openUpdateModal(productId, productName, currentStock) {
+            $('#updateProductId').val(productId);
+            $('#updateProductName').val(productName);
+            $('#updateCurrentStock').val(currentStock);
+            $('#updateNewStock').val(currentStock);
+            new bootstrap.Modal(document.getElementById('updateModal')).show();
+        }
+
+        async function updateStock() {
+            const productId = $('#updateProductId').val();
+            const newStock = parseInt($('#updateNewStock').val());
+
+            try {
+                const response = await fetch('/Stock/UpdateStock', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    body: JSON.stringify({
+                        productId: productId,
+                        newStockLevel: newStock
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert('Hata: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                alert('Güncelleme sırasında hata oluştu');
+            }
+        }
+    </script>
+}
+

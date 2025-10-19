@@ -75,9 +75,17 @@
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label asp-for="ImageUrl" class="form-label">Görsel URL</label>
-                    <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
+                <!-- Modern Image Upload Component -->
+                <div class="mb-4">
+                    <label class="form-label">Ürün Görselleri</label>
+                    <partial name="_ImageUploadPartial" 
+                             model="new { 
+                                 FieldName = nameof(Model.ImageUrl),
+                                 MaxFiles = 5,
+                                 AcceptedTypes = new[] { "image/jpeg", "image/png", "image/webp" },
+                                 MaxFileSize = 5242880
+                             }" />
+                    <input asp-for="ImageUrl" type="hidden" id="imageUrlField" />
                     <span asp-validation-for="ImageUrl" class="text-danger"></span>
                 </div>
 
@@ -112,5 +120,72 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    
+    <!-- Image Upload Scripts -->
+    <script src="~/js/modules/upload/dragDrop.js"></script>
+    <script src="~/js/modules/upload/imageCompression.js"></script>
+    <script src="~/js/modules/upload/multipleFiles.js"></script>
+    <script src="~/js/modules/upload/uploadProgress.js"></script>
+    
+    <script>
+        // Initialize image upload
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        
+        if (dropZone && fileInput) {
+            const dragDropUploader = new DragDropUploader(dropZone, fileInput);
+            const multipleFilesManager = new MultipleFilesManager();
+            const imageCompressor = new ImageCompressor();
+            
+            // Handle file selection
+            fileInput.addEventListener('change', async function(e) {
+                const files = Array.from(e.target.files);
+                
+                for (const file of files) {
+                    if (file.type.startsWith('image/')) {
+                        try {
+                            // Compress image
+                            const compressedBlob = await imageCompressor.compress(file);
+                            
+                            // Add to preview
+                            multipleFilesManager.addFile(file);
+                            
+                            // Upload to server (implement this endpoint)
+                            await uploadImage(compressedBlob, file.name);
+                        } catch (error) {
+                            console.error('Image processing error:', error);
+                        }
+                    }
+                }
+            });
+            
+            async function uploadImage(blob, fileName) {
+                const formData = new FormData();
+                formData.append('file', blob, fileName);
+                
+                try {
+                    const response = await fetch('/api/upload/product-image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        // Update hidden ImageUrl field
+                        const imageUrlField = document.getElementById('imageUrlField');
+                        if (imageUrlField) {
+                            const currentUrls = imageUrlField.value ? imageUrlField.value.split(',') : [];
+                            currentUrls.push(data.url);
+                            imageUrlField.value = currentUrls.join(',');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    alert('Görsel yükleme başarısız oldu');
+                }
+            }
+        }
+    </script>
 }
 

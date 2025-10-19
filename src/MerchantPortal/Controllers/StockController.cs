@@ -161,5 +161,95 @@ public class StockController : Controller
             return Json(new { success = false, message = "Bir hata oluştu" });
         }
     }
+
+    /// <summary>
+    /// Export stock to CSV
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> ExportToCSV()
+    {
+        try
+        {
+            var merchantIdStr = HttpContext.Session.GetString("MerchantId");
+            if (string.IsNullOrEmpty(merchantIdStr) || !Guid.TryParse(merchantIdStr, out var merchantId))
+            {
+                return BadRequest("Merchant not found");
+            }
+
+            var csvData = await _stockService.ExportStockToCsvAsync(merchantId);
+            var fileName = $"Stock_Export_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+            return File(csvData, "text/csv", fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error exporting stock to CSV");
+            return StatusCode(500, "Export error");
+        }
+    }
+
+    /// <summary>
+    /// Import stock from CSV
+    /// </summary>
+    [HttpPost]
+    public async Task<IActionResult> ImportFromCSV(IFormFile file)
+    {
+        try
+        {
+            var merchantIdStr = HttpContext.Session.GetString("MerchantId");
+            if (string.IsNullOrEmpty(merchantIdStr) || !Guid.TryParse(merchantIdStr, out var merchantId))
+            {
+                return Json(new { success = false, message = "Merchant not found" });
+            }
+
+            if (file == null || file.Length == 0)
+            {
+                return Json(new { success = false, message = "Dosya seçilmedi" });
+            }
+
+            using var stream = file.OpenReadStream();
+            var result = await _stockService.ImportStockFromCsvAsync(merchantId, stream);
+
+            return Json(new
+            {
+                success = result.SuccessCount > 0,
+                totalRows = result.TotalRows,
+                successCount = result.SuccessCount,
+                errorCount = result.ErrorCount,
+                errors = result.Errors,
+                message = $"{result.SuccessCount}/{result.TotalRows} ürün güncellendi"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error importing stock from CSV");
+            return Json(new { success = false, message = "Import error" });
+        }
+    }
+
+    /// <summary>
+    /// Get low stock products
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetLowStockProducts(int threshold = 10)
+    {
+        try
+        {
+            var merchantIdStr = HttpContext.Session.GetString("MerchantId");
+            if (string.IsNullOrEmpty(merchantIdStr) || !Guid.TryParse(merchantIdStr, out var merchantId))
+            {
+                return Json(new { success = false, message = "Merchant not found" });
+            }
+
+            var products = await _stockService.GetLowStockProductsAsync(merchantId, threshold);
+
+            return Json(new { success = true, data = products });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting low stock products");
+            return Json(new { success = false, message = "Error loading data" });
+        }
+    }
 }
 
