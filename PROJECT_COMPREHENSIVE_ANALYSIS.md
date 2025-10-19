@@ -192,14 +192,8 @@ options.AddPolicy("SignalRCorsPolicy", policy =>
 
 | # | Görev | Modül | Süre | Öncelik |
 |---|-------|-------|------|---------|
-| 1 | ~~Unit Test Coverage~~ | ~~Web API~~ | ~~40-60h~~ | ✅ **TAMAMLANDI** |
-| 2 | ~~Application Insights~~ | ~~Web API~~ | ~~2h~~ | ✅ **REMOVED** |
-| 3 | ~~Advanced Analytics~~ | ~~Portal~~ | ~~3-4h~~ | ✅ **TAMAMLANDI** |
-| 4 | ~~Payment Tracking Module~~ | ~~Portal~~ | ~~4-5h~~ | ✅ **TAMAMLANDI** |
-| 5 | ~~Stock Management Enhancement~~ | ~~Portal~~ | ~~2-3h~~ | ✅ **TAMAMLANDI** |
-| 6 | ~~File Upload Enhancement~~ | ~~Portal~~ | ~~2-3h~~ | ✅ **TAMAMLANDI** |
-| 7 | **Background Jobs (Hangfire)** | **Web API** | **8-12h** | 🟡 **YÜKSEK** |
-| 8 | **CORS Policy Hardening** | **Web API** | **1h** | 🟢 **ORTA** |
+| 1 | **Background Jobs (Hangfire)** | **Web API** | **8-12h** | 🟡 **YÜKSEK** |
+| 2 | **CORS Policy Hardening** | **Web API** | **1h** | 🟢 **ORTA** |
 
 **Toplam Kalan:** 9-13 saat (1-2 gün) 🎉
 
@@ -208,12 +202,14 @@ options.AddPolicy("SignalRCorsPolicy", policy =>
 ## 🎯 TAVSİYE EDİLEN SIRALAMA
 
 ### ✅ TAMAMLANANLAR (Bu Oturumda)
-1. ~~Advanced Analytics Dashboard~~ (3-4h) ✅
-2. ~~Payment Tracking Module~~ (4-5h) ✅
-3. ~~Stock Management Enhancement~~ (2-3h) ✅
-4. ~~File Upload Enhancement~~ (2-3h) ✅
+1. ~~Unit Test Coverage~~ (40-60h) ✅
+2. ~~Application Insights~~ (2h) ✅ **REMOVED**
+3. ~~Advanced Analytics Dashboard~~ (3-4h) ✅
+4. ~~Payment Tracking Module~~ (4-5h) ✅
+5. ~~Stock Management Enhancement~~ (2-3h) ✅
+6. ~~File Upload Enhancement~~ (2-3h) ✅
 
-**Bu Oturumda Tamamlanan:** ~13 saat 🚀
+**Bu Oturumda Tamamlanan:** ~55 saat 🚀
 
 ### 🔥 SON 2 GÖREV
 1. **Background Jobs (Hangfire)** (8-12h) - Otomasyon için kritik
