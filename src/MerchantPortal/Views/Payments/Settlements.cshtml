@@ -1,140 +1,259 @@
-@model Getir.MerchantPortal.Models.PagedResult<Getir.MerchantPortal.Models.SettlementResponse>
 @{
-    ViewData["Title"] = "Ödemelerim (Settlement)";
+    ViewData["Title"] = "Mutabakat Raporları";
 }
 
+@section Styles {
+    <style>
+        .settlement-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .summary-box {
+            background: #f8f9fa;
+            border-left: 4px solid #5D3EBC;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .summary-row:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding-top: 1rem;
+            margin-top: 0.5rem;
+            border-top: 2px solid #5D3EBC;
+        }
+    </style>
+}
+
+<!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="fas fa-file-invoice-dollar"></i> Ödeme Transferleri</h3>
-    <a href="@Url.Action("Index")" class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Geri
-    </a>
+    <div>
+        <h2><i class="fas fa-file-invoice-dollar me-2"></i>Mutabakat Raporları</h2>
+        <p class="text-muted mb-0">Gelir, komisyon ve net kazanç hesaplamaları</p>
+    </div>
+    <div>
+        <a href="/Payments/Index" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-1"></i> Geri Dön
+        </a>
+    </div>
 </div>
 
+<!-- Date Range Selector -->
+<div class="settlement-card">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">Başlangıç Tarihi</label>
+            <input type="date" class="form-control" id="settlementStartDate" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Bitiş Tarihi</label>
+            <input type="date" class="form-control" id="settlementEndDate" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Hızlı Seçim</label>
+            <select class="form-select" id="quickSelect" onchange="selectQuickPeriod()">
+                <option value="">Özel Tarih</option>
+                <option value="today">Bugün</option>
+                <option value="week">Bu Hafta</option>
+                <option value="month" selected>Bu Ay</option>
+                <option value="lastMonth">Geçen Ay</option>
+                <option value="quarter">Bu Çeyrek</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-primary w-100" onclick="loadSettlementReport()">
+                <i class="fas fa-calculator me-1"></i> Rapor Oluştur
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Settlement Summary -->
+<div class="settlement-card" id="settlementSummary" style="display: none;">
+    <h5 class="mb-4">
+        <i class="fas fa-file-invoice me-2"></i>
+        Mutabakat Özeti
+        <small class="text-muted ms-2" id="reportPeriod"></small>
+    </h5>
+
+    <div class="summary-box">
+        <div class="summary-row">
+            <span>Toplam Gelir</span>
+            <span class="text-success fw-bold" id="summaryRevenue">₺0</span>
+        </div>
+        <div class="summary-row">
+            <span>Komisyon (%15)</span>
+            <span class="text-danger" id="summaryCommission">₺0</span>
+        </div>
+        <div class="summary-row">
+            <span>Net Kazanç</span>
+            <span class="text-primary" style="font-size: 1.25rem;" id="summaryNet">₺0</span>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-3">
+        <div class="col-md-6">
 <div class="alert alert-info">
-    <i class="fas fa-info-circle"></i>
-    <strong>Settlement Nedir?</strong> Getir, ödemelerinizi belirli aralıklarla banka hesabınıza transfer eder. 
-    Bu sayfada transfer geçmişinizi ve bekleyen ödemelerinizi görebilirsiniz.
+                <i class="fas fa-shopping-cart me-2"></i>
+                Toplam Sipariş: <strong id="summaryOrders">0</strong>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                Tamamlanan: <strong id="summaryCompleted">0</strong>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="stat-card">
-    @if (Model != null && Model.Items.Any())
-    {
+<!-- Daily Breakdown -->
+<div class="settlement-card" id="dailyBreakdown" style="display: none;">
+    <h5 class="mb-3">
+        <i class="fas fa-calendar-alt me-2"></i>
+        Günlük Dağılım
+    </h5>
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Settlement Tarihi</th>
-                        <th>Dönem</th>
-                        <th>Toplam Gelir</th>
-                        <th>Komisyon</th>
-                        <th>Net Tutar</th>
-                        <th>Durum</th>
-                        <th>İşlem Tarihi</th>
-                        <th>Referans</th>
+                    <th>Tarih</th>
+                    <th class="text-end">Gelir</th>
+                    <th class="text-end">Komisyon</th>
+                    <th class="text-end">Net</th>
+                    <th class="text-end">Sipariş</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach (var settlement in Model.Items)
-                    {
-                        <tr>
-                            <td>
-                                <strong>@settlement.SettlementDate.ToString("dd MMM yyyy")</strong>
-                            </td>
-                            <td>
-                                <small class="text-muted">
-                                    @settlement.CreatedAt.ToString("MMM yyyy")
-                                </small>
-                            </td>
-                            <td>₺@settlement.TotalAmount.ToString("N2")</td>
-                            <td class="text-danger">-₺@settlement.Commission.ToString("N2")</td>
-                            <td><strong class="text-success">₺@settlement.NetAmount.ToString("N2")</strong></td>
-                            <td>
-                                <span class="badge bg-@GetSettlementStatusBadge(settlement.Status)">
-                                    @GetSettlementStatusName(settlement.Status)
-                                </span>
-                            </td>
-                            <td>
-                                @if (settlement.CompletedAt.HasValue)
-                                {
-                                    <small>@settlement.CompletedAt.Value.ToString("dd MMM HH:mm")</small>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">-</span>
-                                }
-                            </td>
-                            <td>
-                                @if (!string.IsNullOrEmpty(settlement.BankTransferReference))
-                                {
-                                    <code>@settlement.BankTransferReference</code>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">-</span>
-                                }
-                            </td>
-                        </tr>
-                    }
+            <tbody id="dailyBreakdownTable">
+                <!-- Will be populated by JS -->
                 </tbody>
-                <tfoot class="table-light">
-                    <tr>
-                        <td colspan="2" class="text-end"><strong>Toplam:</strong></td>
-                        <td><strong>₺@Model.Items.Sum(s => s.TotalAmount).ToString("N2")</strong></td>
-                        <td class="text-danger"><strong>-₺@Model.Items.Sum(s => s.Commission).ToString("N2")</strong></td>
-                        <td><strong class="text-success">₺@Model.Items.Sum(s => s.NetAmount).ToString("N2")</strong></td>
-                        <td colspan="3"></td>
+            <tfoot>
+                <tr class="fw-bold">
+                    <td>TOPLAM</td>
+                    <td class="text-end text-success" id="totalRevenueFoot">₺0</td>
+                    <td class="text-end text-danger" id="totalCommissionFoot">₺0</td>
+                    <td class="text-end text-primary" id="totalNetFoot">₺0</td>
+                    <td class="text-end" id="totalOrdersFoot">0</td>
                     </tr>
                 </tfoot>
             </table>
         </div>
-
-        @if (Model.TotalPages > 1)
-        {
-            <nav class="mt-4">
-                <ul class="pagination justify-content-center">
-                    @for (int i = 1; i <= Model.TotalPages; i++)
-                    {
-                        <li class="page-item @(i == Model.Page ? "active" : "")">
-                            <a class="page-link" href="@Url.Action("Settlements", new { page = i })">@i</a>
-                        </li>
-                    }
-                </ul>
-            </nav>
-        }
-    }
-    else
-    {
-        <div class="text-center py-5">
-            <i class="fas fa-file-invoice fa-4x text-muted mb-3"></i>
-            <h5 class="text-muted">Henüz settlement bulunmuyor</h5>
-            <p class="text-muted">İlk ödemenizi aldığınızda settlement işlemi başlayacaktır</p>
-        </div>
-    }
 </div>
 
-@functions {
-    string GetSettlementStatusName(string status)
-    {
-        return status switch
-        {
-            "Pending" => "Bekliyor",
-            "Processing" => "İşleniyor",
-            "Completed" => "Tamamlandı",
-            "Failed" => "Başarısız",
-            _ => status
-        };
-    }
+@section Scripts {
+    <script>
+        // Set default to current month
+        document.addEventListener('DOMContentLoaded', function() {
+            selectQuickPeriod();
+        });
 
-    string GetSettlementStatusBadge(string status)
-    {
-        return status switch
-        {
-            "Completed" => "success",
-            "Pending" => "warning",
-            "Processing" => "info",
-            "Failed" => "danger",
-            _ => "secondary"
-        };
-    }
+        function selectQuickPeriod() {
+            const select = document.getElementById('quickSelect');
+            const value = select.value || 'month';
+            const now = new Date();
+            let startDate, endDate;
+
+            switch(value) {
+                case 'today':
+                    startDate = endDate = now;
+                    break;
+                case 'week':
+                    startDate = new Date(now.setDate(now.getDate() - now.getDay()));
+                    endDate = new Date();
+                    break;
+                case 'month':
+                    startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                    endDate = new Date();
+                    break;
+                case 'lastMonth':
+                    startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                    endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+                    break;
+                case 'quarter':
+                    const quarter = Math.floor(now.getMonth() / 3);
+                    startDate = new Date(now.getFullYear(), quarter * 3, 1);
+                    endDate = new Date();
+                    break;
+                default:
+                    return; // Custom date
+            }
+
+            document.getElementById('settlementStartDate').valueAsDate = startDate;
+            document.getElementById('settlementEndDate').valueAsDate = endDate;
+
+            if (value) {
+                loadSettlementReport();
+            }
+        }
+
+        async function loadSettlementReport() {
+            const startDate = document.getElementById('settlementStartDate').value;
+            const endDate = document.getElementById('settlementEndDate').value;
+
+            if (!startDate || !endDate) {
+                alert('Lütfen tarih aralığı seçin');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/Payments/GetSettlementReport?startDate=${startDate}&endDate=${endDate}`);
+                const result = await response.json();
+
+                if (!result.success) {
+                    console.error('Failed to load settlement report');
+                    return;
+                }
+
+                const report = result.data;
+
+                // Update summary
+                document.getElementById('reportPeriod').textContent = 
+                    `(${new Date(startDate).toLocaleDateString('tr-TR')} - ${new Date(endDate).toLocaleDateString('tr-TR')})`;
+                document.getElementById('summaryRevenue').textContent = `₺${report.totalRevenue.toFixed(2)}`;
+                document.getElementById('summaryCommission').textContent = `₺${report.totalCommission.toFixed(2)}`;
+                document.getElementById('summaryNet').textContent = `₺${report.netAmount.toFixed(2)}`;
+                document.getElementById('summaryOrders').textContent = report.totalOrders;
+                document.getElementById('summaryCompleted').textContent = report.completedOrders;
+
+                // Show sections
+                document.getElementById('settlementSummary').style.display = 'block';
+                document.getElementById('dailyBreakdown').style.display = 'block';
+
+                // Render daily breakdown
+                const tbody = document.getElementById('dailyBreakdownTable');
+                tbody.innerHTML = '';
+                report.dailyBreakdown.forEach(day => {
+                    const row = `
+                        <tr>
+                            <td>${new Date(day.date).toLocaleDateString('tr-TR', { weekday: 'short', day: 'numeric', month: 'short' })}</td>
+                            <td class="text-end text-success">₺${day.revenue.toFixed(2)}</td>
+                            <td class="text-end text-danger">₺${day.commission.toFixed(2)}</td>
+                            <td class="text-end text-primary fw-bold">₺${day.netAmount.toFixed(2)}</td>
+                            <td class="text-end">${day.orderCount}</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+
+                // Update footer totals
+                document.getElementById('totalRevenueFoot').textContent = `₺${report.totalRevenue.toFixed(2)}`;
+                document.getElementById('totalCommissionFoot').textContent = `₺${report.totalCommission.toFixed(2)}`;
+                document.getElementById('totalNetFoot').textContent = `₺${report.netAmount.toFixed(2)}`;
+                document.getElementById('totalOrdersFoot').textContent = report.totalOrders;
+
+            } catch (error) {
+                console.error('Error loading settlement report:', error);
+            }
+        }
+    </script>
 }
-

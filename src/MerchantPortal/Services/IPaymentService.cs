@@ -5,29 +5,37 @@ namespace Getir.MerchantPortal.Services;
 public interface IPaymentService
 {
     /// <summary>
-    /// Nakit özeti getirir.
+    /// Gets payment history with filtering
     /// </summary>
-    /// <param name="merchantId">Mağaza ID</param>
-    /// <param name="startDate">Başlangıç tarihi</param>
-    /// <param name="endDate">Bitiş tarihi</param>
-    /// <param name="ct">CancellationToken</param>
-    /// <returns>Nakit özeti</returns>
-    Task<MerchantCashSummaryResponse?> GetCashSummaryAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default);
-    /// <summary>
-    /// Ödemeleri getirir.
-    /// </summary>
-    /// <param name="merchantId">Mağaza ID</param>
-    /// <param name="page">Sayfa numarası</param>
-    /// <param name="pageSize">Sayfa boyutu</param>
-    /// <param name="ct">CancellationToken</param>
-    /// <returns>Ödemeler</returns>
-    Task<PagedResult<SettlementResponse>?> GetSettlementsAsync(Guid merchantId, int page = 1, int pageSize = 20, CancellationToken ct = default);
-    /// <summary>
-    /// Ödeme istatistiklerini getirir.
-    /// </summary>
-    /// <param name="merchantId">Mağaza ID</param>
-    /// <param name="ct">CancellationToken</param>
-    /// <returns>Ödeme istatistikleri</returns>
-    Task<PaymentStatisticsResponse?> GetPaymentStatisticsAsync(Guid merchantId, CancellationToken ct = default);
-}
+    Task<List<PaymentListItemModel>> GetPaymentHistoryAsync(Guid merchantId, PaymentFilterModel filter);
 
+    /// <summary>
+    /// Gets payment details by ID
+    /// </summary>
+    Task<PaymentResponse?> GetPaymentByIdAsync(Guid paymentId);
+
+    /// <summary>
+    /// Gets settlement report for date range
+    /// </summary>
+    Task<SettlementReportModel> GetSettlementReportAsync(Guid merchantId, DateTime startDate, DateTime endDate);
+
+    /// <summary>
+    /// Gets revenue analytics
+    /// </summary>
+    Task<RevenueAnalyticsModel> GetRevenueAnalyticsAsync(Guid merchantId);
+
+    /// <summary>
+    /// Gets payment method breakdown
+    /// </summary>
+    Task<List<PaymentMethodBreakdownModel>> GetPaymentMethodBreakdownAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null);
+
+    /// <summary>
+    /// Exports payments to Excel
+    /// </summary>
+    Task<byte[]> ExportToExcelAsync(Guid merchantId, PaymentExportRequest request);
+
+    /// <summary>
+    /// Exports payments to PDF
+    /// </summary>
+    Task<byte[]> ExportToPdfAsync(Guid merchantId, PaymentExportRequest request);
+}

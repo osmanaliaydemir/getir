@@ -1,283 +1,198 @@
-@using Getir.MerchantPortal.Models
 @{
-    ViewData["Title"] = "Ödemeler";
-    var stats = ViewBag.Stats as PaymentStatisticsResponse;
+    ViewData["Title"] = "Ödeme Geçmişi";
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/dashboard-modern.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css" />
+    <style>
+        .payment-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .filter-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        .stat-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-right: 1rem;
+        }
+        .stat-badge.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .stat-badge.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .stat-badge.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
 }
 
 <!-- Page Header -->
-<div class="d-flex justify-content-between align-items-center mb-4 fade-in">
+<div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h2 class="mb-1"><i class="fas fa-money-bill-wave me-2" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>Ödeme Yönetimi</h2>
-        <p class="text-muted mb-0">Gelir, ödeme ve settlement takibi</p>
+        <h2><i class="fas fa-money-bill-wave me-2"></i>Ödeme Geçmişi</h2>
+        <p class="text-muted mb-0">Tüm ödeme işlemlerini görüntüleyin ve raporlayın</p>
     </div>
-    <div class="d-flex gap-2">
-        <a href="@Url.Action("History")" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px;">
-            <i class="fas fa-history me-1"></i> Geçmiş
+    <div>
+        <a href="/Payments/Reports" class="btn btn-primary me-2">
+            <i class="fas fa-chart-line me-1"></i> Raporlar
         </a>
-        <a href="@Url.Action("Settlements")" class="btn" style="background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%); color: white; border-radius: 10px;">
-            <i class="fas fa-file-invoice-dollar me-1"></i> Ödemeler
-        </a>
-        <a href="@Url.Action("Analytics")" class="btn" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border-radius: 10px;">
-            <i class="fas fa-chart-pie me-1"></i> Analitik
+        <a href="/Payments/Settlements" class="btn btn-outline-primary">
+            <i class="fas fa-file-invoice-dollar me-1"></i> Mutabakat
         </a>
     </div>
 </div>
 
-<!-- Modern Stats Cards -->
-<div class="row g-4 mb-4">
-    <div class="col-md-6 col-lg-3">
-        <div class="stat-card-gradient info fade-in" style="animation-delay: 0.1s;">
-            <div class="gradient-bg"></div>
-            <div class="stat-icon-modern info">
-                <i class="fas fa-calendar-day"></i>
+<!-- Stats Summary -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="payment-card">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon bg-success text-white me-3">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div>
+                    <div class="small text-muted">Tamamlanan</div>
+                    <div class="h4 mb-0" id="completedCount">-</div>
             </div>
-            <div class="stat-label">Bugünkü Gelir</div>
-            <div class="stat-value">₺@((stats?.TodayRevenue ?? 0).ToString("N2"))</div>
-            <div class="stat-change positive">
-                <i class="fas fa-receipt"></i>
-                <span>@(stats?.TodayPayments ?? 0) ödeme</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6 col-lg-3">
-        <div class="stat-card-gradient warning fade-in" style="animation-delay: 0.2s;">
-            <div class="gradient-bg"></div>
-            <div class="stat-icon-modern warning">
-                <i class="fas fa-calendar-week"></i>
-            </div>
-            <div class="stat-label">Haftalık Gelir</div>
-            <div class="stat-value">₺@((stats?.WeekRevenue ?? 0).ToString("N2"))</div>
-            <div class="stat-change positive">
-                <i class="fas fa-receipt"></i>
-                <span>@(stats?.WeekPayments ?? 0) ödeme</span>
             </div>
         </div>
     </div>
-
-    <div class="col-md-6 col-lg-3">
-        <div class="stat-card-gradient success fade-in" style="animation-delay: 0.3s;">
-            <div class="gradient-bg"></div>
-            <div class="stat-icon-modern success">
-                <i class="fas fa-calendar-alt"></i>
+    <div class="col-md-3">
+        <div class="payment-card">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon bg-warning text-white me-3">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div>
+                    <div class="small text-muted">Bekleyen</div>
+                    <div class="h4 mb-0" id="pendingCount">-</div>
             </div>
-            <div class="stat-label">Aylık Gelir</div>
-            <div class="stat-value">₺@((stats?.MonthRevenue ?? 0).ToString("N2"))</div>
-            <div class="stat-change positive">
-                <i class="fas fa-receipt"></i>
-                <span>@(stats?.MonthPayments ?? 0) ödeme</span>
             </div>
         </div>
     </div>
-
-    <div class="col-md-6 col-lg-3">
-        <div class="stat-card-gradient primary fade-in" style="animation-delay: 0.4s;">
-            <div class="gradient-bg"></div>
-            <div class="stat-icon-modern primary">
-                <i class="fas fa-hourglass-half"></i>
+    <div class="col-md-3">
+        <div class="payment-card">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon bg-primary text-white me-3">
+                    <i class="fas fa-lira-sign"></i>
+                </div>
+                <div>
+                    <div class="small text-muted">Toplam Ciro</div>
+                    <div class="h4 mb-0" id="totalRevenue">₺0</div>
             </div>
-            <div class="stat-label">Bekleyen Ödeme</div>
-            <div class="stat-value">₺@((stats?.PendingSettlement ?? 0).ToString("N2"))</div>
-            <div class="stat-change neutral">
-                <i class="fas fa-clock"></i>
-                <span>Settlement bekleniyor</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="payment-card">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon bg-info text-white me-3">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <div>
+                    <div class="small text-muted">Ort. Tutar</div>
+                    <div class="h4 mb-0" id="avgAmount">₺0</div>
+            </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Commission Info -->
-<div class="row g-4 mb-4">
-    <div class="col-md-6">
-        <div class="chart-container-modern fade-in" style="animation-delay: 0.5s;">
-            <div class="chart-header">
-                <div class="chart-title">
-                    <i class="fas fa-chart-line"></i>
-                    Komisyon Bilgisi
-                </div>
+<!-- Filters -->
+<div class="payment-card">
+    <div class="filter-section">
+        <h5 class="mb-3"><i class="fas fa-filter me-2"></i>Filtreler</h5>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Başlangıç Tarihi</label>
+                <input type="date" class="form-control" id="startDate" />
             </div>
-            <div class="row">
-                <div class="col-6">
-                    <div class="mb-3">
-                        <small class="text-muted d-block">Aylık Gelir</small>
-                        <h4 class="mb-0 text-success">₺@((stats?.MonthRevenue ?? 0).ToString("N2"))</h4>
+            <div class="col-md-3">
+                <label class="form-label">Bitiş Tarihi</label>
+                <input type="date" class="form-control" id="endDate" />
                     </div>
+            <div class="col-md-2">
+                <label class="form-label">Ödeme Yöntemi</label>
+                <select class="form-select" id="paymentMethod">
+                    <option value="">Tümü</option>
+                    <option value="Cash">Nakit</option>
+                    <option value="CreditCard">Kredi Kartı</option>
+                    <option value="VodafonePay">Vodafone Pay</option>
+                    <option value="BankTransfer">Havale/EFT</option>
+                </select>
                 </div>
-                <div class="col-6">
-                    <div class="mb-3">
-                        <small class="text-muted d-block">Toplam Komisyon</small>
-                        <h4 class="mb-0 text-danger">₺@((stats?.TotalCommission ?? 0).ToString("N2"))</h4>
+            <div class="col-md-2">
+                <label class="form-label">Durum</label>
+                <select class="form-select" id="status">
+                    <option value="">Tümü</option>
+                    <option value="Completed">Tamamlandı</option>
+                    <option value="Pending">Bekliyor</option>
+                    <option value="Failed">Başarısız</option>
+                </select>
                     </div>
-                </div>
-                <div class="col-12">
-                    <hr />
-                    <div class="d-flex justify-content-between align-items-center">
-                        <strong>Net Tutar:</strong>
-                        <h4 class="mb-0 text-primary">₺@(((stats?.MonthRevenue ?? 0) - (stats?.TotalCommission ?? 0)).ToString("N2"))</h4>
-                    </div>
-                </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn-primary w-100" onclick="applyFilters()">
+                    <i class="fas fa-search me-1"></i> Filtrele
+                </button>
             </div>
         </div>
     </div>
 
-    <div class="col-md-6">
-        <div class="stat-card">
-            <h5 class="mb-3">
-                <i class="fas fa-credit-card text-primary"></i> Ödeme Yöntemleri Dağılımı
-            </h5>
-            @if (stats?.PaymentMethodBreakdown != null && stats.PaymentMethodBreakdown.Any())
-            {
-                <div class="payment-methods">
-                    @foreach (var method in stats.PaymentMethodBreakdown)
-                    {
-                        var percentage = stats.MonthRevenue > 0 ? (method.Value / stats.MonthRevenue * 100) : 0;
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span>@GetPaymentMethodName(method.Key)</span>
-                                <strong>₺@method.Value.ToString("N2")</strong>
-                            </div>
-                            <div class="progress">
-                                <div class="progress-bar @GetPaymentMethodColor(method.Key)" 
-                                     style="width: @percentage.ToString("F1")%">
-                                    @percentage.ToString("F1")%
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="text-center py-4">
-                    <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">Henüz ödeme bulunmuyor</p>
-                </div>
-            }
-        </div>
+    <!-- Export Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3">
+        <button class="btn btn-success btn-sm" onclick="exportToExcel()">
+            <i class="fas fa-file-excel me-1"></i> Excel İndir
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="exportToPdf()">
+            <i class="fas fa-file-pdf me-1"></i> PDF İndir
+        </button>
     </div>
 </div>
 
-<!-- Quick Actions -->
-<div class="row g-4">
-    <div class="col-md-12">
-        <div class="stat-card">
-            <h5 class="mb-4">Hızlı İşlemler</h5>
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <a href="@Url.Action("History")" class="quick-action-card">
-                        <div class="quick-action-icon" style="background: #e3f2fd;">
-                            <i class="fas fa-history" style="color: #2196F3;"></i>
-                        </div>
-                        <div class="quick-action-content">
-                            <h6>Ödeme Geçmişi</h6>
-                            <small class="text-muted">Tüm ödemeleri görüntüle</small>
-                        </div>
-                        <i class="fas fa-chevron-right text-muted"></i>
-                    </a>
-                </div>
-
-                <div class="col-md-4">
-                    <a href="@Url.Action("Settlements")" class="quick-action-card">
-                        <div class="quick-action-icon" style="background: #e8f5e9;">
-                            <i class="fas fa-file-invoice-dollar" style="color: #4CAF50;"></i>
-                        </div>
-                        <div class="quick-action-content">
-                            <h6>Settlement Raporları</h6>
-                            <small class="text-muted">Ödeme transfer geçmişi</small>
-                        </div>
-                        <i class="fas fa-chevron-right text-muted"></i>
-                    </a>
-                </div>
-
-                <div class="col-md-4">
-                    <a href="@Url.Action("Analytics")" class="quick-action-card">
-                        <div class="quick-action-icon" style="background: #f3e5f5;">
-                            <i class="fas fa-chart-pie" style="color: #9C27B0;"></i>
-                        </div>
-                        <div class="quick-action-content">
-                            <h6>Gelir Analizi</h6>
-                            <small class="text-muted">Grafikler ve raporlar</small>
-                        </div>
-                        <i class="fas fa-chevron-right text-muted"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
+<!-- Payment History Table -->
+<div class="payment-card">
+    <h5 class="mb-3"><i class="fas fa-list me-2"></i>Ödeme Listesi</h5>
+    <div class="table-responsive">
+        <table id="paymentsTable" class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Sipariş No</th>
+                    <th>Müşteri</th>
+                    <th>Ödeme Yöntemi</th>
+                    <th>Tutar</th>
+                    <th>Durum</th>
+                    <th>Oluşturma</th>
+                    <th>Tamamlanma</th>
+                    <th>İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- DataTables will populate -->
+            </tbody>
+        </table>
     </div>
 </div>
 
-@functions {
-    string GetPaymentMethodName(string method)
-    {
-        return method switch
-        {
-            "Cash" => "Kapıda Nakit",
-            "CreditCard" => "Kredi Kartı",
-            "VodafonePay" => "Vodafone Pay",
-            "BankTransfer" => "Havale/EFT",
-            "BkmExpress" => "BKM Express",
-            "Papara" => "Papara",
-            "QrCode" => "QR Code",
-            _ => method
-        };
-    }
-
-    string GetPaymentMethodColor(string method)
-    {
-        return method switch
-        {
-            "Cash" => "bg-success",
-            "CreditCard" => "bg-primary",
-            "VodafonePay" => "bg-danger",
-            "BankTransfer" => "bg-info",
-            _ => "bg-secondary"
-        };
-    }
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+    <script src="~/js/modules/payments/payments.js" asp-append-version="true"></script>
 }
-
-<style>
-    .quick-action-card {
-        display: flex;
-        align-items: center;
-        padding: 1.5rem;
-        border: 1px solid #e0e0e0;
-        border-radius: 10px;
-        background: white;
-        text-decoration: none;
-        color: inherit;
-        transition: all 0.2s;
-        height: 100%;
-    }
-    
-    .quick-action-card:hover {
-        border-color: var(--getir-purple);
-        box-shadow: 0 4px 12px rgba(93, 62, 188, 0.1);
-        transform: translateY(-2px);
-    }
-    
-    .quick-action-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.8rem;
-        margin-right: 1rem;
-        flex-shrink: 0;
-    }
-    
-    .quick-action-content {
-        flex: 1;
-    }
-    
-    .quick-action-content h6 {
-        margin-bottom: 0.25rem;
-        font-weight: 600;
-    }
-</style>
-
