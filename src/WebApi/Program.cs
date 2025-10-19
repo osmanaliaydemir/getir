@@ -68,9 +68,6 @@ builder.Services.AddApplicationServices();
 // SignalR Services (real-time communication)
 builder.Services.AddSignalRServices();
 
-// Application Insights (temporarily disabled)
-// builder.Services.AddApplicationInsightsConfiguration(builder.Configuration);
-
 // CSRF Protection
 builder.Services.AddAntiforgery(options =>
 {

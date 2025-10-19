@@ -27,50 +27,11 @@
 ✅ Global standartlar (xUnit + Moq + FluentAssertions)
 ```
 
-### 2. Application Insights (2 saat)
-
-**Sorun:**
-- Production monitoring yok
-- Performance tracking yok
-- Exception tracking yok
-
-**Yapılacaklar:**
-```csharp
-// 1. Package ekle: Microsoft.ApplicationInsights.AspNetCore
-
-// 2. Program.cs - Service Registration
-builder.Services.AddApplicationInsightsTelemetry(options =>
-{
-    options.ConnectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
-    options.EnableAdaptiveSampling = true;
-    options.EnableQuickPulseMetricStream = true;
-});
-
-// 3. appsettings.json
-{
-  "ApplicationInsights": {
-    "ConnectionString": "InstrumentationKey=your-key-here",
-    "EnableAdaptiveSampling": true,
-    "EnableDependencyTracking": true
-  }
-}
-
-// 4. Custom telemetry tracking (opsiyonel)
-services.AddSingleton<ITelemetryInitializer, CustomTelemetryInitializer>();
-```
-
-**Çıktı:**
-- Request telemetry
-- Exception tracking
-- Performance metrics
-- Dependency tracking
-- Custom events
-
 ---
 
-## 🟡 YÜKSEK ÖNCELİKLİ (Öncelik 2)
+## 🟡 YÜKSEK ÖNCELİKLİ (Öncelik 1)
 
-### 3. Background Jobs - Hangfire (8-12 saat)
+### 2. Background Jobs - Hangfire (8-12 saat)
 
 **İhtiyaç:**
 - Order timeout check (15 dakika sonra otomatik iptal)
@@ -156,9 +117,9 @@ app.MapHangfireDashboard("/hangfire", new DashboardOptions
 
 ---
 
-## 🟢 ORTA ÖNCELİKLİ (Öncelik 3)
+## 🟢 ORTA ÖNCELİKLİ (Öncelik 2)
 
-### 4. CORS Policy Hardening (1 saat)
+### 3. CORS Policy Hardening (1 saat)
 
 **Sorun:**
 ```csharp
@@ -222,7 +183,7 @@ options.AddPolicy("SignalRCorsPolicy", policy =>
 
 ## 🟡 YÜKSEK ÖNCELİKLİ
 
-### 1. Payment Tracking Module (4-5 saat)
+### 4. Payment Tracking Module (4-5 saat)
 
 **Eksik Özellikler:**
 - Payment history listing
@@ -259,7 +220,7 @@ src/MerchantPortal/
 
 ## 🟢 ORTA ÖNCELİKLİ
 
-### 3. Stock Management Enhancement (2-3 saat)
+### 5. Stock Management Enhancement (2-3 saat)
 
 **Eklenecek Özellikler:**
 - Low stock dashboard widget
@@ -295,7 +256,7 @@ src/MerchantPortal/
 
 ---
 
-### 4. File Upload Enhancement (2-3 saat)
+### 6. File Upload Enhancement (2-3 saat)
 
 **Eklenecek:**
 - Drag & drop upload
@@ -355,19 +316,18 @@ await axios.post('/upload', formData, {
 
 ## 🎯 TAVSİYE EDİLEN SIRALAMA
 
-### Bu Hafta (Kritik + Hızlı)
-1. **CORS Policy Hardening** (1h) - Hızlı security fix
-2. **Application Insights** (2h) - Production monitoring
+### Bu Hafta (Hızlı Kazanımlar)
+1. **CORS Policy Hardening** (1h) ⚡ En hızlı!
 
 ### Gelecek Hafta (Yüksek Öncelik)
-3. **Payment Tracking Module** (4-5h) - Business critical
-4. **Background Jobs** (8-12h) - Büyük feature
+2. **Payment Tracking Module** (4-5h) - Business critical
+3. **Background Jobs** (8-12h) - Büyük feature
 
 ### Sonrası (Enhancement)
-5. **Stock Management Enhancement** (2-3h)
-6. **File Upload Enhancement** (2-3h)
+4. **Stock Management Enhancement** (2-3h)
+5. **File Upload Enhancement** (2-3h)
 
-**Toplam:** 17-26 saat
+**Toplam:** 15-24 saat
 
 ---
 
@@ -410,7 +370,6 @@ await axios.post('/upload', formData, {
 - Durum: %100 Passing ✅
 
 ### ⏳ Devam Eden
-- [ ] Application Insights
 - [ ] Background Jobs (Hangfire)
 - [ ] CORS Policy Hardening
 - [ ] Payment Tracking Module
@@ -436,8 +395,10 @@ await axios.post('/upload', formData, {
 ---
 
 **Rapor Sahibi:** Senior .NET & Flutter Architect  
-**Son Güncelleme:** 20 Ekim 2025, Saat 00:30  
-**Durum:** 6 görev kaldı, 17-26 saat (2-3 gün)
+**Son Güncelleme:** 20 Ekim 2025, Saat 00:35  
+**Durum:** 5 görev kaldı, 15-24 saat (2-3 gün)
+
+**Not:** Application Insights kaldırıldı - alternatif monitoring çözümü araştırılacak
 
 ---
 
