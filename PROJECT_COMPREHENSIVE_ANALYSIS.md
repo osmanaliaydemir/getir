@@ -436,11 +436,11 @@ await axios.post('/upload', formData, {
 | 4 | **CORS Policy Hardening** | **Web API** | **1h** | 🟢 **ORTA** |
 | 5 | **Payment Tracking Module** | **Portal** | **4-5h** | 🟡 **YÜKSEK** |
 | 6 | **Advanced Analytics** | **Portal** | **3-4h** | 🟡 **YÜKSEK** |
-| 7 | **Working Hours Integration** | **Portal** | **1-2h** | 🟡 **YÜKSEK** |
+| 7 | ~~**Working Hours Integration**~~ | ~~**Portal**~~ | ~~**1-2h**~~ | ✅ **TAMAMLANDI** |
 | 8 | **Stock Management Enhancement** | **Portal** | **2-3h** | 🟢 **ORTA** |
 | 9 | **File Upload Enhancement** | **Portal** | **2-3h** | 🟢 **ORTA** |
 
-**Toplam Kalan:** 23-32 saat (3-4 gün)
+**Toplam Kalan:** 21-30 saat (3-4 gün)
 
 ---
 
@@ -475,6 +475,11 @@ await axios.post('/upload', formData, {
   - MerchantService (4 test)
   - CartService (+6 test, 4→10)
   - OrderService (+10 test, 5→15)
+- [x] Working Hours Integration (1.5 saat)
+  - Backend ↔ Frontend DTO mapping
+  - DayOfWeek enum ↔ string conversion
+  - TimeSpan ↔ string time parsing
+  - IsOpen24Hours logic implementation
 
 ### ⏳ Devam Eden
 - [ ] Application Insights
@@ -482,7 +487,6 @@ await axios.post('/upload', formData, {
 - [ ] CORS Policy Hardening
 - [ ] Payment Tracking Module
 - [ ] Advanced Analytics
-- [ ] Working Hours Integration
 - [ ] Stock Management Enhancement
 - [ ] File Upload Enhancement
 
