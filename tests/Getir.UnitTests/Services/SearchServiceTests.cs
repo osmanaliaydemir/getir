@@ -73,7 +73,7 @@ public class SearchServiceTests
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value!.Items.Should().HaveCount(2);
-        result.Value.TotalCount.Should().Be(2);
+        result.Value.Total.Should().Be(2);
     }
 
     [Fact]
@@ -121,7 +121,7 @@ public class SearchServiceTests
         var query = new SearchMerchantsQuery("restaurant", null, null, null, null, 1, 10);
         var merchants = new List<Merchant>
         {
-            new() { Id = Guid.NewGuid(), Name = "Best Restaurant", IsActive = true, Rating = 4.5m, ServiceCategory = new ServiceCategory { Name = "Food" }, Owner = new User { Name = "Owner" } }
+            new() { Id = Guid.NewGuid(), Name = "Best Restaurant", IsActive = true, Rating = 4.5m, ServiceCategory = new ServiceCategory { Name = "Food" }, Owner = new User { FirstName = "Owner", LastName = "User" } }
         };
 
         var merchantRepoMock = new Mock<IGenericRepository<Merchant>>();
@@ -184,7 +184,7 @@ public class SearchServiceTests
         // Assert
         result.Success.Should().BeTrue();
         result.Value!.Items.Should().BeEmpty();
-        result.Value.TotalCount.Should().Be(0);
+        result.Value.Total.Should().Be(0);
     }
 }
 
