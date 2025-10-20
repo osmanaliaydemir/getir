@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Coupons;
 
+/// <summary>
+/// Kupon servisi: kupon doğrulama, oluşturma, listeleme ve kullanım kaydı işlemleri.
+/// </summary>
 public class CouponService : BaseService, ICouponService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
@@ -14,6 +17,13 @@ public class CouponService : BaseService, ICouponService
     {
         _backgroundTaskService = backgroundTaskService;
     }
+    /// <summary>
+    /// Kupon kodunu doğrular: geçerlilik, süre, kullanım limiti, kullanıcı kullanımı ve minimum tutar kontrolü yapar.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="request">Doğrulama isteği</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Doğrulama yanıtı ve hesaplanan indirim</returns>
     public async Task<Result<CouponValidationResponse>> ValidateCouponAsync(Guid userId, ValidateCouponRequest request, CancellationToken cancellationToken = default)
     {
         var coupon = await _unitOfWork.ReadRepository<Coupon>()
@@ -68,6 +78,12 @@ public class CouponService : BaseService, ICouponService
 
         return Result.Ok(new CouponValidationResponse(true, null, discountAmount, request.Code));
     }
+    /// <summary>
+    /// Yeni kupon oluşturur (kod benzersizliği kontrol eder).
+    /// </summary>
+    /// <param name="request">Kupon oluşturma isteği</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Oluşturulan kupon</returns>
     public async Task<Result<CouponResponse>> CreateCouponAsync(CreateCouponRequest request, CancellationToken cancellationToken = default)
     {
         var existingCoupon = await _unitOfWork.ReadRepository<Coupon>()
@@ -117,6 +133,12 @@ public class CouponService : BaseService, ICouponService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Aktif kuponları sayfalama ile listeler.
+    /// </summary>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Sayfalanmış kuponlar</returns>
     public async Task<Result<PagedResult<CouponResponse>>> GetCouponsAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         var coupons = await _unitOfWork.Repository<Coupon>().GetPagedAsync(
@@ -150,6 +172,15 @@ public class CouponService : BaseService, ICouponService
 
         return Result.Ok(pagedResult);
     }
+    /// <summary>
+    /// Kupon kullanımını kaydeder ve kuponun kullanım sayacını arttırır.
+    /// </summary>
+    /// <param name="couponId">Kupon ID</param>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="orderId">Sipariş ID</param>
+    /// <param name="discountAmount">İndirim miktarı</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public async Task<Result> RecordCouponUsageAsync(Guid couponId, Guid userId, Guid orderId, decimal discountAmount, CancellationToken cancellationToken = default)
     {
         var couponUsage = new CouponUsage

@@ -2,6 +2,9 @@ using Getir.Application.DTO;
 
 namespace Getir.Application.Services.RateLimiting;
 
+/// <summary>
+/// Rate limit konfigürasyon servisi implementasyonu: mock data ile konfigürasyon yönetimi.
+/// </summary>
 public class RateLimitConfigurationService : IRateLimitConfigurationService
 {
     private readonly List<RateLimitConfigurationDto> _mockConfigurations;
@@ -63,6 +66,9 @@ public class RateLimitConfigurationService : IRateLimitConfigurationService
         };
     }
 
+    /// <summary>
+    /// Tüm rate limit konfigürasyonlarını getirir (mock data).
+    /// </summary>
     public Task<List<RateLimitConfigurationDto>> GetAllConfigurationsAsync()
     {
         return Task.FromResult(_mockConfigurations.ToList());

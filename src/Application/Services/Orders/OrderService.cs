@@ -9,6 +9,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Orders;
 
+/// <summary>
+/// Sipariş servisi: sipariş oluşturma (stok, ödeme), durum yönetimi, SignalR bildirimleri, merchant/kullanıcı işlemleri.
+/// </summary>
 public class OrderService : BaseService, IOrderService
 {
     private readonly ISignalRService? _signalRService;
@@ -26,6 +29,9 @@ public class OrderService : BaseService, IOrderService
         _paymentService = paymentService;
     }
 
+    /// <summary>
+    /// Yeni sipariş oluşturur (transaction, stok kontrolü, ödeme, SignalR bildirimi, background task).
+    /// </summary>
     public async Task<Result<OrderResponse>> CreateOrderAsync(Guid userId, CreateOrderRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -344,6 +350,9 @@ public class OrderService : BaseService, IOrderService
             return ServiceResult.HandleException<OrderResponse>(ex, _logger, "CreateOrder");
         }
     }
+    /// <summary>
+    /// Siparişi ID ile getirir (kullanıcı kontrolü).
+    /// </summary>
     public async Task<Result<OrderResponse>> GetOrderByIdAsync(Guid orderId, Guid userId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -412,6 +421,9 @@ public class OrderService : BaseService, IOrderService
             return ServiceResult.HandleException<OrderResponse>(ex, _logger, "GetOrderById");
         }
     }
+    /// <summary>
+    /// Kullanıcı siparişlerini sayfalama ile getirir.
+    /// </summary>
     public async Task<Result<PagedResult<OrderResponse>>> GetUserOrdersAsync(Guid userId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -453,6 +465,9 @@ public class OrderService : BaseService, IOrderService
         return $"ORD-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}";
     }
     // Merchant-specific methods
+    /// <summary>
+    /// Merchant siparişlerini getirir (ownership kontrolü, durum filtresi).
+    /// </summary>
     public async Task<Result<PagedResult<OrderResponse>>> GetMerchantOrdersAsync(Guid merchantOwnerId, PaginationQuery query, string? status = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);

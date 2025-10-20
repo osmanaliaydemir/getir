@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 namespace Getir.Application.Services.Stock;
 
 /// <summary>
-/// Stock synchronization service implementation
+/// Stok senkronizasyon servisi implementasyonu: harici sistem entegrasyonu, transaction, sync geçmişi, otomatik sync.
 /// </summary>
 public class StockSyncService : BaseService, IStockSyncService
 {
@@ -18,6 +18,9 @@ public class StockSyncService : BaseService, IStockSyncService
     {
         _logger = logger;
     }
+    /// <summary>
+    /// Harici sistem ile stok senkronizasyonu yapar (transaction, hata yönetimi, sync geçmişi).
+    /// </summary>
     public async Task<Result<StockSyncResponse>> SynchronizeWithExternalSystemAsync(StockSyncRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -158,6 +161,9 @@ public class StockSyncService : BaseService, IStockSyncService
             return Result.Fail<StockSyncResponse>("Failed to synchronize stock", "STOCK_SYNC_ERROR");
         }
     }
+    /// <summary>
+    /// Senkronizasyon geçmişini getirir (tarih filtresi ile, zaman sıralı).
+    /// </summary>
     public async Task<Result<List<StockSyncHistoryResponse>>> GetSynchronizationHistoryAsync(Guid merchantId, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
     {
         try
@@ -189,6 +195,9 @@ public class StockSyncService : BaseService, IStockSyncService
             return Result.Fail<List<StockSyncHistoryResponse>>("Failed to get synchronization history", "SYNC_HISTORY_ERROR");
         }
     }
+    /// <summary>
+    /// Senkronizasyon durumunu getirir (etkin mi, son sync zamanı, aralık).
+    /// </summary>
     public async Task<Result<StockSyncStatusResponse>> GetSynchronizationStatusAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
@@ -220,6 +229,9 @@ public class StockSyncService : BaseService, IStockSyncService
             return Result.Fail<StockSyncStatusResponse>("Failed to get synchronization status", "SYNC_STATUS_ERROR");
         }
     }
+    /// <summary>
+    /// Harici sistem bağlantısını yapılandırır (API key/URL, sync aralığı, ownership kontrolü).
+    /// </summary>
     public async Task<Result> ConfigureExternalSystemAsync(ExternalSystemConfigRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
@@ -265,6 +277,9 @@ public class StockSyncService : BaseService, IStockSyncService
             return Result.Fail("Failed to configure external system", "EXTERNAL_SYSTEM_CONFIG_ERROR");
         }
     }
+    /// <summary>
+    /// Harici sistem bağlantısını test eder (mock implementasyon).
+    /// </summary>
     public async Task<Result<ConnectionTestResponse>> TestExternalSystemConnectionAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
@@ -293,6 +308,9 @@ public class StockSyncService : BaseService, IStockSyncService
             return Result.Fail<ConnectionTestResponse>("Failed to test connection", "CONNECTION_TEST_ERROR");
         }
     }
+    /// <summary>
+    /// Otomatik senkronizasyon zamanlar (dakika aralığı ile, background job).
+    /// </summary>
     public async Task<Result> ScheduleAutomaticSyncAsync(Guid merchantId, int intervalMinutes, CancellationToken cancellationToken = default)
     {
         try
@@ -323,6 +341,9 @@ public class StockSyncService : BaseService, IStockSyncService
             return Result.Fail("Failed to schedule automatic sync", "SCHEDULE_SYNC_ERROR");
         }
     }
+    /// <summary>
+    /// Otomatik senkronizasyonu iptal eder (background job cancel).
+    /// </summary>
     public async Task<Result> CancelAutomaticSyncAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try

@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.ProductOptions;
 
+/// <summary>
+/// Ürün opsiyon servisi: ürün seçenekleri yönetimi, ownership kontrolü, varsayılan seçim yönetimi, toplu işlemler.
+/// </summary>
 public class ProductOptionService : BaseService, IProductOptionService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
@@ -14,6 +17,9 @@ public class ProductOptionService : BaseService, IProductOptionService
     {
         _backgroundTaskService = backgroundTaskService;
     }
+    /// <summary>
+    /// Opsiyon grubuna ait opsiyonları sayfalama ile getirir (sıralama ile).
+    /// </summary>
     public async Task<Result<PagedResult<ProductOptionResponse>>> GetProductOptionsAsync(Guid productOptionGroupId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
@@ -49,6 +55,9 @@ public class ProductOptionService : BaseService, IProductOptionService
 
         return Result.Ok(pagedResult);
     }
+    /// <summary>
+    /// Opsiyonu ID ile getirir.
+    /// </summary>
     public async Task<Result<ProductOptionResponse>> GetProductOptionAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var option = await _unitOfWork.ReadRepository<ProductOption>()
@@ -73,6 +82,9 @@ public class ProductOptionService : BaseService, IProductOptionService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Yeni opsiyon oluşturur (ownership kontrolü, varsayılan seçim yönetimi - tek olmalı).
+    /// </summary>
     public async Task<Result<ProductOptionResponse>> CreateProductOptionAsync(CreateProductOptionRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -196,6 +208,9 @@ public class ProductOptionService : BaseService, IProductOptionService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Opsiyonu siler (ownership kontrolü).
+    /// </summary>
     public async Task<Result> DeleteProductOptionAsync(Guid id, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         var option = await _unitOfWork.ReadRepository<ProductOption>()
@@ -219,6 +234,9 @@ public class ProductOptionService : BaseService, IProductOptionService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Toplu opsiyon oluşturma (ownership kontrolü, varsayılan seçim tek olmalı).
+    /// </summary>
     public async Task<Result> BulkCreateProductOptionsAsync(BulkCreateProductOptionsRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -267,6 +285,9 @@ public class ProductOptionService : BaseService, IProductOptionService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Toplu opsiyon güncelleme (ownership kontrolü).
+    /// </summary>
     public async Task<Result> BulkUpdateProductOptionsAsync(BulkUpdateProductOptionsRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);

@@ -3,8 +3,14 @@ using Getir.Domain.Enums;
 
 namespace Getir.Application.Services.RateLimiting;
 
+/// <summary>
+/// Rate limit izleme servisi implementasyonu: mock data ile istatistikler, ihlaller, top violators, dashboard.
+/// </summary>
 public class RateLimitMonitoringService : IRateLimitMonitoringService
 {
+    /// <summary>
+    /// Rate limit istatistiklerini getirir (tip filtresi ile, mock data).
+    /// </summary>
     public Task<List<RateLimitStatisticsDto>> GetStatisticsAsync(DateTime startDate, DateTime endDate, RateLimitType? type = null)
     {
         var statistics = new List<RateLimitStatisticsDto>
@@ -135,6 +141,9 @@ public class RateLimitMonitoringService : IRateLimitMonitoringService
         return Task.FromResult(statistics);
     }
 
+    /// <summary>
+    /// Son ihlalleri getirir (zaman sıralı, mock data).
+    /// </summary>
     public Task<List<RateLimitViolationDto>> GetRecentViolationsAsync(int count = 10)
     {
         var violations = new List<RateLimitViolationDto>
@@ -236,6 +245,9 @@ public class RateLimitMonitoringService : IRateLimitMonitoringService
         return Task.FromResult(topIps.Take(count).ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
     }
 
+    /// <summary>
+    /// Uyarı gönderir (mock implementation).
+    /// </summary>
     public Task<bool> SendAlertAsync(string message, string? recipients = null)
     {
         // Mock alert sending
@@ -248,6 +260,9 @@ public class RateLimitMonitoringService : IRateLimitMonitoringService
         return Task.FromResult(true);
     }
 
+    /// <summary>
+    /// Gerçek zamanlı logları getirir (son N adet, mock data).
+    /// </summary>
     public Task<List<RateLimitLogDto>> GetRealTimeLogsAsync(int count = 100)
     {
         var logs = new List<RateLimitLogDto>
@@ -274,6 +289,9 @@ public class RateLimitMonitoringService : IRateLimitMonitoringService
         return Task.FromResult(logs.Take(count).ToList());
     }
 
+    /// <summary>
+    /// Dashboard verilerini getirir (özet istatistikler, top violators, mock data).
+    /// </summary>
     public Task<Dictionary<string, object>> GetDashboardDataAsync()
     {
         var dashboardData = new Dictionary<string, object>

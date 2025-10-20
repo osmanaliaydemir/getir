@@ -18,6 +18,9 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
         : base(unitOfWork, logger, loggingService, cacheService)
     {
     }
+    /// <summary>
+    /// Audit log oluşturur (event tipi, severity, risk seviyesi, IP/device bilgisi).
+    /// </summary>
     public async Task<Result<CashPaymentAuditLogResponse>> CreateAuditLogAsync(CreateAuditLogRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -58,6 +61,9 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail<CashPaymentAuditLogResponse>("Failed to create audit log", "CREATE_AUDIT_LOG_FAILED");
         }
     }
+    /// <summary>
+    /// Audit log'u günceller (description, details, risk seviyesi).
+    /// </summary>
     public async Task<Result<CashPaymentAuditLogResponse>> UpdateAuditLogAsync(Guid auditLogId, UpdateAuditLogRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -93,6 +99,9 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail<CashPaymentAuditLogResponse>("Failed to update audit log", "UPDATE_AUDIT_LOG_FAILED");
         }
     }
+    /// <summary>
+    /// Audit log'ları filtreleme ve sayfalama ile getirir (payment/courier/admin, event/severity/risk filtresi).
+    /// </summary>
     public async Task<Result<PagedResult<CashPaymentAuditLogResponse>>> GetAuditLogsAsync(CashPaymentAuditLogQuery query, CancellationToken cancellationToken = default)
     {
         try
@@ -186,6 +195,9 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail<IEnumerable<CashPaymentAuditLogResponse>>("Failed to get audit logs by courier ID", "GET_AUDIT_LOGS_BY_COURIER_FAILED");
         }
     }
+    /// <summary>
+    /// Audit log istatistiklerini getirir (event tipi/severity/risk dağılımı, ilk/son event tarihleri).
+    /// </summary>
     public async Task<Result<AuditLogStatisticsResponse>> GetAuditLogStatisticsAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
     {
         try
@@ -217,6 +229,9 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail<AuditLogStatisticsResponse>("Failed to get audit log statistics", "GET_AUDIT_LOG_STATISTICS_FAILED");
         }
     }
+    /// <summary>
+    /// Risk analizi yapar (genel risk seviyesi, high/critical olay sayısı, trendler, öneriler).
+    /// </summary>
     public async Task<Result<RiskAnalysisResponse>> PerformRiskAnalysisAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
     {
         try
@@ -268,6 +283,9 @@ public class CashPaymentAuditService : BaseService, ICashPaymentAuditService
             return Result.Fail<RiskAnalysisResponse>("Failed to perform risk analysis", "RISK_ANALYSIS_FAILED");
         }
     }
+    /// <summary>
+    /// Compliance raporu oluşturur (güvenlik olayları, ihlaller, compliance skoru ve notu).
+    /// </summary>
     public async Task<Result<ComplianceReportResponse>> GenerateComplianceReportAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
     {
         try

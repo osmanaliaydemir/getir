@@ -7,6 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Orders;
 
+/// <summary>
+/// Sipariş durum geçiş servisi: validasyon, transaction, audit logging, rollback, SignalR bildirimleri.
+/// </summary>
 public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionService
 {
     private readonly IOrderStatusValidatorService _validatorService;
@@ -20,6 +23,9 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
         _signalRService = signalRService;
         _logger = logger;
     }
+    /// <summary>
+    /// Sipariş durumunu değiştirir (validasyon, transaction, audit log, müşteri/merchant/kurye bildirimleri).
+    /// </summary>
     public async Task<Result> ChangeOrderStatusAsync(ChangeOrderStatusRequest request, Guid userId, string userRole, string? ipAddress = null, string? userAgent = null, CancellationToken cancellationToken = default)
     {
         try
@@ -101,6 +107,9 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
             return Result.Fail("Failed to change order status", "STATUS_CHANGE_ERROR");
         }
     }
+    /// <summary>
+    /// Son durum değişikliğini geri alır (permission kontrolü, transaction, rollback log).
+    /// </summary>
     public async Task<Result> RollbackLastStatusChangeAsync(Guid orderId, Guid userId, string userRole, string? reason = null, CancellationToken cancellationToken = default)
     {
         try
@@ -181,6 +190,9 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
             return Result.Fail("Failed to rollback order status", "ROLLBACK_ERROR");
         }
     }
+    /// <summary>
+    /// Sipariş durum geçiş geçmişini getirir (audit log).
+    /// </summary>
     public async Task<Result<List<OrderStatusTransitionLogResponse>>> GetOrderStatusHistoryAsync(Guid orderId, CancellationToken cancellationToken = default)
     {
         try
@@ -216,6 +228,9 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
             return Result.Fail<List<OrderStatusTransitionLogResponse>>("Failed to get order status history", "ERROR");
         }
     }
+    /// <summary>
+    /// Sipariş için mevcut durum geçişlerini getirir (role bazlı, gerekli verilerle).
+    /// </summary>
     public async Task<Result<List<OrderStatusTransitionResponse>>> GetAvailableTransitionsAsync(Guid orderId, Guid userId, string userRole, CancellationToken cancellationToken = default)
     {
         try

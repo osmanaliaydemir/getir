@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Addresses;
 
+/// <summary>
+/// Kullanıcı adres yönetimi hizmeti: listeleme, ekleme, güncelleme, silme ve varsayılan adres atama işlemlerini sağlar.
+/// </summary>
 public class UserAddressService : BaseService, IUserAddressService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
@@ -15,6 +18,12 @@ public class UserAddressService : BaseService, IUserAddressService
     {
         _backgroundTaskService = backgroundTaskService;
     }
+    /// <summary>
+    /// Kullanıcının aktif adreslerini varsayılan olan en üstte olacak şekilde listeler.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Adres yanıtları listesi</returns>
     public async Task<Result<List<AddressResponse>>> GetUserAddressesAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var addresses = await _unitOfWork.ReadRepository<UserAddress>()
@@ -38,6 +47,13 @@ public class UserAddressService : BaseService, IUserAddressService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Kullanıcıya yeni bir adres ekler. Kullanıcının ilk adresiyse varsayılan olarak işaretlenir.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="request">Adres oluşturma isteği</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Oluşturulan adres</returns>
     public async Task<Result<AddressResponse>> AddAddressAsync(Guid userId, CreateAddressRequest request, CancellationToken cancellationToken = default)
     {
         var address = new UserAddress
@@ -81,6 +97,14 @@ public class UserAddressService : BaseService, IUserAddressService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Kullanıcının mevcut bir adresini günceller.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="addressId">Adres ID</param>
+    /// <param name="request">Adres güncelleme isteği</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Güncellenen adres</returns>
     public async Task<Result<AddressResponse>> UpdateAddressAsync(Guid userId, Guid addressId, UpdateAddressRequest request, CancellationToken cancellationToken = default)
     {
         var address = await _unitOfWork.Repository<UserAddress>()
@@ -116,6 +140,13 @@ public class UserAddressService : BaseService, IUserAddressService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Kullanıcının bir adresini yumuşak silme (soft delete) ile pasif hale getirir. Eğer silinen adres varsayılan ise, mümkünse başka bir adresi varsayılan yapar.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="addressId">Adres ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public async Task<Result> DeleteAddressAsync(Guid userId, Guid addressId, CancellationToken cancellationToken = default)
     {
         var address = await _unitOfWork.Repository<UserAddress>()
@@ -149,6 +180,13 @@ public class UserAddressService : BaseService, IUserAddressService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Kullanıcının varsayılan adresini belirtilen adres olarak ayarlar. Mevcut varsayılan adres varsa kaldırır.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="addressId">Adres ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public async Task<Result> SetDefaultAddressAsync(Guid userId, Guid addressId, CancellationToken cancellationToken = default)
     {
         var address = await _unitOfWork.Repository<UserAddress>()

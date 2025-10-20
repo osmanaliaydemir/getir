@@ -12,6 +12,9 @@ using Getir.Domain.Enums;
 
 namespace Getir.Application.Services.Couriers;
 
+/// <summary>
+/// Kurye servisi: sipariş yönetimi, konum/müsaitlik, dashboard, kazanç, performans ve atama işlemleri.
+/// </summary>
 public class CourierService : BaseService, ICourierService
 {
     private readonly ISignalRService? _signalRService;
@@ -23,6 +26,9 @@ public class CourierService : BaseService, ICourierService
         _signalRService = signalRService;
         _backgroundTaskService = backgroundTaskService;
     }
+    /// <summary>
+    /// Kuryeye atanmış siparişleri sayfalama ile getirir.
+    /// </summary>
     public async Task<Result<PagedResult<CourierOrderResponse>>> GetAssignedOrdersAsync(Guid courierId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         var orders = await _unitOfWork.Repository<Order>().GetPagedAsync(
@@ -52,6 +58,9 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(pagedResult);
     }
+    /// <summary>
+    /// Kurye konumunu günceller ve aktif siparişler için SignalR bildirimi gönderir.
+    /// </summary>
     public async Task<Result> UpdateLocationAsync(Guid courierId, CourierLocationUpdateRequest request, CancellationToken cancellationToken = default)
     {
         var courier = await _unitOfWork.Repository<Courier>()
@@ -89,6 +98,9 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Kurye müsaitlik durumunu ayarlar.
+    /// </summary>
     public async Task<Result> SetAvailabilityAsync(Guid courierId, SetAvailabilityRequest request, CancellationToken cancellationToken = default)
     {
         var courier = await _unitOfWork.Repository<Courier>()
@@ -107,6 +119,9 @@ public class CourierService : BaseService, ICourierService
         return Result.Ok();
     }
     // Courier Panel methods
+    /// <summary>
+    /// Kurye dashboard verilerini getirir (stats, aktif siparişler, son teslimatlar, kazançlar).
+    /// </summary>
     public async Task<Result<CourierDashboardResponse>> GetCourierDashboardAsync(Guid courierId, CancellationToken cancellationToken = default)
     {
         var courier = await _unitOfWork.ReadRepository<Courier>()
@@ -168,6 +183,9 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(dashboard);
     }
+    /// <summary>
+    /// Kurye istatistiklerini getirir (teslimat sayıları, rating, müsaitlik).
+    /// </summary>
     public async Task<Result<CourierStatsResponse>> GetCourierStatsAsync(Guid courierId, CancellationToken cancellationToken = default)
     {
         var courier = await _unitOfWork.ReadRepository<Courier>()
@@ -203,6 +221,9 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(stats);
     }
+    /// <summary>
+    /// Kurye kazançlarını günlük/haftalık/aylık/toplam olarak hesaplar.
+    /// </summary>
     public async Task<Result<CourierEarningsResponse>> GetCourierEarningsAsync(Guid courierId, DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
     {
         var courier = await _unitOfWork.ReadRepository<Courier>()
@@ -248,6 +269,9 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(earnings);
     }
+    /// <summary>
+    /// Kuryenin sipariş kabul etmesini sağlar ve durum günceller, SignalR bildirimi gönderir.
+    /// </summary>
     public async Task<Result> AcceptOrderAsync(Guid courierId, AcceptOrderRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -288,6 +312,9 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Teslimatı başlatır ve durum günceller, SignalR bildirimi gönderir.
+    /// </summary>
     public async Task<Result> StartDeliveryAsync(Guid courierId, StartDeliveryRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -319,6 +346,9 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Teslimatı tamamlar, kurye istatistiklerini günceller ve SignalR bildirimi gönderir.
+    /// </summary>
     public async Task<Result> CompleteDeliveryAsync(Guid courierId, CompleteDeliveryRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -361,6 +391,9 @@ public class CourierService : BaseService, ICourierService
         return Result.Ok();
     }
     // Order Assignment methods
+    /// <summary>
+    /// Siparişe uygun kurye atar (tercih edilen veya en yakın), SignalR bildirimi gönderir.
+    /// </summary>
     public async Task<Result<CourierAssignmentResponse>> AssignOrderAsync(AssignOrderRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -431,6 +464,9 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Verilen konuma en yakın müsait kuryeleri bulur ve mesafe/süre hesaplar.
+    /// </summary>
     public async Task<Result<FindNearestCouriersResponse>> FindNearestCouriersAsync(FindNearestCouriersRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -458,6 +494,9 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// En başarılı kuryeleri performans, rating ve teslimat sayısına göre sıralar.
+    /// </summary>
     public async Task<Result<List<CourierPerformanceResponse>>> GetTopPerformersAsync(int count = 10, CancellationToken cancellationToken = default)
     {
         var couriers = await _unitOfWork.ReadRepository<Courier>()
@@ -498,6 +537,9 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(topPerformers);
     }
+    /// <summary>
+    /// Kurye kazanç detaylarını günlük bazda döker ve toplam/bonus kazançları hesaplar.
+    /// </summary>
     public async Task<Result<CourierEarningsDetailResponse>> GetEarningsDetailAsync(CourierEarningsQuery query, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
@@ -539,6 +581,9 @@ public class CourierService : BaseService, ICourierService
         return Result.Ok(response);
     }
     // SignalR Hub-specific methods
+    /// <summary>
+    /// Kurye konumunu sipariş ile birlikte günceller ve veritabanına kaydeder.
+    /// </summary>
     public async Task<Result> UpdateLocationAsync(CourierLocationUpdateWithOrderRequest request, CancellationToken cancellationToken = default)
     {
         // Store location in database (assuming CourierLocation entity exists)
@@ -566,6 +611,9 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Kuryenin en son konumunu getirir.
+    /// </summary>
     public async Task<Result<CourierLocationResponse>> GetCurrentLocationAsync(Guid courierId, CancellationToken cancellationToken = default)
     {
         // Get most recent location
@@ -598,6 +646,9 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Kurye konum geçmişini sipariş bazında getirir.
+    /// </summary>
     public async Task<Result<List<CourierLocationHistoryItem>>> GetLocationHistoryAsync(Guid courierId, Guid orderId, CancellationToken cancellationToken = default)
     {
         var locations = await _unitOfWork.Repository<CourierLocation>()
@@ -622,6 +673,9 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Kuryenin atanmış tüm aktif siparişlerini getirir.
+    /// </summary>
     public async Task<Result<List<CourierOrderResponse>>> GetAssignedOrdersAsync(Guid courierId, CancellationToken cancellationToken = default)
     {
         var orders = await _unitOfWork.Repository<Order>()
@@ -650,6 +704,9 @@ public class CourierService : BaseService, ICourierService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Kurye müsaitlik durumunu günceller ve log kaydeder.
+    /// </summary>
     public async Task<Result> UpdateAvailabilityAsync(Guid courierId, CourierAvailabilityStatus status, CancellationToken cancellationToken = default)
     {
         var courier = await _unitOfWork.Repository<User>()
@@ -679,12 +736,14 @@ public class CourierService : BaseService, ICourierService
         return Result.Ok();
     }
     // Helper methods
+    /// <summary>İki nokta arası mesafeyi hesaplar (yaklaşık).</summary>
     private static decimal CalculateDistance(decimal lat1, decimal lon1, decimal lat2, decimal lon2)
     {
         // Haversine formula implementation would go here
         // For now, return a simple calculation
         return Math.Abs((decimal)Math.Sqrt(Math.Pow((double)(lat2 - lat1), 2) + Math.Pow((double)(lon2 - lon1), 2))) * 111; // Rough km conversion
     }
+    /// <summary>Mesafeye göre tahmini süre hesaplar.</summary>
     private static int CalculateEstimatedTime(decimal lat1, decimal lon1, decimal lat2, decimal lon2)
     {
         // Simple calculation based on distance
@@ -692,6 +751,9 @@ public class CourierService : BaseService, ICourierService
         return (int)(distance * 2); // Assume 30 km/h average speed
     }
     // Additional methods implementation
+    /// <summary>
+    /// Kurye bilgisini ID'ye göre getirir.
+    /// </summary>
     public async Task<Result<CourierResponse>> GetCourierByIdAsync(Guid courierId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -700,6 +762,9 @@ public class CourierService : BaseService, ICourierService
             new { courierId },
             cancellationToken);
     }
+    /// <summary>
+    /// Müsaitlik durumuna göre kuryeleri sayfalama ile getirir.
+    /// </summary>
     public async Task<Result<PagedResult<CourierResponse>>> GetCouriersByAvailabilityAsync(bool isAvailable, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -708,6 +773,9 @@ public class CourierService : BaseService, ICourierService
             new { isAvailable, query.Page, query.PageSize },
             cancellationToken);
     }
+    /// <summary>
+    /// Belirtilen siparişe belirtilen kuryeyi atar.
+    /// </summary>
     public async Task<Result> AssignCourierToOrderAsync(Guid orderId, Guid courierId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(

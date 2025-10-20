@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.AuditLogging;
 
+/// <summary>
+/// Kullanıcı aktivite log servisi: aktivite oluşturma, sorgulama, istatistik ve temizlik işlemleri.
+/// </summary>
 public class UserActivityLogService : IUserActivityLogService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -17,6 +20,9 @@ public class UserActivityLogService : IUserActivityLogService
         _loggingService = loggingService;
         _logger = logger;
     }
+    /// <summary>
+    /// Yeni kullanıcı aktivite logu oluşturur.
+    /// </summary>
     public async Task<Result<UserActivityLogResponse>> CreateUserActivityLogAsync(CreateUserActivityLogRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -60,6 +66,9 @@ public class UserActivityLogService : IUserActivityLogService
             return Result.Fail<UserActivityLogResponse>("Failed to create user activity log", "CREATE_USER_ACTIVITY_LOG_FAILED");
         }
     }
+    /// <summary>
+    /// Aktivite logunu ID'ye göre getirir.
+    /// </summary>
     public async Task<Result<UserActivityLogResponse>> GetUserActivityLogByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
@@ -83,6 +92,9 @@ public class UserActivityLogService : IUserActivityLogService
             return Result.Fail<UserActivityLogResponse>("Failed to get user activity log", "GET_USER_ACTIVITY_LOG_FAILED");
         }
     }
+    /// <summary>
+    /// Aktivite loglarını filtre ve sayfalama ile listeler.
+    /// </summary>
     public async Task<Result<IEnumerable<UserActivityLogResponse>>> GetUserActivityLogsAsync(UserActivityQueryRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -146,6 +158,9 @@ public class UserActivityLogService : IUserActivityLogService
             return Result.Fail<IEnumerable<UserActivityLogResponse>>("Failed to get user activity logs", "GET_USER_ACTIVITY_LOGS_FAILED");
         }
     }
+    /// <summary>
+    /// Belirli bir kullanıcıya ait aktiviteleri listeler.
+    /// </summary>
     public async Task<Result<IEnumerable<UserActivityLogResponse>>> GetUserActivityLogsByUserIdAsync(Guid userId, DateTime? startDate = null, DateTime? endDate = null, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
@@ -176,6 +191,9 @@ public class UserActivityLogService : IUserActivityLogService
             return Result.Fail<IEnumerable<UserActivityLogResponse>>("Failed to get user activity logs", "GET_USER_ACTIVITY_LOGS_BY_USER_FAILED");
         }
     }
+    /// <summary>
+    /// Aktivite türüne göre logları listeler.
+    /// </summary>
     public async Task<Result<IEnumerable<UserActivityLogResponse>>> GetUserActivityLogsByActivityTypeAsync(string activityType, DateTime? startDate = null, DateTime? endDate = null, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
@@ -206,6 +224,9 @@ public class UserActivityLogService : IUserActivityLogService
             return Result.Fail<IEnumerable<UserActivityLogResponse>>("Failed to get user activity logs", "GET_USER_ACTIVITY_LOGS_BY_ACTIVITY_TYPE_FAILED");
         }
     }
+    /// <summary>
+    /// Aktivite istatistiklerini döner.
+    /// </summary>
     public async Task<Result<Dictionary<string, int>>> GetUserActivityStatisticsAsync(DateTime startDate, DateTime endDate, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         try
@@ -231,6 +252,9 @@ public class UserActivityLogService : IUserActivityLogService
             return Result.Fail<Dictionary<string, int>>("Failed to get user activity statistics", "GET_USER_ACTIVITY_STATISTICS_FAILED");
         }
     }
+    /// <summary>
+    /// Eşik değeri üstü şüpheli aktiviteleri listeler.
+    /// </summary>
     public async Task<Result<IEnumerable<UserActivityLogResponse>>> GetSuspiciousActivitiesAsync(DateTime startDate, DateTime endDate, int threshold = 10, CancellationToken cancellationToken = default)
     {
         try
@@ -258,6 +282,9 @@ public class UserActivityLogService : IUserActivityLogService
             return Result.Fail<IEnumerable<UserActivityLogResponse>>("Failed to get suspicious activities", "GET_SUSPICIOUS_ACTIVITIES_FAILED");
         }
     }
+    /// <summary>
+    /// Eski kullanıcı aktivite loglarını siler.
+    /// </summary>
     public async Task<Result> DeleteOldUserActivityLogsAsync(DateTime cutoffDate, CancellationToken cancellationToken = default)
     {
         try

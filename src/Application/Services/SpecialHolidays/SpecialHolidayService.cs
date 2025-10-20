@@ -7,12 +7,18 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.SpecialHolidays;
 
+/// <summary>
+/// Özel tatil servisi implementasyonu: merchant bazlı tatil yönetimi, çakışma kontrolü, müsaitlik kontrolü, cache.
+/// </summary>
 public class SpecialHolidayService : BaseService, ISpecialHolidayService
 {
     public SpecialHolidayService(IUnitOfWork unitOfWork, ILogger<SpecialHolidayService> logger, ILoggingService loggingService, ICacheService cacheService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
     }
+    /// <summary>
+    /// Tüm aktif özel tatilleri getirir (cache, performance tracking).
+    /// </summary>
     public async Task<Result<List<SpecialHolidayResponse>>> GetAllSpecialHolidaysAsync(CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -21,6 +27,7 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             null,
             cancellationToken);
     }
+    
     private async Task<Result<List<SpecialHolidayResponse>>> GetAllSpecialHolidaysInternalAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -50,6 +57,9 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException<List<SpecialHolidayResponse>>(ex, _logger, "GetAllSpecialHolidays");
         }
     }
+    /// <summary>
+    /// Merchant'a ait özel tatilleri getirir (aktif/pasif filtresi, cache).
+    /// </summary>
     public async Task<Result<List<SpecialHolidayResponse>>> GetSpecialHolidaysByMerchantAsync(Guid merchantId, bool includeInactive = false, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -58,6 +68,7 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             new { MerchantId = merchantId, IncludeInactive = includeInactive },
             cancellationToken);
     }
+    
     private async Task<Result<List<SpecialHolidayResponse>>> GetSpecialHolidaysByMerchantInternalAsync(Guid merchantId, bool includeInactive, CancellationToken cancellationToken = default)
     {
         try
@@ -87,6 +98,9 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException<List<SpecialHolidayResponse>>(ex, _logger, "GetSpecialHolidaysByMerchant");
         }
     }
+    /// <summary>
+    /// Tarih aralığındaki özel tatilleri getirir (çakışma kontrolü için kullanılır, cache).
+    /// </summary>
     public async Task<Result<List<SpecialHolidayResponse>>> GetSpecialHolidaysByDateRangeAsync(Guid merchantId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -95,6 +109,7 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             new { MerchantId = merchantId, StartDate = startDate, EndDate = endDate },
             cancellationToken);
     }
+    
     private async Task<Result<List<SpecialHolidayResponse>>> GetSpecialHolidaysByDateRangeInternalAsync(Guid merchantId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
     {
         try
@@ -128,6 +143,9 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException<List<SpecialHolidayResponse>>(ex, _logger, "GetSpecialHolidaysByDateRange");
         }
     }
+    /// <summary>
+    /// Özel tatili ID ile getirir (cache).
+    /// </summary>
     public async Task<Result<SpecialHolidayResponse>> GetSpecialHolidayByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -136,6 +154,7 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             new { Id = id },
             cancellationToken);
     }
+    
     private async Task<Result<SpecialHolidayResponse>> GetSpecialHolidayByIdInternalAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
@@ -166,6 +185,9 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException<SpecialHolidayResponse>(ex, _logger, "GetSpecialHolidayById");
         }
     }
+    /// <summary>
+    /// Yeni özel tatil oluşturur (ownership kontrolü, çakışma kontrolü, cache invalidation, business log).
+    /// </summary>
     public async Task<Result<SpecialHolidayResponse>> CreateSpecialHolidayAsync(CreateSpecialHolidayRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
@@ -242,6 +264,9 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException<SpecialHolidayResponse>(ex, _logger, "CreateSpecialHoliday");
         }
     }
+    /// <summary>
+    /// Özel tatili günceller (ownership kontrolü, çakışma kontrolü, cache invalidation, business log).
+    /// </summary>
     public async Task<Result<SpecialHolidayResponse>> UpdateSpecialHolidayAsync(Guid id, UpdateSpecialHolidayRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
@@ -311,6 +336,9 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException<SpecialHolidayResponse>(ex, _logger, "UpdateSpecialHoliday");
         }
     }
+    /// <summary>
+    /// Özel tatili siler (ownership kontrolü, cache invalidation, business log).
+    /// </summary>
     public async Task<Result> DeleteSpecialHolidayAsync(Guid id, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
@@ -352,6 +380,9 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException(ex, _logger, "DeleteSpecialHoliday");
         }
     }
+    /// <summary>
+    /// Özel tatil durumunu değiştirir (aktif/pasif, ownership kontrolü, cache invalidation, business log).
+    /// </summary>
     public async Task<Result> ToggleSpecialHolidayStatusAsync(Guid id, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
@@ -396,6 +427,9 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException(ex, _logger, "ToggleSpecialHolidayStatus");
         }
     }
+    /// <summary>
+    /// Merchant'ın belirtilen tarihte müsait olup olmadığını kontrol eder (özel tatil ve normal çalışma saatleri kontrolü).
+    /// </summary>
     public async Task<Result<MerchantAvailabilityResponse>> CheckMerchantAvailabilityAsync(Guid merchantId, DateTime checkDate, CancellationToken cancellationToken = default)
     {
         try
@@ -467,6 +501,9 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException<MerchantAvailabilityResponse>(ex, _logger, "CheckMerchantAvailability");
         }
     }
+    /// <summary>
+    /// Yaklaşan özel tatilleri getirir (bugünden sonraki aktif tatiller, cache).
+    /// </summary>
     public async Task<Result<List<SpecialHolidayResponse>>> GetUpcomingSpecialHolidaysAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -475,6 +512,7 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             new { MerchantId = merchantId },
             cancellationToken);
     }
+    
     private async Task<Result<List<SpecialHolidayResponse>>> GetUpcomingSpecialHolidaysInternalAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
@@ -507,6 +545,7 @@ public class SpecialHolidayService : BaseService, ISpecialHolidayService
             return ServiceResult.HandleException<List<SpecialHolidayResponse>>(ex, _logger, "GetUpcomingSpecialHolidays");
         }
     }
+    
     private static SpecialHolidayResponse MapToResponse(SpecialHoliday specialHoliday)
     {
         return new SpecialHolidayResponse(

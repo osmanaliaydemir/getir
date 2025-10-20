@@ -7,6 +7,9 @@ using System.Text.Json;
 
 namespace Getir.Application.Services.AuditLogging;
 
+/// <summary>
+/// Log analizi ve raporlama servisi: log analizi raporu üretme, listeleme, analitik ve dışa aktarma işlemleri.
+/// </summary>
 public class LogAnalysisService : ILogAnalysisService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -16,6 +19,12 @@ public class LogAnalysisService : ILogAnalysisService
     {
         _unitOfWork = unitOfWork; _loggingService = loggingService; _logger = logger;
     }
+    /// <summary>
+    /// Log analizi raporu oluşturur ve içeriğini hesaplayıp kaydeder.
+    /// </summary>
+    /// <param name="request">Rapor oluşturma isteği</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Oluşturulan rapor</returns>
     public async Task<Result<LogAnalysisReportResponse>> CreateLogAnalysisReportAsync(CreateLogAnalysisReportRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -69,6 +78,12 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<LogAnalysisReportResponse>("Failed to create log analysis report", "CREATE_LOG_ANALYSIS_REPORT_FAILED");
         }
     }
+    /// <summary>
+    /// Log analizi raporunu ID'ye göre getirir.
+    /// </summary>
+    /// <param name="id">Rapor ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Rapor</returns>
     public async Task<Result<LogAnalysisReportResponse>> GetLogAnalysisReportByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
@@ -92,6 +107,10 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<LogAnalysisReportResponse>("Failed to get log analysis report", "GET_LOG_ANALYSIS_REPORT_FAILED");
         }
     }
+    /// <summary>
+    /// Log analizi raporlarını filtre ve sayfalama ile listeler.
+    /// </summary>
+    /// <returns>Rapor listesi</returns>
     public async Task<Result<IEnumerable<LogAnalysisReportResponse>>> GetLogAnalysisReportsAsync(DateTime? startDate = null, DateTime? endDate = null, string? reportType = null, string? status = null, Guid? generatedByUserId = null, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
@@ -131,6 +150,11 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<IEnumerable<LogAnalysisReportResponse>>("Failed to get log analysis reports", "GET_LOG_ANALYSIS_REPORTS_FAILED");
         }
     }
+    /// <summary>
+    /// Audit logları için analitik veri üretir.
+    /// </summary>
+    /// <param name="request">Analitik isteği</param>
+    /// <returns>Analitik yanıtı</returns>
     public async Task<Result<AuditLogAnalyticsResponse>> GenerateAuditLogAnalyticsAsync(AuditLogAnalyticsRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -170,6 +194,9 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<AuditLogAnalyticsResponse>("Failed to generate audit log analytics", "GENERATE_AUDIT_LOG_ANALYTICS_FAILED");
         }
     }
+    /// <summary>
+    /// Kullanıcı aktivite logları için analitik üretir.
+    /// </summary>
     public async Task<Result<Dictionary<string, object>>> GenerateUserActivityAnalyticsAsync(DateTime startDate, DateTime endDate, Guid? userId = null, string? activityType = null, CancellationToken cancellationToken = default)
     {
         try
@@ -220,6 +247,9 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<Dictionary<string, object>>("Failed to generate user activity analytics", "GENERATE_USER_ACTIVITY_ANALYTICS_FAILED");
         }
     }
+    /// <summary>
+    /// Sistem değişiklik logları için analitik üretir.
+    /// </summary>
     public async Task<Result<Dictionary<string, object>>> GenerateSystemChangeAnalyticsAsync(DateTime startDate, DateTime endDate, string? entityType = null, string? changeType = null, CancellationToken cancellationToken = default)
     {
         try
@@ -268,6 +298,9 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<Dictionary<string, object>>("Failed to generate system change analytics", "GENERATE_SYSTEM_CHANGE_ANALYTICS_FAILED");
         }
     }
+    /// <summary>
+    /// Güvenlik olay logları için analitik üretir.
+    /// </summary>
     public async Task<Result<Dictionary<string, object>>> GenerateSecurityEventAnalyticsAsync(DateTime startDate, DateTime endDate, string? severity = null, string? riskLevel = null, CancellationToken cancellationToken = default)
     {
         try
@@ -323,6 +356,9 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<Dictionary<string, object>>("Failed to generate security event analytics", "GENERATE_SECURITY_EVENT_ANALYTICS_FAILED");
         }
     }
+    /// <summary>
+    /// Planlanmış (scheduled) raporları listeler.
+    /// </summary>
     public async Task<Result<IEnumerable<LogAnalysisReportResponse>>> GetScheduledReportsAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -344,6 +380,9 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<IEnumerable<LogAnalysisReportResponse>>("Failed to get scheduled reports", "GET_SCHEDULED_REPORTS_FAILED");
         }
     }
+    /// <summary>
+    /// Zamanı gelen planlanmış raporları çalıştırır ve yeniler.
+    /// </summary>
     public async Task<Result> ExecuteScheduledReportsAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -377,6 +416,9 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail("Failed to execute scheduled reports", "EXECUTE_SCHEDULED_REPORTS_FAILED");
         }
     }
+    /// <summary>
+    /// Süresi dolmuş raporları siler.
+    /// </summary>
     public async Task<Result> DeleteExpiredReportsAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -400,6 +442,9 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail("Failed to delete expired reports", "DELETE_EXPIRED_REPORTS_FAILED");
         }
     }
+    /// <summary>
+    /// Var olan raporu yeniden üretir.
+    /// </summary>
     public async Task<Result<LogAnalysisReportResponse>> RegenerateReportAsync(Guid reportId, CancellationToken cancellationToken = default)
     {
         try
@@ -454,6 +499,9 @@ public class LogAnalysisService : ILogAnalysisService
             return Result.Fail<LogAnalysisReportResponse>("Failed to regenerate report", "REGENERATE_REPORT_FAILED");
         }
     }
+    /// <summary>
+    /// Raporu verilen formatta dışa aktarır (örnek uygulama).
+    /// </summary>
     public async Task<Result<byte[]>> ExportReportAsync(Guid reportId, string format = "PDF", CancellationToken cancellationToken = default)
     {
         try

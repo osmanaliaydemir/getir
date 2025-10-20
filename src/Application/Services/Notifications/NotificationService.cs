@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Notifications;
 
+/// <summary>
+/// Bildirim servisi: kullanıcı bildirimlerinin CRUD işlemleri ve SignalR gerçek zamanlı bildirim.
+/// </summary>
 public class NotificationService : BaseService, INotificationService
 {
     private readonly ISignalRService? _signalRService;
@@ -16,6 +19,9 @@ public class NotificationService : BaseService, INotificationService
         _signalRService = signalRService;
         _backgroundTaskService = backgroundTaskService;
     }
+    /// <summary>
+    /// Kullanıcı bildirimlerini sayfalama ile getirir.
+    /// </summary>
     public async Task<Result<PagedResult<NotificationResponse>>> GetUserNotificationsAsync(Guid userId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         var notifications = await _unitOfWork.Repository<Notification>().GetPagedAsync(
@@ -46,6 +52,9 @@ public class NotificationService : BaseService, INotificationService
 
         return Result.Ok(pagedResult);
     }
+    /// <summary>
+    /// Bildirimleri okundu olarak işaretler (toplu).
+    /// </summary>
     public async Task<Result> MarkAsReadAsync(Guid userId, MarkAsReadRequest request, CancellationToken cancellationToken = default)
     {
         var notifications = await _unitOfWork.Repository<Notification>().GetPagedAsync(
@@ -63,6 +72,9 @@ public class NotificationService : BaseService, INotificationService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Yeni bildirim oluşturur ve SignalR ile gerçek zamanlı gönderir.
+    /// </summary>
     public async Task<Result<NotificationResponse>> CreateNotificationAsync(CreateNotificationRequest request, CancellationToken cancellationToken = default)
     {
         var notification = new Notification
@@ -109,6 +121,9 @@ public class NotificationService : BaseService, INotificationService
         return Result.Ok(response);
     }
     // SignalR Hub-specific methods
+    /// <summary>
+    /// Bildirimi okundu olarak işaretler (tekil).
+    /// </summary>
     public async Task<Result> MarkAsReadAsync(Guid notificationId, Guid userId, CancellationToken cancellationToken = default)
     {
         var notification = await _unitOfWork.Repository<Notification>()
@@ -141,6 +156,9 @@ public class NotificationService : BaseService, INotificationService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Okunmamış bildirim sayısını getirir.
+    /// </summary>
     public async Task<Result<int>> GetUnreadCountAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var count = await _unitOfWork.ReadRepository<Notification>()
@@ -150,6 +168,9 @@ public class NotificationService : BaseService, INotificationService
 
         return Result.Ok(count);
     }
+    /// <summary>
+    /// Kullanıcı bildirimlerini belirtilen sayıda getirir.
+    /// </summary>
     public async Task<Result<List<NotificationResponse>>> GetUserNotificationsAsync(Guid userId, int count, CancellationToken cancellationToken = default)
     {
         var notifications = await _unitOfWork.Repository<Notification>()
@@ -176,6 +197,9 @@ public class NotificationService : BaseService, INotificationService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Tüm bildirimleri okundu olarak işaretler.
+    /// </summary>
     public async Task<Result> MarkAllAsReadAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var unreadNotifications = await _unitOfWork.Repository<Notification>()
@@ -205,6 +229,9 @@ public class NotificationService : BaseService, INotificationService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Bildirimi siler.
+    /// </summary>
     public async Task<Result> DeleteNotificationAsync(Guid notificationId, Guid userId, CancellationToken cancellationToken = default)
     {
         var notification = await _unitOfWork.Repository<Notification>()
@@ -229,6 +256,9 @@ public class NotificationService : BaseService, INotificationService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Sipariş durum bildirimi gönderir (SignalR ile).
+    /// </summary>
     public async Task<Result> SendOrderStatusNotificationAsync(Guid userId, Guid orderId, Domain.Enums.OrderStatus status, CancellationToken cancellationToken = default)
     {
         // Create notification for order status change

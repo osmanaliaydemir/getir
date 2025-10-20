@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.UserPreferences;
 
+/// <summary>
+/// Kullanıcı tercihleri servisi implementasyonu: bildirim tercihleri (email/sms/push), sessiz saatler, merchant portal ayarları.
+/// </summary>
 public class UserPreferencesService : IUserPreferencesService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -15,6 +18,9 @@ public class UserPreferencesService : IUserPreferencesService
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
+    /// <summary>
+    /// Kullanıcı tercihlerini getirir (yoksa hata döner).
+    /// </summary>
     public async Task<Result<UserNotificationPreferencesResponse>> GetUserPreferencesAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         try
@@ -39,6 +45,9 @@ public class UserPreferencesService : IUserPreferencesService
                 ErrorCodes.INTERNAL_ERROR);
         }
     }
+    /// <summary>
+    /// Kullanıcı tercihlerini getirir veya yoksa varsayılan oluşturur.
+    /// </summary>
     public async Task<Result<UserNotificationPreferencesResponse>> GetOrCreateUserPreferencesAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         try
@@ -73,6 +82,9 @@ public class UserPreferencesService : IUserPreferencesService
                 ErrorCodes.INTERNAL_ERROR);
         }
     }
+    /// <summary>
+    /// Kullanıcı tercihlerini günceller (partial update, yoksa oluşturur).
+    /// </summary>
     public async Task<Result<UserNotificationPreferencesResponse>> UpdateUserPreferencesAsync(Guid userId, UpdateUserNotificationPreferencesRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -143,6 +155,9 @@ public class UserPreferencesService : IUserPreferencesService
                 ErrorCodes.INTERNAL_ERROR);
         }
     }
+    /// <summary>
+    /// Merchant portal için basitleştirilmiş tercihleri getirir.
+    /// </summary>
     public async Task<Result<MerchantNotificationPreferencesResponse>> GetMerchantPreferencesAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         try
@@ -181,6 +196,9 @@ public class UserPreferencesService : IUserPreferencesService
                 ErrorCodes.INTERNAL_ERROR);
         }
     }
+    /// <summary>
+    /// Merchant portal için basitleştirilmiş tercihleri günceller (zaman ayrıştırma).
+    /// </summary>
     public async Task<Result<MerchantNotificationPreferencesResponse>> UpdateMerchantPreferencesAsync(Guid userId, UpdateMerchantNotificationPreferencesRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -235,6 +253,9 @@ public class UserPreferencesService : IUserPreferencesService
                 ErrorCodes.INTERNAL_ERROR);
         }
     }
+    /// <summary>
+    /// Kullanıcı tercihlerini siler.
+    /// </summary>
     public async Task<Result> DeleteUserPreferencesAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         try

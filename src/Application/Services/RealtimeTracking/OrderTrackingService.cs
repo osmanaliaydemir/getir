@@ -3,6 +3,9 @@ using Getir.Domain.Enums;
 
 namespace Getir.Application.Services.RealtimeTracking;
 
+/// <summary>
+/// Sipariş takip servisi implementasyonu: mock data ile tracking yönetimi, konum/durum güncelleme, Haversine.
+/// </summary>
 public class OrderTrackingService : IOrderTrackingService
 {
     private readonly List<OrderTrackingDto> _mockTrackings;
@@ -89,18 +92,27 @@ public class OrderTrackingService : IOrderTrackingService
         };
     }
 
+    /// <summary>
+    /// Sipariş ID'sine göre tracking kaydını getirir (mock data).
+    /// </summary>
     public Task<OrderTrackingDto?> GetTrackingByOrderIdAsync(Guid orderId)
     {
         var tracking = _mockTrackings.FirstOrDefault(t => t.OrderId == orderId);
         return Task.FromResult(tracking);
     }
 
+    /// <summary>
+    /// Tracking ID'sine göre kaydı getirir (mock data).
+    /// </summary>
     public Task<OrderTrackingDto?> GetTrackingByIdAsync(Guid trackingId)
     {
         var tracking = _mockTrackings.FirstOrDefault(t => t.Id == trackingId);
         return Task.FromResult(tracking);
     }
 
+    /// <summary>
+    /// Yeni tracking kaydı oluşturur (mock data).
+    /// </summary>
     public Task<OrderTrackingDto> CreateTrackingAsync(Guid orderId, Guid? courierId = null)
     {
         var tracking = new OrderTrackingDto
@@ -123,6 +135,9 @@ public class OrderTrackingService : IOrderTrackingService
         return Task.FromResult(tracking);
     }
 
+    /// <summary>
+    /// Konum günceller (mesafe/ETA hesaplama, konum geçmişi, Haversine, mock data).
+    /// </summary>
     public Task<LocationUpdateResponse> UpdateLocationAsync(LocationUpdateRequest request)
     {
         var tracking = _mockTrackings.FirstOrDefault(t => t.Id == request.OrderTrackingId);
@@ -185,6 +200,9 @@ public class OrderTrackingService : IOrderTrackingService
         });
     }
 
+    /// <summary>
+    /// Durum günceller (validasyon, konum/adres güncellemesi, bildirim, mock data).
+    /// </summary>
     public Task<StatusUpdateResponse> UpdateStatusAsync(StatusUpdateRequest request)
     {
         var tracking = _mockTrackings.FirstOrDefault(t => t.Id == request.OrderTrackingId);
@@ -243,6 +261,9 @@ public class OrderTrackingService : IOrderTrackingService
         });
     }
 
+    /// <summary>
+    /// Tracking kaydını siler (soft delete, mock data).
+    /// </summary>
     public Task<bool> DeleteTrackingAsync(Guid trackingId)
     {
         var tracking = _mockTrackings.FirstOrDefault(t => t.Id == trackingId);
@@ -254,18 +275,27 @@ public class OrderTrackingService : IOrderTrackingService
         return Task.FromResult(false);
     }
 
+    /// <summary>
+    /// Aktif tracking kayıtlarını getirir (mock data).
+    /// </summary>
     public Task<List<OrderTrackingDto>> GetActiveTrackingsAsync()
     {
         var activeTrackings = _mockTrackings.Where(t => t.IsActive).ToList();
         return Task.FromResult(activeTrackings);
     }
 
+    /// <summary>
+    /// Kurye bazlı tracking kayıtlarını getirir (mock data).
+    /// </summary>
     public Task<List<OrderTrackingDto>> GetTrackingsByCourierAsync(Guid courierId)
     {
         var courierTrackings = _mockTrackings.Where(t => t.CourierId == courierId).ToList();
         return Task.FromResult(courierTrackings);
     }
 
+    /// <summary>
+    /// Kullanıcı bazlı tracking kayıtlarını getirir (mock data).
+    /// </summary>
     public Task<List<OrderTrackingDto>> GetTrackingsByUserAsync(Guid userId)
     {
         // Mock implementation - in real scenario, would filter by user's orders
@@ -273,6 +303,9 @@ public class OrderTrackingService : IOrderTrackingService
         return Task.FromResult(userTrackings);
     }
 
+    /// <summary>
+    /// Tracking kayıtlarını arar (filtreleme ve sayfalama, mock data).
+    /// </summary>
     public Task<TrackingSearchResponse> SearchTrackingsAsync(TrackingSearchRequest request)
     {
         var trackings = _mockTrackings.AsQueryable();
@@ -313,6 +346,9 @@ public class OrderTrackingService : IOrderTrackingService
         return Task.FromResult(response);
     }
 
+    /// <summary>
+    /// Konum geçmişini getirir (son N kayıt, zaman sıralı, mock data).
+    /// </summary>
     public Task<List<LocationHistoryDto>> GetLocationHistoryAsync(Guid trackingId, int count = 50)
     {
         var history = _mockLocationHistory
@@ -324,6 +360,9 @@ public class OrderTrackingService : IOrderTrackingService
         return Task.FromResult(history);
     }
 
+    /// <summary>
+    /// Tracking istatistiklerini getirir (durum sayıları, ortalama süre/mesafe, mock data).
+    /// </summary>
     public Task<TrackingStatisticsDto> GetTrackingStatisticsAsync(DateTime startDate, DateTime endDate)
     {
         var statistics = new TrackingStatisticsDto
@@ -343,6 +382,9 @@ public class OrderTrackingService : IOrderTrackingService
         return Task.FromResult(statistics);
     }
 
+    /// <summary>
+    /// Durum geçişinin geçerli olup olmadığını kontrol eder (mock data).
+    /// </summary>
     public Task<bool> CanTransitionToStatusAsync(Guid trackingId, TrackingStatus newStatus)
     {
         var tracking = _mockTrackings.FirstOrDefault(t => t.Id == trackingId);
@@ -352,6 +394,9 @@ public class OrderTrackingService : IOrderTrackingService
         return Task.FromResult(tracking.Status.CanTransitionTo(newStatus));
     }
 
+    /// <summary>
+    /// Mevcut geçerli durum geçişlerini getirir (mock data).
+    /// </summary>
     public Task<List<TrackingStatus>> GetAvailableTransitionsAsync(Guid trackingId)
     {
         var tracking = _mockTrackings.FirstOrDefault(t => t.Id == trackingId);

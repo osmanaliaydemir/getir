@@ -8,6 +8,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Reviews;
 
+/// <summary>
+/// Review servisi implementasyonu: değerlendirme yönetimi, rating hesaplama, moderasyon, SignalR entegrasyonu.
+/// </summary>
 public class ReviewService : BaseService, IReviewService
 {
     private readonly ISignalRService? _signalRService;
@@ -18,6 +21,9 @@ public class ReviewService : BaseService, IReviewService
         _signalRService = signalRService;
         _backgroundTaskService = backgroundTaskService;
     }
+    /// <summary>
+    /// Yeni değerlendirme oluşturur (validasyon, duplicate kontrolü, tag ekleme, rating güncelleme, SignalR bildirim).
+    /// </summary>
     public async Task<Result<ReviewResponse>> CreateReviewAsync(CreateReviewRequest request, Guid reviewerId, CancellationToken cancellationToken = default)
     {
         // Validate that user can review
@@ -115,6 +121,9 @@ public class ReviewService : BaseService, IReviewService
         var createdReview = await GetReviewAsync(review.Id, cancellationToken);
         return createdReview;
     }
+    /// <summary>
+    /// Değerlendirmeyi günceller (ownership kontrolü, tag yönetimi, rating güncelleme, cache invalidation).
+    /// </summary>
     public async Task<Result<ReviewResponse>> UpdateReviewAsync(Guid reviewId, UpdateReviewRequest request, Guid userId, CancellationToken cancellationToken = default)
     {
         var review = await _unitOfWork.ReadRepository<Review>()
@@ -175,6 +184,9 @@ public class ReviewService : BaseService, IReviewService
 
         return await GetReviewAsync(reviewId, cancellationToken);
     }
+    /// <summary>
+    /// Değerlendirmeyi siler (ownership kontrolü, soft delete, rating güncelleme, cache invalidation).
+    /// </summary>
     public async Task<Result> DeleteReviewAsync(Guid reviewId, Guid userId, CancellationToken cancellationToken = default)
     {
         var review = await _unitOfWork.ReadRepository<Review>()
@@ -207,6 +219,9 @@ public class ReviewService : BaseService, IReviewService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Değerlendirmeyi ID ile getirir (tag/helpful count dahil).
+    /// </summary>
     public async Task<Result<ReviewResponse>> GetReviewAsync(Guid reviewId, CancellationToken cancellationToken = default)
     {
         var review = await _unitOfWork.ReadRepository<Review>()
@@ -243,6 +258,9 @@ public class ReviewService : BaseService, IReviewService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Değerlendirmeleri arar (filtreleme ile, sayfalama).
+    /// </summary>
     public async Task<Result<PagedResult<ReviewResponse>>> GetReviewsAsync(ReviewSearchQuery query, CancellationToken cancellationToken = default)
     {
         var filter = BuildReviewFilter(query);
@@ -286,6 +304,9 @@ public class ReviewService : BaseService, IReviewService
 
         return Result.Ok(pagedResult);
     }
+    /// <summary>
+    /// Entity için değerlendirmeleri getirir (cache, performance tracking).
+    /// </summary>
     public async Task<Result<PagedResult<ReviewResponse>>> GetReviewsByRevieweeAsync(Guid revieweeId, string revieweeType, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -294,6 +315,7 @@ public class ReviewService : BaseService, IReviewService
             new { RevieweeId = revieweeId, RevieweeType = revieweeType, Page = query.Page },
             cancellationToken);
     }
+    
     private async Task<Result<PagedResult<ReviewResponse>>> GetReviewsByRevieweeInternalAsync(Guid revieweeId, string revieweeType, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         try
@@ -324,6 +346,9 @@ public class ReviewService : BaseService, IReviewService
             return ServiceResult.HandleException<PagedResult<ReviewResponse>>(ex, _logger, "GetReviewsByReviewee");
         }
     }
+    /// <summary>
+    /// Kullanıcının yaptığı değerlendirmeleri getirir.
+    /// </summary>
     public async Task<Result<PagedResult<ReviewResponse>>> GetReviewsByReviewerAsync(Guid reviewerId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         // Adjust filter for reviewer
@@ -368,6 +393,9 @@ public class ReviewService : BaseService, IReviewService
 
         return Result.Ok(pagedResult);
     }
+    /// <summary>
+    /// Sipariş için değerlendirmeleri getirir.
+    /// </summary>
     public async Task<Result<PagedResult<ReviewResponse>>> GetReviewsByOrderAsync(Guid orderId, CancellationToken cancellationToken = default)
     {
         // Adjust filter for order
@@ -412,6 +440,9 @@ public class ReviewService : BaseService, IReviewService
 
         return Result.Ok(pagedResult);
     }
+    /// <summary>
+    /// Entity rating'ini getirir (ortalama, breakdown, cache, yoksa oluşturur).
+    /// </summary>
     public async Task<Result<RatingResponse>> GetRatingAsync(Guid entityId, string entityType, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -420,6 +451,7 @@ public class ReviewService : BaseService, IReviewService
             new { EntityId = entityId, EntityType = entityType },
             cancellationToken);
     }
+    
     private async Task<Result<RatingResponse>> GetRatingInternalAsync(Guid entityId, string entityType, CancellationToken cancellationToken = default)
     {
         try
@@ -488,6 +520,9 @@ public class ReviewService : BaseService, IReviewService
             return ServiceResult.HandleException<RatingResponse>(ex, _logger, "GetRating");
         }
     }
+    /// <summary>
+    /// Review istatistiklerini getirir (ortalama, breakdown, son performans).
+    /// </summary>
     public async Task<Result<ReviewStatsResponse>> GetReviewStatsAsync(Guid entityId, string entityType, CancellationToken cancellationToken = default)
     {
         var rating = await _unitOfWork.ReadRepository<Rating>()
@@ -512,6 +547,9 @@ public class ReviewService : BaseService, IReviewService
 
         return Result.Ok(stats);
     }
+    /// <summary>
+    /// Rating hesaplar (tarih aralığı ile, ortalama ve breakdown).
+    /// </summary>
     public async Task<Result<RatingCalculationResponse>> CalculateRatingAsync(RatingCalculationRequest request, CancellationToken cancellationToken = default)
     {
         var fromDate = request.FromDate ?? DateTime.UtcNow.AddYears(-1);
@@ -559,6 +597,9 @@ public class ReviewService : BaseService, IReviewService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Entity rating'ini günceller (ortalama, breakdown, son 30 gün performansı, pozitif oran).
+    /// </summary>
     public async Task<Result> UpdateRatingAsync(Guid entityId, string entityType, CancellationToken cancellationToken = default)
     {
         var reviews = await _unitOfWork.ReadRepository<Review>()
@@ -622,7 +663,9 @@ public class ReviewService : BaseService, IReviewService
 
         return Result.Ok();
     }
+    
     // Helper methods
+    
     private Expression<Func<Review, bool>> BuildReviewFilter(ReviewSearchQuery query)
     {
         return r => !r.IsDeleted &&
@@ -633,7 +676,10 @@ public class ReviewService : BaseService, IReviewService
                     (!query.DateFrom.HasValue || r.CreatedAt >= query.DateFrom.Value) &&
                     (!query.DateTo.HasValue || r.CreatedAt <= query.DateTo.Value);
     }
-    // Placeholder methods for remaining interface members
+    
+    /// <summary>
+    /// Moderasyon bekleyen değerlendirmeleri getirir.
+    /// </summary>
     public async Task<Result<PagedResult<PendingReviewResponse>>> GetPendingReviewsAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         try
@@ -678,6 +724,9 @@ public class ReviewService : BaseService, IReviewService
             return Result.Fail<PagedResult<PendingReviewResponse>>("Failed to get pending reviews", "GET_PENDING_REVIEWS_ERROR");
         }
     }
+    /// <summary>
+    /// Değerlendirmeyi modere eder (approve/reject, moderation log, SignalR bildirim).
+    /// </summary>
     public async Task<Result<ReviewModerationResponse>> ModerateReviewAsync(Guid reviewId, ReviewModerationRequest request, Guid moderatorId, CancellationToken cancellationToken = default)
     {
         try
@@ -745,6 +794,9 @@ public class ReviewService : BaseService, IReviewService
             return Result.Fail<ReviewModerationResponse>("Failed to moderate review", "MODERATION_ERROR");
         }
     }
+    /// <summary>
+    /// Toplu moderasyon (hata yönetimi, başarı/hata sayısı).
+    /// </summary>
     public async Task<Result> BulkModerateReviewsAsync(List<Guid> reviewIds, ReviewModerationRequest request, Guid moderatorId, CancellationToken cancellationToken = default)
     {
         try
@@ -798,6 +850,9 @@ public class ReviewService : BaseService, IReviewService
             return Result.Fail("Failed to perform bulk moderation", "BULK_MODERATION_ERROR");
         }
     }
+    /// <summary>
+    /// Faydalı/faydasız oy verir (duplicate kontrolü, count güncelleme).
+    /// </summary>
     public async Task<Result<ReviewHelpfulResponse>> VoteHelpfulAsync(Guid reviewId, ReviewHelpfulRequest request, Guid userId, CancellationToken cancellationToken = default)
     {
         try
@@ -857,6 +912,9 @@ public class ReviewService : BaseService, IReviewService
             return Result.Fail<ReviewHelpfulResponse>("Failed to vote helpful", "VOTE_HELPFUL_ERROR");
         }
     }
+    /// <summary>
+    /// Faydalı oyunu geri alır.
+    /// </summary>
     public async Task<Result> RemoveHelpfulVoteAsync(Guid reviewId, Guid userId, CancellationToken cancellationToken = default)
     {
         try
@@ -884,6 +942,9 @@ public class ReviewService : BaseService, IReviewService
             return Result.Fail("Failed to remove helpful vote", "REMOVE_VOTE_ERROR");
         }
     }
+    /// <summary>
+    /// Review analizlerini getirir (rating dağılımı, faydalı oy sayıları, en yaygın tag'ler).
+    /// </summary>
     public async Task<Result<ReviewAnalyticsResponse>> GetReviewAnalyticsAsync(Guid entityId, string entityType, CancellationToken cancellationToken = default)
     {
         try
@@ -957,6 +1018,9 @@ public class ReviewService : BaseService, IReviewService
             return Result.Fail<ReviewAnalyticsResponse>("Failed to get review analytics", "ANALYTICS_ERROR");
         }
     }
+    /// <summary>
+    /// Değerlendirmeleri detaylı arar (filtreleme, sıralama, sayfalama).
+    /// </summary>
     public async Task<Result<ReviewSearchResponse>> SearchReviewsAsync(ReviewSearchQuery query, CancellationToken cancellationToken = default)
     {
         try
@@ -1057,6 +1121,9 @@ public class ReviewService : BaseService, IReviewService
             return Result.Fail<ReviewSearchResponse>("Failed to search reviews", "SEARCH_ERROR");
         }
     }
+    /// <summary>
+    /// Kullanıcının değerlendirme yapıp yapamayacağını kontrol eder (order tamamlanma kontrolü).
+    /// </summary>
     public async Task<Result<bool>> CanUserReviewAsync(Guid userId, Guid revieweeId, string revieweeType, Guid orderId, CancellationToken cancellationToken = default)
     {
         // Check if user has completed order
@@ -1069,6 +1136,9 @@ public class ReviewService : BaseService, IReviewService
 
         return Result.Ok(order != null);
     }
+    /// <summary>
+    /// Kullanıcının order'ı daha önce değerlendirip değerlendirmediğini kontrol eder.
+    /// </summary>
     public async Task<Result<bool>> HasUserReviewedOrderAsync(Guid userId, Guid orderId, CancellationToken cancellationToken = default)
     {
         var review = await _unitOfWork.ReadRepository<Review>()
@@ -1080,6 +1150,9 @@ public class ReviewService : BaseService, IReviewService
 
         return Result.Ok(review != null);
     }
+    /// <summary>
+    /// Entity tipi için mevcut tag'leri getirir (merchant/courier için önceden tanımlı).
+    /// </summary>
     public Task<Result<List<string>>> GetAvailableTagsAsync(string revieweeType, CancellationToken cancellationToken = default)
     {
         // Return predefined tags based on reviewee type
@@ -1092,6 +1165,9 @@ public class ReviewService : BaseService, IReviewService
 
         return Task.FromResult(Result.Ok(tags));
     }
+    /// <summary>
+    /// Tag frekanslarını getirir (en çok kullanılan tag'ler, yüzde hesaplaması).
+    /// </summary>
     public async Task<Result<List<TagFrequencyResponse>>> GetTagFrequenciesAsync(Guid entityId, string entityType, CancellationToken cancellationToken = default)
     {
         try
@@ -1132,6 +1208,9 @@ public class ReviewService : BaseService, IReviewService
     }
 
     #region Additional Review Methods
+    /// <summary>
+    /// Değerlendirmeyi raporlar (duplicate kontrolü, rapor kaydı).
+    /// </summary>
     public async Task<Result> ReportReviewAsync(Guid reviewId, ReportReviewRequest request, Guid reporterId, CancellationToken cancellationToken = default)
     {
         try
@@ -1181,6 +1260,9 @@ public class ReviewService : BaseService, IReviewService
             return Result.Fail("Failed to report review", "REPORT_REVIEW_ERROR");
         }
     }
+    /// <summary>
+    /// Değerlendirmeyi beğenir (duplicate kontrolü, performance tracking).
+    /// </summary>
     public async Task<Result> LikeReviewAsync(Guid reviewId, Guid userId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -1189,6 +1271,7 @@ public class ReviewService : BaseService, IReviewService
             new { reviewId, userId },
             cancellationToken);
     }
+    
     private async Task<Result> LikeReviewInternalAsync(Guid reviewId, Guid userId, CancellationToken cancellationToken)
     {
         try
@@ -1232,6 +1315,9 @@ public class ReviewService : BaseService, IReviewService
             return Result.Fail("Failed to like review", "LIKE_REVIEW_ERROR");
         }
     }
+    /// <summary>
+    /// Beğeniyi geri alır (performance tracking).
+    /// </summary>
     public async Task<Result> UnlikeReviewAsync(Guid reviewId, Guid userId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -1240,6 +1326,7 @@ public class ReviewService : BaseService, IReviewService
             new { reviewId, userId },
             cancellationToken);
     }
+    
     private async Task<Result> UnlikeReviewInternalAsync(Guid reviewId, Guid userId, CancellationToken cancellationToken)
     {
         try
@@ -1266,5 +1353,6 @@ public class ReviewService : BaseService, IReviewService
             return Result.Fail("Failed to unlike review", "UNLIKE_REVIEW_ERROR");
         }
     }
+    
     #endregion
 }

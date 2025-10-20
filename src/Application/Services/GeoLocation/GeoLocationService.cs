@@ -7,6 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.GeoLocation;
 
+/// <summary>
+/// Coğrafi konum servisi: Haversine ile mesafe hesaplama, ray-casting ile nokta-poligon kontrolü, yakın merchant bulma.
+/// </summary>
 public class GeoLocationService : BaseService, IGeoLocationService
 {
     private const double EarthRadiusKm = 6371.0; // Dünya yarıçapı (km)
@@ -505,6 +508,9 @@ public class GeoLocationService : BaseService, IGeoLocationService
     #endregion
 
     #region Additional GeoLocationController Methods
+    /// <summary>
+    /// Kullanıcı konumunu kaydeder.
+    /// </summary>
     public async Task<Result> SaveUserLocationAsync(SaveUserLocationRequest request, Guid userId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -527,6 +533,9 @@ public class GeoLocationService : BaseService, IGeoLocationService
             return Result.Fail("Error saving user location");
         }
     }
+    /// <summary>
+    /// Kullanıcı konum geçmişini sayfalama ile getirir.
+    /// </summary>
     public async Task<Result<PagedResult<UserLocationResponse>>> GetUserLocationHistoryAsync(Guid userId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -555,6 +564,9 @@ public class GeoLocationService : BaseService, IGeoLocationService
             return Result.Fail<PagedResult<UserLocationResponse>>("Error getting user location history");
         }
     }
+    /// <summary>
+    /// Belirtilen alan içindeki merchantları getirir.
+    /// </summary>
     public async Task<Result<IEnumerable<MerchantInAreaResponse>>> GetMerchantsInAreaAsync(GetMerchantsInAreaRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -577,6 +589,9 @@ public class GeoLocationService : BaseService, IGeoLocationService
             return Result.Fail<IEnumerable<MerchantInAreaResponse>>("Error getting merchants in area");
         }
     }
+    /// <summary>
+    /// Konum analizlerini getirir (heatmap data).
+    /// </summary>
     public async Task<Result<LocationAnalyticsResponse>> GetLocationAnalyticsAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -604,6 +619,9 @@ public class GeoLocationService : BaseService, IGeoLocationService
             return Result.Fail<LocationAnalyticsResponse>("Error getting location analytics");
         }
     }
+    /// <summary>
+    /// Teslimat bölgesi kapsama alanını getirir.
+    /// </summary>
     public async Task<Result<DeliveryZoneCoverageResponse>> GetDeliveryZoneCoverageAsync(CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(

@@ -4,52 +4,21 @@ using Getir.Application.DTO;
 namespace Getir.Application.Services.UserPreferences;
 
 /// <summary>
-/// User preferences service interface
+/// Kullanıcı tercihleri servisi: bildirim tercihleri (email/sms/push), sessiz saatler, merchant portal ayarları.
 /// </summary>
 public interface IUserPreferencesService
 {
-    /// <summary>
-    /// Get user notification preferences
-    /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>User notification preferences or null if not found</returns>
+    /// <summary>Kullanıcı bildirim tercihlerini getirir (yoksa hata).</summary>
     Task<Result<UserNotificationPreferencesResponse>> GetUserPreferencesAsync(Guid userId, CancellationToken cancellationToken = default);
-    /// <summary>
-    /// Get or create user notification preferences (ensures always exists)
-    /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>User notification preferences</returns>
+    /// <summary>Kullanıcı tercihlerini getirir veya yoksa varsayılan oluşturur (her zaman döner).</summary>
     Task<Result<UserNotificationPreferencesResponse>> GetOrCreateUserPreferencesAsync(Guid userId, CancellationToken cancellationToken = default);
-    /// <summary>
-    /// Update user notification preferences
-    /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <param name="request">Update request</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Updated preferences</returns>
+    /// <summary>Kullanıcı bildirim tercihlerini günceller (partial update).</summary>
     Task<Result<UserNotificationPreferencesResponse>> UpdateUserPreferencesAsync(Guid userId, UpdateUserNotificationPreferencesRequest request, CancellationToken cancellationToken = default);
-    /// <summary>
-    /// Get simplified merchant portal preferences
-    /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Merchant notification preferences</returns>
+    /// <summary>Merchant portal için basitleştirilmiş tercihleri getirir.</summary>
     Task<Result<MerchantNotificationPreferencesResponse>> GetMerchantPreferencesAsync(Guid userId, CancellationToken cancellationToken = default);
-    /// <summary>
-    /// Update simplified merchant portal preferences
-    /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <param name="request">Update request</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Updated merchant preferences</returns>
+    /// <summary>Merchant portal için basitleştirilmiş tercihleri günceller.</summary>
     Task<Result<MerchantNotificationPreferencesResponse>> UpdateMerchantPreferencesAsync(Guid userId, UpdateMerchantNotificationPreferencesRequest request, CancellationToken cancellationToken = default);
-    /// <summary>
-    /// Delete user preferences
-    /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <summary>Kullanıcı tercihlerini siler.</summary>
     Task<Result> DeleteUserPreferencesAsync(Guid userId, CancellationToken cancellationToken = default);
 }
 

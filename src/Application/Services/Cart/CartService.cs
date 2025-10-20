@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Cart;
 
+/// <summary>
+/// Sepet servisi: sepet görüntüleme, ürün ekleme/güncelleme/silme, stok kontrolü ve merchant kısıtlaması.
+/// </summary>
 public class CartService : BaseService, ICartService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
@@ -14,6 +17,12 @@ public class CartService : BaseService, ICartService
     {
         _backgroundTaskService = backgroundTaskService;
     }
+    /// <summary>
+    /// Kullanıcının sepetini ürünlerle birlikte getirir.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Sepet yanıtı</returns>
     public async Task<Result<CartResponse>> GetCartAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var cartItems = await _unitOfWork.ReadRepository<CartItem>()
@@ -56,6 +65,13 @@ public class CartService : BaseService, ICartService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Sepete ürün ekler; aynı ürün varsa miktarı arttırır, farklı merchant kontrolü yapar, stok doğrular.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="request">Sepete ekleme isteği</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Eklenen/güncellenen ürün</returns>
     public async Task<Result<CartItemResponse>> AddItemAsync(Guid userId, AddToCartRequest request, CancellationToken cancellationToken = default)
     {
         // Sepette başka merchanttan ürün var mı kontrol et
@@ -126,6 +142,14 @@ public class CartService : BaseService, ICartService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Sepetteki ürün miktarını ve notunu günceller.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="itemId">Sepet ürün ID</param>
+    /// <param name="request">Güncelleme isteği</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Güncellenen ürün</returns>
     public async Task<Result<CartItemResponse>> UpdateItemAsync(Guid userId, Guid itemId, UpdateCartItemRequest request, CancellationToken cancellationToken = default)
     {
         var cartItem = await _unitOfWork.Repository<CartItem>()
@@ -157,6 +181,13 @@ public class CartService : BaseService, ICartService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Sepetten belirli bir ürünü kaldırır.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="itemId">Sepet ürün ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public async Task<Result> RemoveItemAsync(Guid userId, Guid itemId, CancellationToken cancellationToken = default)
     {
         var cartItem = await _unitOfWork.Repository<CartItem>()
@@ -172,6 +203,12 @@ public class CartService : BaseService, ICartService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Kullanıcının sepetindeki tüm ürünleri temizler.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public async Task<Result> ClearCartAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var cartItems = await _unitOfWork.Repository<CartItem>()

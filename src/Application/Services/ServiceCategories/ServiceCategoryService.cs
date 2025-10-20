@@ -7,6 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.ServiceCategories;
 
+/// <summary>
+/// Servis kategorisi servisi implementasyonu: cache stratejisi, tip bazlı filtreleme, merchant count.
+/// </summary>
 public class ServiceCategoryService : BaseService, IServiceCategoryService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
@@ -15,6 +18,9 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
     {
         _backgroundTaskService = backgroundTaskService;
     }
+    /// <summary>
+    /// Servis kategorilerini sayfalama ile getirir (cache, performance tracking, extra long TTL).
+    /// </summary>
     public async Task<Result<PagedResult<ServiceCategoryResponse>>> GetServiceCategoriesAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -23,6 +29,7 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
             new { Page = query.Page, PageSize = query.PageSize },
             cancellationToken);
     }
+    
     private async Task<Result<PagedResult<ServiceCategoryResponse>>> GetServiceCategoriesInternalAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         try
@@ -70,6 +77,9 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
             return ServiceResult.HandleException<PagedResult<ServiceCategoryResponse>>(ex, _logger, "GetServiceCategories");
         }
     }
+    /// <summary>
+    /// Servis kategorisini ID ile getirir (merchant count dahil, cache).
+    /// </summary>
     public async Task<Result<ServiceCategoryResponse>> GetServiceCategoryByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -78,6 +88,7 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
             new { CategoryId = id },
             cancellationToken);
     }
+    
     private async Task<Result<ServiceCategoryResponse>> GetServiceCategoryByIdInternalAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
@@ -120,6 +131,9 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
             return ServiceResult.HandleException<ServiceCategoryResponse>(ex, _logger, "GetServiceCategoryById");
         }
     }
+    /// <summary>
+    /// Yeni servis kategorisi oluşturur (cache invalidation).
+    /// </summary>
     public async Task<Result<ServiceCategoryResponse>> CreateServiceCategoryAsync(CreateServiceCategoryRequest request, CancellationToken cancellationToken = default)
     {
         var category = new ServiceCategory
@@ -156,6 +170,9 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Servis kategorisini günceller (merchant count hesaplama, cache invalidation).
+    /// </summary>
     public async Task<Result<ServiceCategoryResponse>> UpdateServiceCategoryAsync(Guid id, UpdateServiceCategoryRequest request, CancellationToken cancellationToken = default)
     {
         var category = await _unitOfWork.Repository<ServiceCategory>()
@@ -202,6 +219,9 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Servis kategorisini siler (soft delete, cache invalidation).
+    /// </summary>
     public async Task<Result> DeleteServiceCategoryAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var category = await _unitOfWork.Repository<ServiceCategory>()
@@ -228,6 +248,9 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Tip bazlı servis kategorilerini getirir (Food/Market/Pharmacy/Service, sayfalama, cache).
+    /// </summary>
     public async Task<Result<PagedResult<ServiceCategoryResponse>>> GetServiceCategoriesByTypeAsync(ServiceCategoryType type, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -236,6 +259,7 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
             new { Type = type, Page = query.Page, PageSize = query.PageSize },
             cancellationToken);
     }
+    
     private async Task<Result<PagedResult<ServiceCategoryResponse>>> GetServiceCategoriesByTypeInternalAsync(ServiceCategoryType type, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         try
@@ -283,6 +307,9 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
             return ServiceResult.HandleException<PagedResult<ServiceCategoryResponse>>(ex, _logger, "GetServiceCategoriesByType");
         }
     }
+    /// <summary>
+    /// Tip bazlı aktif kategorileri getirir (tüm kayıtlar, sayfalama yok, cache).
+    /// </summary>
     public async Task<Result<IEnumerable<ServiceCategoryResponse>>> GetActiveServiceCategoriesByTypeAsync(ServiceCategoryType type, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -291,6 +318,7 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
             new { Type = type },
             cancellationToken);
     }
+    
     private async Task<Result<IEnumerable<ServiceCategoryResponse>>> GetActiveServiceCategoriesByTypeInternalAsync(ServiceCategoryType type, CancellationToken cancellationToken = default)
     {
         try
@@ -334,3 +362,4 @@ public class ServiceCategoryService : BaseService, IServiceCategoryService
         }
     }
 }
+

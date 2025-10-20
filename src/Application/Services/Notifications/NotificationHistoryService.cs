@@ -11,7 +11,7 @@ using NotificationStatus = Getir.Application.DTO.NotificationStatus;
 namespace Getir.Application.Services.Notifications;
 
 /// <summary>
-/// Notification history service for tracking and managing notification history
+/// Bildirim geçmişi servisi: bildirimlerin loglanması, durum takibi ve istatistik hesaplama.
 /// </summary>
 public class NotificationHistoryService : BaseService, INotificationHistoryService
 {
@@ -20,6 +20,9 @@ public class NotificationHistoryService : BaseService, INotificationHistoryServi
     {
     }
 
+    /// <summary>
+    /// Bildirim isteğini loglar (metadata, timestamp'ler, status tracking).
+    /// </summary>
     public async Task<Result<Guid>> LogNotificationAsync(LogNotificationRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -71,6 +74,9 @@ public class NotificationHistoryService : BaseService, INotificationHistoryServi
         }
     }
 
+    /// <summary>
+    /// Bildirim durumunu günceller (sent/delivered/failed, ilgili timestamp'leri günceller).
+    /// </summary>
     public async Task<Result> UpdateNotificationStatusAsync(Guid historyId, Domain.Entities.NotificationStatus status, string? errorMessage = null, string? errorCode = null, CancellationToken cancellationToken = default)
     {
         try
@@ -124,6 +130,9 @@ public class NotificationHistoryService : BaseService, INotificationHistoryServi
         }
     }
 
+    /// <summary>
+    /// Kullanıcı için bildirim geçmişini getirir (tip/kanal/durum/tarih filtreleme, sayfalama).
+    /// </summary>
     public async Task<Result<PagedResult<NotificationHistoryResponse>>> GetNotificationHistoryAsync(Guid userId, NotificationHistoryQuery query, CancellationToken cancellationToken = default)
     {
         try
@@ -187,6 +196,9 @@ public class NotificationHistoryService : BaseService, INotificationHistoryServi
         }
     }
 
+    /// <summary>
+    /// Kullanıcı için bildirim istatistiklerini getirir (başarı oranı, ortalama teslimat süresi, kanal bazlı).
+    /// </summary>
     public async Task<Result<NotificationStatistics>> GetNotificationStatisticsAsync(Guid userId, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
     {
         try
@@ -223,6 +235,9 @@ public class NotificationHistoryService : BaseService, INotificationHistoryServi
         }
     }
 
+    /// <summary>
+    /// Başarısız bildirimi yeniden dener (retry count arttırır, status sıfırlar).
+    /// </summary>
     public async Task<Result> RetryFailedNotificationAsync(Guid historyId, CancellationToken cancellationToken = default)
     {
         try
@@ -263,6 +278,9 @@ public class NotificationHistoryService : BaseService, INotificationHistoryServi
         }
     }
 
+    /// <summary>
+    /// Eski bildirimleri temizler (varsayılan 90 gün).
+    /// </summary>
     public async Task<Result> CleanupOldNotificationsAsync(int daysToKeep = 90, CancellationToken cancellationToken = default)
     {
         try

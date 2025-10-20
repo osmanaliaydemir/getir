@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.AuditLogging;
 
+/// <summary>
+/// Güvenlik olay kaydı servisi: güvenlik olaylarını oluşturma, listeleme, istatistik ve çözümleme işlemleri.
+/// </summary>
 public class SecurityEventLogService : ISecurityEventLogService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -17,6 +20,9 @@ public class SecurityEventLogService : ISecurityEventLogService
         _loggingService = loggingService;
         _logger = logger;
     }
+    /// <summary>
+    /// Yeni güvenlik olay kaydı oluşturur.
+    /// </summary>
     public async Task<Result<SecurityEventLogResponse>> CreateSecurityEventLogAsync(CreateSecurityEventLogRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -64,6 +70,9 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<SecurityEventLogResponse>("Failed to create security event log", "CREATE_SECURITY_EVENT_LOG_FAILED");
         }
     }
+    /// <summary>
+    /// Güvenlik olay kaydını ID'ye göre getirir.
+    /// </summary>
     public async Task<Result<SecurityEventLogResponse>> GetSecurityEventLogByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
@@ -87,6 +96,9 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<SecurityEventLogResponse>("Failed to get security event log", "GET_SECURITY_EVENT_LOG_FAILED");
         }
     }
+    /// <summary>
+    /// Güvenlik olay kayıtlarını filtre ve sayfalama ile listeler.
+    /// </summary>
     public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetSecurityEventLogsAsync(SecurityEventQueryRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -158,6 +170,9 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<IEnumerable<SecurityEventLogResponse>>("Failed to get security event logs", "GET_SECURITY_EVENT_LOGS_FAILED");
         }
     }
+    /// <summary>
+    /// Çözülmemiş güvenlik olaylarını listeler.
+    /// </summary>
     public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetUnresolvedSecurityEventsAsync(DateTime? startDate = null, DateTime? endDate = null, string? severity = null, string? riskLevel = null, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
@@ -194,6 +209,9 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<IEnumerable<SecurityEventLogResponse>>("Failed to get unresolved security events", "GET_UNRESOLVED_SECURITY_EVENTS_FAILED");
         }
     }
+    /// <summary>
+    /// İnceleme gerektiren güvenlik olaylarını listeler.
+    /// </summary>
     public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetSecurityEventsRequiringInvestigationAsync(DateTime? startDate = null, DateTime? endDate = null, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
@@ -224,6 +242,9 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<IEnumerable<SecurityEventLogResponse>>("Failed to get security events requiring investigation", "GET_SECURITY_EVENTS_REQUIRING_INVESTIGATION_FAILED");
         }
     }
+    /// <summary>
+    /// Güvenlik olayını çözümlenmiş olarak işaretler.
+    /// </summary>
     public async Task<Result<SecurityEventLogResponse>> ResolveSecurityEventAsync(Guid id, string resolvedBy, string resolutionNotes, CancellationToken cancellationToken = default)
     {
         try
@@ -255,6 +276,9 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<SecurityEventLogResponse>("Failed to resolve security event", "RESOLVE_SECURITY_EVENT_FAILED");
         }
     }
+    /// <summary>
+    /// Güvenlik olayını yanlış pozitif olarak işaretler.
+    /// </summary>
     public async Task<Result<SecurityEventLogResponse>> MarkAsFalsePositiveAsync(Guid id, string resolvedBy, string resolutionNotes, CancellationToken cancellationToken = default)
     {
         try
@@ -287,6 +311,9 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<SecurityEventLogResponse>("Failed to mark security event as false positive", "MARK_SECURITY_EVENT_FALSE_POSITIVE_FAILED");
         }
     }
+    /// <summary>
+    /// Güvenlik olay istatistiklerini döner.
+    /// </summary>
     public async Task<Result<Dictionary<string, int>>> GetSecurityEventStatisticsAsync(DateTime startDate, DateTime endDate, string? severity = null, string? riskLevel = null, CancellationToken cancellationToken = default)
     {
         try
@@ -315,6 +342,9 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<Dictionary<string, int>>("Failed to get security event statistics", "GET_SECURITY_EVENT_STATISTICS_FAILED");
         }
     }
+    /// <summary>
+    /// Yüksek riskli güvenlik olaylarını listeler.
+    /// </summary>
     public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetHighRiskSecurityEventsAsync(DateTime startDate, DateTime endDate, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
@@ -338,6 +368,9 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<IEnumerable<SecurityEventLogResponse>>("Failed to get high risk security events", "GET_HIGH_RISK_SECURITY_EVENTS_FAILED");
         }
     }
+    /// <summary>
+    /// Belirli bir kullanıcıya ait güvenlik olaylarını listeler.
+    /// </summary>
     public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetSecurityEventsByUserAsync(Guid userId, DateTime? startDate = null, DateTime? endDate = null, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
@@ -368,6 +401,9 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<IEnumerable<SecurityEventLogResponse>>("Failed to get security events", "GET_SECURITY_EVENTS_BY_USER_FAILED");
         }
     }
+    /// <summary>
+    /// Belirli bir IP adresine ait güvenlik olaylarını listeler.
+    /// </summary>
     public async Task<Result<IEnumerable<SecurityEventLogResponse>>> GetSecurityEventsByIpAddressAsync(string ipAddress, DateTime? startDate = null, DateTime? endDate = null, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
@@ -398,6 +434,9 @@ public class SecurityEventLogService : ISecurityEventLogService
             return Result.Fail<IEnumerable<SecurityEventLogResponse>>("Failed to get security events", "GET_SECURITY_EVENTS_BY_IP_FAILED");
         }
     }
+    /// <summary>
+    /// Eski güvenlik olay kayıtlarını siler.
+    /// </summary>
     public async Task<Result> DeleteOldSecurityEventLogsAsync(DateTime cutoffDate, CancellationToken cancellationToken = default)
     {
         try

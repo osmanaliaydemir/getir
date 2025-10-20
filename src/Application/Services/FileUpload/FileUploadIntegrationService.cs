@@ -5,6 +5,9 @@ using Getir.Domain.Entities;
 
 namespace Getir.Application.Services.FileUpload;
 
+/// <summary>
+/// Dosya yükleme entegrasyon servisi: entity'lerle dosya işlemlerini entegre eder.
+/// </summary>
 public class FileUploadIntegrationService : IFileUploadIntegrationService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -16,6 +19,9 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
         _fileStorageService = fileStorageService;
         _loggingService = loggingService;
     }
+    /// <summary>
+    /// Merchant logo URL'ini günceller ve eski dosyayı siler.
+    /// </summary>
     public async Task<Result> UpdateMerchantLogoAsync(Guid merchantId, string logoUrl, CancellationToken cancellationToken = default)
     {
         try
@@ -54,6 +60,9 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Failed to update merchant logo", "MERCHANT_LOGO_UPDATE_ERROR");
         }
     }
+    /// <summary>
+    /// Merchant kapak resmi URL'ini günceller ve eski dosyayı siler.
+    /// </summary>
     public async Task<Result> UpdateMerchantCoverAsync(Guid merchantId, string coverImageUrl, CancellationToken cancellationToken = default)
     {
         try
@@ -92,6 +101,9 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Failed to update merchant cover", "MERCHANT_COVER_UPDATE_ERROR");
         }
     }
+    /// <summary>
+    /// Ürün resmi URL'ini günceller ve eski dosyayı siler.
+    /// </summary>
     public async Task<Result> UpdateProductImageAsync(Guid productId, string imageUrl, CancellationToken cancellationToken = default)
     {
         try
@@ -130,6 +142,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Failed to update product image", "PRODUCT_IMAGE_UPDATE_ERROR");
         }
     }
+    /// <summary>Merchant logosunu siler ve entity'yi günceller.</summary>
     public async Task<Result> DeleteMerchantLogoAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
@@ -161,6 +174,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Failed to delete merchant logo", "MERCHANT_LOGO_DELETE_ERROR");
         }
     }
+    /// <summary>Merchant kapak resmini siler ve entity'yi günceller.</summary>
     public async Task<Result> DeleteMerchantCoverAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
@@ -192,6 +206,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Failed to delete merchant cover", "MERCHANT_COVER_DELETE_ERROR");
         }
     }
+    /// <summary>Ürün resmini siler ve entity'yi günceller.</summary>
     public async Task<Result> DeleteProductImageAsync(Guid productId, CancellationToken cancellationToken = default)
     {
         try
@@ -223,6 +238,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Failed to delete product image", "PRODUCT_IMAGE_DELETE_ERROR");
         }
     }
+    /// <summary>Merchant logo URL'ini getirir.</summary>
     public async Task<Result<string?>> GetMerchantLogoAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
@@ -243,6 +259,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<string?>("Failed to get merchant logo", "MERCHANT_LOGO_GET_ERROR");
         }
     }
+    /// <summary>Merchant kapak resmi URL'ini getirir.</summary>
     public async Task<Result<string?>> GetMerchantCoverAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
@@ -263,6 +280,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<string?>("Failed to get merchant cover", "MERCHANT_COVER_GET_ERROR");
         }
     }
+    /// <summary>Ürün resmi URL'ini getirir.</summary>
     public async Task<Result<string?>> GetProductImageAsync(Guid productId, CancellationToken cancellationToken = default)
     {
         try
@@ -306,6 +324,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
     #endregion
 
     #region Additional FileUploadController Methods
+    /// <summary>Genel dosya yükler (basitleştirilmiş implementasyon).</summary>
     public async Task<Result<FileUploadResponse>> UploadFileAsync(IUploadedFile file, Guid userId, CancellationToken cancellationToken = default)
     {
         try
@@ -328,6 +347,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<FileUploadResponse>("Error uploading file");
         }
     }
+    /// <summary>Çoklu dosya yükler.</summary>
     public async Task<Result<IEnumerable<FileUploadResponse>>> UploadMultipleFilesAsync(IUploadedFile[] files, Guid userId, CancellationToken cancellationToken = default)
     {
         try
@@ -354,6 +374,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<IEnumerable<FileUploadResponse>>("Error uploading multiple files");
         }
     }
+    /// <summary>Dosya URL'i oluşturur.</summary>
     public async Task<Result<string>> GetFileUrlAsync(string containerName, string fileName, CancellationToken cancellationToken = default)
     {
         try
@@ -368,6 +389,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<string>("Error getting file URL");
         }
     }
+    /// <summary>Dosya siler (kullanıcı).</summary>
     public async Task<Result> DeleteFileAsync(string containerName, string fileName, Guid userId, CancellationToken cancellationToken = default)
     {
         try
@@ -381,6 +403,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Error deleting file");
         }
     }
+    /// <summary>Merchant dosyası yükler.</summary>
     public async Task<Result<FileUploadResponse>> UploadMerchantFileAsync(IUploadedFile file, Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
@@ -403,6 +426,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<FileUploadResponse>("Error uploading merchant file");
         }
     }
+    /// <summary>Merchant dosyalarını sayfalama ile getirir.</summary>
     public async Task<Result<PagedResult<FileUploadResponse>>> GetMerchantFilesAsync(Guid merchantId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         try
@@ -423,6 +447,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<PagedResult<FileUploadResponse>>("Error getting merchant files");
         }
     }
+    /// <summary>Merchant dosyasını siler.</summary>
     public async Task<Result> DeleteMerchantFileAsync(string containerName, string fileName, Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
@@ -436,6 +461,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Error deleting merchant file");
         }
     }
+    /// <summary>Tüm dosyaları sayfalama ile getirir (admin).</summary>
     public async Task<Result<PagedResult<FileUploadResponse>>> GetAllFilesAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         try
@@ -456,6 +482,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<PagedResult<FileUploadResponse>>("Error getting all files");
         }
     }
+    /// <summary>Herhangi bir dosyayı siler (admin).</summary>
     public async Task<Result> DeleteAnyFileAsync(string containerName, string fileName, CancellationToken cancellationToken = default)
     {
         try
@@ -469,6 +496,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail("Error deleting any file");
         }
     }
+    /// <summary>Dosya istatistiklerini getirir.</summary>
     public async Task<Result<FileStatisticsResponse>> GetFileStatisticsAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -489,6 +517,7 @@ public class FileUploadIntegrationService : IFileUploadIntegrationService
             return Result.Fail<FileStatisticsResponse>("Error getting file statistics");
         }
     }
+    /// <summary>Eski dosyaları temizler.</summary>
     public async Task<Result<int>> CleanupOldFilesAsync(DateTime cutoffDate, CancellationToken cancellationToken = default)
     {
         try

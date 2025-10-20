@@ -20,6 +20,9 @@ public class PaymentService : BaseService, IPaymentService
     {
         _signalRService = signalRService;
     }
+    /// <summary>
+    /// Ödeme oluşturur (order kontrolü, ödeme yöntemi validasyonu, SignalR bildirimi).
+    /// </summary>
     public async Task<Result<PaymentResponse>> CreatePaymentAsync(CreatePaymentRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -88,6 +91,9 @@ public class PaymentService : BaseService, IPaymentService
         var response = await MapToPaymentResponseAsync(payment, cancellationToken);
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Ödeme durumunu günceller (external transaction bilgileri, order durumu, SignalR).
+    /// </summary>
     public async Task<Result> UpdatePaymentStatusAsync(Guid paymentId, PaymentStatusUpdateRequest request, CancellationToken cancellationToken = default)
     {
         var payment = await _unitOfWork.Repository<Payment>()
@@ -260,6 +266,9 @@ public class PaymentService : BaseService, IPaymentService
         return Result.Ok();
     }
     // === CASH PAYMENT SPECIFIC METHODS ===
+    /// <summary>
+    /// Kurye için bekleyen nakit ödemeleri getirir.
+    /// </summary>
     public async Task<Result<PagedResult<PaymentResponse>>> GetPendingCashPaymentsAsync(Guid courierId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         var payments = await _unitOfWork.ReadRepository<Payment>()
@@ -289,6 +298,9 @@ public class PaymentService : BaseService, IPaymentService
         var pagedResult = PagedResult<PaymentResponse>.Create(responses, total, query.Page, query.PageSize);
         return Result.Ok(pagedResult);
     }
+    /// <summary>
+    /// Nakit ödemeyi toplandı olarak işaretler (cash collection kaydı, order durumu, SignalR bildirimleri).
+    /// </summary>
     public async Task<Result> MarkCashPaymentAsCollectedAsync(Guid paymentId, Guid courierId, CollectCashPaymentRequest request, CancellationToken cancellationToken = default)
     {
         var payment = await _unitOfWork.Repository<Payment>()
@@ -415,6 +427,9 @@ public class PaymentService : BaseService, IPaymentService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Kurye günlük nakit toplama özetini getirir (toplam, başarılı/başarısız sayısı, ödeme listesi).
+    /// </summary>
     public async Task<Result<CourierCashSummaryResponse>> GetCourierCashSummaryAsync(Guid courierId, DateTime? date = null, CancellationToken cancellationToken = default)
     {
         var targetDate = date ?? DateTime.UtcNow.Date;
@@ -468,6 +483,9 @@ public class PaymentService : BaseService, IPaymentService
         return Result.Ok(summary);
     }
     // === MERCHANT METHODS ===
+    /// <summary>
+    /// Merchant nakit ödeme özetini getirir (toplam, komisyon, net tutar, ödeme listesi).
+    /// </summary>
     public async Task<Result<MerchantCashSummaryResponse>> GetMerchantCashSummaryAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
     {
         var start = startDate ?? DateTime.UtcNow.Date.AddDays(-30);
@@ -555,6 +573,9 @@ public class PaymentService : BaseService, IPaymentService
         return Result.Ok(pagedResult);
     }
     // === ADMIN METHODS ===
+    /// <summary>
+    /// Admin için tüm nakit ödemeleri getirir (durum filtresi ile).
+    /// </summary>
     public async Task<Result<PagedResult<PaymentResponse>>> GetAllCashPaymentsAsync(PaginationQuery query, string? status = null, CancellationToken cancellationToken = default)
     {
         Expression<Func<Payment, bool>> filter = p => p.PaymentMethod == PaymentMethod.Cash;
@@ -586,6 +607,9 @@ public class PaymentService : BaseService, IPaymentService
         var pagedResult = PagedResult<PaymentResponse>.Create(responses, total, query.Page, query.PageSize);
         return Result.Ok(pagedResult);
     }
+    /// <summary>
+    /// Settlement işlemi yapar (ödenmeyen nakit ödemeleri hesaplar, settlement kaydı oluşturur).
+    /// </summary>
     public async Task<Result> ProcessSettlementAsync(Guid merchantId, ProcessSettlementRequest request, Guid adminId, CancellationToken cancellationToken = default)
     {
         // Get merchant's completed cash payments that haven't been settled

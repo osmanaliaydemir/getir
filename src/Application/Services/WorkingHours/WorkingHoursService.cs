@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.WorkingHours;
 
+/// <summary>
+/// Çalışma saatleri servisi implementasyonu: merchant günlük saatler, toplu işlemler, cache stratejisi.
+/// </summary>
 public class WorkingHoursService : BaseService, IWorkingHoursService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
@@ -14,7 +17,11 @@ public class WorkingHoursService : BaseService, IWorkingHoursService
     {
         _backgroundTaskService = backgroundTaskService;
     }
+    /// <summary>
+    /// Merchant çalışma saatlerini getirir (cache, performance tracking, long TTL).
+    /// </summary>
     public async Task<Result<List<WorkingHoursResponse>>> GetWorkingHoursByMerchantAsync(Guid merchantId, CancellationToken cancellationToken = default)
+
     {
         return await ExecuteWithPerformanceTracking(
             async () => await GetWorkingHoursByMerchantInternalAsync(merchantId, cancellationToken),
@@ -23,6 +30,7 @@ public class WorkingHoursService : BaseService, IWorkingHoursService
             cancellationToken);
     }
     private async Task<Result<List<WorkingHoursResponse>>> GetWorkingHoursByMerchantInternalAsync(Guid merchantId, CancellationToken cancellationToken = default)
+    
     {
         try
         {
@@ -60,6 +68,9 @@ public class WorkingHoursService : BaseService, IWorkingHoursService
             return ServiceResult.HandleException<List<WorkingHoursResponse>>(ex, _logger, "GetWorkingHoursByMerchant");
         }
     }
+    /// <summary>
+    /// Çalışma saatini ID ile getirir.
+    /// </summary>
     public async Task<Result<WorkingHoursResponse>> GetWorkingHoursByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var workingHours = await _unitOfWork.Repository<Domain.Entities.WorkingHours>()
@@ -82,6 +93,9 @@ public class WorkingHoursService : BaseService, IWorkingHoursService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Yeni çalışma saati oluşturur (ownership kontrolü, duplicate kontrolü, cache invalidation).
+    /// </summary>
     public async Task<Result<WorkingHoursResponse>> CreateWorkingHoursAsync(CreateWorkingHoursRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         // Merchant ownership kontrolü
@@ -134,6 +148,9 @@ public class WorkingHoursService : BaseService, IWorkingHoursService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Çalışma saatini günceller (ownership kontrolü, cache invalidation).
+    /// </summary>
     public async Task<Result<WorkingHoursResponse>> UpdateWorkingHoursAsync(Guid id, UpdateWorkingHoursRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         var workingHours = await _unitOfWork.Repository<Domain.Entities.WorkingHours>()
@@ -177,6 +194,9 @@ public class WorkingHoursService : BaseService, IWorkingHoursService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Çalışma saatini siler (ownership kontrolü, cache invalidation).
+    /// </summary>
     public async Task<Result> DeleteWorkingHoursAsync(Guid id, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         var workingHours = await _unitOfWork.Repository<Domain.Entities.WorkingHours>()
@@ -205,6 +225,9 @@ public class WorkingHoursService : BaseService, IWorkingHoursService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Toplu çalışma saati güncelleme (7 gün, upsert, cache invalidation).
+    /// </summary>
     public async Task<Result> BulkUpdateWorkingHoursAsync(Guid merchantId, BulkUpdateWorkingHoursRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         // Merchant ownership kontrolü
@@ -258,6 +281,9 @@ public class WorkingHoursService : BaseService, IWorkingHoursService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Merchant'ın belirtilen zamanda açık olup olmadığını kontrol eder.
+    /// </summary>
     public async Task<Result<bool>> IsMerchantOpenAsync(Guid merchantId, DateTime? checkTime = null, CancellationToken cancellationToken = default)
     {
         var timeToCheck = checkTime ?? DateTime.UtcNow;

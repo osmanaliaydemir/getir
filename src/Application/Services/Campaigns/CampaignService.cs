@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Campaigns;
 
+/// <summary>
+/// Kampanya servisi: aktif kampanyaları sayfalama ve önbellek ile getirir.
+/// </summary>
 public class CampaignService : BaseService, ICampaignService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
@@ -14,6 +17,12 @@ public class CampaignService : BaseService, ICampaignService
     {
         _backgroundTaskService = backgroundTaskService;
     }
+    /// <summary>
+    /// Aktif kampanyaları sayfalama ile getirir (önbellek kullanır).
+    /// </summary>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Sayfalanmış kampanyalar</returns>
     public async Task<Result<PagedResult<CampaignResponse>>> GetActiveCampaignsAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(

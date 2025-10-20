@@ -6,12 +6,18 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Favorites;
 
+/// <summary>
+/// Favori ürünler servisi: kullanıcı favorilerinin cache'li yönetimi.
+/// </summary>
 public class FavoritesService : BaseService, IFavoritesService
 {
     public FavoritesService(IUnitOfWork unitOfWork, ILogger<FavoritesService> logger, ILoggingService loggingService, ICacheService cacheService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
     }
+    /// <summary>
+    /// Kullanıcının favori ürünlerini sayfalama ile getirir (cache).
+    /// </summary>
     public async Task<Result<PagedResult<FavoriteProductResponse>>> GetUserFavoritesAsync(Guid userId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -74,6 +80,9 @@ public class FavoritesService : BaseService, IFavoritesService
             return ServiceResult.HandleException<PagedResult<FavoriteProductResponse>>(ex, _logger, "GetUserFavorites");
         }
     }
+    /// <summary>
+    /// Ürünü favorilere ekler (duplicate kontrolü yapar, cache invalidation).
+    /// </summary>
     public async Task<Result> AddToFavoritesAsync(Guid userId, Guid productId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -122,6 +131,9 @@ public class FavoritesService : BaseService, IFavoritesService
         _logger.LogInformation("Product {ProductId} added to favorites for user {UserId}", productId, userId);
         return Result.Ok();
     }
+    /// <summary>
+    /// Ürünü favorilerden çıkarır (cache invalidation).
+    /// </summary>
     public async Task<Result> RemoveFromFavoritesAsync(Guid userId, Guid productId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -151,6 +163,9 @@ public class FavoritesService : BaseService, IFavoritesService
         _logger.LogInformation("Product {ProductId} removed from favorites for user {UserId}", productId, userId);
         return Result.Ok();
     }
+    /// <summary>
+    /// Ürünün kullanıcının favorilerinde olup olmadığını kontrol eder.
+    /// </summary>
     public async Task<Result<bool>> IsFavoriteAsync(Guid userId, Guid productId, CancellationToken cancellationToken = default)
     {
         var exists = await _unitOfWork.ReadRepository<FavoriteProduct>()

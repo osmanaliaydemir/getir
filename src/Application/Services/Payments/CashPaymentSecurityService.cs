@@ -24,6 +24,9 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
         _fileStorageService = fileStorageService;
         _auditService = auditService;
     }
+    /// <summary>
+    /// Nakit ödeme kanıtı oluşturur (file hash doğrulama, audit log).
+    /// </summary>
     public async Task<Result<CashPaymentEvidenceResponse>> CreateEvidenceAsync(CreateCashPaymentEvidenceRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -104,6 +107,9 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             return Result.Fail<CashPaymentEvidenceResponse>("Failed to create evidence", "CREATE_EVIDENCE_FAILED");
         }
     }
+    /// <summary>
+    /// Güvenlik kaydı oluşturur (para üstü doğrulama, kimlik hash, risk değerlendirmesi, audit log).
+    /// </summary>
     public async Task<Result<CashPaymentSecurityResponse>> CreateSecurityRecordAsync(CreateCashPaymentSecurityRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -194,6 +200,9 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             return Result.Fail<CashPaymentSecurityResponse>("Failed to create security record", "CREATE_SECURITY_RECORD_FAILED");
         }
     }
+    /// <summary>
+    /// Para üstü hesaplar (verilen miktar - sipariş tutarı).
+    /// </summary>
     public async Task<Result<CalculateChangeResponse>> CalculateChangeAsync(CalculateChangeRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -217,6 +226,9 @@ public class CashPaymentSecurityService : BaseService, ICashPaymentSecurityServi
             return Result.Fail<CalculateChangeResponse>("Failed to calculate change", "CALCULATE_CHANGE_FAILED");
         }
     }
+    /// <summary>
+    /// Güvenlik kontrolü ile nakit ödeme toplar (para üstü, güvenlik kaydı, kanıtlar, payment durumu günceller).
+    /// </summary>
     public async Task<Result> CollectCashPaymentWithSecurityAsync(Guid paymentId, Guid courierId, CollectCashPaymentWithSecurityRequest request, CancellationToken cancellationToken = default)
     {
         try

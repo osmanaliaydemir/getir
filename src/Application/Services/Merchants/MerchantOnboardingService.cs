@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Merchants;
 
+/// <summary>
+/// Merchant onboarding servisi: 6 adımlı onboarding sürecinin yönetimi.
+/// </summary>
 public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
@@ -21,6 +24,9 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         _backgroundTaskService = backgroundTaskService;
     }
 
+    /// <summary>
+    /// Yeni onboarding oluşturur (6 adımlı süreç: BasicInfo, BusinessInfo, WorkingHours, DeliveryZones, Products, Documents).
+    /// </summary>
     public async Task<Result<MerchantOnboardingResponse>> CreateOnboardingAsync(CreateMerchantOnboardingRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -91,6 +97,9 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         return Result.Ok(response);
     }
 
+    /// <summary>
+    /// Onboarding durumunu getirir.
+    /// </summary>
     public async Task<Result<MerchantOnboardingResponse>> GetOnboardingStatusAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         var onboarding = await _unitOfWork.ReadRepository<MerchantOnboarding>()
@@ -127,6 +136,9 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         return Result.Ok(response);
     }
 
+    /// <summary>
+    /// Onboarding ilerlemesini getirir (tamamlanan adımlar, mevcut adım, ilerleme yüzdesi).
+    /// </summary>
     public async Task<Result<OnboardingProgressResponse>> GetOnboardingProgressAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         var onboarding = await _unitOfWork.ReadRepository<MerchantOnboarding>()
@@ -172,6 +184,9 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         return Result.Ok(response);
     }
 
+    /// <summary>
+    /// Onboarding adımını günceller (ilerleme hesaplar, tüm adımlar tamamlanınca verify eder).
+    /// </summary>
     public async Task<Result<MerchantOnboardingResponse>> UpdateOnboardingStepAsync(UpdateOnboardingStepRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -248,6 +263,9 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         return Result.Ok(response);
     }
 
+    /// <summary>
+    /// Onboarding'i tamamlar (tüm adımlar tamamlanmalı).
+    /// </summary>
     public async Task<Result> CompleteOnboardingAsync(CompleteOnboardingRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -275,6 +293,9 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         return Result.Ok();
     }
 
+    /// <summary>
+    /// Admin onayı bekleyen merchantları getirir.
+    /// </summary>
     public async Task<Result<PagedResult<MerchantOnboardingResponse>>> GetPendingApprovalsAsync(GetPendingApprovalsQuery query, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
@@ -321,6 +342,9 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         return Result.Ok(pagedResult);
     }
 
+    /// <summary>
+    /// Merchant'ı onaylar veya reddeder (merchant'ı aktif eder).
+    /// </summary>
     public async Task<Result> ApproveMerchantAsync(ApproveMerchantRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -358,6 +382,9 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
         return Result.Ok();
     }
 
+    /// <summary>
+    /// Onboarding adımlarını getirir (sabit 6 adım).
+    /// </summary>
     public async Task<Result<List<OnboardingStepResponse>>> GetOnboardingStepsAsync(CancellationToken cancellationToken = default)
     {
         var steps = new List<OnboardingStepResponse>
@@ -372,6 +399,9 @@ public class MerchantOnboardingService : BaseService, IMerchantOnboardingService
 
         return Result.Ok(steps);
     }
+    /// <summary>
+    /// Merchant'ın satış yapabilir durumda olup olmadığını kontrol eder (verify ve approve kontrolü).
+    /// </summary>
     public async Task<Result<bool>> CanMerchantStartTradingAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         var onboarding = await _unitOfWork.ReadRepository<MerchantOnboarding>()

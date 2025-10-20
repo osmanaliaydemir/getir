@@ -12,6 +12,10 @@ using Getir.Domain.Enums;
 
 namespace Getir.Application.Services.Admin;
 
+/// <summary>
+/// Yönetim (Admin) işlemleri servisi: dashboard, istatistikler, kullanıcı/merchant yönetimi,
+/// denetim kayıtları (audit), bildirimler ve sistem operasyonlarını sağlar.
+/// </summary>
 public class AdminService : BaseService, IAdminService
 {
     private readonly ISignalRService? _signalRService;
@@ -24,6 +28,11 @@ public class AdminService : BaseService, IAdminService
         _backgroundTaskService = backgroundTaskService;
     }
 
+    /// <summary>
+    /// Admin dashboard için özet verileri (kullanıcı, merchant, kurye, sipariş vb.) getirir.
+    /// </summary>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Dashboard yanıtı</returns>
     public async Task<Result<AdminDashboardResponse>> GetDashboardAsync(CancellationToken cancellationToken = default)
     {
         // Get basic statistics
@@ -98,6 +107,11 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok(dashboard);
     }
 
+    /// <summary>
+    /// Sistem genel istatistiklerini (kullanıcı, merchant, sipariş, gelir, performans) getirir.
+    /// </summary>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>İstatistikler</returns>
     public async Task<Result<SystemStatisticsResponse>> GetSystemStatisticsAsync(CancellationToken cancellationToken = default)
     {
         // User Statistics
@@ -198,6 +212,12 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok(statistics);
     }
 
+    /// <summary>
+    /// Merchant başvurularını sayfalama ile listeler.
+    /// </summary>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Sayfalanmış başvurular</returns>
     public async Task<Result<PagedResult<RecentMerchantApplicationResponse>>> GetMerchantApplicationsAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         var applications = await _unitOfWork.ReadRepository<MerchantOnboarding>()
@@ -231,6 +251,12 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok(pagedResult);
     }
 
+    /// <summary>
+    /// Merchant başvurusunun detaylarını getirir.
+    /// </summary>
+    /// <param name="applicationId">Başvuru ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başvuru detayları</returns>
     public async Task<Result<MerchantApplicationDetailsResponse>> GetMerchantApplicationDetailsAsync(Guid applicationId, CancellationToken cancellationToken = default)
     {
         var application = await _unitOfWork.ReadRepository<MerchantOnboarding>()
@@ -269,6 +295,13 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok(response);
     }
 
+    /// <summary>
+    /// Merchant başvurusunu onaylar ve audit log oluşturur.
+    /// </summary>
+    /// <param name="request">Onay isteği</param>
+    /// <param name="adminId">Admin ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Onay yanıtı</returns>
     public async Task<Result<MerchantApprovalResponse>> ApproveMerchantApplicationAsync(MerchantApprovalRequest request, Guid adminId, CancellationToken cancellationToken = default)
     {
         var application = await _unitOfWork.ReadRepository<MerchantOnboarding>()
@@ -314,6 +347,13 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok(response);
     }
 
+    /// <summary>
+    /// Merchant başvurusunu reddeder ve audit log oluşturur.
+    /// </summary>
+    /// <param name="request">Red isteği</param>
+    /// <param name="adminId">Admin ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public async Task<Result> RejectMerchantApplicationAsync(MerchantApprovalRequest request, Guid adminId, CancellationToken cancellationToken = default)
     {
         var application = await _unitOfWork.ReadRepository<MerchantOnboarding>()
@@ -344,6 +384,12 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok();
     }
 
+    /// <summary>
+    /// Kullanıcıları sayfalama ile listeler.
+    /// </summary>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Sayfalanmış kullanıcılar</returns>
     public async Task<Result<PagedResult<AdminUserResponse>>> GetUsersAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         var users = await _unitOfWork.ReadRepository<User>()
@@ -390,6 +436,12 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok(pagedResult);
     }
 
+    /// <summary>
+    /// Kullanıcı detaylarını getirir.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Kullanıcı detayı</returns>
     public async Task<Result<AdminUserResponse>> GetUserDetailsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _unitOfWork.ReadRepository<User>()
@@ -420,6 +472,13 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok(response);
     }
 
+    /// <summary>
+    /// Yeni kullanıcı oluşturur ve audit log yazar.
+    /// </summary>
+    /// <param name="request">Kullanıcı oluşturma isteği</param>
+    /// <param name="adminId">Admin ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Oluşturulan kullanıcı</returns>
     public async Task<Result<AdminUserResponse>> CreateUserAsync(AdminCreateUserRequest request, Guid adminId, CancellationToken cancellationToken = default)
     {
         // Check if user already exists
@@ -475,6 +534,14 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok(response);
     }
 
+    /// <summary>
+    /// Kullanıcıyı günceller ve audit log yazar.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="request">Güncelleme isteği</param>
+    /// <param name="adminId">Admin ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Güncellenen kullanıcı</returns>
     public async Task<Result<AdminUserResponse>> UpdateUserAsync(Guid userId, AdminUpdateUserRequest request, Guid adminId, CancellationToken cancellationToken = default)
     {
         var user = await _unitOfWork.ReadRepository<User>()
@@ -528,6 +595,13 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok(response);
     }
 
+    /// <summary>
+    /// Kullanıcıyı soft delete ile pasifleştirir ve audit log yazar.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="adminId">Admin ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public async Task<Result> DeleteUserAsync(Guid userId, Guid adminId, CancellationToken cancellationToken = default)
     {
         var user = await _unitOfWork.ReadRepository<User>()
@@ -558,6 +632,13 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok();
     }
 
+    /// <summary>
+    /// Kullanıcıyı aktive eder ve audit log oluşturur.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="adminId">Admin ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public async Task<Result> ActivateUserAsync(Guid userId, Guid adminId, CancellationToken cancellationToken = default)
     {
         var user = await _unitOfWork.ReadRepository<User>()
@@ -587,6 +668,13 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok();
     }
 
+    /// <summary>
+    /// Kullanıcıyı deaktive eder ve audit log oluşturur.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="adminId">Admin ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public async Task<Result> DeactivateUserAsync(Guid userId, Guid adminId, CancellationToken cancellationToken = default)
     {
         var user = await _unitOfWork.ReadRepository<User>()
@@ -616,6 +704,12 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok();
     }
 
+    /// <summary>
+    /// Kullanıcının sipariş ve davranış istatistiklerini getirir.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Kullanıcı istatistikleri</returns>
     public async Task<Result<AdminUserStatsResponse>> GetUserStatsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _unitOfWork.ReadRepository<User>()
@@ -647,11 +741,22 @@ public class AdminService : BaseService, IAdminService
     }
 
     // Placeholder implementations for remaining methods
+    /// <summary>
+    /// Merchant listesini sayfalama ile getirir (uygulamada role filtrelemesi yapılmalıdır).
+    /// </summary>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Sayfalanmış merchant listesi</returns>
     public async Task<Result<PagedResult<AdminUserResponse>>> GetMerchantsAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await GetUsersAsync(query, cancellationToken); // Filter by role in implementation
     }
 
+    /// <summary>
+    /// Sistem performans metriklerini döner (ör. uptime, response time vb.).
+    /// </summary>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Performans metrikleri</returns>
     public Task<Result<PerformanceMetricsResponse>> GetPerformanceMetricsAsync(CancellationToken cancellationToken = default)
     {
         var metrics = new PerformanceMetricsResponse(
@@ -659,6 +764,11 @@ public class AdminService : BaseService, IAdminService
         return Task.FromResult(Result.Ok(metrics));
     }
 
+    /// <summary>
+    /// Sistem bildirimlerini listeler.
+    /// </summary>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Bildirim listesi</returns>
     public async Task<Result<List<AdminNotificationResponse>>> GetSystemNotificationsAsync(CancellationToken cancellationToken = default)
     {
         var notifications = await _unitOfWork.ReadRepository<SystemNotification>()
@@ -670,12 +780,24 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok(responses);
     }
 
+    /// <summary>
+    /// Bildirimi okundu olarak işaretler (planlanmış).
+    /// </summary>
+    /// <param name="notificationId">Bildirim ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public Task<Result> MarkNotificationAsReadAsync(Guid notificationId, CancellationToken cancellationToken = default)
     {
         // TODO: Implement notification read tracking
         return Task.FromResult(Result.Ok());
     }
 
+    /// <summary>
+    /// Denetim kayıtlarını (audit logs) sayfalama ile getirir.
+    /// </summary>
+    /// <param name="query">Audit sorgusu</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Sayfalanmış audit log</returns>
     public async Task<Result<PagedResult<AuditLogResponse>>> GetAuditLogsAsync(AuditLogQuery query, CancellationToken cancellationToken = default)
     {
         var logs = await _unitOfWork.ReadRepository<AuditLog>()
@@ -697,6 +819,11 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok(pagedResult);
     }
 
+    /// <summary>
+    /// Denetim kayıtları istatistiklerini döner.
+    /// </summary>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Audit istatistikleri</returns>
     public async Task<Result<AuditLogStatsResponse>> GetAuditLogStatsAsync(CancellationToken cancellationToken = default)
     {
         var totalLogs = await _unitOfWork.ReadRepository<AuditLog>()
@@ -718,6 +845,18 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok(stats);
     }
 
+    /// <summary>
+    /// Yeni bir denetim kaydı oluşturur.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID (string)</param>
+    /// <param name="action">Aksiyon</param>
+    /// <param name="entityType">Varlık türü</param>
+    /// <param name="entityId">Varlık ID</param>
+    /// <param name="details">Detay</param>
+    /// <param name="ipAddress">IP adresi</param>
+    /// <param name="userAgent">User-Agent</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public async Task<Result> CreateAuditLogAsync(string userId, string action, string entityType, string entityId, string details, string ipAddress, string userAgent, CancellationToken cancellationToken = default)
     {
         var user = await _unitOfWork.ReadRepository<User>()
@@ -744,31 +883,74 @@ public class AdminService : BaseService, IAdminService
     }
 
     // Placeholder implementations for remaining methods
+    /// <summary>
+    /// Admin arama işlemi (placeholder).
+    /// </summary>
+    /// <param name="query">Arama sorgusu</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Arama sonucu</returns>
     public async Task<Result<AdminSearchResponse>> SearchAsync(AdminSearchQuery query, CancellationToken cancellationToken = default)
     {
         return Result.Ok(new AdminSearchResponse(new List<AdminSearchResultResponse>(), 0, 1, 10, 0));
     }
 
+    /// <summary>
+    /// Kullanıcı büyüme verilerini döner (placeholder).
+    /// </summary>
+    /// <param name="fromDate">Başlangıç</param>
+    /// <param name="toDate">Bitiş</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Büyüme verileri</returns>
     public async Task<Result<List<UserGrowthDataResponse>>> GetUserGrowthDataAsync(DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
     {
         return Result.Ok(new List<UserGrowthDataResponse>());
     }
 
+    /// <summary>
+    /// Merchant büyüme verilerini döner (placeholder).
+    /// </summary>
+    /// <param name="fromDate">Başlangıç</param>
+    /// <param name="toDate">Bitiş</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Büyüme verileri</returns>
     public async Task<Result<List<MerchantGrowthDataResponse>>> GetMerchantGrowthDataAsync(DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
     {
         return Result.Ok(new List<MerchantGrowthDataResponse>());
     }
 
+    /// <summary>
+    /// Sipariş trend verilerini döner (placeholder).
+    /// </summary>
+    /// <param name="fromDate">Başlangıç</param>
+    /// <param name="toDate">Bitiş</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Trend verileri</returns>
     public async Task<Result<List<AdminOrderTrendDataResponse>>> GetOrderTrendDataAsync(DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
     {
         return Result.Ok(new List<AdminOrderTrendDataResponse>());
     }
 
+    /// <summary>
+    /// Gelir trend verilerini döner (placeholder).
+    /// </summary>
+    /// <param name="fromDate">Başlangıç</param>
+    /// <param name="toDate">Bitiş</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Trend verileri</returns>
     public async Task<Result<List<RevenueTrendDataResponse>>> GetRevenueTrendDataAsync(DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
     {
         return Result.Ok(new List<RevenueTrendDataResponse>());
     }
 
+    /// <summary>
+    /// Sistem bildirimi gönderir (kalıcı kayıt oluşturur).
+    /// </summary>
+    /// <param name="title">Başlık</param>
+    /// <param name="message">Mesaj</param>
+    /// <param name="type">Tür</param>
+    /// <param name="targetRoles">Hedef roller</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public async Task<Result> SendSystemNotificationAsync(string title, string message, string type, List<string> targetRoles, CancellationToken cancellationToken = default)
     {
         var notification = new SystemNotification
@@ -789,18 +971,35 @@ public class AdminService : BaseService, IAdminService
         return Result.Ok();
     }
 
+    /// <summary>
+    /// Sistem mesajını yayınlar (placeholder).
+    /// </summary>
+    /// <param name="message">Mesaj</param>
+    /// <param name="targetRoles">Hedef roller</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public Task<Result> BroadcastSystemMessageAsync(string message, List<string> targetRoles, CancellationToken cancellationToken = default)
     {
         // TODO: Implement broadcast messaging
         return Task.FromResult(Result.Ok());
     }
 
+    /// <summary>
+    /// Sistem önbelleğini temizler (placeholder).
+    /// </summary>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public Task<Result> ClearCacheAsync(CancellationToken cancellationToken = default)
     {
         // TODO: Implement cache clearing
         return Task.FromResult(Result.Ok());
     }
 
+    /// <summary>
+    /// Veritabanı yedeği alır (placeholder).
+    /// </summary>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public Task<Result> BackupDatabaseAsync(CancellationToken cancellationToken = default)
     {
         // TODO: Implement database backup

@@ -7,6 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Merchants;
 
+/// <summary>
+/// Merchant dashboard servisi: dashboard verileri, istatistikler, performans metrikleri.
+/// </summary>
 public class MerchantDashboardService : BaseService, IMerchantDashboardService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
@@ -17,6 +20,9 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
         _backgroundTaskService = backgroundTaskService;
     }
 
+    /// <summary>
+    /// Merchant dashboard verilerini getirir (ownership kontrolü).
+    /// </summary>
     public async Task<Result<MerchantDashboardResponse>> GetDashboardAsync(Guid merchantId, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         // Merchant ownership kontrolü
@@ -44,6 +50,9 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
         return Result.Ok(response);
     }
 
+    /// <summary>
+    /// Son siparişleri getirir (ownership kontrolü).
+    /// </summary>
     public async Task<Result<List<RecentOrderResponse>>> GetRecentOrdersAsync(Guid merchantId, Guid merchantOwnerId, int limit = ApplicationConstants.MaxRecentItems, CancellationToken cancellationToken = default)
     {
         // Merchant ownership kontrolü
@@ -76,6 +85,9 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
         return Result.Ok(response);
     }
 
+    /// <summary>
+    /// En çok satılan ürünleri getirir (son 30 gün, ownership kontrolü).
+    /// </summary>
     public async Task<Result<List<TopProductResponse>>> GetTopProductsAsync(Guid merchantId, Guid merchantOwnerId, int limit = ApplicationConstants.MaxRecentItems, CancellationToken cancellationToken = default)
     {
         // Merchant ownership kontrolü
@@ -121,6 +133,9 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
         return Result.Ok(response);
     }
 
+    /// <summary>
+    /// Performans metriklerini hesaplar (ownership kontrolü).
+    /// </summary>
     public async Task<Result<MerchantPerformanceMetrics>> GetPerformanceMetricsAsync(Guid merchantId, Guid merchantOwnerId, DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
     {
         // Merchant ownership kontrolü

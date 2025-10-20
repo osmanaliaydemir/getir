@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 namespace Getir.Application.Services.Stock;
 
 /// <summary>
-/// Stock alert service implementation
+/// Stok uyarı servisi implementasyonu: low/out/overstock uyarıları, SignalR bildirimleri, ayar yönetimi.
 /// </summary>
 public class StockAlertService : BaseService, IStockAlertService
 {
@@ -20,6 +20,9 @@ public class StockAlertService : BaseService, IStockAlertService
         _logger = logger;
         _signalRService = signalRService;
     }
+    /// <summary>
+    /// Düşük stok uyarıları oluşturur (duplicate kontrolü, SignalR bildirim).
+    /// </summary>
     public async Task<Result> CreateLowStockAlertsAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
@@ -93,6 +96,9 @@ public class StockAlertService : BaseService, IStockAlertService
             return Result.Fail("Failed to create low stock alerts", "LOW_STOCK_ALERT_ERROR");
         }
     }
+    /// <summary>
+    /// Stok tükenen ürünler için uyarı oluşturur (duplicate kontrolü, SignalR bildirim).
+    /// </summary>
     public async Task<Result> CreateOutOfStockAlertsAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
@@ -165,6 +171,9 @@ public class StockAlertService : BaseService, IStockAlertService
             return Result.Fail("Failed to create out of stock alerts", "OUT_OF_STOCK_ALERT_ERROR");
         }
     }
+    /// <summary>
+    /// Aşırı stok için uyarı oluşturur (duplicate kontrolü, SignalR bildirim).
+    /// </summary>
     public async Task<Result> CreateOverstockAlertsAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
@@ -237,6 +246,9 @@ public class StockAlertService : BaseService, IStockAlertService
             return Result.Fail("Failed to create overstock alerts", "OVERSTOCK_ALERT_ERROR");
         }
     }
+    /// <summary>
+    /// Stok uyarısını çözer (çözüm notları ile).
+    /// </summary>
     public async Task<Result> ResolveStockAlertAsync(Guid alertId, Guid resolvedBy, string resolutionNotes, CancellationToken cancellationToken = default)
     {
         try
@@ -275,6 +287,9 @@ public class StockAlertService : BaseService, IStockAlertService
             return Result.Fail("Failed to resolve stock alert", "RESOLVE_ALERT_ERROR");
         }
     }
+    /// <summary>
+    /// Stok uyarı istatistiklerini getirir (tip bazlı sayılar, çözülme durumu).
+    /// </summary>
     public async Task<Result<StockAlertStatisticsResponse>> GetStockAlertStatisticsAsync(Guid merchantId, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
     {
         try
@@ -314,6 +329,9 @@ public class StockAlertService : BaseService, IStockAlertService
             return Result.Fail<StockAlertStatisticsResponse>("Failed to get stock alert statistics", "ALERT_STATISTICS_ERROR");
         }
     }
+    /// <summary>
+    /// Stok uyarı bildirimleri gönderir (SignalR ile gerçek zamanlı).
+    /// </summary>
     public async Task<Result> SendStockAlertNotificationsAsync(List<Guid> alertIds, CancellationToken cancellationToken = default)
     {
         if (_signalRService == null) return Result.Ok();
@@ -355,6 +373,9 @@ public class StockAlertService : BaseService, IStockAlertService
             return Result.Fail("Failed to send stock alert notifications", "SEND_NOTIFICATIONS_ERROR");
         }
     }
+    /// <summary>
+    /// Stok uyarı ayarlarını yapılandırır (eşik değerleri, otomatik stok düşürme, senkronizasyon).
+    /// </summary>
     public async Task<Result> ConfigureStockAlertSettingsAsync(StockAlertSettingsRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try

@@ -3,6 +3,9 @@ using Getir.Domain.Enums;
 
 namespace Getir.Application.Services.RateLimiting;
 
+/// <summary>
+/// Rate limit servisi implementasyonu: mock data ile istek kontrolü, kural yönetimi, istatistikler.
+/// </summary>
 public class RateLimitService : IRateLimitService
 {
     private readonly List<RateLimitRuleDto> _mockRules;
@@ -73,6 +76,9 @@ public class RateLimitService : IRateLimitService
         };
     }
 
+    /// <summary>
+    /// İsteğin rate limit durumunu kontrol eder (kural eşleştirme, sayaç güncelleme, header ekleme).
+    /// </summary>
     public Task<RateLimitCheckResponse> CheckRateLimitAsync(RateLimitCheckRequest request)
     {
         var response = new RateLimitCheckResponse
@@ -136,6 +142,9 @@ public class RateLimitService : IRateLimitService
         return Task.FromResult(response);
     }
 
+    /// <summary>
+    /// İsteğin izinli olup olmadığını kontrol eder (basit boolean yanıt).
+    /// </summary>
     public Task<bool> IsAllowedAsync(string endpoint, string httpMethod, string? userId = null, string? ipAddress = null)
     {
         var request = new RateLimitCheckRequest
@@ -150,6 +159,9 @@ public class RateLimitService : IRateLimitService
         return Task.FromResult(response.IsAllowed);
     }
 
+    /// <summary>
+    /// Rate limit durumunu getirir (detaylı bilgi ile, mock data).
+    /// </summary>
     public Task<RateLimitCheckResponse> GetRateLimitStatusAsync(string endpoint, string httpMethod, string? userId = null, string? ipAddress = null)
     {
         var request = new RateLimitCheckRequest
@@ -163,22 +175,34 @@ public class RateLimitService : IRateLimitService
         return CheckRateLimitAsync(request);
     }
 
+    /// <summary>
+    /// İsteği loglar (mock data).
+    /// </summary>
     public Task LogRequestAsync(RateLimitCheckRequest request, RateLimitCheckResponse response)
     {
         // Mock logging - in real implementation, this would save to database
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Aktif kuralları getirir (mock data).
+    /// </summary>
     public Task<List<RateLimitRuleDto>> GetActiveRulesAsync()
     {
         return Task.FromResult(_mockRules.Where(r => r.IsActive).ToList());
     }
 
+    /// <summary>
+    /// Kuralı ID ile getirir (mock data).
+    /// </summary>
     public Task<RateLimitRuleDto?> GetRuleByIdAsync(Guid id)
     {
         return Task.FromResult(_mockRules.FirstOrDefault(r => r.Id == id));
     }
 
+    /// <summary>
+    /// Yeni kural oluşturur (mock data).
+    /// </summary>
     public Task<RateLimitRuleDto> CreateRuleAsync(CreateRateLimitRuleRequest request)
     {
         var rule = new RateLimitRuleDto
@@ -203,6 +227,9 @@ public class RateLimitService : IRateLimitService
         return Task.FromResult(rule);
     }
 
+    /// <summary>
+    /// Kuralı günceller (mock data).
+    /// </summary>
     public Task<RateLimitRuleDto> UpdateRuleAsync(Guid id, UpdateRateLimitRuleRequest request)
     {
         var rule = _mockRules.FirstOrDefault(r => r.Id == id);
@@ -227,6 +254,9 @@ public class RateLimitService : IRateLimitService
         return Task.FromResult(rule);
     }
 
+    /// <summary>
+    /// Kuralı siler (mock data).
+    /// </summary>
     public Task<bool> DeleteRuleAsync(Guid id)
     {
         var rule = _mockRules.FirstOrDefault(r => r.Id == id);
@@ -238,6 +268,9 @@ public class RateLimitService : IRateLimitService
         return Task.FromResult(false);
     }
 
+    /// <summary>
+    /// Kuralı aktif hale getirir (mock data).
+    /// </summary>
     public Task<bool> EnableRuleAsync(Guid id)
     {
         var rule = _mockRules.FirstOrDefault(r => r.Id == id);
@@ -249,6 +282,9 @@ public class RateLimitService : IRateLimitService
         return Task.FromResult(false);
     }
 
+    /// <summary>
+    /// Kuralı pasif hale getirir (mock data).
+    /// </summary>
     public Task<bool> DisableRuleAsync(Guid id)
     {
         var rule = _mockRules.FirstOrDefault(r => r.Id == id);
@@ -260,6 +296,9 @@ public class RateLimitService : IRateLimitService
         return Task.FromResult(false);
     }
 
+    /// <summary>
+    /// İstatistikleri getirir (tip bazlı, mock data).
+    /// </summary>
     public Task<List<RateLimitStatisticsDto>> GetStatisticsAsync(DateTime startDate, DateTime endDate)
     {
         var statistics = new List<RateLimitStatisticsDto>
@@ -325,6 +364,9 @@ public class RateLimitService : IRateLimitService
         return Task.FromResult(statistics);
     }
 
+    /// <summary>
+    /// Logları arar (filtreleme ve sayfalama, mock data).
+    /// </summary>
     public Task<RateLimitSearchResponse> SearchLogsAsync(RateLimitSearchRequest request)
     {
         // Mock search results
@@ -361,6 +403,9 @@ public class RateLimitService : IRateLimitService
         return Task.FromResult(response);
     }
 
+    /// <summary>
+    /// İhlalleri arar (filtreleme ve sayfalama, mock data).
+    /// </summary>
     public Task<RateLimitViolationSearchResponse> SearchViolationsAsync(RateLimitViolationSearchRequest request)
     {
         // Mock violation results
@@ -399,12 +444,18 @@ public class RateLimitService : IRateLimitService
         return Task.FromResult(response);
     }
 
+    /// <summary>
+    /// İhlali çözümler (mock data).
+    /// </summary>
     public Task<bool> ResolveViolationAsync(Guid violationId, ResolveViolationRequest request)
     {
         // Mock resolution
         return Task.FromResult(true);
     }
 
+    /// <summary>
+    /// Rate limit cache'ini temizler (endpoint/user/IP bazlı, mock data).
+    /// </summary>
     public Task<bool> ClearRateLimitCacheAsync(string? endpoint = null, string? userId = null, string? ipAddress = null)
     {
         // Mock cache clearing

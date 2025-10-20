@@ -8,6 +8,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Merchants;
 
+/// <summary>
+/// Merchant doküman yönetimi servisi: onboarding dokümanlarının yükleme, doğrulama ve takibi.
+/// </summary>
 public class MerchantDocumentService : IMerchantDocumentService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -21,6 +24,9 @@ public class MerchantDocumentService : IMerchantDocumentService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Merchant onboarding için doküman yükler (duplicate kontrolü, file hash, onboarding progress günceller).
+    /// </summary>
     public async Task<Result<MerchantDocumentResponse>> UploadDocumentAsync(UploadMerchantDocumentRequest request, Stream fileStream, string fileName, string mimeType, Guid uploadedBy,
         CancellationToken cancellationToken = default)
     {
@@ -114,6 +120,9 @@ public class MerchantDocumentService : IMerchantDocumentService
         }
     }
 
+    /// <summary>
+    /// Merchant dokümanlarını filtreleme ile getirir.
+    /// </summary>
     public async Task<Result<PagedResult<MerchantDocumentResponse>>> GetDocumentsAsync(GetMerchantDocumentsRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -149,6 +158,7 @@ public class MerchantDocumentService : IMerchantDocumentService
         }
     }
 
+    /// <summary>Dokümanı ID ile getirir.</summary>
     public async Task<Result<MerchantDocumentResponse>> GetDocumentByIdAsync(Guid documentId, CancellationToken cancellationToken = default)
     {
         try
@@ -171,6 +181,7 @@ public class MerchantDocumentService : IMerchantDocumentService
         }
     }
 
+    /// <summary>Dokümanı doğrular/onaylar veya reddeder (onboarding progress günceller).</summary>
     public async Task<Result<MerchantDocumentResponse>> VerifyDocumentAsync(VerifyMerchantDocumentRequest request, Guid verifiedBy, CancellationToken cancellationToken = default)
     {
         try

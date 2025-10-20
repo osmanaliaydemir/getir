@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.ProductCategories;
 
+/// <summary>
+/// Ürün kategorisi servisi: merchant bazlı kategori yönetimi, hiyerarşik yapı, cache stratejisi.
+/// </summary>
 public class ProductCategoryService : BaseService, IProductCategoryService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
@@ -14,6 +17,9 @@ public class ProductCategoryService : BaseService, IProductCategoryService
     {
         _backgroundTaskService = backgroundTaskService;
     }
+    /// <summary>
+    /// Merchant'a ait kategorileri getirir (cache, performance tracking).
+    /// </summary>
     public async Task<Result<List<ProductCategoryResponse>>> GetMerchantCategoriesAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -65,6 +71,9 @@ public class ProductCategoryService : BaseService, IProductCategoryService
             return ServiceResult.HandleException<List<ProductCategoryResponse>>(ex, _logger, "GetMerchantCategories");
         }
     }
+    /// <summary>
+    /// Merchant'a ait kategori ağacını getirir (recursive yapı, cache, performance tracking).
+    /// </summary>
     public async Task<Result<List<ProductCategoryTreeResponse>>> GetMerchantCategoryTreeAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -122,6 +131,9 @@ public class ProductCategoryService : BaseService, IProductCategoryService
             subCategories
         );
     }
+    /// <summary>
+    /// Kategoriyi ID ile getirir (cache, performance tracking).
+    /// </summary>
     public async Task<Result<ProductCategoryResponse>> GetProductCategoryByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -178,6 +190,9 @@ public class ProductCategoryService : BaseService, IProductCategoryService
             return ServiceResult.HandleException<ProductCategoryResponse>(ex, _logger, "GetProductCategoryById");
         }
     }
+    /// <summary>
+    /// Yeni kategori oluşturur (merchant kontrolü, parent kategori kontrolü).
+    /// </summary>
     public async Task<Result<ProductCategoryResponse>> CreateProductCategoryAsync(CreateProductCategoryRequest request, Guid merchantId, CancellationToken cancellationToken = default)
     {
         // Merchant var mı kontrol et
@@ -244,6 +259,9 @@ public class ProductCategoryService : BaseService, IProductCategoryService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Kategoriyi günceller (ownership kontrolü, parent kontrolü, cache invalidation).
+    /// </summary>
     public async Task<Result<ProductCategoryResponse>> UpdateProductCategoryAsync(Guid id, UpdateProductCategoryRequest request, Guid currentUserId, CancellationToken cancellationToken = default)
     {
         var category = await _unitOfWork.Repository<ProductCategory>()
@@ -328,6 +346,9 @@ public class ProductCategoryService : BaseService, IProductCategoryService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Kategoriyi siler (ownership kontrolü, alt kategori/ürün kontrolü, soft delete, cache invalidation).
+    /// </summary>
     public async Task<Result> DeleteProductCategoryAsync(Guid id, Guid currentUserId, CancellationToken cancellationToken = default)
     {
         var category = await _unitOfWork.Repository<ProductCategory>()

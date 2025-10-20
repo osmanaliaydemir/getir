@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Internationalization;
 
+/// <summary>
+/// Dil yönetimi servisi: desteklenen dillerin cache'li yönetimi.
+/// </summary>
 public class LanguageService : ILanguageService
 {
     private readonly ICacheService _cacheService;
@@ -17,6 +20,9 @@ public class LanguageService : ILanguageService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Tüm dilleri getirir (cache).
+    /// </summary>
     public async Task<List<LanguageDto>> GetAllLanguagesAsync()
     {
         try
@@ -50,24 +56,28 @@ public class LanguageService : ILanguageService
         }
     }
 
+    /// <summary>Dili ID ile getirir.</summary>
     public async Task<LanguageDto?> GetLanguageByIdAsync(Guid id)
     {
         var languages = await GetAllLanguagesAsync();
         return languages.FirstOrDefault(l => l.Id == id);
     }
 
+    /// <summary>Dili kod ile getirir.</summary>
     public async Task<LanguageDto?> GetLanguageByCodeAsync(LanguageCode code)
     {
         var languages = await GetAllLanguagesAsync();
         return languages.FirstOrDefault(l => l.Code == code);
     }
 
+    /// <summary>Varsayılan dili getirir.</summary>
     public async Task<LanguageDto?> GetDefaultLanguageAsync()
     {
         var languages = await GetAllLanguagesAsync();
         return languages.FirstOrDefault(l => l.IsDefault);
     }
 
+    /// <summary>Yeni dil oluşturur (cache invalidation).</summary>
     public async Task<LanguageDto> CreateLanguageAsync(CreateLanguageRequest request)
     {
         var language = new LanguageDto
@@ -91,6 +101,7 @@ public class LanguageService : ILanguageService
         return language;
     }
 
+    /// <summary>Dil günceller (cache invalidation).</summary>
     public async Task<LanguageDto> UpdateLanguageAsync(Guid id, UpdateLanguageRequest request)
     {
         var language = new LanguageDto
@@ -114,6 +125,7 @@ public class LanguageService : ILanguageService
         return language;
     }
 
+    /// <summary>Dil siler (cache invalidation).</summary>
     public async Task<bool> DeleteLanguageAsync(Guid id)
     {
         // ============= CACHE INVALIDATION =============
@@ -123,11 +135,13 @@ public class LanguageService : ILanguageService
         return true;
     }
 
+    /// <summary>Varsayılan dil ayarlar.</summary>
     public Task<bool> SetDefaultLanguageAsync(Guid id)
     {
         return Task.FromResult(true);
     }
 
+    /// <summary>Dil istatistiklerini getirir (çeviri tamamlanma oranları).</summary>
     public Task<List<LanguageStatisticsDto>> GetLanguageStatisticsAsync()
     {
         var statistics = new List<LanguageStatisticsDto>

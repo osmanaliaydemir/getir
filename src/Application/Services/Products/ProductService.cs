@@ -12,24 +12,19 @@ using Getir.Domain.Entities;
 namespace Getir.Application.Services.Products;
 
 /// <summary>
-/// Service for managing products and their operations
+/// Ürün servisi: ürün CRUD işlemleri, merchant yönetimi, cache stratejisi, stok/müsaitlik, toplu işlemler.
 /// </summary>
 public class ProductService : BaseService, IProductService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
-    /// <summary>
-    /// Initializes a new instance of the ProductService class
-    /// </summary>
-    /// <param name="unitOfWork">The unit of work for database operations</param>
-    /// <param name="logger">The logger for logging operations</param>
-    /// <param name="loggingService">The logging service for structured logging</param>
-    /// <param name="cacheService">The cache service for caching operations</param>
-    /// <param name="backgroundTaskService">The background task service for async operations</param>
     public ProductService(IUnitOfWork unitOfWork, ILogger<ProductService> logger, ILoggingService loggingService, ICacheService cacheService, IBackgroundTaskService backgroundTaskService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _backgroundTaskService = backgroundTaskService;
     }
+    /// <summary>
+    /// Merchant'a ait ürünleri sayfalama ile getirir (cache, performance tracking).
+    /// </summary>
     public async Task<Result<PagedResult<ProductResponse>>> GetProductsByMerchantAsync(Guid merchantId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -95,6 +90,9 @@ public class ProductService : BaseService, IProductService
             return ServiceResult.HandleException<PagedResult<ProductResponse>>(ex, _logger, "GetProductsByMerchant");
         }
     }
+    /// <summary>
+    /// Ürünü ID ile getirir (cache-aside pattern).
+    /// </summary>
     public async Task<Result<ProductResponse>> GetProductByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         // Cache-Aside Pattern: Try cache first
@@ -138,6 +136,9 @@ public class ProductService : BaseService, IProductService
             TimeSpan.FromMinutes(CacheKeys.TTL.Medium), // 15 minutes TTL for single product
             cancellationToken);
     }
+    /// <summary>
+    /// Yeni ürün oluşturur (merchant kontrolü, otomatik müsaitlik).
+    /// </summary>
     public async Task<Result<ProductResponse>> CreateProductAsync(CreateProductRequest request, CancellationToken cancellationToken = default)
     {
         var merchantExists = await _unitOfWork.ReadRepository<Merchant>()
@@ -194,6 +195,9 @@ public class ProductService : BaseService, IProductService
 
         return Result.Ok(response);
     }
+    /// <summary>
+    /// Ürünü günceller (cache invalidation, pattern-based removal).
+    /// </summary>
     public async Task<Result<ProductResponse>> UpdateProductAsync(Guid id, UpdateProductRequest request, CancellationToken cancellationToken = default)
     {
         var product = await _unitOfWork.Repository<Product>()
@@ -280,6 +284,9 @@ public class ProductService : BaseService, IProductService
         return Result.Ok();
     }
     // Merchant-specific methods
+    /// <summary>
+    /// Merchant sahibinin ürünlerini getirir (ownership kontrolü, kategori dahil).
+    /// </summary>
     public async Task<Result<PagedResult<ProductResponse>>> GetMyProductsAsync(Guid merchantOwnerId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
@@ -334,6 +341,9 @@ public class ProductService : BaseService, IProductService
 
         return Result.Ok(pagedResult);
     }
+    /// <summary>
+    /// Merchant sahibi için ürün oluşturur (ownership kontrolü, otomatik müsaitlik).
+    /// </summary>
     public async Task<Result<ProductResponse>> CreateMyProductAsync(CreateProductRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -473,6 +483,9 @@ public class ProductService : BaseService, IProductService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Ürün stok miktarını günceller (ownership kontrolü).
+    /// </summary>
     public async Task<Result> UpdateProductStockAsync(Guid id, int newStockQuantity, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         var product = await _unitOfWork.ReadRepository<Product>()
@@ -499,6 +512,9 @@ public class ProductService : BaseService, IProductService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Ürün müsaitliğini açar/kapatır (ownership kontrolü).
+    /// </summary>
     public async Task<Result> ToggleProductAvailabilityAsync(Guid id, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         var product = await _unitOfWork.ReadRepository<Product>()
@@ -525,6 +541,9 @@ public class ProductService : BaseService, IProductService
 
         return Result.Ok();
     }
+    /// <summary>
+    /// Toplu ürün sırası güncelleme (ownership kontrolü, DisplayOrder).
+    /// </summary>
     public async Task<Result> BulkUpdateProductOrderAsync(List<UpdateProductOrderRequest> requests, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(requests);
@@ -566,6 +585,9 @@ public class ProductService : BaseService, IProductService
     }
 
     #region Additional Merchant Product Methods
+    /// <summary>
+    /// Merchant ürün istatistiklerini getirir (performance tracking).
+    /// </summary>
     public async Task<Result<ProductStatisticsResponse>> GetMyProductStatisticsAsync(Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -613,6 +635,9 @@ public class ProductService : BaseService, IProductService
     #endregion
 
     #region Additional Methods
+    /// <summary>
+    /// Ürünleri arar (isim/açıklama bazlı, aktif/müsait filtresi, performance tracking).
+    /// </summary>
     public async Task<Result<PagedResult<ProductResponse>>> SearchProductsAsync(string searchQuery, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(

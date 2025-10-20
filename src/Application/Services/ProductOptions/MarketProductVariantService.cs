@@ -6,12 +6,18 @@ using Getir.Domain.Entities;
 
 namespace Getir.Application.Services.ProductOptions;
 
+/// <summary>
+/// Market ürün varyant servisi: ürün varyantları (beden/renk/tat) yönetimi, ownership kontrolü, stok yönetimi.
+/// </summary>
 public class MarketProductVariantService : BaseService, IMarketProductVariantService
 {
     public MarketProductVariantService(IUnitOfWork unitOfWork, ILogger<MarketProductVariantService> logger, ILoggingService loggingService, ICacheService cacheService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
     }
+    /// <summary>
+    /// Ürüne ait varyantları sayfalama ile getirir (performance tracking).
+    /// </summary>
     public async Task<Result<PagedResult<MarketProductVariantResponse>>> GetProductVariantsAsync(Guid productId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -84,6 +90,9 @@ public class MarketProductVariantService : BaseService, IMarketProductVariantSer
             return Result.Fail<MarketProductVariantResponse>("Failed to get product variant", "GET_VARIANT_ERROR");
         }
     }
+    /// <summary>
+    /// Yeni varyant oluşturur (ownership kontrolü, SKU benzersizlik, performance tracking).
+    /// </summary>
     public async Task<Result<MarketProductVariantResponse>> CreateProductVariantAsync(CreateMarketProductVariantRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -252,6 +261,9 @@ public class MarketProductVariantService : BaseService, IMarketProductVariantSer
             return Result.Fail("Failed to delete product variant", "DELETE_VARIANT_ERROR");
         }
     }
+    /// <summary>
+    /// Varyant stok miktarını günceller (ownership kontrolü, müsaitlik otomatik ayarlanır, performance tracking).
+    /// </summary>
     public async Task<Result> UpdateVariantStockAsync(Guid id, int newStockQuantity, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -292,6 +304,9 @@ public class MarketProductVariantService : BaseService, IMarketProductVariantSer
             return Result.Fail("Failed to update variant stock", "UPDATE_STOCK_ERROR");
         }
     }
+    /// <summary>
+    /// Toplu varyant stok güncelleme (ownership kontrolü, müsaitlik otomatik ayarlanır, performance tracking).
+    /// </summary>
     public async Task<Result> BulkUpdateVariantStockAsync(List<UpdateVariantStockRequest> requests, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(

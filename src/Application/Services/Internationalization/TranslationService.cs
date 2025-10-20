@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Internationalization;
 
+/// <summary>
+/// Çeviri yönetimi servisi: key-value bazlı çevirilerin cache'li yönetimi, arama, toplu işlemler, import/export.
+/// </summary>
 public class TranslationService : ITranslationService
 {
     private readonly ICacheService _cacheService;
@@ -17,6 +20,9 @@ public class TranslationService : ITranslationService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Belirtilen anahtar ve dil için çeviri getirir (cache).
+    /// </summary>
     public async Task<TranslationDto?> GetTranslationAsync(string key, LanguageCode languageCode)
     {
         try
@@ -49,6 +55,9 @@ public class TranslationService : ITranslationService
         }
     }
 
+    /// <summary>
+    /// Birden fazla anahtar için çevirileri toplu getirir (cache).
+    /// </summary>
     public async Task<GetTranslationsByKeysResponse> GetTranslationsByKeysAsync(GetTranslationsByKeysRequest request)
     {
         try
@@ -97,6 +106,9 @@ public class TranslationService : ITranslationService
         }
     }
 
+    /// <summary>
+    /// Çevirilerde arama yapar (filtreleme ve sayfalama).
+    /// </summary>
     public Task<TranslationSearchResponse> SearchTranslationsAsync(TranslationSearchRequest request)
     {
         var translations = GetMockTranslations();
@@ -128,6 +140,7 @@ public class TranslationService : ITranslationService
         return Task.FromResult(response);
     }
 
+    /// <summary>Yeni çeviri oluşturur (cache invalidation).</summary>
     public async Task<TranslationDto> CreateTranslationAsync(CreateTranslationRequest request)
     {
         var translation = new TranslationDto
@@ -148,6 +161,7 @@ public class TranslationService : ITranslationService
         return translation;
     }
 
+    /// <summary>Çeviri günceller (cache invalidation).</summary>
     public async Task<TranslationDto> UpdateTranslationAsync(Guid id, UpdateTranslationRequest request)
     {
         var translation = new TranslationDto
@@ -168,6 +182,7 @@ public class TranslationService : ITranslationService
         return translation;
     }
 
+    /// <summary>Çeviri siler (cache invalidation).</summary>
     public async Task<bool> DeleteTranslationAsync(Guid id)
     {
         // ============= CACHE INVALIDATION =============
@@ -176,6 +191,7 @@ public class TranslationService : ITranslationService
         return true;
     }
 
+    /// <summary>Toplu çeviri oluşturur (cache invalidation).</summary>
     public async Task<bool> BulkCreateTranslationsAsync(BulkTranslationRequest request)
     {
         // ============= CACHE INVALIDATION =============
@@ -184,6 +200,7 @@ public class TranslationService : ITranslationService
         return true;
     }
 
+    /// <summary>Toplu çeviri günceller (cache invalidation).</summary>
     public async Task<bool> BulkUpdateTranslationsAsync(BulkTranslationRequest request)
     {
         // ============= CACHE INVALIDATION =============
@@ -192,6 +209,7 @@ public class TranslationService : ITranslationService
         return true;
     }
 
+    /// <summary>Kategoriye göre çevirileri getirir.</summary>
     public async Task<List<TranslationDto>> GetTranslationsByCategoryAsync(string category, LanguageCode languageCode)
     {
         var translations = GetMockTranslations();
@@ -199,6 +217,7 @@ public class TranslationService : ITranslationService
         return filtered;
     }
 
+    /// <summary>Çevirileri sözlük formatında getirir (cache).</summary>
     public async Task<Dictionary<string, string>> GetTranslationsDictionaryAsync(LanguageCode languageCode, string? category = null)
     {
         try
@@ -229,6 +248,7 @@ public class TranslationService : ITranslationService
         }
     }
 
+    /// <summary>Eksik çevirileri getirir.</summary>
     public Task<List<string>> GetMissingTranslationsAsync(LanguageCode languageCode, string? category = null)
     {
         // Mock missing keys
@@ -236,11 +256,13 @@ public class TranslationService : ITranslationService
         return Task.FromResult(missingKeys);
     }
 
+    /// <summary>JSON'dan çevirileri içe aktarır.</summary>
     public Task<bool> ImportTranslationsFromJsonAsync(string jsonContent, LanguageCode languageCode, string? category = null)
     {
         return Task.FromResult(true);
     }
 
+    /// <summary>Çevirileri JSON formatında dışa aktarır.</summary>
     public Task<string> ExportTranslationsToJsonAsync(LanguageCode languageCode, string? category = null)
     {
         var mockJson = "{\"welcome\": \"Welcome\", \"goodbye\": \"Goodbye\"}";

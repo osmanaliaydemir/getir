@@ -7,6 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Stock;
 
+/// <summary>
+/// Stok yönetim servisi implementasyonu: sipariş bazlı otomatik stok düşürme/iade, geçmiş, uyarılar, senkronizasyon.
+/// </summary>
 public class StockManagementService : BaseService, IStockManagementService
 {
     private new readonly ILogger<StockManagementService> _logger;
@@ -17,6 +20,9 @@ public class StockManagementService : BaseService, IStockManagementService
         _logger = logger;
         _signalRService = signalRService;
     }
+    /// <summary>
+    /// Sipariş onaylandığında stok düşürür (transaction, stok geçmişi, uyarı kontrolü).
+    /// </summary>
     public async Task<Result> ReduceStockForOrderAsync(Guid orderId, CancellationToken cancellationToken = default)
     {
         try
@@ -114,6 +120,9 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail("Failed to reduce stock for order", "STOCK_REDUCTION_ERROR");
         }
     }
+    /// <summary>
+    /// Sipariş iptal edildiğinde stok iade eder (transaction, stok geçmişi).
+    /// </summary>
     public async Task<Result> RestoreStockForOrderAsync(Guid orderId, CancellationToken cancellationToken = default)
     {
         try
@@ -207,6 +216,9 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail("Failed to restore stock for order", "STOCK_RESTORATION_ERROR");
         }
     }
+    /// <summary>
+    /// Stok seviyelerini kontrol eder ve uyarı oluşturur (low/out of stock, SignalR bildirim).
+    /// </summary>
     public async Task<Result> CheckStockLevelsAndAlertAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
@@ -280,6 +292,9 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail("Failed to check stock levels", "STOCK_CHECK_ERROR");
         }
     }
+    /// <summary>
+    /// Ürün stok geçmişini getirir (tarih filtresi ile, son 100 kayıt).
+    /// </summary>
     public async Task<Result<List<StockHistoryResponse>>> GetStockHistoryAsync(Guid productId, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
     {
         try
@@ -319,6 +334,9 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail<List<StockHistoryResponse>>("Failed to get stock history", "STOCK_HISTORY_ERROR");
         }
     }
+    /// <summary>
+    /// Merchant stok uyarılarını getirir (aktif olanlar, ürün bilgileri dahil).
+    /// </summary>
     public async Task<Result<List<StockAlertResponse>>> GetStockAlertsAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
@@ -369,6 +387,9 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail<List<StockAlertResponse>>("Failed to get stock alerts", "STOCK_ALERTS_ERROR");
         }
     }
+    /// <summary>
+    /// Stok seviyesini manuel günceller (ownership kontrolü, stok geçmişi).
+    /// </summary>
     public async Task<Result> UpdateStockLevelAsync(UpdateStockRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
@@ -455,6 +476,9 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail("Failed to update stock level", "STOCK_UPDATE_ERROR");
         }
     }
+    /// <summary>
+    /// Toplu stok güncelleme yapar (transaction, rollback desteği).
+    /// </summary>
     public async Task<Result> BulkUpdateStockLevelsAsync(List<UpdateStockRequest> requests, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
@@ -488,6 +512,9 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail("Failed to bulk update stock levels", "BULK_STOCK_UPDATE_ERROR");
         }
     }
+    /// <summary>
+    /// Stok raporu oluşturur (özet istatistikler, ürün bazlı detaylar).
+    /// </summary>
     public async Task<Result<StockReportResponse>> GetStockReportAsync(StockReportRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
@@ -544,6 +571,9 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail<StockReportResponse>("Failed to generate stock report", "STOCK_REPORT_ERROR");
         }
     }
+    /// <summary>
+    /// Harici sistemlerle stok senkronizasyonu yapar (mock: sadece son sync zamanını günceller).
+    /// </summary>
     public async Task<Result> SynchronizeStockAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         try
@@ -572,6 +602,7 @@ public class StockManagementService : BaseService, IStockManagementService
             return Result.Fail("Failed to synchronize stock", "STOCK_SYNC_ERROR");
         }
     }
+    
     private async Task CreateStockHistoryAsync(Guid productId, Guid? productVariantId, int previousQuantity, int newQuantity, Domain.Enums.StockChangeType changeType,
         string? reason, Guid? orderId, string? referenceNumber, CancellationToken cancellationToken)
     {
@@ -592,6 +623,7 @@ public class StockManagementService : BaseService, IStockManagementService
 
         await _unitOfWork.Repository<StockHistory>().AddAsync(history, cancellationToken);
     }
+   
     private async Task SendStockAlertsAsync(Guid merchantId, List<StockAlert> alerts, CancellationToken cancellationToken)
     {
         if (_signalRService == null) return;
@@ -622,6 +654,7 @@ public class StockManagementService : BaseService, IStockManagementService
             _logger.LogError(ex, "Error sending stock alerts");
         }
     }
+    
     private StockStatus GetStockStatus(int stockQuantity)
     {
         return stockQuantity switch

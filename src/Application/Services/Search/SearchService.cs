@@ -11,6 +11,9 @@ using Getir.Domain.Entities;
 
 namespace Getir.Application.Services.Search;
 
+/// <summary>
+/// Arama servisi implementasyonu: ürün/merchant arama, cache stratejisi, filtreleme.
+/// </summary>
 public class SearchService : BaseService, ISearchService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
@@ -19,6 +22,9 @@ public class SearchService : BaseService, ISearchService
     {
         _backgroundTaskService = backgroundTaskService;
     }
+    /// <summary>
+    /// Ürünleri arar (isim bazlı, kategori/fiyat filtresi, cache, performance tracking).
+    /// </summary>
     public async Task<Result<PagedResult<ProductResponse>>> SearchProductsAsync(SearchProductsQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -27,6 +33,7 @@ public class SearchService : BaseService, ISearchService
             new { Query = query.Query, MerchantId = query.MerchantId, Page = query.Page },
             cancellationToken);
     }
+    
     private async Task<Result<PagedResult<ProductResponse>>> SearchProductsInternalAsync(SearchProductsQuery query, CancellationToken cancellationToken = default)
     {
         try
@@ -95,6 +102,9 @@ public class SearchService : BaseService, ISearchService
             return ServiceResult.HandleException<PagedResult<ProductResponse>>(ex, _logger, "SearchProducts");
         }
     }
+    /// <summary>
+    /// Merchantları arar (isim/kategori bazlı, rating sıralaması, cache, performance tracking).
+    /// </summary>
     public async Task<Result<PagedResult<MerchantResponse>>> SearchMerchantsAsync(SearchMerchantsQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -103,6 +113,7 @@ public class SearchService : BaseService, ISearchService
             new { Query = query.Query, CategoryId = query.CategoryId, Page = query.Page },
             cancellationToken);
     }
+    
     private async Task<Result<PagedResult<MerchantResponse>>> SearchMerchantsInternalAsync(SearchMerchantsQuery query, CancellationToken cancellationToken = default)
     {
         try

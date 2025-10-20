@@ -8,6 +8,9 @@ using System.Linq;
 
 namespace Getir.Application.Services.Auth;
 
+/// <summary>
+/// Kimlik doğrulama servisi: kayıt, giriş, token yenileme/çıkış, şifre işlemleri ve profil yönetimi.
+/// </summary>
 public class AuthService : BaseService, IAuthService
 {
     private readonly IJwtTokenService _jwtTokenService;
@@ -26,6 +29,12 @@ public class AuthService : BaseService, IAuthService
         _accessTokenMinutes = 60; // Bu değerler configuration'dan gelecek şekilde iyileştirilebilir
         _refreshTokenMinutes = 10080; // 7 days
     }
+    /// <summary>
+    /// Yeni kullanıcı kaydı oluşturur ve access/refresh token üretir.
+    /// </summary>
+    /// <param name="request">Kayıt isteği</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Kimlik doğrulama yanıtı</returns>
     public async Task<Result<AuthResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -112,6 +121,12 @@ public class AuthService : BaseService, IAuthService
             return ServiceResult.HandleException<AuthResponse>(ex, _logger, "UserRegistration");
         }
     }
+    /// <summary>
+    /// Kullanıcı girişi yapar ve access/refresh token üretir.
+    /// </summary>
+    /// <param name="request">Giriş isteği</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Kimlik doğrulama yanıtı</returns>
     public async Task<Result<AuthResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(async () => await LoginInternalAsync(request, cancellationToken),
@@ -219,6 +234,12 @@ public class AuthService : BaseService, IAuthService
             return ServiceResult.HandleException<AuthResponse>(ex, _logger, "UserLogin");
         }
     }
+    /// <summary>
+    /// Geçerli refresh token ile yeni access/refresh token üretir.
+    /// </summary>
+    /// <param name="request">Refresh token isteği</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Kimlik doğrulama yanıtı</returns>
     public async Task<Result<AuthResponse>> RefreshAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -297,6 +318,12 @@ public class AuthService : BaseService, IAuthService
             return ServiceResult.HandleException<AuthResponse>(ex, _logger, "TokenRefresh");
         }
     }
+    /// <summary>
+    /// Kullanıcının tüm aktif refresh tokenlarını iptal ederek çıkış yapar.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public async Task<Result> LogoutAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -341,6 +368,12 @@ public class AuthService : BaseService, IAuthService
             return ServiceResult.HandleException(ex, _logger, "UserLogout");
         }
     }
+    /// <summary>
+    /// Şifremi unuttum akışını başlatır ve e-posta ile doğrulama kodu gönderir.
+    /// </summary>
+    /// <param name="request">Şifre sıfırlama başlangıç isteği</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public async Task<Result> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -414,6 +447,12 @@ public class AuthService : BaseService, IAuthService
             return ServiceResult.HandleException(ex, _logger, "ForgotPassword");
         }
     }
+    /// <summary>
+    /// Gönderilen token/kod ile şifreyi sıfırlar ve tüm refresh tokenları iptal eder.
+    /// </summary>
+    /// <param name="request">Şifre sıfırlama isteği</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public async Task<Result> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -523,6 +562,13 @@ public class AuthService : BaseService, IAuthService
             return ServiceResult.HandleException(ex, _logger, "ResetPassword");
         }
     }
+    /// <summary>
+    /// Mevcut şifre doğrulaması ile yeni şifreyi belirler ve refresh tokenları iptal eder.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="request">Şifre değiştirme isteği</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Başarı durumu</returns>
     public async Task<Result> ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -615,6 +661,12 @@ public class AuthService : BaseService, IAuthService
             return ServiceResult.HandleException(ex, _logger, "ChangePassword");
         }
     }
+    /// <summary>
+    /// Kullanıcı profil bilgilerini getirir.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Profil yanıtı</returns>
     public async Task<Result<UserProfileResponse>> GetUserProfileAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -651,6 +703,13 @@ public class AuthService : BaseService, IAuthService
             return ServiceResult.HandleException<UserProfileResponse>(ex, _logger, "GetUserProfile");
         }
     }
+    /// <summary>
+    /// Kullanıcı profilini günceller.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="request">Profil güncelleme isteği</param>
+    /// <param name="cancellationToken">İptal belirteci</param>
+    /// <returns>Güncellenen profil</returns>
     public async Task<Result<UserProfileResponse>> UpdateUserProfileAsync(Guid userId, UpdateUserProfileRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(

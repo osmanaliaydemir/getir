@@ -6,12 +6,18 @@ using Getir.Domain.Entities;
 
 namespace Getir.Application.Services.ProductOptions;
 
+/// <summary>
+/// Ürün opsiyon grubu servisi: ürün seçenekleri gruplarının yönetimi, ownership kontrolü, sıralama.
+/// </summary>
 public class ProductOptionGroupService : BaseService, IProductOptionGroupService
 {
     public ProductOptionGroupService(IUnitOfWork unitOfWork, ILogger<ProductOptionGroupService> logger, ILoggingService loggingService, ICacheService cacheService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
     }
+    /// <summary>
+    /// Ürüne ait opsiyon gruplarını sayfalama ile getirir (opsiyonlar dahil, performance tracking).
+    /// </summary>
     public async Task<Result<PagedResult<ProductOptionGroupResponse>>> GetProductOptionGroupsAsync(Guid productId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -219,6 +225,9 @@ public class ProductOptionGroupService : BaseService, IProductOptionGroupService
             return Result.Fail("Failed to delete product option group", "DELETE_OPTION_GROUP_ERROR");
         }
     }
+    /// <summary>
+    /// Opsiyon gruplarının sırasını yeniden düzenler (ownership kontrolü, DisplayOrder güncelleme, performance tracking).
+    /// </summary>
     public async Task<Result> ReorderProductOptionGroupsAsync(Guid productId, List<Guid> orderedGroupIds, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(

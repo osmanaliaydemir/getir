@@ -2,6 +2,9 @@ using Getir.Application.DTO;
 
 namespace Getir.Application.Services.RealtimeTracking;
 
+/// <summary>
+/// Gerçek zamanlı takip servisi implementasyonu: mock data ile realtime tracking, mesafe hesaplama, Haversine.
+/// </summary>
 public class RealtimeTrackingService : IRealtimeTrackingService
 {
     private readonly List<RealtimeTrackingData> _mockRealtimeData;
@@ -44,18 +47,27 @@ public class RealtimeTrackingService : IRealtimeTrackingService
         };
     }
 
+    /// <summary>
+    /// Gerçek zamanlı tracking verisini getirir (mock data).
+    /// </summary>
     public Task<RealtimeTrackingData?> GetRealtimeDataAsync(Guid orderTrackingId)
     {
         var data = _mockRealtimeData.FirstOrDefault(d => d.OrderTrackingId == orderTrackingId);
         return Task.FromResult(data);
     }
 
+    /// <summary>
+    /// Aktif gerçek zamanlı tracking verilerini getirir (mock data).
+    /// </summary>
     public Task<List<RealtimeTrackingData>> GetActiveRealtimeDataAsync()
     {
         var activeData = _mockRealtimeData.Where(d => d.IsActive).ToList();
         return Task.FromResult(activeData);
     }
 
+    /// <summary>
+    /// Kullanıcı bazlı gerçek zamanlı verileri getirir (mock data).
+    /// </summary>
     public Task<List<RealtimeTrackingData>> GetRealtimeDataByUserAsync(Guid userId)
     {
         // Mock implementation - in real scenario, would filter by user's orders
@@ -63,6 +75,9 @@ public class RealtimeTrackingService : IRealtimeTrackingService
         return Task.FromResult(userData);
     }
 
+    /// <summary>
+    /// Kurye bazlı gerçek zamanlı verileri getirir (mock data).
+    /// </summary>
     public Task<List<RealtimeTrackingData>> GetRealtimeDataByCourierAsync(Guid courierId)
     {
         // Mock implementation - in real scenario, would filter by courier's orders
@@ -70,6 +85,9 @@ public class RealtimeTrackingService : IRealtimeTrackingService
         return Task.FromResult(courierData);
     }
 
+    /// <summary>
+    /// Tracking başlatır (duplicate kontrolü, mock data).
+    /// </summary>
     public Task<bool> StartTrackingAsync(Guid orderId, Guid? courierId = null)
     {
         // Check if tracking already exists
@@ -100,6 +118,9 @@ public class RealtimeTrackingService : IRealtimeTrackingService
         return Task.FromResult(true);
     }
 
+    /// <summary>
+    /// Tracking durdurur (soft delete, mock data).
+    /// </summary>
     public Task<bool> StopTrackingAsync(Guid orderTrackingId)
     {
         var data = _mockRealtimeData.FirstOrDefault(d => d.OrderTrackingId == orderTrackingId);
@@ -111,6 +132,9 @@ public class RealtimeTrackingService : IRealtimeTrackingService
         return Task.FromResult(false);
     }
 
+    /// <summary>
+    /// Tracking duraklatır (mock data).
+    /// </summary>
     public Task<bool> PauseTrackingAsync(Guid orderTrackingId)
     {
         var data = _mockRealtimeData.FirstOrDefault(d => d.OrderTrackingId == orderTrackingId);
@@ -122,6 +146,9 @@ public class RealtimeTrackingService : IRealtimeTrackingService
         return Task.FromResult(false);
     }
 
+    /// <summary>
+    /// Tracking devam ettirir (mock data).
+    /// </summary>
     public Task<bool> ResumeTrackingAsync(Guid orderTrackingId)
     {
         var data = _mockRealtimeData.FirstOrDefault(d => d.OrderTrackingId == orderTrackingId);
@@ -134,12 +161,18 @@ public class RealtimeTrackingService : IRealtimeTrackingService
         return Task.FromResult(false);
     }
 
+    /// <summary>
+    /// Tracking aktif mi kontrol eder (mock data).
+    /// </summary>
     public Task<bool> IsTrackingActiveAsync(Guid orderTrackingId)
     {
         var data = _mockRealtimeData.FirstOrDefault(d => d.OrderTrackingId == orderTrackingId);
         return Task.FromResult(data?.IsActive ?? false);
     }
 
+    /// <summary>
+    /// Tracking metriklerini getirir (hız, bearing, accuracy, süre, mock data).
+    /// </summary>
     public Task<Dictionary<string, object>> GetTrackingMetricsAsync(Guid orderTrackingId)
     {
         var data = _mockRealtimeData.FirstOrDefault(d => d.OrderTrackingId == orderTrackingId);
@@ -171,6 +204,9 @@ public class RealtimeTrackingService : IRealtimeTrackingService
         return Task.FromResult(metrics);
     }
 
+    /// <summary>
+    /// Koordinatların geçerli olup olmadığını kontrol eder (Türkiye sınırları: 35-42 lat, 25-45 lon).
+    /// </summary>
     public Task<bool> ValidateLocationAsync(double latitude, double longitude)
     {
         // Validate coordinates are within reasonable bounds
@@ -187,6 +223,9 @@ public class RealtimeTrackingService : IRealtimeTrackingService
         return Task.FromResult(true);
     }
 
+    /// <summary>
+    /// Hedefe olan mesafeyi hesaplar (Haversine formula, mock destination: İstanbul merkez).
+    /// </summary>
     public Task<double> CalculateDistanceToDestinationAsync(Guid orderTrackingId, double latitude, double longitude)
     {
         var data = _mockRealtimeData.FirstOrDefault(d => d.OrderTrackingId == orderTrackingId);
@@ -202,6 +241,9 @@ public class RealtimeTrackingService : IRealtimeTrackingService
         return Task.FromResult(distance);
     }
 
+    /// <summary>
+    /// Hedefe yakın olup olmadığını kontrol eder (varsayılan eşik: 500 metre).
+    /// </summary>
     public Task<bool> IsNearDestinationAsync(Guid orderTrackingId, double latitude, double longitude, double thresholdMeters = 500)
     {
         var distance = CalculateDistanceToDestinationAsync(orderTrackingId, latitude, longitude);

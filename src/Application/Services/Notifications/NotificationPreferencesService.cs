@@ -9,7 +9,7 @@ using NotificationChannel = Getir.Application.DTO.NotificationChannel;
 namespace Getir.Application.Services.Notifications;
 
 /// <summary>
-/// Notification preferences service implementation
+/// Bildirim tercihleri servisi: email/sms/push tercihleri, sessiz saatler, kanal kontrolü.
 /// </summary>
 public class NotificationPreferencesService : BaseService, INotificationPreferencesService
 {
@@ -17,6 +17,9 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
         : base(unitOfWork, logger, loggingService, cacheService)
     {
     }
+    /// <summary>
+    /// Kullanıcı bildirim tercihlerini getirir (yoksa varsayılan oluşturur).
+    /// </summary>
     public async Task<Result<NotificationPreferencesResponse>> GetUserPreferencesAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         try
@@ -74,6 +77,9 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
             return Result.Fail<NotificationPreferencesResponse>("Failed to get notification preferences", "GET_PREFERENCES_ERROR");
         }
     }
+    /// <summary>
+    /// Kullanıcı bildirim tercihlerini günceller (partial update).
+    /// </summary>
     public async Task<Result> UpdateUserPreferencesAsync(Guid userId, UpdateNotificationPreferencesRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -132,6 +138,9 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
             return Result.Fail("Failed to update notification preferences", "UPDATE_PREFERENCES_ERROR");
         }
     }
+    /// <summary>
+    /// Kullanıcı bildirim tercihlerini varsayılana sıfırlar.
+    /// </summary>
     public async Task<Result> ResetToDefaultsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         try
@@ -185,6 +194,9 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
             return Result.Fail("Failed to reset notification preferences", "RESET_PREFERENCES_ERROR");
         }
     }
+    /// <summary>
+    /// Yeni kullanıcı için varsayılan bildirim tercihleri oluşturur.
+    /// </summary>
     public async Task<Result> CreateDefaultPreferencesAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         try
@@ -239,6 +251,9 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
             return Result.Fail("Failed to create default notification preferences", "CREATE_PREFERENCES_ERROR");
         }
     }
+    /// <summary>
+    /// Bildirim tercihleri özetini getirir (aktif kanallar, dil).
+    /// </summary>
     public async Task<Result<NotificationPreferencesSummary>> GetPreferencesSummaryAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         try
@@ -270,6 +285,9 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
             return Result.Fail<NotificationPreferencesSummary>("Failed to get notification preferences summary", "GET_PREFERENCES_SUMMARY_ERROR");
         }
     }
+    /// <summary>
+    /// Kullanıcının belirtilen tip ve kanal için bildirim alıp alamayacağını kontrol eder (kanal, tip, sessiz saatler).
+    /// </summary>
     public async Task<Result<bool>> CanReceiveNotificationAsync(Guid userId, NotificationType type, NotificationChannel channel, CancellationToken cancellationToken = default)
     {
         try
@@ -338,6 +356,9 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
             return Result.Fail<bool>("Failed to check notification eligibility", "CHECK_ELIGIBILITY_ERROR");
         }
     }
+    /// <summary>
+    /// Geçerli zamanın sessiz saatler içinde olup olmadığını kontrol eder (gece yarısı geçişini handle eder).
+    /// </summary>
     public async Task<Result<bool>> IsWithinQuietHoursAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         try
@@ -375,6 +396,9 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
             return Result.Fail<bool>("Failed to check quiet hours", "CHECK_QUIET_HOURS_ERROR");
         }
     }
+    /// <summary>
+    /// Toplu bildirim tercihi günceller (birden fazla kullanıcı için).
+    /// </summary>
     public async Task<Result> BulkUpdatePreferencesAsync(BulkNotificationPreferencesRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -411,6 +435,9 @@ public class NotificationPreferencesService : BaseService, INotificationPreferen
             return Result.Fail("Failed to bulk update notification preferences", "BULK_UPDATE_PREFERENCES_ERROR");
         }
     }
+    /// <summary>
+    /// Belirtilen bildirim tipini alabilen kullanıcıları getirir (tercih kontrolü).
+    /// </summary>
     public async Task<Result<IEnumerable<Guid>>> GetEligibleUsersAsync(NotificationType type, NotificationChannel channel, CancellationToken cancellationToken = default)
     {
         try

@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.AuditLogging;
 
+/// <summary>
+/// Sistem değişiklik kayıtları servisi: değişiklik oluşturma, sorgulama, istatistik ve temizlik işlemleri.
+/// </summary>
 public class SystemChangeLogService : ISystemChangeLogService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -17,6 +20,9 @@ public class SystemChangeLogService : ISystemChangeLogService
         _loggingService = loggingService;
         _logger = logger;
     }
+    /// <summary>
+    /// Yeni sistem değişiklik kaydı oluşturur.
+    /// </summary>
     public async Task<Result<SystemChangeLogResponse>> CreateSystemChangeLogAsync(CreateSystemChangeLogRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -59,6 +65,9 @@ public class SystemChangeLogService : ISystemChangeLogService
             return Result.Fail<SystemChangeLogResponse>("Failed to create system change log", "CREATE_SYSTEM_CHANGE_LOG_FAILED");
         }
     }
+    /// <summary>
+    /// Sistem değişiklik kaydını ID'ye göre getirir.
+    /// </summary>
     public async Task<Result<SystemChangeLogResponse>> GetSystemChangeLogByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
@@ -82,6 +91,9 @@ public class SystemChangeLogService : ISystemChangeLogService
             return Result.Fail<SystemChangeLogResponse>("Failed to get system change log", "GET_SYSTEM_CHANGE_LOG_FAILED");
         }
     }
+    /// <summary>
+    /// Sistem değişiklik kayıtlarını filtre ve sayfalama ile listeler.
+    /// </summary>
     public async Task<Result<IEnumerable<SystemChangeLogResponse>>> GetSystemChangeLogsAsync(SystemChangeQueryRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -141,6 +153,9 @@ public class SystemChangeLogService : ISystemChangeLogService
             return Result.Fail<IEnumerable<SystemChangeLogResponse>>("Failed to get system change logs", "GET_SYSTEM_CHANGE_LOGS_FAILED");
         }
     }
+    /// <summary>
+    /// Belirli bir varlık için sistem değişiklik kayıtlarını listeler.
+    /// </summary>
     public async Task<Result<IEnumerable<SystemChangeLogResponse>>> GetSystemChangeLogsByEntityAsync(string entityType, string entityId, DateTime? startDate = null, DateTime? endDate = null, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
@@ -171,6 +186,9 @@ public class SystemChangeLogService : ISystemChangeLogService
             return Result.Fail<IEnumerable<SystemChangeLogResponse>>("Failed to get system change logs", "GET_SYSTEM_CHANGE_LOGS_BY_ENTITY_FAILED");
         }
     }
+    /// <summary>
+    /// Belirli bir kullanıcıya ait sistem değişiklik kayıtlarını listeler.
+    /// </summary>
     public async Task<Result<IEnumerable<SystemChangeLogResponse>>> GetSystemChangeLogsByUserAsync(Guid userId, DateTime? startDate = null, DateTime? endDate = null, int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
     {
         try
@@ -201,6 +219,9 @@ public class SystemChangeLogService : ISystemChangeLogService
             return Result.Fail<IEnumerable<SystemChangeLogResponse>>("Failed to get system change logs", "GET_SYSTEM_CHANGE_LOGS_BY_USER_FAILED");
         }
     }
+    /// <summary>
+    /// Sistem değişiklik istatistiklerini döner.
+    /// </summary>
     public async Task<Result<Dictionary<string, int>>> GetSystemChangeStatisticsAsync(DateTime startDate, DateTime endDate, string? entityType = null, CancellationToken cancellationToken = default)
     {
         try
@@ -226,6 +247,9 @@ public class SystemChangeLogService : ISystemChangeLogService
             return Result.Fail<Dictionary<string, int>>("Failed to get system change statistics", "GET_SYSTEM_CHANGE_STATISTICS_FAILED");
         }
     }
+    /// <summary>
+    /// Son sistem değişikliklerini listeler.
+    /// </summary>
     public async Task<Result<IEnumerable<SystemChangeLogResponse>>> GetRecentSystemChangesAsync(int count = 50, string? entityType = null, CancellationToken cancellationToken = default)
     {
         try
@@ -252,6 +276,9 @@ public class SystemChangeLogService : ISystemChangeLogService
             return Result.Fail<IEnumerable<SystemChangeLogResponse>>("Failed to get recent system changes", "GET_RECENT_SYSTEM_CHANGES_FAILED");
         }
     }
+    /// <summary>
+    /// Eski sistem değişiklik kayıtlarını siler.
+    /// </summary>
     public async Task<Result> DeleteOldSystemChangeLogsAsync(DateTime cutoffDate, CancellationToken cancellationToken = default)
     {
         try

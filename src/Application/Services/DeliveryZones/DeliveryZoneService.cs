@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.DeliveryZones;
 
+/// <summary>
+/// Teslimat bölgesi servisi: merchant bazlı teslimat alanlarının yönetimi, cache ve nokta-poligon kontrolü.
+/// </summary>
 public class DeliveryZoneService : BaseService, IDeliveryZoneService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
@@ -16,6 +19,9 @@ public class DeliveryZoneService : BaseService, IDeliveryZoneService
         _backgroundTaskService = backgroundTaskService;
     }
 
+    /// <summary>
+    /// Merchant'a ait aktif teslimat bölgelerini cache'den getirir.
+    /// </summary>
     public async Task<Result<List<DeliveryZoneResponse>>> GetDeliveryZonesByMerchantAsync(Guid merchantId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -72,6 +78,9 @@ public class DeliveryZoneService : BaseService, IDeliveryZoneService
         }
     }
 
+    /// <summary>
+    /// Teslimat bölgesini ID ile getirir (cache).
+    /// </summary>
     public async Task<Result<DeliveryZoneResponse>> GetDeliveryZoneByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -130,6 +139,9 @@ public class DeliveryZoneService : BaseService, IDeliveryZoneService
         }
     }
 
+    /// <summary>
+    /// Yeni teslimat bölgesi oluşturur (min 3 nokta gerekli, cache invalidation yapar).
+    /// </summary>
     public async Task<Result<DeliveryZoneResponse>> CreateDeliveryZoneAsync(CreateDeliveryZoneRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         // Merchant ownership kontrolü
@@ -205,6 +217,9 @@ public class DeliveryZoneService : BaseService, IDeliveryZoneService
         return Result.Ok(response);
     }
 
+    /// <summary>
+    /// Teslimat bölgesini günceller (noktalar dahil, cache invalidation yapar).
+    /// </summary>
     public async Task<Result<DeliveryZoneResponse>> UpdateDeliveryZoneAsync(Guid id, UpdateDeliveryZoneRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         var deliveryZone = await _unitOfWork.Repository<DeliveryZone>()
@@ -294,6 +309,9 @@ public class DeliveryZoneService : BaseService, IDeliveryZoneService
         return Result.Ok(response);
     }
 
+    /// <summary>
+    /// Teslimat bölgesini siler (noktalar dahil, cache invalidation yapar).
+    /// </summary>
     public async Task<Result> DeleteDeliveryZoneAsync(Guid id, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         var deliveryZone = await _unitOfWork.Repository<DeliveryZone>()
@@ -336,6 +354,9 @@ public class DeliveryZoneService : BaseService, IDeliveryZoneService
         return Result.Ok();
     }
 
+    /// <summary>
+    /// Verilen koordinatın merchant'ın teslimat bölgelerinden herhangi birinde olup olmadığını kontrol eder (ray casting algoritması).
+    /// </summary>
     public async Task<Result<CheckDeliveryZoneResponse>> CheckDeliveryZoneAsync(Guid merchantId, CheckDeliveryZoneRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(

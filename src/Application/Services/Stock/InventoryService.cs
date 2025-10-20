@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 namespace Getir.Application.Services.Stock;
 
 /// <summary>
-/// Inventory management service implementation
+/// Envanter yönetim servisi implementasyonu: envanter sayımı, uyumsuzluklar, devir raporu, yavaş hareket eden ürünler, değerleme.
 /// </summary>
 public class InventoryService : BaseService, IInventoryService
 {
@@ -18,6 +18,9 @@ public class InventoryService : BaseService, IInventoryService
     {
         _logger = logger;
     }
+    /// <summary>
+    /// Envanter sayımı yapar (transaction, uyumsuzluk kaydı, ownership kontrolü).
+    /// </summary>
     public async Task<Result> PerformInventoryCountAsync(InventoryCountRequest request, Guid merchantOwnerId, CancellationToken cancellationToken = default)
     {
         try
@@ -127,6 +130,9 @@ public class InventoryService : BaseService, IInventoryService
             return Result.Fail("Failed to perform inventory count", "INVENTORY_COUNT_ERROR");
         }
     }
+    /// <summary>
+    /// Envanter sayım geçmişini getirir (tarih filtresi ile, zaman sıralı).
+    /// </summary>
     public async Task<Result<List<InventoryCountResponse>>> GetInventoryCountHistoryAsync(Guid merchantId, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
     {
         try
@@ -159,6 +165,9 @@ public class InventoryService : BaseService, IInventoryService
             return Result.Fail<List<InventoryCountResponse>>("Failed to get inventory count history", "INVENTORY_HISTORY_ERROR");
         }
     }
+    /// <summary>
+    /// Mevcut envanter seviyelerini getirir (varyantlar opsiyonel, stok durumu hesaplaması).
+    /// </summary>
     public async Task<Result<List<InventoryLevelResponse>>> GetCurrentInventoryLevelsAsync(Guid merchantId, bool includeVariants = true, CancellationToken cancellationToken = default)
     {
         try
@@ -218,6 +227,9 @@ public class InventoryService : BaseService, IInventoryService
             return Result.Fail<List<InventoryLevelResponse>>("Failed to get inventory levels", "INVENTORY_LEVELS_ERROR");
         }
     }
+    /// <summary>
+    /// Envanter uyumsuzluklarını getirir (beklenen vs gerçekleşen, varyans yüzdesi).
+    /// </summary>
     public async Task<Result<List<InventoryDiscrepancyResponse>>> GetInventoryDiscrepanciesAsync(Guid merchantId, DateTime? fromDate = null, CancellationToken cancellationToken = default)
     {
         try
@@ -253,6 +265,9 @@ public class InventoryService : BaseService, IInventoryService
             return Result.Fail<List<InventoryDiscrepancyResponse>>("Failed to get inventory discrepancies", "INVENTORY_DISCREPANCY_ERROR");
         }
     }
+    /// <summary>
+    /// Envanter seviyelerini ayarlar (uyumsuzluk bazlı, transaction, ownership kontrolü, stok geçmişi).
+    /// </summary>
     public async Task<Result> AdjustInventoryLevelsAsync(List<InventoryAdjustmentRequest> adjustments, Guid merchantOwnerId, string reason, CancellationToken cancellationToken = default)
     {
         try
@@ -344,6 +359,9 @@ public class InventoryService : BaseService, IInventoryService
             return Result.Fail("Failed to adjust inventory levels", "INVENTORY_ADJUSTMENT_ERROR");
         }
     }
+    /// <summary>
+    /// Envanter devir hızı raporu oluşturur (devir oranı, top/bottom 10 ürün).
+    /// </summary>
     public async Task<Result<InventoryTurnoverResponse>> GetInventoryTurnoverReportAsync(Guid merchantId, DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
     {
         try
@@ -396,6 +414,9 @@ public class InventoryService : BaseService, IInventoryService
             return Result.Fail<InventoryTurnoverResponse>("Failed to get inventory turnover report", "INVENTORY_TURNOVER_ERROR");
         }
     }
+    /// <summary>
+    /// Yavaş hareket eden ürünleri getirir (son hareket tarihi eşik değerinden eski).
+    /// </summary>
     public async Task<Result<List<SlowMovingInventoryResponse>>> GetSlowMovingInventoryAsync(Guid merchantId, int daysThreshold = 30, CancellationToken cancellationToken = default)
     {
         try
@@ -438,6 +459,9 @@ public class InventoryService : BaseService, IInventoryService
             return Result.Fail<List<SlowMovingInventoryResponse>>("Failed to get slow moving inventory", "SLOW_MOVING_INVENTORY_ERROR");
         }
     }
+    /// <summary>
+    /// Envanter değerlemesi yapar (FIFO/LIFO/WeightedAverage metodları, top 10 değerli ürünler).
+    /// </summary>
     public async Task<Result<InventoryValuationResponse>> GetInventoryValuationAsync(Guid merchantId, ValuationMethod method = ValuationMethod.FIFO, CancellationToken cancellationToken = default)
     {
         try
@@ -478,6 +502,7 @@ public class InventoryService : BaseService, IInventoryService
             return Result.Fail<InventoryValuationResponse>("Failed to get inventory valuation", "INVENTORY_VALUATION_ERROR");
         }
     }
+    
     private async Task CreateStockHistoryAsync(Guid productId, Guid? productVariantId, int previousQuantity, int newQuantity, Domain.Enums.StockChangeType changeType, string? reason,
         Guid? orderId, string? referenceNumber, CancellationToken cancellationToken)
     {
@@ -498,6 +523,7 @@ public class InventoryService : BaseService, IInventoryService
 
         await _unitOfWork.Repository<StockHistory>().AddAsync(history, cancellationToken);
     }
+    
     private StockStatus GetStockStatus(int stockQuantity)
     {
         return stockQuantity switch

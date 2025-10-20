@@ -3,6 +3,9 @@ using Getir.Domain.Enums;
 
 namespace Getir.Application.Services.RealtimeTracking;
 
+/// <summary>
+/// Tracking bildirim servisi implementasyonu: mock data ile push/email/sms bildirimleri, okundu yönetimi.
+/// </summary>
 public class TrackingNotificationService : ITrackingNotificationService
 {
     private readonly List<TrackingNotificationDto> _mockNotifications;
@@ -52,6 +55,9 @@ public class TrackingNotificationService : ITrackingNotificationService
         };
     }
 
+    /// <summary>
+    /// Bildirim gönderir (push/email/sms, mock data).
+    /// </summary>
     public Task<SendNotificationResponse> SendNotificationAsync(SendNotificationRequest request)
     {
         var notification = new TrackingNotificationDto
@@ -84,6 +90,9 @@ public class TrackingNotificationService : ITrackingNotificationService
         });
     }
 
+    /// <summary>
+    /// Tracking ID bazlı bildirimleri getirir (zaman sıralı, mock data).
+    /// </summary>
     public Task<List<TrackingNotificationDto>> GetNotificationsByTrackingIdAsync(Guid orderTrackingId)
     {
         var notifications = _mockNotifications
@@ -94,6 +103,9 @@ public class TrackingNotificationService : ITrackingNotificationService
         return Task.FromResult(notifications);
     }
 
+    /// <summary>
+    /// Kullanıcı bazlı bildirimleri getirir (zaman sıralı, mock data).
+    /// </summary>
     public Task<List<TrackingNotificationDto>> GetNotificationsByUserIdAsync(Guid userId)
     {
         var notifications = _mockNotifications
@@ -104,6 +116,9 @@ public class TrackingNotificationService : ITrackingNotificationService
         return Task.FromResult(notifications);
     }
 
+    /// <summary>
+    /// Okunmamış bildirimleri getirir (mock data).
+    /// </summary>
     public Task<List<TrackingNotificationDto>> GetUnreadNotificationsAsync(Guid userId)
     {
         var unreadNotifications = _mockNotifications
@@ -114,6 +129,9 @@ public class TrackingNotificationService : ITrackingNotificationService
         return Task.FromResult(unreadNotifications);
     }
 
+    /// <summary>
+    /// Bildirimi okundu olarak işaretler (mock data).
+    /// </summary>
     public Task<bool> MarkNotificationAsReadAsync(Guid notificationId)
     {
         var notification = _mockNotifications.FirstOrDefault(n => n.Id == notificationId);
@@ -126,6 +144,9 @@ public class TrackingNotificationService : ITrackingNotificationService
         return Task.FromResult(false);
     }
 
+    /// <summary>
+    /// Tüm bildirimleri okundu olarak işaretler (mock data).
+    /// </summary>
     public Task<bool> MarkAllNotificationsAsReadAsync(Guid userId)
     {
         var userNotifications = _mockNotifications.Where(n => n.UserId == userId && !n.IsRead);
@@ -137,6 +158,9 @@ public class TrackingNotificationService : ITrackingNotificationService
         return Task.FromResult(true);
     }
 
+    /// <summary>
+    /// Bildirimi siler (mock data).
+    /// </summary>
     public Task<bool> DeleteNotificationAsync(Guid notificationId)
     {
         var notification = _mockNotifications.FirstOrDefault(n => n.Id == notificationId);
@@ -148,6 +172,9 @@ public class TrackingNotificationService : ITrackingNotificationService
         return Task.FromResult(false);
     }
 
+    /// <summary>
+    /// Tip bazlı bildirimleri getirir (tarih filtresi, mock data).
+    /// </summary>
     public Task<List<TrackingNotificationDto>> GetNotificationsByTypeAsync(NotificationType type, DateTime? startDate = null, DateTime? endDate = null)
     {
         var notifications = _mockNotifications.Where(n => n.Type == type);
@@ -161,6 +188,9 @@ public class TrackingNotificationService : ITrackingNotificationService
         return Task.FromResult(notifications.OrderByDescending(n => n.CreatedAt).ToList());
     }
 
+    /// <summary>
+    /// Durum güncelleme bildirimi gönderir (mock data).
+    /// </summary>
     public Task<bool> SendStatusUpdateNotificationAsync(Guid orderTrackingId, TrackingStatus newStatus, string? message = null)
     {
         var notification = new TrackingNotificationDto
@@ -185,6 +215,9 @@ public class TrackingNotificationService : ITrackingNotificationService
         return Task.FromResult(true);
     }
 
+    /// <summary>
+    /// Konum güncelleme bildirimi gönderir (mock data).
+    /// </summary>
     public Task<bool> SendLocationUpdateNotificationAsync(Guid orderTrackingId, double latitude, double longitude)
     {
         var notification = new TrackingNotificationDto
@@ -209,6 +242,9 @@ public class TrackingNotificationService : ITrackingNotificationService
         return Task.FromResult(true);
     }
 
+    /// <summary>
+    /// ETA güncelleme bildirimi gönderir (mock data).
+    /// </summary>
     public Task<bool> SendETAUpdateNotificationAsync(Guid orderTrackingId, DateTime estimatedArrivalTime)
     {
         var notification = new TrackingNotificationDto
@@ -233,6 +269,9 @@ public class TrackingNotificationService : ITrackingNotificationService
         return Task.FromResult(true);
     }
 
+    /// <summary>
+    /// Teslimat uyarısı gönderir (yaklaşıyor bildirimi, mock data).
+    /// </summary>
     public Task<bool> SendDeliveryAlertAsync(Guid orderTrackingId)
     {
         var notification = new TrackingNotificationDto
@@ -257,6 +296,9 @@ public class TrackingNotificationService : ITrackingNotificationService
         return Task.FromResult(true);
     }
 
+    /// <summary>
+    /// Gecikme uyarısı gönderir (dakika bilgisi ile, mock data).
+    /// </summary>
     public Task<bool> SendDelayAlertAsync(Guid orderTrackingId, int delayMinutes)
     {
         var notification = new TrackingNotificationDto
@@ -281,6 +323,9 @@ public class TrackingNotificationService : ITrackingNotificationService
         return Task.FromResult(true);
     }
 
+    /// <summary>
+    /// Tamamlanma bildirimi gönderir (teslimat başarılı, mock data).
+    /// </summary>
     public Task<bool> SendCompletionAlertAsync(Guid orderTrackingId)
     {
         var notification = new TrackingNotificationDto
@@ -305,6 +350,9 @@ public class TrackingNotificationService : ITrackingNotificationService
         return Task.FromResult(true);
     }
 
+    /// <summary>
+    /// Okunmamış bildirim sayısını getirir (mock data).
+    /// </summary>
     public Task<int> GetUnreadNotificationCountAsync(Guid userId)
     {
         var unreadCount = _mockNotifications.Count(n => n.UserId == userId && !n.IsRead);

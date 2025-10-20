@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Getir.Application.Services.Orders;
 
+/// <summary>
+/// Sipariş durum validasyon servisi: geçiş kuralları, role bazlı yetki, business rule kontrolleri.
+/// </summary>
 public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorService
 {
     private new readonly ILogger<OrderStatusValidatorService> _logger;
@@ -14,6 +17,9 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
     {
         _logger = logger;
     }
+    /// <summary>
+    /// Sipariş durum geçişinin geçerli olup olmadığını kontrol eder (geçiş kuralı, yetki, business rule).
+    /// </summary>
     public async Task<Result> ValidateStatusTransitionAsync(Guid orderId, OrderStatus fromStatus, OrderStatus toStatus, Guid userId, string userRole, CancellationToken cancellationToken = default)
     {
         try
@@ -65,6 +71,9 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
             return Result.Fail("Failed to validate status transition", "VALIDATION_ERROR");
         }
     }
+    /// <summary>
+    /// Sipariş için geçerli sonraki durumları getirir (mevcut durum ve role bazlı).
+    /// </summary>
     public async Task<Result<List<OrderStatus>>> GetValidNextStatusesAsync(Guid orderId, Guid userId, string userRole, CancellationToken cancellationToken = default)
     {
         try
@@ -101,6 +110,9 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
             return Result.Fail<List<OrderStatus>>("Failed to get valid next statuses", "ERROR");
         }
     }
+    /// <summary>
+    /// Kullanıcının sipariş durumunu değiştirme yetkisi olup olmadığını kontrol eder (admin/merchant/courier/customer).
+    /// </summary>
     public async Task<Result> ValidateUserPermissionAsync(Guid orderId, OrderStatus toStatus, Guid userId, string userRole, CancellationToken cancellationToken = default)
     {
         try
@@ -131,6 +143,9 @@ public class OrderStatusValidatorService : BaseService, IOrderStatusValidatorSer
             return Result.Fail("Failed to validate user permission", "PERMISSION_ERROR");
         }
     }
+    /// <summary>
+    /// Durum geçişi için gerekli verileri getirir (CourierId, CancellationReason vb).
+    /// </summary>
     public Task<Result<List<string>>> GetRequiredTransitionDataAsync(OrderStatus fromStatus, OrderStatus toStatus, CancellationToken cancellationToken = default)
     {
         var requiredData = new List<string>();

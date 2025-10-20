@@ -2,6 +2,9 @@ using Getir.Application.DTO;
 
 namespace Getir.Application.Services.RealtimeTracking;
 
+/// <summary>
+/// Tracking ayarları servisi implementasyonu: mock data ile user/merchant ayarları, validasyon.
+/// </summary>
 public class TrackingSettingsService : ITrackingSettingsService
 {
     private readonly List<TrackingSettingsDto> _mockSettings;
@@ -58,18 +61,27 @@ public class TrackingSettingsService : ITrackingSettingsService
         };
     }
 
+    /// <summary>
+    /// Kullanıcı tracking ayarlarını getirir (mock data).
+    /// </summary>
     public Task<TrackingSettingsDto?> GetUserSettingsAsync(Guid userId)
     {
         var settings = _mockSettings.FirstOrDefault(s => s.UserId == userId);
         return Task.FromResult(settings);
     }
 
+    /// <summary>
+    /// Merchant tracking ayarlarını getirir (mock data).
+    /// </summary>
     public Task<TrackingSettingsDto?> GetMerchantSettingsAsync(Guid merchantId)
     {
         var settings = _mockSettings.FirstOrDefault(s => s.MerchantId == merchantId);
         return Task.FromResult(settings);
     }
 
+    /// <summary>
+    /// Kullanıcı için tracking ayarları oluşturur (mock data).
+    /// </summary>
     public Task<TrackingSettingsDto> CreateUserSettingsAsync(Guid userId, UpdateTrackingSettingsRequest request)
     {
         var settings = new TrackingSettingsDto
@@ -99,6 +111,9 @@ public class TrackingSettingsService : ITrackingSettingsService
         return Task.FromResult(settings);
     }
 
+    /// <summary>
+    /// Merchant için tracking ayarları oluşturur (mock data).
+    /// </summary>
     public Task<TrackingSettingsDto> CreateMerchantSettingsAsync(Guid merchantId, UpdateTrackingSettingsRequest request)
     {
         var settings = new TrackingSettingsDto
@@ -128,6 +143,9 @@ public class TrackingSettingsService : ITrackingSettingsService
         return Task.FromResult(settings);
     }
 
+    /// <summary>
+    /// Kullanıcı tracking ayarlarını günceller (mock data).
+    /// </summary>
     public Task<TrackingSettingsDto> UpdateUserSettingsAsync(Guid userId, UpdateTrackingSettingsRequest request)
     {
         var settings = _mockSettings.FirstOrDefault(s => s.UserId == userId);
@@ -156,6 +174,9 @@ public class TrackingSettingsService : ITrackingSettingsService
         return Task.FromResult(settings);
     }
 
+    /// <summary>
+    /// Merchant tracking ayarlarını günceller (mock data).
+    /// </summary>
     public Task<TrackingSettingsDto> UpdateMerchantSettingsAsync(Guid merchantId, UpdateTrackingSettingsRequest request)
     {
         var settings = _mockSettings.FirstOrDefault(s => s.MerchantId == merchantId);
@@ -184,6 +205,9 @@ public class TrackingSettingsService : ITrackingSettingsService
         return Task.FromResult(settings);
     }
 
+    /// <summary>
+    /// Kullanıcı tracking ayarlarını siler (mock data).
+    /// </summary>
     public Task<bool> DeleteUserSettingsAsync(Guid userId)
     {
         var settings = _mockSettings.FirstOrDefault(s => s.UserId == userId);
@@ -195,6 +219,9 @@ public class TrackingSettingsService : ITrackingSettingsService
         return Task.FromResult(false);
     }
 
+    /// <summary>
+    /// Merchant tracking ayarlarını siler (mock data).
+    /// </summary>
     public Task<bool> DeleteMerchantSettingsAsync(Guid merchantId)
     {
         var settings = _mockSettings.FirstOrDefault(s => s.MerchantId == merchantId);
@@ -206,6 +233,9 @@ public class TrackingSettingsService : ITrackingSettingsService
         return Task.FromResult(false);
     }
 
+    /// <summary>
+    /// Varsayılan tracking ayarlarını getirir (mock data).
+    /// </summary>
     public Task<TrackingSettingsDto> GetDefaultSettingsAsync()
     {
         var defaultSettings = new TrackingSettingsDto
@@ -232,6 +262,9 @@ public class TrackingSettingsService : ITrackingSettingsService
         return Task.FromResult(defaultSettings);
     }
 
+    /// <summary>
+    /// Tracking ayarlarını doğrular (aralık kontrolleri: 10-300s konum, 60-3600s bildirim, 10-1000m accuracy, 30-600s ETA, 5-120dk gecikme, 100-2000m yakınlık).
+    /// </summary>
     public Task<bool> ValidateSettingsAsync(UpdateTrackingSettingsRequest request)
     {
         // Validate settings
@@ -256,12 +289,18 @@ public class TrackingSettingsService : ITrackingSettingsService
         return Task.FromResult(true);
     }
 
+    /// <summary>
+    /// Tüm kullanıcı ayarlarını getirir (mock data).
+    /// </summary>
     public Task<List<TrackingSettingsDto>> GetAllUserSettingsAsync()
     {
         var userSettings = _mockSettings.Where(s => s.UserId.HasValue).ToList();
         return Task.FromResult(userSettings);
     }
 
+    /// <summary>
+    /// Tüm merchant ayarlarını getirir (mock data).
+    /// </summary>
     public Task<List<TrackingSettingsDto>> GetAllMerchantSettingsAsync()
     {
         var merchantSettings = _mockSettings.Where(s => s.MerchantId.HasValue).ToList();

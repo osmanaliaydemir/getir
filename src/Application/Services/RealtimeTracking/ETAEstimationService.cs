@@ -2,9 +2,13 @@ using Getir.Application.DTO;
 
 namespace Getir.Application.Services.RealtimeTracking;
 
+/// <summary>
+/// ETA tahmini servisi implementasyonu: mock data ile ETA hesaplama, Haversine formula.
+/// </summary>
 public class ETAEstimationService : IETAEstimationService
 {
     private readonly List<ETAEstimationDto> _mockETAEstimations;
+    
     public ETAEstimationService()
     {
         // Mock ETA estimations
@@ -40,6 +44,10 @@ public class ETAEstimationService : IETAEstimationService
             }
         };
     }
+    
+    /// <summary>
+    /// Sipariş takibi için güncel ETA tahminini getirir (en son aktif kayıt, mock data).
+    /// </summary>
     public Task<ETAEstimationDto?> GetCurrentETAAsync(Guid orderTrackingId)
     {
         var eta = _mockETAEstimations
@@ -49,6 +57,10 @@ public class ETAEstimationService : IETAEstimationService
 
         return Task.FromResult(eta);
     }
+    
+    /// <summary>
+    /// Yeni ETA tahmini oluşturur (mock data).
+    /// </summary>
     public Task<ETAEstimationDto> CreateETAEstimationAsync(CreateETAEstimationRequest request)
     {
         var eta = new ETAEstimationDto
@@ -69,6 +81,10 @@ public class ETAEstimationService : IETAEstimationService
         _mockETAEstimations.Add(eta);
         return Task.FromResult(eta);
     }
+    
+    /// <summary>
+    /// ETA tahminini günceller (mock data).
+    /// </summary>
     public Task<ETAEstimationDto> UpdateETAEstimationAsync(Guid id, UpdateETAEstimationRequest request)
     {
         var eta = _mockETAEstimations.FirstOrDefault(e => e.Id == id);
@@ -87,6 +103,10 @@ public class ETAEstimationService : IETAEstimationService
 
         return Task.FromResult(eta);
     }
+    
+    /// <summary>
+    /// ETA tahminini siler (soft delete, mock data).
+    /// </summary>
     public Task<bool> DeleteETAEstimationAsync(Guid id)
     {
         var eta = _mockETAEstimations.FirstOrDefault(e => e.Id == id);
@@ -97,6 +117,10 @@ public class ETAEstimationService : IETAEstimationService
         }
         return Task.FromResult(false);
     }
+    
+    /// <summary>
+    /// ETA tahmin geçmişini getirir (zaman sıralı, mock data).
+    /// </summary>
     public Task<List<ETAEstimationDto>> GetETAHistoryAsync(Guid orderTrackingId)
     {
         var history = _mockETAEstimations
@@ -106,6 +130,10 @@ public class ETAEstimationService : IETAEstimationService
 
         return Task.FromResult(history);
     }
+    
+    /// <summary>
+    /// ETA hesaplar (mevcut konum, mesafe, ortalama hız bazlı, Haversine, mock data).
+    /// </summary>
     public Task<ETAEstimationDto> CalculateETAAsync(Guid orderTrackingId, double? currentLatitude = null, double? currentLongitude = null)
     {
         // Mock ETA calculation
@@ -135,6 +163,10 @@ public class ETAEstimationService : IETAEstimationService
         _mockETAEstimations.Add(eta);
         return Task.FromResult(eta);
     }
+    
+    /// <summary>
+    /// ETA'nın makul olup olmadığını doğrular (5 dakika - 2 saat arası).
+    /// </summary>
     public Task<bool> ValidateETAAsync(Guid orderTrackingId, DateTime estimatedArrivalTime)
     {
         // Mock validation - check if ETA is reasonable
@@ -144,11 +176,19 @@ public class ETAEstimationService : IETAEstimationService
         // ETA should be between 5 minutes and 2 hours from now
         return Task.FromResult(timeDifference.TotalMinutes >= 5 && timeDifference.TotalMinutes <= 120);
     }
+    
+    /// <summary>
+    /// Aktif ETA tahminlerini getirir (mock data).
+    /// </summary>
     public Task<List<ETAEstimationDto>> GetActiveETAEstimationsAsync()
     {
         var activeETAs = _mockETAEstimations.Where(e => e.IsActive).ToList();
         return Task.FromResult(activeETAs);
     }
+    
+    /// <summary>
+    /// İki koordinat arası mesafeyi hesaplar (Haversine formula).
+    /// </summary>
     public Task<double> CalculateDistanceAsync(double lat1, double lon1, double lat2, double lon2)
     {
         // Haversine formula for calculating distance between two points
@@ -161,16 +201,22 @@ public class ETAEstimationService : IETAEstimationService
         var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
         return Task.FromResult(R * c);
     }
+    
+    /// <summary>
+    /// Tahmini dakika hesaplar (mesafe ve ortalama hız bazlı, minimum 5 dk).
+    /// </summary>
     public Task<int> CalculateEstimatedMinutesAsync(double distanceKm, double? averageSpeed = null)
     {
         var speed = averageSpeed ?? 25.0; // Default speed 25 km/h
         var minutes = (int)(distanceKm / speed * 60);
         return Task.FromResult(Math.Max(minutes, 5)); // Minimum 5 minutes
     }
+    
     private double ToRadians(double degrees)
     {
         return degrees * (Math.PI / 180);
     }
+    
     private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
     {
         // Haversine formula for calculating distance between two points

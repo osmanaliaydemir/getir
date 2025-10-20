@@ -16,6 +16,9 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
         : base(unitOfWork, logger, loggingService, cacheService)
     {
     }
+    /// <summary>
+    /// Yeni teslimat kapasitesi oluşturur (benzersizlik kontrolü yapar).
+    /// </summary>
     public async Task<Result<DeliveryCapacityResponse>> CreateCapacityAsync(DeliveryCapacityRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -81,6 +84,9 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail<DeliveryCapacityResponse>("Failed to create delivery capacity", "CREATE_CAPACITY_ERROR");
         }
     }
+    /// <summary>
+    /// Teslimat kapasitesi ayarlarını günceller.
+    /// </summary>
     public async Task<Result<DeliveryCapacityResponse>> UpdateCapacityAsync(Guid capacityId, DeliveryCapacityRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -129,6 +135,9 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail<DeliveryCapacityResponse>("Failed to update delivery capacity", "UPDATE_CAPACITY_ERROR");
         }
     }
+    /// <summary>
+    /// Merchant'ın teslimat kapasitesini kontrol eder (eşzamanlı/günlük/haftalık limit, mesafe, yoğun saat).
+    /// </summary>
     public async Task<Result<DeliveryCapacityCheckResponse>> CheckCapacityAsync(DeliveryCapacityCheckRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -229,6 +238,9 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail<DeliveryCapacityCheckResponse>("Failed to check delivery capacity", "CHECK_CAPACITY_ERROR");
         }
     }
+    /// <summary>
+    /// Aktif teslimat sayısını arttırır.
+    /// </summary>
     public async Task<Result> IncrementActiveDeliveriesAsync(Guid merchantId, Guid? deliveryZoneId = null, CancellationToken cancellationToken = default)
     {
         try
@@ -264,6 +276,9 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail("Failed to increment active deliveries", "INCREMENT_ACTIVE_DELIVERIES_ERROR");
         }
     }
+    /// <summary>
+    /// Aktif teslimat sayısını azaltır.
+    /// </summary>
     public async Task<Result> DecrementActiveDeliveriesAsync(Guid merchantId, Guid? deliveryZoneId = null, CancellationToken cancellationToken = default)
     {
         try
@@ -299,6 +314,9 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail("Failed to decrement active deliveries", "DECREMENT_ACTIVE_DELIVERIES_ERROR");
         }
     }
+    /// <summary>
+    /// Günlük ve haftalık teslimat sayaçlarını arttırır.
+    /// </summary>
     public async Task<Result> IncrementDailyDeliveriesAsync(Guid merchantId, Guid? deliveryZoneId = null, CancellationToken cancellationToken = default)
     {
         try
@@ -336,6 +354,9 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail("Failed to increment daily deliveries", "INCREMENT_DAILY_DELIVERIES_ERROR");
         }
     }
+    /// <summary>
+    /// Teslimat kapasitesi verilerini getirir.
+    /// </summary>
     public async Task<Result<DeliveryCapacityResponse>> GetCapacityAsync(Guid merchantId, Guid? deliveryZoneId = null, CancellationToken cancellationToken = default)
     {
         try
@@ -361,6 +382,9 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail<DeliveryCapacityResponse>("Failed to get delivery capacity", "GET_CAPACITY_ERROR");
         }
     }
+    /// <summary>
+    /// Dinamik olarak kapasiteyi arttırır veya azaltır.
+    /// </summary>
     public async Task<Result> AdjustCapacityAsync(DynamicCapacityAdjustmentRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -410,6 +434,9 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail("Failed to adjust capacity", "ADJUST_CAPACITY_ERROR");
         }
     }
+    /// <summary>
+    /// Kapasite uyarısı gönderir (log kaydeder).
+    /// </summary>
     public Task<Result> SendCapacityAlertAsync(CapacityAlertRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -433,6 +460,9 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Task.FromResult(Result.Fail("Failed to send capacity alert", "SEND_ALERT_ERROR"));
         }
     }
+    /// <summary>
+    /// Günlük teslimat sayaçlarını sıfırlar.
+    /// </summary>
     public async Task<Result> ResetDailyCountersAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -468,6 +498,9 @@ public class DeliveryCapacityService : BaseService, IDeliveryCapacityService
             return Result.Fail("Failed to reset daily counters", "RESET_DAILY_COUNTERS_ERROR");
         }
     }
+    /// <summary>
+    /// Haftalık teslimat sayaçlarını sıfırlar.
+    /// </summary>
     public async Task<Result> ResetWeeklyCountersAsync(CancellationToken cancellationToken = default)
     {
         try

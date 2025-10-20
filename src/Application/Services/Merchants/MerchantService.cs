@@ -15,20 +15,12 @@ using Getir.Domain.Enums;
 namespace Getir.Application.Services.Merchants;
 
 /// <summary>
-/// Service for managing merchants and their operations
+/// Merchant yönetimi servisi: merchant CRUD işlemleri, cache yönetimi, kategori bazlı filtreleme.
 /// </summary>
 public class MerchantService : BaseService, IMerchantService
 {
     private readonly IBackgroundTaskService _backgroundTaskService;
 
-    /// <summary>
-    /// Initializes a new instance of the MerchantService class
-    /// </summary>
-    /// <param name="unitOfWork">The unit of work for database operations</param>
-    /// <param name="logger">The logger for logging operations</param>
-    /// <param name="loggingService">The logging service for structured logging</param>
-    /// <param name="cacheService">The cache service for caching operations</param>
-    /// <param name="backgroundTaskService">The background task service for async operations</param>
     public MerchantService(IUnitOfWork unitOfWork, ILogger<MerchantService> logger, ILoggingService loggingService, ICacheService cacheService, IBackgroundTaskService backgroundTaskService)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
@@ -36,11 +28,8 @@ public class MerchantService : BaseService, IMerchantService
     }
 
     /// <summary>
-    /// Gets a paginated list of active merchants
+    /// Aktif merchantları sayfalama ile getirir (cache).
     /// </summary>
-    /// <param name="query">The pagination query parameters</param>
-    /// <param name="cancellationToken">The cancellation token</param>
-    /// <returns>A result containing the paginated list of merchants</returns>
     public async Task<Result<PagedResult<MerchantResponse>>> GetMerchantsAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -112,12 +101,8 @@ public class MerchantService : BaseService, IMerchantService
     }
 
     /// <summary>
-    /// Gets a merchant by their unique identifier
+    /// Merchant'ı ID ile getirir (cache).
     /// </summary>
-    /// <param name="id">The unique identifier of the merchant</param>
-    /// <param name="cancellationToken">The cancellation token</param>
-    /// <returns>A result containing the merchant details or an error if not found</returns>
-    /// <exception cref="EntityNotFoundException">Thrown when the merchant is not found</exception>
     public async Task<Result<MerchantResponse>> GetMerchantByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -127,6 +112,9 @@ public class MerchantService : BaseService, IMerchantService
             cancellationToken);
     }
 
+    /// <summary>
+    /// Merchant'ı owner ID ile getirir (cache).
+    /// </summary>
     public async Task<Result<MerchantResponse>> GetMerchantByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -257,14 +245,8 @@ public class MerchantService : BaseService, IMerchantService
     }
 
     /// <summary>
-    /// Creates a new merchant for the specified owner
+    /// Yeni merchant oluşturur (validasyon, cache invalidation, background task).
     /// </summary>
-    /// <param name="request">The merchant creation request</param>
-    /// <param name="ownerId">The unique identifier of the owner</param>
-    /// <param name="cancellationToken">The cancellation token</param>
-    /// <returns>A result containing the created merchant details or an error if creation fails</returns>
-    /// <exception cref="EntityNotFoundException">Thrown when the owner or service category is not found</exception>
-    /// <exception cref="BusinessRuleViolationException">Thrown when business rules are violated</exception>
     public async Task<Result<MerchantResponse>> CreateMerchantAsync(CreateMerchantRequest request, Guid ownerId, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -388,6 +370,9 @@ public class MerchantService : BaseService, IMerchantService
         }
     }
 
+    /// <summary>
+    /// Merchant günceller (ownership kontrolü, cache invalidation).
+    /// </summary>
     public async Task<Result<MerchantResponse>> UpdateMerchantAsync(Guid id, UpdateMerchantRequest request, Guid currentUserId, CancellationToken cancellationToken = default)
     {
         var merchant = await _unitOfWork.Repository<Merchant>()
@@ -470,6 +455,9 @@ public class MerchantService : BaseService, IMerchantService
         return Result.Ok(response);
     }
 
+    /// <summary>
+    /// Merchant siler (soft delete, cache invalidation).
+    /// </summary>
     public async Task<Result> DeleteMerchantAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var merchant = await _unitOfWork.Repository<Merchant>()
@@ -501,6 +489,9 @@ public class MerchantService : BaseService, IMerchantService
         return Result.Ok();
     }
 
+    /// <summary>
+    /// Kategoriye göre merchantları sayfalama ile getirir (cache).
+    /// </summary>
     public async Task<Result<PagedResult<MerchantResponse>>> GetMerchantsByCategoryTypeAsync(ServiceCategoryType categoryType, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -571,6 +562,9 @@ public class MerchantService : BaseService, IMerchantService
         }
     }
 
+    /// <summary>
+    /// Kategoriye göre aktif ve açık merchantları getirir (cache).
+    /// </summary>
     public async Task<Result<IEnumerable<MerchantResponse>>> GetActiveMerchantsByCategoryTypeAsync(ServiceCategoryType categoryType, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -636,6 +630,9 @@ public class MerchantService : BaseService, IMerchantService
         }
     }
 
+    /// <summary>
+    /// Aktif merchantları sayfalama ile getirir.
+    /// </summary>
     public async Task<Result<PagedResult<MerchantResponse>>> GetActiveMerchantsAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
@@ -645,6 +642,9 @@ public class MerchantService : BaseService, IMerchantService
             cancellationToken);
     }
 
+    /// <summary>
+    /// Merchantlarda arama yapar (isim/açıklama).
+    /// </summary>
     public async Task<Result<PagedResult<MerchantResponse>>> SearchMerchantsAsync(string searchQuery, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithPerformanceTracking(
