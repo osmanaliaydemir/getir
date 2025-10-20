@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Authentication controller for user registration, login, and token management
+/// Kullanıcı kaydı, giriş ve token yönetimi için kimlik doğrulama controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -22,11 +22,11 @@ public class AuthController : BaseController
     }
 
     /// <summary>
-    /// Register a new user
+    /// Yeni kullanıcı kaydet
     /// </summary>
-    /// <param name="request">Registration request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Authentication response with tokens</returns>
+    /// <param name="request">Kayıt talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Token'larla kimlik doğrulama yanıtı</returns>
     [HttpPost("register")]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -40,11 +40,11 @@ public class AuthController : BaseController
     }
 
     /// <summary>
-    /// Login with email and password
+    /// E-posta ve şifre ile giriş yap
     /// </summary>
-    /// <param name="request">Login request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Authentication response with tokens</returns>
+    /// <param name="request">Giriş talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Token'larla kimlik doğrulama yanıtı</returns>
     [HttpPost("login")]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -61,11 +61,11 @@ public class AuthController : BaseController
     }
 
     /// <summary>
-    /// Refresh access token using refresh token
+    /// Refresh token kullanarak erişim token'ını yenile
     /// </summary>
-    /// <param name="request">Refresh token request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>New authentication response with tokens</returns>
+    /// <param name="request">Token yenileme talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Yeni token'larla kimlik doğrulama yanıtı</returns>
     [HttpPost("refresh")]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -79,10 +79,10 @@ public class AuthController : BaseController
     }
 
     /// <summary>
-    /// Logout current user
+    /// Mevcut kullanıcıyı çıkış yap
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("logout")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -97,11 +97,11 @@ public class AuthController : BaseController
     }
 
     /// <summary>
-    /// Request password reset (sends 6-digit code via email)
+    /// Şifre sıfırlama talebi (e-posta ile 6 haneli kod gönderir)
     /// </summary>
-    /// <param name="request">Forgot password request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="request">Şifremi unuttum talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("forgot-password")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -115,11 +115,11 @@ public class AuthController : BaseController
     }
 
     /// <summary>
-    /// Reset password using code from email
+    /// E-postadaki kod ile şifreyi sıfırla
     /// </summary>
-    /// <param name="request">Reset password request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="request">Şifre sıfırlama talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("reset-password")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -133,11 +133,11 @@ public class AuthController : BaseController
     }
 
     /// <summary>
-    /// Change password for authenticated user
+    /// Kimlik doğrulanmış kullanıcı için şifre değiştir
     /// </summary>
-    /// <param name="request">Change password request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="request">Şifre değiştirme talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("change-password")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]

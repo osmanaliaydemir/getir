@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Cash payment audit controller for cash payment audit operations
+/// Nakit ödeme denetim işlemleri için nakit ödeme denetim controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -22,11 +22,11 @@ public class CashPaymentAuditController : BaseController
     }
 
     /// <summary>
-    /// Create audit log (system only)
+    /// Denetim kaydı oluştur (yalnızca sistem)
     /// </summary>
-    /// <param name="request">Create audit log request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Created audit log</returns>
+    /// <param name="request">Denetim kaydı oluşturma talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Oluşturulan denetim kaydı</returns>
     [HttpPost("logs")]
     [Authorize(Roles = "Admin,System")]
     [ProducesResponseType(typeof(CashPaymentAuditLogResponse), StatusCodes.Status200OK)]
@@ -43,12 +43,12 @@ public class CashPaymentAuditController : BaseController
     }
 
     /// <summary>
-    /// Update audit log
+    /// Denetim kaydını güncelle
     /// </summary>
-    /// <param name="auditLogId">Audit log ID</param>
-    /// <param name="request">Update audit log request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Updated audit log</returns>
+    /// <param name="auditLogId">Denetim kaydı ID'si</param>
+    /// <param name="request">Denetim kaydı güncelleme talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güncellenen denetim kaydı</returns>
     [HttpPut("logs/{auditLogId}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(CashPaymentAuditLogResponse), StatusCodes.Status200OK)]
@@ -67,22 +67,22 @@ public class CashPaymentAuditController : BaseController
     }
 
     /// <summary>
-    /// Get audit logs with filtering
+    /// Filtreleme ile denetim kayıtlarını getir
     /// </summary>
-    /// <param name="paymentId">Payment ID</param>
-    /// <param name="courierId">Courier ID</param>
-    /// <param name="customerId">Customer ID</param>
-    /// <param name="adminId">Admin ID</param>
-    /// <param name="eventType">Event type</param>
-    /// <param name="severityLevel">Severity level</param>
-    /// <param name="riskLevel">Risk level</param>
-    /// <param name="startDate">Start date</param>
-    /// <param name="endDate">End date</param>
-    /// <param name="searchTerm">Search term</param>
-    /// <param name="page">Page number</param>
-    /// <param name="pageSize">Page size</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged audit logs</returns>
+    /// <param name="paymentId">Ödeme ID'si</param>
+    /// <param name="courierId">Kurye ID'si</param>
+    /// <param name="customerId">Müşteri ID'si</param>
+    /// <param name="adminId">Admin ID'si</param>
+    /// <param name="eventType">Olay türü</param>
+    /// <param name="severityLevel">Ciddiyet seviyesi</param>
+    /// <param name="riskLevel">Risk seviyesi</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <param name="searchTerm">Arama terimi</param>
+    /// <param name="page">Sayfa numarası</param>
+    /// <param name="pageSize">Sayfa boyutu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış denetim kayıtları</returns>
     [HttpGet("logs")]
     [Authorize(Roles = "Admin,Courier")]
     [ProducesResponseType(typeof(PagedResult<CashPaymentAuditLogResponse>), StatusCodes.Status200OK)]
@@ -123,11 +123,11 @@ public class CashPaymentAuditController : BaseController
     }
 
     /// <summary>
-    /// Get audit log by ID
+    /// ID'ye göre denetim kaydını getir
     /// </summary>
-    /// <param name="auditLogId">Audit log ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Audit log</returns>
+    /// <param name="auditLogId">Denetim kaydı ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Denetim kaydı</returns>
     [HttpGet("logs/{auditLogId}")]
     [Authorize(Roles = "Admin,Courier")]
     [ProducesResponseType(typeof(CashPaymentAuditLogResponse), StatusCodes.Status200OK)]
@@ -141,11 +141,11 @@ public class CashPaymentAuditController : BaseController
     }
 
     /// <summary>
-    /// Get audit logs by payment ID
+    /// Ödeme ID'sine göre denetim kayıtlarını getir
     /// </summary>
-    /// <param name="paymentId">Payment ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Audit logs for payment</returns>
+    /// <param name="paymentId">Ödeme ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Ödemeye ait denetim kayıtları</returns>
     [HttpGet("logs/payment/{paymentId}")]
     [Authorize(Roles = "Admin,Courier")]
     [ProducesResponseType(typeof(IEnumerable<CashPaymentAuditLogResponse>), StatusCodes.Status200OK)]
@@ -159,11 +159,11 @@ public class CashPaymentAuditController : BaseController
     }
 
     /// <summary>
-    /// Get audit logs by courier ID
+    /// Kurye ID'sine göre denetim kayıtlarını getir
     /// </summary>
-    /// <param name="courierId">Courier ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Audit logs for courier</returns>
+    /// <param name="courierId">Kurye ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kuryeye ait denetim kayıtları</returns>
     [HttpGet("logs/courier/{courierId}")]
     [Authorize(Roles = "Admin,Courier")]
     [ProducesResponseType(typeof(IEnumerable<CashPaymentAuditLogResponse>), StatusCodes.Status200OK)]
@@ -172,7 +172,7 @@ public class CashPaymentAuditController : BaseController
         [FromRoute] Guid courierId,
         CancellationToken ct = default)
     {
-        // Courier can only see their own logs
+        // Kurye yalnızca kendi kayıtlarını görebilir
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var currentCourierId);
         if (unauthorizedResult != null) return unauthorizedResult;
 
@@ -186,12 +186,12 @@ public class CashPaymentAuditController : BaseController
     }
 
     /// <summary>
-    /// Get audit log statistics
+    /// Denetim kaydı istatistiklerini getir
     /// </summary>
-    /// <param name="startDate">Start date</param>
-    /// <param name="endDate">End date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Audit log statistics</returns>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Denetim kaydı istatistikleri</returns>
     [HttpGet("statistics")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(AuditLogStatisticsResponse), StatusCodes.Status200OK)]
@@ -205,12 +205,12 @@ public class CashPaymentAuditController : BaseController
     }
 
     /// <summary>
-    /// Perform risk analysis
+    /// Risk analizi yap
     /// </summary>
-    /// <param name="startDate">Start date</param>
-    /// <param name="endDate">End date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Risk analysis</returns>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Risk analizi</returns>
     [HttpGet("risk-analysis")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(RiskAnalysisResponse), StatusCodes.Status200OK)]
@@ -224,12 +224,12 @@ public class CashPaymentAuditController : BaseController
     }
 
     /// <summary>
-    /// Generate compliance report
+    /// Uyumluluk raporu oluştur
     /// </summary>
-    /// <param name="startDate">Start date</param>
-    /// <param name="endDate">End date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Compliance report</returns>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Uyumluluk raporu</returns>
     [HttpGet("compliance-report")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ComplianceReportResponse), StatusCodes.Status200OK)]
@@ -243,13 +243,13 @@ public class CashPaymentAuditController : BaseController
     }
 
     /// <summary>
-    /// Get security incidents
+    /// Güvenlik olaylarını getir
     /// </summary>
-    /// <param name="startDate">Start date</param>
-    /// <param name="endDate">End date</param>
-    /// <param name="minRiskLevel">Minimum risk level</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Security incidents</returns>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <param name="minRiskLevel">Minimum risk seviyesi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güvenlik olayları</returns>
     [HttpGet("security-incidents")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(IEnumerable<CashPaymentAuditLogResponse>), StatusCodes.Status200OK)]
@@ -268,12 +268,12 @@ public class CashPaymentAuditController : BaseController
     }
 
     /// <summary>
-    /// Get critical events
+    /// Kritik olayları getir
     /// </summary>
-    /// <param name="startDate">Start date</param>
-    /// <param name="endDate">End date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Critical events</returns>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kritik olaylar</returns>
     [HttpGet("critical-events")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(IEnumerable<CashPaymentAuditLogResponse>), StatusCodes.Status200OK)]
@@ -287,11 +287,11 @@ public class CashPaymentAuditController : BaseController
     }
 
     /// <summary>
-    /// Delete audit log (soft delete)
+    /// Denetim kaydını sil (soft delete)
     /// </summary>
-    /// <param name="auditLogId">Audit log ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="auditLogId">Denetim kaydı ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpDelete("logs/{auditLogId}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -305,11 +305,11 @@ public class CashPaymentAuditController : BaseController
     }
 
     /// <summary>
-    /// Cleanup old audit logs
+    /// Eski denetim kayıtlarını temizle
     /// </summary>
-    /// <param name="cutoffDate">Cutoff date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Number of deleted logs</returns>
+    /// <param name="cutoffDate">Eşik tarih</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Silinen kayıt sayısı</returns>
     [HttpPost("cleanup")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
@@ -322,11 +322,11 @@ public class CashPaymentAuditController : BaseController
     }
 
     /// <summary>
-    /// Archive audit logs
+    /// Denetim kayıtlarını arşivle
     /// </summary>
-    /// <param name="cutoffDate">Cutoff date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="cutoffDate">Eşik tarih</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("archive")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]

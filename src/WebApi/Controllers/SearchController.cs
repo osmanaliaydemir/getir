@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Search controller for search operations
+/// Arama işlemleri için arama controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -21,11 +21,11 @@ public class SearchController : BaseController
     }
 
     /// <summary>
-    /// Search products
+    /// Ürün ara
     /// </summary>
-    /// <param name="query">Search products query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged search results</returns>
+    /// <param name="query">Ürün arama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış arama sonuçları</returns>
     [HttpGet("products")]
     [ProducesResponseType(typeof(PagedResult<ProductResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> SearchProducts(
@@ -37,11 +37,11 @@ public class SearchController : BaseController
     }
 
     /// <summary>
-    /// Search merchants
+    /// Mağaza ara
     /// </summary>
-    /// <param name="query">Search merchants query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged search results</returns>
+    /// <param name="query">Mağaza arama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış arama sonuçları</returns>
     [HttpGet("merchants")]
     [ProducesResponseType(typeof(PagedResult<MerchantResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> SearchMerchants(

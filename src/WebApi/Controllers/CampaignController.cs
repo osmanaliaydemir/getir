@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Campaign controller for managing campaigns
+/// Kampanyaları yönetmek için kampanya controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -21,11 +21,11 @@ public class CampaignController : BaseController
     }
 
     /// <summary>
-    /// Get active campaigns with pagination
+    /// Sayfalama ile aktif kampanyaları getir
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged list of active campaigns</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış aktif kampanyalar listesi</returns>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<CampaignResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetActiveCampaigns(

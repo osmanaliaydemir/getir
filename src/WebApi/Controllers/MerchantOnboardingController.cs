@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Merchant onboarding controller for merchant onboarding operations
+/// Mağaza onboarding işlemleri için mağaza onboarding controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/merchants/{merchantId:guid}/[controller]")]
@@ -23,11 +23,11 @@ public class MerchantOnboardingController : BaseController
     }
 
     /// <summary>
-    /// Get onboarding status
+    /// Onboarding durumunu getir
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Onboarding status</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Onboarding durumu</returns>
     [HttpGet]
     [ProducesResponseType(typeof(MerchantOnboardingResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -40,11 +40,11 @@ public class MerchantOnboardingController : BaseController
     }
 
     /// <summary>
-    /// Get onboarding progress
+    /// Onboarding ilerlemesini getir
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Onboarding progress</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Onboarding ilerlemesi</returns>
     [HttpGet("progress")]
     [ProducesResponseType(typeof(OnboardingProgressResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -57,11 +57,11 @@ public class MerchantOnboardingController : BaseController
     }
 
     /// <summary>
-    /// Get onboarding steps
+    /// Onboarding adımlarını getir
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Onboarding steps</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Onboarding adımları</returns>
     [HttpGet("steps")]
     [ProducesResponseType(typeof(IEnumerable<OnboardingStepResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -74,13 +74,13 @@ public class MerchantOnboardingController : BaseController
     }
 
     /// <summary>
-    /// Complete onboarding step
+    /// Onboarding adımını tamamla
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="stepId">Step ID</param>
-    /// <param name="request">Complete step request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Updated step</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="stepId">Adım ID</param>
+    /// <param name="request">Adım tamamlama isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güncellenen adım</returns>
     [HttpPost("steps/{stepId}/complete")]
     [ProducesResponseType(typeof(OnboardingStepResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -99,11 +99,11 @@ public class MerchantOnboardingController : BaseController
     }
 
     /// <summary>
-    /// Submit onboarding for review
+    /// Onboarding'i incelemeye gönder
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("submit")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -117,11 +117,11 @@ public class MerchantOnboardingController : BaseController
     }
 
     /// <summary>
-    /// Get onboarding checklist
+    /// Onboarding kontrol listesini getir
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Onboarding checklist</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Onboarding kontrol listesi</returns>
     [HttpGet("checklist")]
     [ProducesResponseType(typeof(OnboardingChecklistResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

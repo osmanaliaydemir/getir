@@ -6,7 +6,7 @@ using Getir.Application.Common;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Market product variant management controller
+/// Pazar ürün varyant yönetimi controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -21,11 +21,11 @@ public class MarketProductVariantController : BaseController
     }
 
     /// <summary>
-    /// Get product variants for a market product
+    /// Bir pazar ürünü için ürün varyantlarını getirir
     /// </summary>
-    /// <param name="productId">Product ID</param>
-    /// <param name="query">Pagination query</param>
-    /// <returns>List of product variants</returns>
+    /// <param name="productId">Ürün ID</param>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <returns>Ürün varyantları listesi</returns>
     [HttpGet("products/{productId}")]
     [ProducesResponseType(typeof(PagedResult<MarketProductVariantResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -42,10 +42,10 @@ public class MarketProductVariantController : BaseController
     }
 
     /// <summary>
-    /// Get a specific product variant
+    /// Belirli bir ürün varyantını getirir
     /// </summary>
-    /// <param name="id">Variant ID</param>
-    /// <returns>Product variant details</returns>
+    /// <param name="id">Varyant ID</param>
+    /// <returns>Ürün varyant detayları</returns>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(MarketProductVariantResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -58,10 +58,10 @@ public class MarketProductVariantController : BaseController
     }
 
     /// <summary>
-    /// Create a new product variant
+    /// Yeni ürün varyantı oluşturur
     /// </summary>
-    /// <param name="request">Create variant request</param>
-    /// <returns>Created variant</returns>
+    /// <param name="request">Varyant oluşturma isteği</param>
+    /// <returns>Oluşturulan varyant</returns>
     [HttpPost]
     [ProducesResponseType(typeof(MarketProductVariantResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -79,11 +79,11 @@ public class MarketProductVariantController : BaseController
     }
 
     /// <summary>
-    /// Update a product variant
+    /// Ürün varyantını günceller
     /// </summary>
-    /// <param name="id">Variant ID</param>
-    /// <param name="request">Update request</param>
-    /// <returns>Updated variant</returns>
+    /// <param name="id">Varyant ID</param>
+    /// <param name="request">Güncelleme isteği</param>
+    /// <returns>Güncellenen varyant</returns>
     [HttpPut("{id}")]
     [ProducesResponseType(typeof(MarketProductVariantResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -102,10 +102,10 @@ public class MarketProductVariantController : BaseController
     }
 
     /// <summary>
-    /// Delete a product variant
+    /// Ürün varyantını siler
     /// </summary>
-    /// <param name="id">Variant ID</param>
-    /// <returns>No content</returns>
+    /// <param name="id">Varyant ID</param>
+    /// <returns>İçerik yok</returns>
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -122,11 +122,11 @@ public class MarketProductVariantController : BaseController
     }
 
     /// <summary>
-    /// Update variant stock quantity
+    /// Varyant stok miktarını günceller
     /// </summary>
-    /// <param name="id">Variant ID</param>
-    /// <param name="newStockQuantity">New stock quantity</param>
-    /// <returns>No content</returns>
+    /// <param name="id">Varyant ID</param>
+    /// <param name="newStockQuantity">Yeni stok miktarı</param>
+    /// <returns>İçerik yok</returns>
     [HttpPut("{id}/stock")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -145,10 +145,10 @@ public class MarketProductVariantController : BaseController
     }
 
     /// <summary>
-    /// Bulk update variant stock quantities
+    /// Varyant stok miktarlarını toplu günceller
     /// </summary>
-    /// <param name="requests">List of stock update requests</param>
-    /// <returns>No content</returns>
+    /// <param name="requests">Stok güncelleme istekleri listesi</param>
+    /// <returns>İçerik yok</returns>
     [HttpPut("stock/bulk")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

@@ -6,7 +6,7 @@ using Getir.Application.Common;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Product option management controller
+/// Ürün seçenek yönetimi controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -25,11 +25,11 @@ public class ProductOptionController : BaseController
     }
 
     /// <summary>
-    /// Get product option groups for a product
+    /// Bir ürün için ürün seçenek gruplarını getirir
     /// </summary>
-    /// <param name="productId">Product ID</param>
-    /// <param name="query">Pagination query</param>
-    /// <returns>List of product option groups</returns>
+    /// <param name="productId">Ürün ID</param>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <returns>Ürün seçenek grupları listesi</returns>
     [HttpGet("groups/{productId}")]
     [ProducesResponseType(typeof(PagedResult<ProductOptionGroupResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -46,10 +46,10 @@ public class ProductOptionController : BaseController
     }
 
     /// <summary>
-    /// Get a specific product option group
+    /// Belirli bir ürün seçenek grubunu getirir
     /// </summary>
-    /// <param name="id">Option group ID</param>
-    /// <returns>Product option group details</returns>
+    /// <param name="id">Seçenek grubu ID</param>
+    /// <returns>Ürün seçenek grubu detayları</returns>
     [HttpGet("groups/details/{id}")]
     [ProducesResponseType(typeof(ProductOptionGroupResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -62,10 +62,10 @@ public class ProductOptionController : BaseController
     }
 
     /// <summary>
-    /// Create a new product option group
+    /// Yeni ürün seçenek grubu oluşturur
     /// </summary>
-    /// <param name="request">Create option group request</param>
-    /// <returns>Created option group</returns>
+    /// <param name="request">Seçenek grubu oluşturma isteği</param>
+    /// <returns>Oluşturulan seçenek grubu</returns>
     [HttpPost("groups")]
     [ProducesResponseType(typeof(ProductOptionGroupResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -83,11 +83,11 @@ public class ProductOptionController : BaseController
     }
 
     /// <summary>
-    /// Update a product option group
+    /// Ürün seçenek grubunu günceller
     /// </summary>
-    /// <param name="id">Option group ID</param>
-    /// <param name="request">Update request</param>
-    /// <returns>Updated option group</returns>
+    /// <param name="id">Seçenek grubu ID</param>
+    /// <param name="request">Güncelleme isteği</param>
+    /// <returns>Güncellenen seçenek grubu</returns>
     [HttpPut("groups/{id}")]
     [ProducesResponseType(typeof(ProductOptionGroupResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -106,10 +106,10 @@ public class ProductOptionController : BaseController
     }
 
     /// <summary>
-    /// Delete a product option group
+    /// Ürün seçenek grubunu siler
     /// </summary>
-    /// <param name="id">Option group ID</param>
-    /// <returns>No content</returns>
+    /// <param name="id">Seçenek grubu ID</param>
+    /// <returns>İçerik yok</returns>
     [HttpDelete("groups/{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -126,11 +126,11 @@ public class ProductOptionController : BaseController
     }
 
     /// <summary>
-    /// Reorder product option groups
+    /// Ürün seçenek gruplarını yeniden sıralar
     /// </summary>
-    /// <param name="productId">Product ID</param>
-    /// <param name="orderedGroupIds">Ordered list of group IDs</param>
-    /// <returns>No content</returns>
+    /// <param name="productId">Ürün ID</param>
+    /// <param name="orderedGroupIds">Sıralı grup ID listesi</param>
+    /// <returns>İçerik yok</returns>
     [HttpPut("groups/{productId}/reorder")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -148,11 +148,11 @@ public class ProductOptionController : BaseController
     }
 
     /// <summary>
-    /// Get product options for a group
+    /// Bir grup için ürün seçeneklerini getirir
     /// </summary>
-    /// <param name="productOptionGroupId">Option group ID</param>
-    /// <param name="query">Pagination query</param>
-    /// <returns>List of product options</returns>
+    /// <param name="productOptionGroupId">Seçenek grubu ID</param>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <returns>Ürün seçenekleri listesi</returns>
     [HttpGet("groups/{productOptionGroupId}/options")]
     [ProducesResponseType(typeof(PagedResult<ProductOptionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -168,10 +168,10 @@ public class ProductOptionController : BaseController
     }
 
     /// <summary>
-    /// Get a specific product option
+    /// Belirli bir ürün seçeneğini getirir
     /// </summary>
-    /// <param name="id">Option ID</param>
-    /// <returns>Product option details</returns>
+    /// <param name="id">Seçenek ID</param>
+    /// <returns>Ürün seçeneği detayları</returns>
     [HttpGet("options/{id}")]
     [ProducesResponseType(typeof(ProductOptionResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -184,10 +184,10 @@ public class ProductOptionController : BaseController
     }
 
     /// <summary>
-    /// Create a new product option
+    /// Yeni ürün seçeneği oluşturur
     /// </summary>
-    /// <param name="request">Create option request</param>
-    /// <returns>Created option</returns>
+    /// <param name="request">Seçenek oluşturma isteği</param>
+    /// <returns>Oluşturulan seçenek</returns>
     [HttpPost("options")]
     [ProducesResponseType(typeof(ProductOptionResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -205,11 +205,11 @@ public class ProductOptionController : BaseController
     }
 
     /// <summary>
-    /// Update a product option
+    /// Ürün seçeneğini günceller
     /// </summary>
-    /// <param name="id">Option ID</param>
-    /// <param name="request">Update request</param>
-    /// <returns>Updated option</returns>
+    /// <param name="id">Seçenek ID</param>
+    /// <param name="request">Güncelleme isteği</param>
+    /// <returns>Güncellenen seçenek</returns>
     [HttpPut("options/{id}")]
     [ProducesResponseType(typeof(ProductOptionResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -228,10 +228,10 @@ public class ProductOptionController : BaseController
     }
 
     /// <summary>
-    /// Delete a product option
+    /// Ürün seçeneğini siler
     /// </summary>
-    /// <param name="id">Option ID</param>
-    /// <returns>No content</returns>
+    /// <param name="id">Seçenek ID</param>
+    /// <returns>İçerik yok</returns>
     [HttpDelete("options/{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -248,10 +248,10 @@ public class ProductOptionController : BaseController
     }
 
     /// <summary>
-    /// Bulk create product options
+    /// Ürün seçeneklerini toplu oluşturur
     /// </summary>
-    /// <param name="request">Bulk create request</param>
-    /// <returns>No content</returns>
+    /// <param name="request">Toplu oluşturma isteği</param>
+    /// <returns>İçerik yok</returns>
     [HttpPost("options/bulk")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -268,10 +268,10 @@ public class ProductOptionController : BaseController
     }
 
     /// <summary>
-    /// Bulk update product options
+    /// Ürün seçeneklerini toplu günceller
     /// </summary>
-    /// <param name="request">Bulk update request</param>
-    /// <returns>No content</returns>
+    /// <param name="request">Toplu güncelleme isteği</param>
+    /// <returns>İçerik yok</returns>
     [HttpPut("options/bulk")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Payment controller for managing payments
+/// Ödemeleri yönetmek için ödeme controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -24,11 +24,11 @@ public class PaymentController : BaseController
     #region Customer Endpoints
 
     /// <summary>
-    /// Create a new payment
+    /// Yeni ödeme oluştur
     /// </summary>
-    /// <param name="request">Create payment request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Created payment</returns>
+    /// <param name="request">Ödeme oluşturma talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Oluşturulan ödeme</returns>
     [HttpPost]
     [Authorize]
     [ProducesResponseType(typeof(PaymentResponse), StatusCodes.Status200OK)]
@@ -47,11 +47,11 @@ public class PaymentController : BaseController
     }
 
     /// <summary>
-    /// Get payment details by ID
+    /// ID'ye göre ödeme detaylarını getir
     /// </summary>
-    /// <param name="paymentId">Payment ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Payment details</returns>
+    /// <param name="paymentId">Ödeme ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Ödeme detayları</returns>
     [HttpGet("{paymentId:guid}")]
     [Authorize]
     [ProducesResponseType(typeof(PaymentResponse), StatusCodes.Status200OK)]
@@ -67,12 +67,12 @@ public class PaymentController : BaseController
     }
 
     /// <summary>
-    /// Get all payments for an order
+    /// Bir siparişin tüm ödemelerini getir
     /// </summary>
-    /// <param name="orderId">Order ID</param>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged payments</returns>
+    /// <param name="orderId">Sipariş ID</param>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış ödemeler</returns>
     [HttpGet("order/{orderId:guid}")]
     [Authorize]
     [ProducesResponseType(typeof(PagedResult<PaymentResponse>), StatusCodes.Status200OK)]
@@ -93,11 +93,11 @@ public class PaymentController : BaseController
     #region Courier Endpoints
 
     /// <summary>
-    /// Get pending cash payments for courier
+    /// Kurye için bekleyen nakit ödemeleri getir
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged pending payments</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış bekleyen ödemeler</returns>
     [HttpGet("courier/pending")]
     [Authorize]
     [ProducesResponseType(typeof(PagedResult<PaymentResponse>), StatusCodes.Status200OK)]
@@ -116,12 +116,12 @@ public class PaymentController : BaseController
     }
 
     /// <summary>
-    /// Mark cash payment as collected
+    /// Nakit ödemeyi tahsil edildi olarak işaretle
     /// </summary>
-    /// <param name="paymentId">Payment ID</param>
-    /// <param name="request">Collect payment request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="paymentId">Ödeme ID</param>
+    /// <param name="request">Tahsilat isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("courier/{paymentId:guid}/collect")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -145,12 +145,12 @@ public class PaymentController : BaseController
     }
 
     /// <summary>
-    /// Mark cash payment as failed
+    /// Nakit ödemeyi başarısız olarak işaretle
     /// </summary>
-    /// <param name="paymentId">Payment ID</param>
-    /// <param name="request">Fail payment request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="paymentId">Ödeme ID</param>
+    /// <param name="request">Başarısız ödeme isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("courier/{paymentId:guid}/fail")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -174,11 +174,11 @@ public class PaymentController : BaseController
     }
 
     /// <summary>
-    /// Get courier daily cash collection summary
+    /// Kurye günlük nakit tahsilat özetini getir
     /// </summary>
-    /// <param name="date">Date (optional, defaults to today)</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Cash summary</returns>
+    /// <param name="date">Tarih (isteğe bağlı, varsayılan bugün)</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Nakit özeti</returns>
     [HttpGet("courier/summary")]
     [Authorize]
     [ProducesResponseType(typeof(CourierCashSummaryResponse), StatusCodes.Status200OK)]
@@ -201,12 +201,12 @@ public class PaymentController : BaseController
     #region Merchant Endpoints
 
     /// <summary>
-    /// Get merchant cash payment summary
+    /// Mağaza nakit ödeme özetini getir
     /// </summary>
-    /// <param name="startDate">Start date</param>
-    /// <param name="endDate">End date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Cash summary</returns>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Nakit özeti</returns>
     [HttpGet("merchant/summary")]
     [Authorize]
     [Authorize(Roles = "MerchantOwner,Admin")]
@@ -235,11 +235,11 @@ public class PaymentController : BaseController
     }
 
     /// <summary>
-    /// Get merchant settlement history
+    /// Mağaza mutabakat geçmişini getir
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged settlements</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış mutabakatlar</returns>
     [HttpGet("merchant/settlements")]
     [Authorize]
     [Authorize(Roles = "MerchantOwner,Admin")]
@@ -269,12 +269,12 @@ public class PaymentController : BaseController
     #region Admin Endpoints
 
     /// <summary>
-    /// Get all cash payments (admin only)
+    /// Tüm nakit ödemeleri getir (sadece admin)
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="status">Payment status filter</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged cash payments</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="status">Ödeme durumu filtresi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış nakit ödemeler</returns>
     [HttpGet("admin/cash-collections")]
     [Authorize]
     [Authorize(Roles = "Admin")]
@@ -292,12 +292,12 @@ public class PaymentController : BaseController
     }
 
     /// <summary>
-    /// Process settlement for merchant (admin only)
+    /// Mağaza için mutabakatı işle (sadece admin)
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="request">Process settlement request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="request">Mutabakat işleme isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("admin/settlements/{merchantId:guid}/process")]
     [Authorize]
     [Authorize(Roles = "Admin")]

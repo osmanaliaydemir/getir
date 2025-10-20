@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Shopping cart controller for managing cart operations
+/// Sepet işlemlerini yönetmek için alışveriş sepeti controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -23,10 +23,10 @@ public class CartController : BaseController
     }
 
     /// <summary>
-    /// Get user's cart
+    /// Kullanıcının sepetini getir
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Cart details</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sepet detayları</returns>
     [HttpGet]
     [ProducesResponseType(typeof(CartResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

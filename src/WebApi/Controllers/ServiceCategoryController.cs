@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Service category controller for managing service categories
+/// Hizmet kategorilerini yönetmek için hizmet kategorisi controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -23,11 +23,11 @@ public class ServiceCategoryController : BaseController
     }
 
     /// <summary>
-    /// Get service categories with pagination
+    /// Sayfalama ile hizmet kategorilerini getir
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged list of service categories</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış hizmet kategorileri</returns>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<ServiceCategoryResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetServiceCategories(
@@ -39,11 +39,11 @@ public class ServiceCategoryController : BaseController
     }
 
     /// <summary>
-    /// Get service category by ID
+    /// Hizmet kategorisini ID'ye göre getir
     /// </summary>
-    /// <param name="id">Service category ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Service category details</returns>
+    /// <param name="id">Hizmet kategorisi ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Hizmet kategorisi detayları</returns>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(ServiceCategoryResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -56,11 +56,11 @@ public class ServiceCategoryController : BaseController
     }
 
     /// <summary>
-    /// Create a new service category
+    /// Yeni hizmet kategorisi oluştur
     /// </summary>
-    /// <param name="request">Create service category request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Created service category</returns>
+    /// <param name="request">Hizmet kategorisi oluşturma isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Oluşturulan hizmet kategorisi</returns>
     [HttpPost]
     [Authorize]
     [Authorize(Roles = "Admin")]
@@ -79,12 +79,12 @@ public class ServiceCategoryController : BaseController
     }
 
     /// <summary>
-    /// Update service category
+    /// Hizmet kategorisini güncelle
     /// </summary>
-    /// <param name="id">Service category ID</param>
-    /// <param name="request">Update service category request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Updated service category</returns>
+    /// <param name="id">Hizmet kategorisi ID</param>
+    /// <param name="request">Hizmet kategorisi güncelleme isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güncellenen hizmet kategorisi</returns>
     [HttpPut("{id:guid}")]
     [Authorize]
     [Authorize(Roles = "Admin")]
@@ -105,11 +105,11 @@ public class ServiceCategoryController : BaseController
     }
 
     /// <summary>
-    /// Delete service category
+    /// Hizmet kategorisini sil
     /// </summary>
-    /// <param name="id">Service category ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="id">Hizmet kategorisi ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpDelete("{id:guid}")]
     [Authorize]
     [Authorize(Roles = "Admin")]
@@ -125,12 +125,12 @@ public class ServiceCategoryController : BaseController
     }
 
     /// <summary>
-    /// Get service categories by type
+    /// Türüne göre hizmet kategorilerini getir
     /// </summary>
-    /// <param name="type">Service category type</param>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged list of service categories</returns>
+    /// <param name="type">Hizmet kategorisi türü</param>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış hizmet kategorileri</returns>
     [HttpGet("by-type/{type}")]
     [ProducesResponseType(typeof(PagedResult<ServiceCategoryResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetServiceCategoriesByType(
@@ -143,11 +143,11 @@ public class ServiceCategoryController : BaseController
     }
 
     /// <summary>
-    /// Get active service categories by type (without pagination)
+    /// Türüne göre aktif hizmet kategorilerini getir (sayfalama yok)
     /// </summary>
-    /// <param name="type">Service category type</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of active service categories</returns>
+    /// <param name="type">Hizmet kategorisi türü</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Aktif hizmet kategorileri listesi</returns>
     [HttpGet("active/by-type/{type}")]
     [ProducesResponseType(typeof(IEnumerable<ServiceCategoryResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetActiveServiceCategoriesByType(

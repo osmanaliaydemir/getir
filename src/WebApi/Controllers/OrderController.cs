@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Order controller for managing orders
+/// Siparişleri yönetmek için sipariş controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -23,11 +23,11 @@ public class OrderController : BaseController
     }
 
     /// <summary>
-    /// Create a new order
+    /// Yeni sipariş oluştur
     /// </summary>
-    /// <param name="request">Create order request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Created order</returns>
+    /// <param name="request">Sipariş oluşturma talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Oluşturulan sipariş</returns>
     [HttpPost]
     [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -47,11 +47,11 @@ public class OrderController : BaseController
     }
 
     /// <summary>
-    /// Get order by ID
+    /// ID'ye göre sipariş getir
     /// </summary>
-    /// <param name="id">Order ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Order details</returns>
+    /// <param name="id">Sipariş ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sipariş detayları</returns>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -68,11 +68,11 @@ public class OrderController : BaseController
     }
 
     /// <summary>
-    /// Get user orders with pagination
+    /// Sayfalama ile kullanıcı siparişlerini getir
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged list of user orders</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış kullanıcı siparişleri listesi</returns>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<OrderResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

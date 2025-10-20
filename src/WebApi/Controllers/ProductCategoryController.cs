@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Product category controller for managing product categories
+/// Ürün kategorilerini yönetmek için ürün kategorisi controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -22,11 +22,11 @@ public class ProductCategoryController : BaseController
     }
 
     /// <summary>
-    /// Get merchant's categories (flat list)
+    /// Mağaza kategorilerini getir (düz liste)
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of categories</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kategori listesi</returns>
     [HttpGet("merchant/{merchantId:guid}")]
     [ProducesResponseType(typeof(List<ProductCategoryResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMerchantCategories(
@@ -38,11 +38,11 @@ public class ProductCategoryController : BaseController
     }
 
     /// <summary>
-    /// Get merchant's category tree
+    /// Mağaza kategori ağacını getir
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Category tree</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kategori ağacı</returns>
     [HttpGet("merchant/{merchantId:guid}/tree")]
     [ProducesResponseType(typeof(List<ProductCategoryTreeResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMerchantCategoryTree(
@@ -54,11 +54,11 @@ public class ProductCategoryController : BaseController
     }
 
     /// <summary>
-    /// Get product category by ID
+    /// Ürün kategorisini ID'ye göre getir
     /// </summary>
-    /// <param name="id">Product category ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Product category details</returns>
+    /// <param name="id">Ürün kategorisi ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Ürün kategorisi detayları</returns>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(ProductCategoryResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -71,12 +71,12 @@ public class ProductCategoryController : BaseController
     }
 
     /// <summary>
-    /// Create a new product category for merchant
+    /// Mağaza için yeni ürün kategorisi oluştur
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="request">Create product category request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Created product category</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="request">Ürün kategorisi oluşturma isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Oluşturulan ürün kategorisi</returns>
     [HttpPost("merchant/{merchantId:guid}")]
     [Authorize]
     [Authorize(Roles = "Admin,MerchantOwner")]
@@ -96,12 +96,12 @@ public class ProductCategoryController : BaseController
     }
 
     /// <summary>
-    /// Update product category
+    /// Ürün kategorisini güncelle
     /// </summary>
-    /// <param name="id">Product category ID</param>
-    /// <param name="request">Update product category request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Updated product category</returns>
+    /// <param name="id">Ürün kategorisi ID</param>
+    /// <param name="request">Ürün kategorisi güncelleme isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güncellenen ürün kategorisi</returns>
     [HttpPut("{id:guid}")]
     [Authorize]
     [Authorize(Roles = "Admin,MerchantOwner")]
@@ -125,11 +125,11 @@ public class ProductCategoryController : BaseController
     }
 
     /// <summary>
-    /// Delete product category
+    /// Ürün kategorisini sil
     /// </summary>
-    /// <param name="id">Product category ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="id">Ürün kategorisi ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpDelete("{id:guid}")]
     [Authorize]
     [Authorize(Roles = "Admin,MerchantOwner")]

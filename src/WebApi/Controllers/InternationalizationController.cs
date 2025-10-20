@@ -7,6 +7,9 @@ namespace Getir.WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+/// <summary>
+/// Uluslararasılaştırma (diller, çeviriler ve kullanıcı dil tercihleri) ile ilgili işlemler
+/// </summary>
 public class InternationalizationController : ControllerBase
 {
     private readonly ILanguageService _languageService;
@@ -25,6 +28,10 @@ public class InternationalizationController : ControllerBase
 
     #region Languages
 
+    /// <summary>
+    /// Tüm dilleri getirir
+    /// </summary>
+    /// <returns>Diller listesi</returns>
     [HttpGet("languages")]
     public async Task<ActionResult<List<LanguageDto>>> GetAllLanguages()
     {
@@ -32,6 +39,11 @@ public class InternationalizationController : ControllerBase
         return Ok(languages);
     }
 
+    /// <summary>
+    /// ID'ye göre dili getirir
+    /// </summary>
+    /// <param name="id">Dil ID</param>
+    /// <returns>Dil</returns>
     [HttpGet("languages/{id:guid}")]
     public async Task<ActionResult<LanguageDto>> GetLanguageById(Guid id)
     {
@@ -42,6 +54,11 @@ public class InternationalizationController : ControllerBase
         return Ok(language);
     }
 
+    /// <summary>
+    /// Koda göre dili getirir
+    /// </summary>
+    /// <param name="code">Dil kodu</param>
+    /// <returns>Dil</returns>
     [HttpGet("languages/code/{code}")]
     public async Task<ActionResult<LanguageDto>> GetLanguageByCode(LanguageCode code)
     {
@@ -52,6 +69,10 @@ public class InternationalizationController : ControllerBase
         return Ok(language);
     }
 
+    /// <summary>
+    /// Varsayılan dili getirir
+    /// </summary>
+    /// <returns>Varsayılan dil</returns>
     [HttpGet("languages/default")]
     public async Task<ActionResult<LanguageDto>> GetDefaultLanguage()
     {
@@ -62,6 +83,11 @@ public class InternationalizationController : ControllerBase
         return Ok(language);
     }
 
+    /// <summary>
+    /// Yeni dil oluşturur
+    /// </summary>
+    /// <param name="request">Dil oluşturma isteği</param>
+    /// <returns>Oluşturulan dil</returns>
     [HttpPost("languages")]
     public async Task<ActionResult<LanguageDto>> CreateLanguage([FromBody] CreateLanguageRequest request)
     {
@@ -69,6 +95,12 @@ public class InternationalizationController : ControllerBase
         return CreatedAtAction(nameof(GetLanguageById), new { id = language.Id }, language);
     }
 
+    /// <summary>
+    /// Dili günceller
+    /// </summary>
+    /// <param name="id">Dil ID</param>
+    /// <param name="request">Dil güncelleme isteği</param>
+    /// <returns>Güncellenen dil</returns>
     [HttpPut("languages/{id:guid}")]
     public async Task<ActionResult<LanguageDto>> UpdateLanguage(Guid id, [FromBody] UpdateLanguageRequest request)
     {
@@ -76,6 +108,11 @@ public class InternationalizationController : ControllerBase
         return Ok(language);
     }
 
+    /// <summary>
+    /// Dili siler
+    /// </summary>
+    /// <param name="id">Dil ID</param>
+    /// <returns>İçerik yok</returns>
     [HttpDelete("languages/{id:guid}")]
     public async Task<ActionResult> DeleteLanguage(Guid id)
     {
@@ -86,6 +123,11 @@ public class InternationalizationController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Varsayılan dili değiştirir
+    /// </summary>
+    /// <param name="id">Dil ID</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("languages/{id:guid}/set-default")]
     public async Task<ActionResult> SetDefaultLanguage(Guid id)
     {
@@ -96,6 +138,10 @@ public class InternationalizationController : ControllerBase
         return Ok(new { Message = "Default language updated successfully" });
     }
 
+    /// <summary>
+    /// Dil istatistiklerini getirir
+    /// </summary>
+    /// <returns>Dil istatistikleri</returns>
     [HttpGet("languages/statistics")]
     public async Task<ActionResult<List<LanguageStatisticsDto>>> GetLanguageStatistics()
     {
@@ -107,6 +153,12 @@ public class InternationalizationController : ControllerBase
 
     #region Translations
 
+    /// <summary>
+    /// Anahtar ve dil koduna göre çeviri getirir
+    /// </summary>
+    /// <param name="key">Çeviri anahtarı</param>
+    /// <param name="languageCode">Dil kodu</param>
+    /// <returns>Çeviri</returns>
     [HttpGet("translations/{key}/{languageCode}")]
     public async Task<ActionResult<TranslationDto>> GetTranslation(string key, LanguageCode languageCode)
     {
@@ -117,6 +169,11 @@ public class InternationalizationController : ControllerBase
         return Ok(translation);
     }
 
+    /// <summary>
+    /// Anahtarlara göre çoklu çevirileri getirir
+    /// </summary>
+    /// <param name="request">Çoklu çeviri istek modeli</param>
+    /// <returns>Çoklu çeviri sonucu</returns>
     [HttpPost("translations/bulk")]
     public async Task<ActionResult<GetTranslationsByKeysResponse>> GetTranslationsByKeys([FromBody] GetTranslationsByKeysRequest request)
     {
@@ -124,6 +181,11 @@ public class InternationalizationController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Çeviri araması yapar
+    /// </summary>
+    /// <param name="request">Arama isteği</param>
+    /// <returns>Arama sonucu</returns>
     [HttpPost("translations/search")]
     public async Task<ActionResult<TranslationSearchResponse>> SearchTranslations([FromBody] TranslationSearchRequest request)
     {
@@ -131,6 +193,11 @@ public class InternationalizationController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Yeni çeviri oluşturur
+    /// </summary>
+    /// <param name="request">Çeviri oluşturma isteği</param>
+    /// <returns>Oluşturulan çeviri</returns>
     [HttpPost("translations")]
     public async Task<ActionResult<TranslationDto>> CreateTranslation([FromBody] CreateTranslationRequest request)
     {
@@ -138,6 +205,12 @@ public class InternationalizationController : ControllerBase
         return CreatedAtAction(nameof(GetTranslation), new { key = translation.Key, languageCode = translation.LanguageCode }, translation);
     }
 
+    /// <summary>
+    /// Çeviriyi günceller
+    /// </summary>
+    /// <param name="id">Çeviri ID</param>
+    /// <param name="request">Çeviri güncelleme isteği</param>
+    /// <returns>Güncellenen çeviri</returns>
     [HttpPut("translations/{id:guid}")]
     public async Task<ActionResult<TranslationDto>> UpdateTranslation(Guid id, [FromBody] UpdateTranslationRequest request)
     {
@@ -145,6 +218,11 @@ public class InternationalizationController : ControllerBase
         return Ok(translation);
     }
 
+    /// <summary>
+    /// Çeviriyi siler
+    /// </summary>
+    /// <param name="id">Çeviri ID</param>
+    /// <returns>İçerik yok</returns>
     [HttpDelete("translations/{id:guid}")]
     public async Task<ActionResult> DeleteTranslation(Guid id)
     {
@@ -155,6 +233,11 @@ public class InternationalizationController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Toplu çeviri oluşturur
+    /// </summary>
+    /// <param name="request">Toplu çeviri isteği</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("translations/bulk-create")]
     public async Task<ActionResult> BulkCreateTranslations([FromBody] BulkTranslationRequest request)
     {
@@ -165,6 +248,11 @@ public class InternationalizationController : ControllerBase
         return Ok(new { Message = "Translations created successfully" });
     }
 
+    /// <summary>
+    /// Toplu çeviri günceller
+    /// </summary>
+    /// <param name="request">Toplu çeviri isteği</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("translations/bulk-update")]
     public async Task<ActionResult> BulkUpdateTranslations([FromBody] BulkTranslationRequest request)
     {
@@ -175,6 +263,12 @@ public class InternationalizationController : ControllerBase
         return Ok(new { Message = "Translations updated successfully" });
     }
 
+    /// <summary>
+    /// Kategori ve dil koduna göre çevirileri getirir
+    /// </summary>
+    /// <param name="category">Kategori</param>
+    /// <param name="languageCode">Dil kodu</param>
+    /// <returns>Çeviri listesi</returns>
     [HttpGet("translations/category/{category}/{languageCode}")]
     public async Task<ActionResult<List<TranslationDto>>> GetTranslationsByCategory(string category, LanguageCode languageCode)
     {
@@ -182,6 +276,12 @@ public class InternationalizationController : ControllerBase
         return Ok(translations);
     }
 
+    /// <summary>
+    /// Verilen dil için sözlük formatında çevirileri getirir
+    /// </summary>
+    /// <param name="languageCode">Dil kodu</param>
+    /// <param name="category">İsteğe bağlı kategori</param>
+    /// <returns>Anahtar-değer sözlüğü</returns>
     [HttpGet("translations/dictionary/{languageCode}")]
     public async Task<ActionResult<Dictionary<string, string>>> GetTranslationsDictionary(LanguageCode languageCode, [FromQuery] string? category = null)
     {
@@ -189,6 +289,12 @@ public class InternationalizationController : ControllerBase
         return Ok(dictionary);
     }
 
+    /// <summary>
+    /// Belirtilen dil için eksik çeviri anahtarlarını getirir
+    /// </summary>
+    /// <param name="languageCode">Dil kodu</param>
+    /// <param name="category">İsteğe bağlı kategori</param>
+    /// <returns>Eksik anahtar listesi</returns>
     [HttpGet("translations/missing/{languageCode}")]
     public async Task<ActionResult<List<string>>> GetMissingTranslations(LanguageCode languageCode, [FromQuery] string? category = null)
     {
@@ -196,6 +302,12 @@ public class InternationalizationController : ControllerBase
         return Ok(missingKeys);
     }
 
+    /// <summary>
+    /// JSON içerikten çevirileri içe aktarır
+    /// </summary>
+    /// <param name="languageCode">Dil kodu</param>
+    /// <param name="request">İçe aktarma isteği</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("translations/import/{languageCode}")]
     public async Task<ActionResult> ImportTranslations(LanguageCode languageCode, [FromBody] ImportTranslationsRequest request)
     {
@@ -206,6 +318,12 @@ public class InternationalizationController : ControllerBase
         return Ok(new { Message = "Translations imported successfully" });
     }
 
+    /// <summary>
+    /// Çevirileri JSON olarak dışa aktarır
+    /// </summary>
+    /// <param name="languageCode">Dil kodu</param>
+    /// <param name="category">İsteğe bağlı kategori</param>
+    /// <returns>JSON içerik</returns>
     [HttpGet("translations/export/{languageCode}")]
     public async Task<ActionResult> ExportTranslations(LanguageCode languageCode, [FromQuery] string? category = null)
     {
@@ -217,6 +335,11 @@ public class InternationalizationController : ControllerBase
 
     #region User Language Preferences
 
+    /// <summary>
+    /// Kullanıcının dil tercihlerini getirir (tek tercih)
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <returns>Kullanıcı dil tercihi</returns>
     [HttpGet("users/{userId:guid}/language-preference")]
     public async Task<ActionResult<UserLanguagePreferenceDto>> GetUserLanguagePreference(Guid userId)
     {
@@ -227,6 +350,12 @@ public class InternationalizationController : ControllerBase
         return Ok(preference);
     }
 
+    /// <summary>
+    /// Kullanıcının dil tercihlerini ayarlar (tek tercih)
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="request">Dil tercih isteği</param>
+    /// <returns>Güncellenen tercih</returns>
     [HttpPost("users/{userId:guid}/language-preference")]
     public async Task<ActionResult<UserLanguagePreferenceDto>> SetUserLanguagePreference(Guid userId, [FromBody] SetUserLanguageRequest request)
     {
@@ -234,6 +363,11 @@ public class InternationalizationController : ControllerBase
         return Ok(preference);
     }
 
+    /// <summary>
+    /// Kullanıcının tüm dil tercihlerini getirir
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <returns>Dil tercihleri listesi</returns>
     [HttpGet("users/{userId:guid}/language-preferences")]
     public async Task<ActionResult<List<UserLanguagePreferenceDto>>> GetUserLanguagePreferences(Guid userId)
     {
@@ -241,6 +375,12 @@ public class InternationalizationController : ControllerBase
         return Ok(preferences);
     }
 
+    /// <summary>
+    /// Kullanıcının belirli bir dil tercihlerini kaldırır
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="languageCode">Dil kodu</param>
+    /// <returns>İçerik yok</returns>
     [HttpDelete("users/{userId:guid}/language-preferences/{languageCode}")]
     public async Task<ActionResult> RemoveUserLanguagePreference(Guid userId, LanguageCode languageCode)
     {
@@ -251,6 +391,11 @@ public class InternationalizationController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Kullanıcının tercih ettiği dili getirir
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <returns>Dil kodu</returns>
     [HttpGet("users/{userId:guid}/preferred-language")]
     public async Task<ActionResult<LanguageCode>> GetUserPreferredLanguage(Guid userId)
     {
@@ -258,6 +403,12 @@ public class InternationalizationController : ControllerBase
         return Ok(languageCode);
     }
 
+    /// <summary>
+    /// Kullanıcının tercih ettiği dili ayarlar
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="request">Tercih edilen dil isteği</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("users/{userId:guid}/preferred-language")]
     public async Task<ActionResult> SetUserPreferredLanguage(Guid userId, [FromBody] SetPreferredLanguageRequest request)
     {

@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Controller for inventory management operations
+/// Envanter yönetimi işlemleri için controller
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -29,7 +29,7 @@ public class InventoryController : BaseController
     }
 
     /// <summary>
-    /// Gets the merchant ID for the current user
+    /// Mevcut kullanıcı için merchant ID'sini alır
     /// </summary>
     private async Task<(IActionResult? Error, Guid MerchantId)> GetCurrentUserMerchantIdAsync(CancellationToken ct = default)
     {
@@ -48,11 +48,11 @@ public class InventoryController : BaseController
     }
 
     /// <summary>
-    /// Performs inventory count
+    /// Envanter sayımı gerçekleştirir
     /// </summary>
-    /// <param name="request">Inventory count request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>No content</returns>
+    /// <param name="request">Envanter sayım isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>İçerik yok</returns>
     [HttpPost("count")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -73,12 +73,12 @@ public class InventoryController : BaseController
     }
 
     /// <summary>
-    /// Gets inventory count history
+    /// Envanter sayım geçmişini alır
     /// </summary>
-    /// <param name="fromDate">From date</param>
-    /// <param name="toDate">To date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Inventory count history</returns>
+    /// <param name="fromDate">Başlangıç tarihi</param>
+    /// <param name="toDate">Bitiş tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Envanter sayım geçmişi</returns>
     [HttpGet("count/history")]
     [ProducesResponseType(typeof(List<InventoryCountResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -95,11 +95,11 @@ public class InventoryController : BaseController
     }
 
     /// <summary>
-    /// Gets current inventory levels
+    /// Mevcut envanter seviyelerini alır
     /// </summary>
-    /// <param name="includeVariants">Include product variants</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Current inventory levels</returns>
+    /// <param name="includeVariants">Ürün varyantlarını dahil et</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Mevcut envanter seviyeleri</returns>
     [HttpGet("levels")]
     [ProducesResponseType(typeof(List<InventoryLevelResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -115,11 +115,11 @@ public class InventoryController : BaseController
     }
 
     /// <summary>
-    /// Gets inventory discrepancies
+    /// Envanter uyumsuzluklarını alır
     /// </summary>
-    /// <param name="fromDate">From date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Inventory discrepancies</returns>
+    /// <param name="fromDate">Başlangıç tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Envanter uyumsuzlukları</returns>
     [HttpGet("discrepancies")]
     [ProducesResponseType(typeof(List<InventoryDiscrepancyResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -135,12 +135,12 @@ public class InventoryController : BaseController
     }
 
     /// <summary>
-    /// Adjusts inventory levels
+    /// Envanter seviyelerini ayarlar
     /// </summary>
-    /// <param name="request">Inventory adjustment request</param>
-    /// <param name="reason">Reason for adjustment</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>No content</returns>
+    /// <param name="request">Envanter ayarlama isteği</param>
+    /// <param name="reason">Ayarlama nedeni</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>İçerik yok</returns>
     [HttpPut("adjust")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -162,12 +162,12 @@ public class InventoryController : BaseController
     }
 
     /// <summary>
-    /// Gets inventory turnover report
+    /// Envanter devir raporunu alır
     /// </summary>
-    /// <param name="fromDate">From date</param>
-    /// <param name="toDate">To date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Inventory turnover report</returns>
+    /// <param name="fromDate">Başlangıç tarihi</param>
+    /// <param name="toDate">Bitiş tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Envanter devir raporu</returns>
     [HttpGet("turnover-report")]
     [ProducesResponseType(typeof(InventoryTurnoverResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -185,11 +185,11 @@ public class InventoryController : BaseController
     }
 
     /// <summary>
-    /// Gets slow moving inventory items
+    /// Yavaş hareket eden envanter öğelerini alır
     /// </summary>
-    /// <param name="daysThreshold">Days threshold for slow moving</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Slow moving inventory items</returns>
+    /// <param name="daysThreshold">Yavaş hareket için gün eşiği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Yavaş hareket eden envanter öğeleri</returns>
     [HttpGet("slow-moving")]
     [ProducesResponseType(typeof(List<SlowMovingInventoryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -205,11 +205,11 @@ public class InventoryController : BaseController
     }
 
     /// <summary>
-    /// Gets inventory valuation
+    /// Envanter değerlemesini alır
     /// </summary>
-    /// <param name="method">Valuation method</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Inventory valuation</returns>
+    /// <param name="method">Değerleme yöntemi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Envanter değerlemesi</returns>
     [HttpGet("valuation")]
     [ProducesResponseType(typeof(InventoryValuationResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

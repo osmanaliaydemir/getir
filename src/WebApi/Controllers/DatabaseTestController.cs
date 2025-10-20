@@ -6,7 +6,7 @@ using System.Diagnostics;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Database test controller for database testing and monitoring
+/// Veritabanı testi ve izleme için veritabanı test controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -21,9 +21,9 @@ public class DatabaseTestController : BaseController
     }
 
     /// <summary>
-    /// Test database connection
+    /// Veritabanı bağlantısını test et
     /// </summary>
-    /// <returns>Connection status</returns>
+    /// <returns>Bağlantı durumu</returns>
     [HttpGet("connection")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -45,9 +45,9 @@ public class DatabaseTestController : BaseController
     }
 
     /// <summary>
-    /// Get indexes for Products table
+    /// Products tablosu için indeksleri getir
     /// </summary>
-    /// <returns>Table indexes</returns>
+    /// <returns>Tablo indeksleri</returns>
     [HttpGet("indexes")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -73,9 +73,9 @@ public class DatabaseTestController : BaseController
     }
 
     /// <summary>
-    /// Get statistics for Products table
+    /// Products tablosu için istatistikleri getir
     /// </summary>
-    /// <returns>Table statistics</returns>
+    /// <returns>Tablo istatistikleri</returns>
     [HttpGet("statistics")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -101,9 +101,9 @@ public class DatabaseTestController : BaseController
     }
 
     /// <summary>
-    /// Performance test
+    /// Performans testi
     /// </summary>
-    /// <returns>Performance test results</returns>
+    /// <returns>Performans testi sonuçları</returns>
     [HttpGet("performance-test")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -130,9 +130,9 @@ public class DatabaseTestController : BaseController
     }
 
     /// <summary>
-    /// Schema validation
+    /// Şema doğrulama
     /// </summary>
-    /// <returns>Schema validation results</returns>
+    /// <returns>Şema doğrulama sonuçları</returns>
     [HttpGet("schema-validation")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -158,9 +158,9 @@ public class DatabaseTestController : BaseController
     }
 
     /// <summary>
-    /// Database health check
+    /// Veritabanı sağlık kontrolü
     /// </summary>
-    /// <returns>Health check results</returns>
+    /// <returns>Sağlık kontrolü sonuçları</returns>
     [HttpGet("health")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -170,10 +170,10 @@ public class DatabaseTestController : BaseController
         {
             var stopwatch = Stopwatch.StartNew();
             
-            // Test basic connectivity
+            // Temel bağlantıyı test et
             var canConnect = await _context.Database.CanConnectAsync();
             
-            // Test a simple query
+            // Basit bir sorguyu test et
             var userCount = await _context.Users.CountAsync();
             
             stopwatch.Stop();
@@ -194,9 +194,9 @@ public class DatabaseTestController : BaseController
     }
 
     /// <summary>
-    /// Get table row counts
+    /// Tablo satır sayılarını getir
     /// </summary>
-    /// <returns>Table row counts</returns>
+    /// <returns>Tablo satır sayıları</returns>
     [HttpGet("table-counts")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -206,7 +206,7 @@ public class DatabaseTestController : BaseController
         {
             var tableCounts = new Dictionary<string, int>();
             
-            // Get counts for major tables
+            // Büyük tablolar için kayıt sayıları
             tableCounts["Users"] = await _context.Users.CountAsync();
             tableCounts["Merchants"] = await _context.Merchants.CountAsync();
             tableCounts["Products"] = await _context.Products.CountAsync();

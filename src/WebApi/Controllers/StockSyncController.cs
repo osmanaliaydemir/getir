@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Controller for stock synchronization operations
+/// Stok senkronizasyon işlemleri için controller
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]

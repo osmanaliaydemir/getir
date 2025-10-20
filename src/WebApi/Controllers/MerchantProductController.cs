@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Merchant product controller for merchant product management
+/// Mağaza ürün yönetimi için mağaza ürün controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/merchants/[controller]")]
@@ -23,11 +23,11 @@ public class MerchantProductController : BaseController
     }
 
     /// <summary>
-    /// Get my products
+    /// Mağazama ait ürünleri getir
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged products</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış ürünler</returns>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<ProductResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -43,11 +43,11 @@ public class MerchantProductController : BaseController
     }
 
     /// <summary>
-    /// Create new product
+    /// Yeni ürün oluştur
     /// </summary>
-    /// <param name="request">Create product request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Created product</returns>
+    /// <param name="request">Ürün oluşturma isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Oluşturulan ürün</returns>
     [HttpPost]
     [ProducesResponseType(typeof(ProductResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -71,12 +71,12 @@ public class MerchantProductController : BaseController
     }
 
     /// <summary>
-    /// Update my product
+    /// Ürünümü güncelle
     /// </summary>
-    /// <param name="productId">Product ID</param>
-    /// <param name="request">Update product request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Updated product</returns>
+    /// <param name="productId">Ürün ID</param>
+    /// <param name="request">Ürün güncelleme isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güncellenen ürün</returns>
     [HttpPut("{productId:guid}")]
     [ProducesResponseType(typeof(ProductResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -98,11 +98,11 @@ public class MerchantProductController : BaseController
     }
 
     /// <summary>
-    /// Delete my product
+    /// Ürünümü sil
     /// </summary>
-    /// <param name="productId">Product ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="productId">Ürün ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>İçerik yok</returns>
     [HttpDelete("{productId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -123,10 +123,10 @@ public class MerchantProductController : BaseController
     }
 
     /// <summary>
-    /// Get product statistics
+    /// Ürün istatistiklerini getir
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Product statistics</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Ürün istatistikleri</returns>
     [HttpGet("statistics")]
     [ProducesResponseType(typeof(ProductStatisticsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -140,11 +140,11 @@ public class MerchantProductController : BaseController
     }
 
     /// <summary>
-    /// Bulk update product status
+    /// Ürün durumlarını toplu güncelle
     /// </summary>
-    /// <param name="request">Bulk update request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Bulk update results</returns>
+    /// <param name="request">Toplu güncelleme isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Toplu güncelleme sonuçları</returns>
     [HttpPost("bulk-update-status")]
     [ProducesResponseType(typeof(BulkUpdateProductStatusResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

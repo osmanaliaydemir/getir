@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Controller for stock management operations
+/// Stok yönetimi işlemleri için controller
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]

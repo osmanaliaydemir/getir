@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Merchant document controller for merchant document management
+/// Mağaza belge yönetimi için mağaza belge controller'ı
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -23,11 +23,11 @@ public class MerchantDocumentController : BaseController
     }
 
     /// <summary>
-    /// Upload a document for merchant onboarding
+    /// Merchant onboarding için belge yükle
     /// </summary>
-    /// <param name="request">Upload document request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Uploaded document</returns>
+    /// <param name="request">Belge yükleme isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Yüklenen belge</returns>
     [HttpPost("upload")]
     [Authorize]
     [ProducesResponseType(typeof(MerchantDocumentResponse), StatusCodes.Status201Created)]
@@ -51,14 +51,14 @@ public class MerchantDocumentController : BaseController
     }
 
     /// <summary>
-    /// Get merchant documents with filtering
+    /// Filtreleme ile mağaza belgelerini getir
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="documentType">Document type</param>
-    /// <param name="status">Document status</param>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged documents</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="documentType">Belge türü</param>
+    /// <param name="status">Belge durumu</param>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış belgeler</returns>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<MerchantDocumentResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDocuments(
@@ -90,11 +90,11 @@ public class MerchantDocumentController : BaseController
     }
 
     /// <summary>
-    /// Get document by ID
+    /// Belgeyi ID'ye göre getir
     /// </summary>
-    /// <param name="documentId">Document ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Document details</returns>
+    /// <param name="documentId">Belge ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Belge detayları</returns>
     [HttpGet("{documentId:guid}")]
     [ProducesResponseType(typeof(MerchantDocumentResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -107,12 +107,12 @@ public class MerchantDocumentController : BaseController
     }
 
     /// <summary>
-    /// Verify/approve or reject a document
+    /// Belgeyi doğrula/onayla veya reddet
     /// </summary>
-    /// <param name="documentId">Document ID</param>
-    /// <param name="request">Verify document request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Updated document</returns>
+    /// <param name="documentId">Belge ID</param>
+    /// <param name="request">Belge doğrulama isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güncellenen belge</returns>
     [HttpPost("{documentId:guid}/verify")]
     [Authorize]
     [Authorize(Roles = "Admin")]
@@ -136,11 +136,11 @@ public class MerchantDocumentController : BaseController
     }
 
     /// <summary>
-    /// Delete a document
+    /// Belgeyi sil
     /// </summary>
-    /// <param name="documentId">Document ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="documentId">Belge ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>İçerik yok</returns>
     [HttpDelete("{documentId:guid}")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -162,11 +162,11 @@ public class MerchantDocumentController : BaseController
     }
 
     /// <summary>
-    /// Get document upload progress for a merchant
+    /// Bir mağaza için belge yükleme ilerlemesini getir
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Upload progress</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Yükleme ilerlemesi</returns>
     [HttpGet("progress/{merchantId:guid}")]
     [ProducesResponseType(typeof(MerchantDocumentProgressResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -179,10 +179,10 @@ public class MerchantDocumentController : BaseController
     }
 
     /// <summary>
-    /// Get required document types
+    /// Gerekli belge türlerini getir
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Required document types</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Gerekli belge türleri</returns>
     [HttpGet("required-types")]
     [ProducesResponseType(typeof(IEnumerable<DocumentTypeResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetRequiredDocumentTypes(CancellationToken ct = default)
@@ -192,11 +192,11 @@ public class MerchantDocumentController : BaseController
     }
 
     /// <summary>
-    /// Get document statistics
+    /// Belge istatistiklerini getir
     /// </summary>
-    /// <param name="merchantId">Merchant ID (optional)</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Document statistics</returns>
+    /// <param name="merchantId">Mağaza ID'si (isteğe bağlı)</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Belge istatistikleri</returns>
     [HttpGet("statistics")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(MerchantDocumentStatisticsResponse), StatusCodes.Status200OK)]
@@ -209,11 +209,11 @@ public class MerchantDocumentController : BaseController
     }
 
     /// <summary>
-    /// Bulk verify documents
+    /// Belgeleri toplu doğrula
     /// </summary>
-    /// <param name="request">Bulk verify request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Bulk verification results</returns>
+    /// <param name="request">Toplu doğrulama isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Toplu doğrulama sonuçları</returns>
     [HttpPost("bulk-verify")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(BulkVerifyDocumentsResponse), StatusCodes.Status200OK)]
@@ -234,11 +234,11 @@ public class MerchantDocumentController : BaseController
     }
 
     /// <summary>
-    /// Get pending documents for review
+    /// İnceleme için bekleyen belgeleri getir
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged pending documents</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış bekleyen belgeler</returns>
     [HttpGet("pending")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(PagedResult<MerchantDocumentResponse>), StatusCodes.Status200OK)]
@@ -251,11 +251,11 @@ public class MerchantDocumentController : BaseController
     }
 
     /// <summary>
-    /// Download document
+    /// Belge indir
     /// </summary>
-    /// <param name="documentId">Document ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Document file</returns>
+    /// <param name="documentId">Belge ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Belge dosyası</returns>
     [HttpGet("{documentId:guid}/download")]
     [Authorize]
     [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]

@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Product controller for managing products
+/// Ürünleri yönetmek için ürün controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -22,12 +22,12 @@ public class ProductController : BaseController
     }
 
     /// <summary>
-    /// Get products by merchant ID
+    /// Mağaza ID'sine göre ürünleri getir
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged list of products</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış ürün listesi</returns>
     [HttpGet("merchant/{merchantId:guid}")]
     [ProducesResponseType(typeof(PagedResult<ProductResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetProductsByMerchant(
@@ -40,11 +40,11 @@ public class ProductController : BaseController
     }
 
     /// <summary>
-    /// Get product by ID
+    /// ID'ye göre ürün getir
     /// </summary>
-    /// <param name="id">Product ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Product details</returns>
+    /// <param name="id">Ürün ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Ürün detayları</returns>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(ProductResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -57,11 +57,11 @@ public class ProductController : BaseController
     }
 
     /// <summary>
-    /// Create a new product
+    /// Yeni ürün oluştur
     /// </summary>
-    /// <param name="request">Create product request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Created product</returns>
+    /// <param name="request">Ürün oluşturma talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Oluşturulan ürün</returns>
     [HttpPost]
     [Authorize]
     [ProducesResponseType(typeof(ProductResponse), StatusCodes.Status200OK)]
@@ -78,12 +78,12 @@ public class ProductController : BaseController
     }
 
     /// <summary>
-    /// Update product
+    /// Ürünü güncelle
     /// </summary>
-    /// <param name="id">Product ID</param>
-    /// <param name="request">Update product request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Updated product</returns>
+    /// <param name="id">Ürün ID'si</param>
+    /// <param name="request">Ürün güncelleme talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güncellenen ürün</returns>
     [HttpPut("{id:guid}")]
     [Authorize]
     [ProducesResponseType(typeof(ProductResponse), StatusCodes.Status200OK)]

@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// File upload controller for file management operations
+/// Dosya yönetimi işlemleri için dosya yükleme controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/files")]
@@ -29,11 +29,11 @@ public class FileUploadController : BaseController
     #region Customer Endpoints
 
     /// <summary>
-    /// Upload a file (Customer)
+    /// Dosya yükle (Müşteri)
     /// </summary>
-    /// <param name="file">File to upload</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Upload response</returns>
+    /// <param name="file">Yüklenecek dosya</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Yükleme yanıtı</returns>
     [HttpPost("upload")]
     [Authorize]
     [ProducesResponseType(typeof(FileUploadResponse), StatusCodes.Status200OK)]
@@ -56,11 +56,11 @@ public class FileUploadController : BaseController
     }
 
     /// <summary>
-    /// Upload multiple files (Customer)
+    /// Birden fazla dosya yükle (Müşteri)
     /// </summary>
-    /// <param name="files">Files to upload</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Upload responses</returns>
+    /// <param name="files">Yüklenecek dosyalar</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Yükleme yanıtları</returns>
     [HttpPost("upload-multiple")]
     [Authorize]
     [ProducesResponseType(typeof(IEnumerable<FileUploadResponse>), StatusCodes.Status200OK)]
@@ -83,12 +83,12 @@ public class FileUploadController : BaseController
     }
 
     /// <summary>
-    /// Get file download URL
+    /// Dosya indirme URL'sini al
     /// </summary>
-    /// <param name="containerName">Container name</param>
-    /// <param name="fileName">File name</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>File URL</returns>
+    /// <param name="containerName">Konteyner adı</param>
+    /// <param name="fileName">Dosya adı</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Dosya URL'si</returns>
     [HttpGet("{containerName}/{fileName}")]
     [Authorize]
     [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
@@ -104,12 +104,12 @@ public class FileUploadController : BaseController
     }
 
     /// <summary>
-    /// Delete a file (Customer)
+    /// Dosya sil (Müşteri)
     /// </summary>
-    /// <param name="containerName">Container name</param>
-    /// <param name="fileName">File name</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="containerName">Konteyner adı</param>
+    /// <param name="fileName">Dosya adı</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpDelete("{containerName}/{fileName}")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -136,11 +136,11 @@ public class FileUploadController : BaseController
     #region Merchant Endpoints
 
     /// <summary>
-    /// Upload merchant file
+    /// Merchant dosyası yükle
     /// </summary>
-    /// <param name="file">File to upload</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Upload response</returns>
+    /// <param name="file">Yüklenecek dosya</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Yükleme yanıtı</returns>
     [HttpPost("merchant/upload")]
     [Authorize(Roles = "MerchantOwner")]
     [ProducesResponseType(typeof(FileUploadResponse), StatusCodes.Status200OK)]
@@ -164,11 +164,11 @@ public class FileUploadController : BaseController
     }
 
     /// <summary>
-    /// Get merchant files
+    /// Merchant dosyalarını al
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged merchant files</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış merchant dosyaları</returns>
     [HttpGet("merchant")]
     [Authorize(Roles = "MerchantOwner")]
     [ProducesResponseType(typeof(PagedResult<FileUploadResponse>), StatusCodes.Status200OK)]
@@ -186,12 +186,12 @@ public class FileUploadController : BaseController
     }
 
     /// <summary>
-    /// Delete merchant file
+    /// Merchant dosyasını sil
     /// </summary>
-    /// <param name="containerName">Container name</param>
-    /// <param name="fileName">File name</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="containerName">Konteyner adı</param>
+    /// <param name="fileName">Dosya adı</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpDelete("merchant/{containerName}/{fileName}")]
     [Authorize(Roles = "MerchantOwner")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -219,11 +219,11 @@ public class FileUploadController : BaseController
     #region Admin Endpoints
 
     /// <summary>
-    /// Get all files (Admin)
+    /// Tüm dosyaları al (Admin)
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged files</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış dosyalar</returns>
     [HttpGet("admin")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(PagedResult<FileUploadResponse>), StatusCodes.Status200OK)]
@@ -238,12 +238,12 @@ public class FileUploadController : BaseController
     }
 
     /// <summary>
-    /// Delete any file (Admin)
+    /// Herhangi bir dosyayı sil (Admin)
     /// </summary>
-    /// <param name="containerName">Container name</param>
-    /// <param name="fileName">File name</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="containerName">Konteyner adı</param>
+    /// <param name="fileName">Dosya adı</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpDelete("admin/{containerName}/{fileName}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -264,10 +264,10 @@ public class FileUploadController : BaseController
     }
 
     /// <summary>
-    /// Get file statistics (Admin)
+    /// Dosya istatistiklerini al (Admin)
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>File statistics</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Dosya istatistikleri</returns>
     [HttpGet("admin/statistics")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(FileStatisticsResponse), StatusCodes.Status200OK)]
@@ -280,11 +280,11 @@ public class FileUploadController : BaseController
     }
 
     /// <summary>
-    /// Cleanup old files (Admin)
+    /// Eski dosyaları temizle (Admin)
     /// </summary>
-    /// <param name="cutoffDate">Cutoff date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Number of deleted files</returns>
+    /// <param name="cutoffDate">Kesim tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Silinen dosya sayısı</returns>
     [HttpPost("admin/cleanup")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]

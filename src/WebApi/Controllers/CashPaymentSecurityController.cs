@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Cash payment security controller for cash payment security operations
+/// Nakit ödeme güvenlik işlemleri için nakit ödeme güvenlik controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -26,11 +26,11 @@ public class CashPaymentSecurityController : BaseController
     #region Evidence Endpoints
 
     /// <summary>
-    /// Create cash payment evidence
+    /// Nakit ödeme kanıtı oluştur
     /// </summary>
-    /// <param name="request">Create evidence request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Created evidence</returns>
+    /// <param name="request">Kanıt oluşturma talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Oluşturulan kanıt</returns>
     [HttpPost("evidence")]
     [Authorize(Roles = "Courier")]
     [ProducesResponseType(typeof(CashPaymentEvidenceResponse), StatusCodes.Status201Created)]
@@ -51,12 +51,12 @@ public class CashPaymentSecurityController : BaseController
     }
 
     /// <summary>
-    /// Update cash payment evidence (Admin only)
+    /// Nakit ödeme kanıtını güncelle (Yalnızca Admin)
     /// </summary>
-    /// <param name="evidenceId">Evidence ID</param>
-    /// <param name="request">Update evidence request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Updated evidence</returns>
+    /// <param name="evidenceId">Kanıt ID'si</param>
+    /// <param name="request">Kanıt güncelleme talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güncellenen kanıt</returns>
     [HttpPut("evidence/{evidenceId}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(CashPaymentEvidenceResponse), StatusCodes.Status200OK)]
@@ -75,12 +75,12 @@ public class CashPaymentSecurityController : BaseController
     }
 
     /// <summary>
-    /// Get payment evidence
+    /// Ödeme kanıtını getir
     /// </summary>
-    /// <param name="paymentId">Payment ID</param>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged evidence</returns>
+    /// <param name="paymentId">Ödeme ID'si</param>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış kanıt</returns>
     [HttpGet("evidence/payment/{paymentId}")]
     [ProducesResponseType(typeof(PagedResult<CashPaymentEvidenceResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -98,11 +98,11 @@ public class CashPaymentSecurityController : BaseController
     #region Security Endpoints
 
     /// <summary>
-    /// Create cash payment security record
+    /// Nakit ödeme güvenlik kaydı oluştur
     /// </summary>
-    /// <param name="request">Create security request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Created security record</returns>
+    /// <param name="request">Güvenlik oluşturma talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Oluşturulan güvenlik kaydı</returns>
     [HttpPost("security")]
     [Authorize(Roles = "Courier")]
     [ProducesResponseType(typeof(CashPaymentSecurityResponse), StatusCodes.Status201Created)]
@@ -123,12 +123,12 @@ public class CashPaymentSecurityController : BaseController
     }
 
     /// <summary>
-    /// Update cash payment security record
+    /// Nakit ödeme güvenlik kaydını güncelle
     /// </summary>
-    /// <param name="securityId">Security ID</param>
-    /// <param name="request">Update security request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Updated security record</returns>
+    /// <param name="securityId">Güvenlik ID'si</param>
+    /// <param name="request">Güvenlik güncelleme talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güncellenen güvenlik kaydı</returns>
     [HttpPut("security/{securityId}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(CashPaymentSecurityResponse), StatusCodes.Status200OK)]
@@ -147,11 +147,11 @@ public class CashPaymentSecurityController : BaseController
     }
 
     /// <summary>
-    /// Get payment security
+    /// Ödeme güvenliğini getir
     /// </summary>
-    /// <param name="paymentId">Payment ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Payment security</returns>
+    /// <param name="paymentId">Ödeme ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Ödeme güvenliği</returns>
     [HttpGet("security/payment/{paymentId}")]
     [ProducesResponseType(typeof(CashPaymentSecurityResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -169,12 +169,12 @@ public class CashPaymentSecurityController : BaseController
     #region Payment Collection with Security
 
     /// <summary>
-    /// Collect cash payment with security
+    /// Güvenlik ile nakit ödeme topla
     /// </summary>
-    /// <param name="paymentId">Payment ID</param>
-    /// <param name="request">Collect payment request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="paymentId">Ödeme ID'si</param>
+    /// <param name="request">Ödeme toplama talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("collect/{paymentId}")]
     [Authorize(Roles = "Courier")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -200,11 +200,11 @@ public class CashPaymentSecurityController : BaseController
     #region Utility Endpoints
 
     /// <summary>
-    /// Calculate change
+    /// Para üstü hesapla
     /// </summary>
-    /// <param name="request">Calculate change request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Change calculation</returns>
+    /// <param name="request">Para üstü hesaplama talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Para üstü hesaplaması</returns>
     [HttpPost("calculate-change")]
     [ProducesResponseType(typeof(CalculateChangeResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -220,12 +220,12 @@ public class CashPaymentSecurityController : BaseController
     }
 
     /// <summary>
-    /// Perform fake money check
+    /// Sahte para kontrolü yap
     /// </summary>
-    /// <param name="paymentId">Payment ID</param>
-    /// <param name="request">Fake money check request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Check result</returns>
+    /// <param name="paymentId">Ödeme ID'si</param>
+    /// <param name="request">Sahte para kontrolü talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kontrol sonucu</returns>
     [HttpPost("fake-money-check/{paymentId}")]
     [Authorize(Roles = "Courier")]
     [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
@@ -244,12 +244,12 @@ public class CashPaymentSecurityController : BaseController
     }
 
     /// <summary>
-    /// Verify customer identity
+    /// Müşteri kimliğini doğrula
     /// </summary>
-    /// <param name="paymentId">Payment ID</param>
-    /// <param name="request">Verify identity request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Verification result</returns>
+    /// <param name="paymentId">Ödeme ID'si</param>
+    /// <param name="request">Kimlik doğrulama talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Doğrulama sonucu</returns>
     [HttpPost("verify-identity/{paymentId}")]
     [Authorize(Roles = "Courier")]
     [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
@@ -268,11 +268,11 @@ public class CashPaymentSecurityController : BaseController
     }
 
     /// <summary>
-    /// Assess security risk
+    /// Güvenlik riskini değerlendir
     /// </summary>
-    /// <param name="paymentId">Payment ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Risk assessment</returns>
+    /// <param name="paymentId">Ödeme ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Risk değerlendirmesi</returns>
     [HttpPost("assess-risk/{paymentId}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(SecurityRiskLevel), StatusCodes.Status200OK)]
@@ -291,11 +291,11 @@ public class CashPaymentSecurityController : BaseController
     #region Admin Endpoints
 
     /// <summary>
-    /// Get payments requiring approval
+    /// Onay gerektiren ödemeleri getir
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged payments requiring approval</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Onay gerektiren sayfalanmış ödemeler</returns>
     [HttpGet("pending-approvals")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(PagedResult<CashPaymentSecurityResponse>), StatusCodes.Status200OK)]
@@ -309,12 +309,12 @@ public class CashPaymentSecurityController : BaseController
     }
 
     /// <summary>
-    /// Approve security record
+    /// Güvenlik kaydını onayla
     /// </summary>
-    /// <param name="securityId">Security ID</param>
-    /// <param name="request">Approve security request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="securityId">Güvenlik ID'si</param>
+    /// <param name="request">Güvenlik onaylama talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("approve/{securityId}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -336,12 +336,12 @@ public class CashPaymentSecurityController : BaseController
     }
 
     /// <summary>
-    /// Reject security record
+    /// Güvenlik kaydını reddet
     /// </summary>
-    /// <param name="securityId">Security ID</param>
-    /// <param name="request">Reject security request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="securityId">Güvenlik ID'si</param>
+    /// <param name="request">Güvenlik reddetme talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("reject/{securityId}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]

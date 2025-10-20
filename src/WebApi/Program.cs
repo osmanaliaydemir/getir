@@ -132,13 +132,27 @@ builder.Services.AddSignalR(options =>
     options.ClientTimeoutInterval = TimeSpan.FromSeconds(ApplicationConstants.SignalRClientTimeoutSeconds);
 });
 
-// CORS for SignalR
+// CORS for SignalR (Environment-based configuration)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("SignalRCorsPolicy", policy =>
     {
-        policy.SetIsOriginAllowed(_ => true) // Allow all origins for SignalR WebSocket
-              .AllowAnyMethod()
+        var allowedOrigins = builder.Configuration
+            .GetSection("Cors:AllowedOrigins")
+            .Get<string[]>() ?? Array.Empty<string>();
+        
+        if (builder.Environment.IsDevelopment())
+        {
+            // Development: Allow all origins (for testing)
+            policy.SetIsOriginAllowed(_ => true);
+        }
+        else
+        {
+            // Production: Restrict to configured origins only
+            policy.WithOrigins(allowedOrigins);
+        }
+        
+        policy.AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
     });

@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Admin controller for system administration
+/// Sistem yönetimi için admin controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -25,10 +25,10 @@ public class AdminController : BaseController
     #region Dashboard
 
     /// <summary>
-    /// Get admin dashboard data
+    /// Admin dashboard verilerini getir
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Dashboard data</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Dashboard verileri</returns>
     [HttpGet("dashboard")]
     [ProducesResponseType(typeof(AdminDashboardResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDashboard(CancellationToken ct = default)
@@ -38,10 +38,10 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Get system statistics
+    /// Sistem istatistiklerini getir
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>System statistics</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sistem istatistikleri</returns>
     [HttpGet("statistics")]
     [ProducesResponseType(typeof(SystemStatisticsResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSystemStatistics(CancellationToken ct = default)
@@ -55,11 +55,11 @@ public class AdminController : BaseController
     #region Merchant Management
 
     /// <summary>
-    /// Get merchant applications
+    /// Mağaza başvurularını getir
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged merchant applications</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış mağaza başvuruları</returns>
     [HttpGet("merchants/applications")]
     [ProducesResponseType(typeof(PagedResult<RecentMerchantApplicationResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMerchantApplications(
@@ -71,11 +71,11 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Get merchant application details
+    /// Mağaza başvuru detaylarını getir
     /// </summary>
-    /// <param name="applicationId">Application ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Application details</returns>
+    /// <param name="applicationId">Başvuru ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başvuru detayları</returns>
     [HttpGet("merchants/applications/{applicationId:guid}")]
     [ProducesResponseType(typeof(MerchantApplicationDetailsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -88,12 +88,12 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Approve merchant application
+    /// Mağaza başvurusunu onayla
     /// </summary>
-    /// <param name="applicationId">Application ID</param>
-    /// <param name="request">Approval request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="applicationId">Başvuru ID'si</param>
+    /// <param name="request">Onay talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("merchants/applications/{applicationId:guid}/approve")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -113,12 +113,12 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Reject merchant application
+    /// Mağaza başvurusunu reddet
     /// </summary>
-    /// <param name="applicationId">Application ID</param>
-    /// <param name="request">Rejection request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="applicationId">Başvuru ID'si</param>
+    /// <param name="request">Red talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("merchants/applications/{applicationId:guid}/reject")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -138,11 +138,11 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Get all merchants
+    /// Tüm mağazaları getir
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged merchants</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış mağazalar</returns>
     [HttpGet("merchants")]
     [ProducesResponseType(typeof(PagedResult<MerchantResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMerchants(
@@ -158,11 +158,11 @@ public class AdminController : BaseController
     #region User Management
 
     /// <summary>
-    /// Get all users
+    /// Tüm kullanıcıları getir
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged users</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış kullanıcılar</returns>
     [HttpGet("users")]
     [ProducesResponseType(typeof(PagedResult<AdminUserResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUsers(
@@ -174,11 +174,11 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Get user details
+    /// Kullanıcı detaylarını getir
     /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>User details</returns>
+    /// <param name="userId">Kullanıcı ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kullanıcı detayları</returns>
     [HttpGet("users/{userId:guid}")]
     [ProducesResponseType(typeof(AdminUserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -191,11 +191,11 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Create new user
+    /// Yeni kullanıcı oluştur
     /// </summary>
-    /// <param name="request">Create user request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Created user</returns>
+    /// <param name="request">Kullanıcı oluşturma talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Oluşturulan kullanıcı</returns>
     [HttpPost("users")]
     [ProducesResponseType(typeof(AdminUserResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -218,12 +218,12 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Update user
+    /// Kullanıcıyı güncelle
     /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <param name="request">Update user request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Updated user</returns>
+    /// <param name="userId">Kullanıcı ID'si</param>
+    /// <param name="request">Kullanıcı güncelleme talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güncellenen kullanıcı</returns>
     [HttpPut("users/{userId:guid}")]
     [ProducesResponseType(typeof(AdminUserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -244,11 +244,11 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Delete user
+    /// Kullanıcıyı sil
     /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="userId">Kullanıcı ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpDelete("users/{userId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -269,11 +269,11 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Activate user
+    /// Kullanıcıyı aktifleştir
     /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="userId">Kullanıcı ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("users/{userId:guid}/activate")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -290,11 +290,11 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Deactivate user
+    /// Kullanıcıyı deaktifleştir
     /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="userId">Kullanıcı ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("users/{userId:guid}/deactivate")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -311,11 +311,11 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Get user statistics
+    /// Kullanıcı istatistiklerini getir
     /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>User statistics</returns>
+    /// <param name="userId">Kullanıcı ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kullanıcı istatistikleri</returns>
     [HttpGet("users/{userId:guid}/stats")]
     [ProducesResponseType(typeof(AdminUserStatsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -332,10 +332,10 @@ public class AdminController : BaseController
     #region System Monitoring
 
     /// <summary>
-    /// Get performance metrics
+    /// Performans metriklerini getir
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Performance metrics</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Performans metrikleri</returns>
     [HttpGet("metrics")]
     [ProducesResponseType(typeof(PerformanceMetricsResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPerformanceMetrics(CancellationToken ct = default)
@@ -345,10 +345,10 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Get system notifications
+    /// Sistem bildirimlerini getir
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>System notifications</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sistem bildirimleri</returns>
     [HttpGet("notifications")]
     [ProducesResponseType(typeof(IEnumerable<AdminNotificationResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSystemNotifications(CancellationToken ct = default)
@@ -358,11 +358,11 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Mark notification as read
+    /// Bildirimi okundu olarak işaretle
     /// </summary>
-    /// <param name="notificationId">Notification ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="notificationId">Bildirim ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPut("notifications/{notificationId:guid}/read")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -379,11 +379,11 @@ public class AdminController : BaseController
     #region Audit Logs
 
     /// <summary>
-    /// Get audit logs
+    /// Denetim kayıtlarını getir
     /// </summary>
-    /// <param name="query">Audit log query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged audit logs</returns>
+    /// <param name="query">Denetim kayıt sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış denetim kayıtları</returns>
     [HttpGet("audit-logs")]
     [ProducesResponseType(typeof(PagedResult<AuditLogResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAuditLogs(
@@ -395,10 +395,10 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Get audit log statistics
+    /// Denetim kayıt istatistiklerini getir
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Audit log statistics</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Denetim kayıt istatistikleri</returns>
     [HttpGet("audit-logs/stats")]
     [ProducesResponseType(typeof(AuditLogStatsResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAuditLogStats(CancellationToken ct = default)
@@ -412,11 +412,11 @@ public class AdminController : BaseController
     #region Search
 
     /// <summary>
-    /// Admin search
+    /// Admin arama
     /// </summary>
-    /// <param name="query">Search query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Search results</returns>
+    /// <param name="query">Arama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Arama sonuçları</returns>
     [HttpPost("search")]
     [ProducesResponseType(typeof(AdminSearchResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Search(
@@ -435,12 +435,12 @@ public class AdminController : BaseController
     #region Reports
 
     /// <summary>
-    /// Get user growth data
+    /// Kullanıcı büyüme verilerini getir
     /// </summary>
-    /// <param name="fromDate">From date</param>
-    /// <param name="toDate">To date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>User growth data</returns>
+    /// <param name="fromDate">Başlangıç tarihi</param>
+    /// <param name="toDate">Bitiş tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kullanıcı büyüme verileri</returns>
     [HttpGet("reports/user-growth")]
     [ProducesResponseType(typeof(UserGrowthDataResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUserGrowthData(
@@ -453,12 +453,12 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Get merchant growth data
+    /// Mağaza büyüme verilerini getir
     /// </summary>
-    /// <param name="fromDate">From date</param>
-    /// <param name="toDate">To date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Merchant growth data</returns>
+    /// <param name="fromDate">Başlangıç tarihi</param>
+    /// <param name="toDate">Bitiş tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Mağaza büyüme verileri</returns>
     [HttpGet("reports/merchant-growth")]
     [ProducesResponseType(typeof(MerchantGrowthDataResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMerchantGrowthData(
@@ -471,12 +471,12 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Get order trend data
+    /// Sipariş trend verilerini getir
     /// </summary>
-    /// <param name="fromDate">From date</param>
-    /// <param name="toDate">To date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Order trend data</returns>
+    /// <param name="fromDate">Başlangıç tarihi</param>
+    /// <param name="toDate">Bitiş tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sipariş trend verileri</returns>
     [HttpGet("reports/order-trends")]
     [ProducesResponseType(typeof(AdminOrderTrendDataResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetOrderTrendData(
@@ -489,12 +489,12 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Get revenue trend data
+    /// Gelir trend verilerini getir
     /// </summary>
-    /// <param name="fromDate">From date</param>
-    /// <param name="toDate">To date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Revenue trend data</returns>
+    /// <param name="fromDate">Başlangıç tarihi</param>
+    /// <param name="toDate">Bitiş tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Gelir trend verileri</returns>
     [HttpGet("reports/revenue-trends")]
     [ProducesResponseType(typeof(RevenueTrendDataResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetRevenueTrendData(
@@ -511,11 +511,11 @@ public class AdminController : BaseController
     #region System Operations
 
     /// <summary>
-    /// Send system notification
+    /// Sistem bildirimi gönder
     /// </summary>
-    /// <param name="request">Send notification request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="request">Bildirim gönderme talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("notifications/send")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -536,11 +536,11 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Broadcast system message
+    /// Sistem mesajı yayınla
     /// </summary>
-    /// <param name="request">Broadcast message request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="request">Mesaj yayınlama talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("broadcast")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -559,10 +559,10 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Clear system cache
+    /// Sistem önbelleğini temizle
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("cache/clear")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> ClearCache(CancellationToken ct = default)
@@ -572,10 +572,10 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Backup database
+    /// Veritabanını yedekle
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("backup")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> BackupDatabase(CancellationToken ct = default)

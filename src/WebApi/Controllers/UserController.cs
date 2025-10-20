@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// User controller for managing user addresses
+/// Kullanıcı adreslerini yönetmek için kullanıcı controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -40,10 +40,10 @@ public class UserController : BaseController
     }
 
     /// <summary>
-    /// Get user addresses
+    /// Kullanıcı adreslerini getir
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>User addresses</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kullanıcı adresleri</returns>
     [HttpGet("addresses")]
     [ProducesResponseType(typeof(List<AddressResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -57,11 +57,11 @@ public class UserController : BaseController
     }
 
     /// <summary>
-    /// Add user address
+    /// Kullanıcı adresi ekle
     /// </summary>
-    /// <param name="request">Create address request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Created address</returns>
+    /// <param name="request">Adres oluşturma talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Oluşturulan adres</returns>
     [HttpPost("addresses")]
     [ProducesResponseType(typeof(AddressResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -79,12 +79,12 @@ public class UserController : BaseController
     }
 
     /// <summary>
-    /// Update user address
+    /// Kullanıcı adresini güncelle
     /// </summary>
-    /// <param name="id">Address ID</param>
-    /// <param name="request">Update address request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Updated address</returns>
+    /// <param name="id">Adres ID'si</param>
+    /// <param name="request">Adres güncelleme talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güncellenen adres</returns>
     [HttpPut("addresses/{id:guid}")]
     [ProducesResponseType(typeof(AddressResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -104,11 +104,11 @@ public class UserController : BaseController
     }
 
     /// <summary>
-    /// Delete user address
+    /// Kullanıcı adresini sil
     /// </summary>
-    /// <param name="id">Address ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="id">Adres ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpDelete("addresses/{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -123,11 +123,11 @@ public class UserController : BaseController
     }
 
     /// <summary>
-    /// Set default address
+    /// Varsayılan adres ayarla
     /// </summary>
-    /// <param name="id">Address ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="id">Adres ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPut("addresses/{id:guid}/set-default")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -142,10 +142,10 @@ public class UserController : BaseController
     }
 
     /// <summary>
-    /// Get current user's profile
+    /// Mevcut kullanıcının profilini getir
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>User profile</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kullanıcı profili</returns>
     [HttpGet("profile")]
     [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

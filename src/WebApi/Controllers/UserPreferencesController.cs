@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// User preferences controller for managing notification preferences
+/// Bildirim tercihlerini yönetmek için kullanıcı tercihleri controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -22,7 +22,7 @@ public class UserPreferencesController : BaseController
     }
 
     /// <summary>
-    /// Get current user's notification preferences
+    /// Mevcut kullanıcının bildirim tercihlerini getir
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(UserNotificationPreferencesResponse), StatusCodes.Status200OK)]

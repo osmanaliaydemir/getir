@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Merchant order controller for merchant order management
+/// Mağaza sipariş yönetimi için mağaza sipariş controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/merchants/[controller]")]
@@ -23,12 +23,12 @@ public class MerchantOrderController : BaseController
     }
 
     /// <summary>
-    /// Get merchant orders
+    /// Mağaza siparişlerini getir
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="status">Order status filter</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged orders</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="status">Sipariş durumu filtresi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış siparişler</returns>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<OrderResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -45,12 +45,12 @@ public class MerchantOrderController : BaseController
     }
 
     /// <summary>
-    /// Get order statistics
+    /// Sipariş istatistiklerini getir
     /// </summary>
-    /// <param name="startDate">Start date</param>
-    /// <param name="endDate">End date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Order statistics</returns>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sipariş istatistikleri</returns>
     [HttpGet("statistics")]
     [ProducesResponseType(typeof(OrderStatisticsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -67,11 +67,11 @@ public class MerchantOrderController : BaseController
     }
 
     /// <summary>
-    /// Get order details
+    /// Sipariş detaylarını getir
     /// </summary>
-    /// <param name="orderId">Order ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Order details</returns>
+    /// <param name="orderId">Sipariş ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sipariş detayları</returns>
     [HttpGet("{orderId:guid}")]
     [ProducesResponseType(typeof(OrderDetailsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -87,12 +87,12 @@ public class MerchantOrderController : BaseController
     }
 
     /// <summary>
-    /// Update order status
+    /// Sipariş durumunu güncelle
     /// </summary>
-    /// <param name="orderId">Order ID</param>
-    /// <param name="request">Update order status request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Updated order</returns>
+    /// <param name="orderId">Sipariş ID</param>
+    /// <param name="request">Sipariş durumu güncelleme isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güncellenen sipariş</returns>
     [HttpPut("{orderId:guid}/status")]
     [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -114,12 +114,12 @@ public class MerchantOrderController : BaseController
     }
 
     /// <summary>
-    /// Get order analytics
+    /// Sipariş analitiklerini getir
     /// </summary>
-    /// <param name="startDate">Start date</param>
-    /// <param name="endDate">End date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Order analytics</returns>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sipariş analitikleri</returns>
     [HttpGet("analytics")]
     [ProducesResponseType(typeof(OrderAnalyticsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -136,11 +136,11 @@ public class MerchantOrderController : BaseController
     }
 
     /// <summary>
-    /// Get pending orders
+    /// Bekleyen siparişleri getir
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged pending orders</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış bekleyen siparişler</returns>
     [HttpGet("pending")]
     [ProducesResponseType(typeof(PagedResult<OrderResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -156,11 +156,11 @@ public class MerchantOrderController : BaseController
     }
 
     /// <summary>
-    /// Get order timeline
+    /// Sipariş zaman çizelgesini getir
     /// </summary>
-    /// <param name="orderId">Order ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Order timeline</returns>
+    /// <param name="orderId">Sipariş ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sipariş zaman çizelgesi</returns>
     [HttpGet("{orderId:guid}/timeline")]
     [ProducesResponseType(typeof(IEnumerable<OrderTimelineResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

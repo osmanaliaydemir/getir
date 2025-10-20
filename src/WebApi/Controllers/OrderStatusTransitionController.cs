@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Controller for order status transition management
+/// Sipariş durumu geçiş yönetimi için controller
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -33,11 +33,11 @@ public class OrderStatusTransitionController : BaseController
     }
 
     /// <summary>
-    /// Change order status with validation and audit logging
+    /// Doğrulama ve denetim kaydı ile sipariş durumunu değiştir
     /// </summary>
-    /// <param name="request">Status change request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Result of status change</returns>
+    /// <param name="request">Durum değiştirme isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Durum değişikliğinin sonucu</returns>
     [HttpPost("change-status")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -64,12 +64,12 @@ public class OrderStatusTransitionController : BaseController
     }
 
     /// <summary>
-    /// Rollback the last status change
+    /// Son durum değişikliğini geri al
     /// </summary>
-    /// <param name="orderId">Order ID</param>
-    /// <param name="reason">Rollback reason</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Result of rollback</returns>
+    /// <param name="orderId">Sipariş ID</param>
+    /// <param name="reason">Geri alma nedeni</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Geri alma sonucu</returns>
     [HttpPost("rollback/{orderId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -92,11 +92,11 @@ public class OrderStatusTransitionController : BaseController
     }
 
     /// <summary>
-    /// Get order status transition history
+    /// Sipariş durum geçiş geçmişini getir
     /// </summary>
-    /// <param name="orderId">Order ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Status transition history</returns>
+    /// <param name="orderId">Sipariş ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Durum geçiş geçmişi</returns>
     [HttpGet("history/{orderId}")]
     [ProducesResponseType(typeof(List<OrderStatusTransitionLogResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -113,11 +113,11 @@ public class OrderStatusTransitionController : BaseController
     }
 
     /// <summary>
-    /// Get available status transitions for an order
+    /// Sipariş için kullanılabilir durum geçişlerini getir
     /// </summary>
-    /// <param name="orderId">Order ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Available transitions</returns>
+    /// <param name="orderId">Sipariş ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kullanılabilir geçişler</returns>
     [HttpGet("available-transitions/{orderId}")]
     [ProducesResponseType(typeof(List<OrderStatusTransitionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -138,12 +138,12 @@ public class OrderStatusTransitionController : BaseController
     }
 
     /// <summary>
-    /// Validate order status transition
+    /// Sipariş durumu geçişini doğrula
     /// </summary>
-    /// <param name="orderId">Order ID</param>
-    /// <param name="newStatus">New status to validate</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Validation result</returns>
+    /// <param name="orderId">Sipariş ID</param>
+    /// <param name="newStatus">Doğrulanacak yeni durum</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Doğrulama sonucu</returns>
     [HttpPost("validate/{orderId}")]
     [ProducesResponseType(typeof(OrderStatusValidationResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -191,11 +191,11 @@ public class OrderStatusTransitionController : BaseController
     }
 
     /// <summary>
-    /// Bulk change order statuses
+    /// Sipariş durumlarını toplu değiştir
     /// </summary>
-    /// <param name="request">Bulk status change request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Bulk operation result</returns>
+    /// <param name="request">Toplu durum değiştirme isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Toplu işlem sonucu</returns>
     [HttpPost("bulk-change")]
     [Authorize(Roles = "Admin,MerchantOwner")]
     [ProducesResponseType(typeof(BulkOrderStatusChangeResponse), StatusCodes.Status200OK)]

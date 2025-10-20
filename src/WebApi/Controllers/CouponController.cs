@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Coupon controller for managing coupons
+/// Kuponları yönetmek için kupon controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -22,11 +22,11 @@ public class CouponController : BaseController
     }
 
     /// <summary>
-    /// Validate coupon code
+    /// Kupon kodunu doğrula
     /// </summary>
-    /// <param name="request">Validate coupon request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Coupon validation response</returns>
+    /// <param name="request">Kupon doğrulama talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kupon doğrulama yanıtı</returns>
     [HttpPost("validate")]
     [Authorize]
     [ProducesResponseType(typeof(CouponValidationResponse), StatusCodes.Status200OK)]
@@ -47,11 +47,11 @@ public class CouponController : BaseController
     }
 
     /// <summary>
-    /// Create a new coupon
+    /// Yeni kupon oluştur
     /// </summary>
-    /// <param name="request">Create coupon request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Created coupon</returns>
+    /// <param name="request">Kupon oluşturma talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Oluşturulan kupon</returns>
     [HttpPost]
     [Authorize]
     [ProducesResponseType(typeof(CouponResponse), StatusCodes.Status200OK)]
@@ -68,11 +68,11 @@ public class CouponController : BaseController
     }
 
     /// <summary>
-    /// Get coupons with pagination
+    /// Sayfalama ile kuponları getir
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged list of coupons</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış kupon listesi</returns>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<CouponResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCoupons(

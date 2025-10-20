@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Delivery zone controller for managing delivery zones
+/// Teslimat bölgelerini yönetmek için teslimat bölgesi controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -22,11 +22,11 @@ public class DeliveryZoneController : BaseController
     }
 
     /// <summary>
-    /// Get delivery zones for a merchant
+    /// Bir mağaza için teslimat bölgelerini getir
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of delivery zones</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Teslimat bölgeleri listesi</returns>
     [HttpGet("merchant/{merchantId:guid}")]
     [ProducesResponseType(typeof(List<DeliveryZoneResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -39,11 +39,11 @@ public class DeliveryZoneController : BaseController
     }
 
     /// <summary>
-    /// Get specific delivery zone
+    /// Belirli bir teslimat bölgesini getir
     /// </summary>
-    /// <param name="id">Delivery zone ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Delivery zone details</returns>
+    /// <param name="id">Teslimat bölgesi ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Teslimat bölgesi detayları</returns>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(DeliveryZoneResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -56,11 +56,11 @@ public class DeliveryZoneController : BaseController
     }
 
     /// <summary>
-    /// Create delivery zone
+    /// Teslimat bölgesi oluştur
     /// </summary>
-    /// <param name="request">Create delivery zone request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Created delivery zone</returns>
+    /// <param name="request">Teslimat bölgesi oluşturma talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Oluşturulan teslimat bölgesi</returns>
     [HttpPost]
     [Authorize]
     [Authorize(Roles = "Admin,MerchantOwner")]
@@ -82,12 +82,12 @@ public class DeliveryZoneController : BaseController
     }
 
     /// <summary>
-    /// Update delivery zone
+    /// Teslimat bölgesini güncelle
     /// </summary>
-    /// <param name="id">Delivery zone ID</param>
-    /// <param name="request">Update delivery zone request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Updated delivery zone</returns>
+    /// <param name="id">Teslimat bölgesi ID'si</param>
+    /// <param name="request">Teslimat bölgesi güncelleme talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güncellenen teslimat bölgesi</returns>
     [HttpPut("{id:guid}")]
     [Authorize]
     [Authorize(Roles = "Admin,MerchantOwner")]
@@ -111,11 +111,11 @@ public class DeliveryZoneController : BaseController
     }
 
     /// <summary>
-    /// Delete delivery zone
+    /// Teslimat bölgesini sil
     /// </summary>
-    /// <param name="id">Delivery zone ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="id">Teslimat bölgesi ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpDelete("{id:guid}")]
     [Authorize]
     [Authorize(Roles = "Admin,MerchantOwner")]
@@ -134,12 +134,12 @@ public class DeliveryZoneController : BaseController
     }
 
     /// <summary>
-    /// Check if location is in delivery zone
+    /// Konum teslimat bölgesi içinde mi kontrol et
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="request">Check delivery zone request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Check result</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="request">Teslimat bölgesi kontrol talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kontrol sonucu</returns>
     [HttpPost("merchant/{merchantId:guid}/check")]
     [ProducesResponseType(typeof(CheckDeliveryZoneResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

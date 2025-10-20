@@ -10,7 +10,7 @@ using NotificationChannel = Getir.Application.DTO.NotificationChannel;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Notification controller for managing notifications
+/// Bildirimleri yönetmek için bildirim controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -35,11 +35,11 @@ public class NotificationController : BaseController
     }
 
     /// <summary>
-    /// Get user notifications
+    /// Kullanıcı bildirimlerini getir
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged notifications</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış bildirimler</returns>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<NotificationResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -53,11 +53,11 @@ public class NotificationController : BaseController
     }
 
     /// <summary>
-    /// Mark notifications as read
+    /// Bildirimleri okundu olarak işaretle
     /// </summary>
-    /// <param name="request">Mark as read request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="request">Okundu işaretleme isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("mark-as-read")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -77,10 +77,10 @@ public class NotificationController : BaseController
     #region Notification Preferences
 
     /// <summary>
-    /// Get user notification preferences
+    /// Kullanıcı bildirim tercihlerini getir
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Notification preferences</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Bildirim tercihleri</returns>
     [HttpGet("preferences")]
     [ProducesResponseType(typeof(NotificationPreferencesResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -94,11 +94,11 @@ public class NotificationController : BaseController
     }
 
     /// <summary>
-    /// Update user notification preferences
+    /// Kullanıcı bildirim tercihlerini güncelle
     /// </summary>
-    /// <param name="request">Update preferences request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="request">Tercih güncelleme isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPut("preferences")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -116,10 +116,10 @@ public class NotificationController : BaseController
     }
 
     /// <summary>
-    /// Reset notification preferences to defaults
+    /// Bildirim tercihlerini varsayılanlara sıfırla
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("preferences/reset")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -133,10 +133,10 @@ public class NotificationController : BaseController
     }
 
     /// <summary>
-    /// Get notification preferences summary
+    /// Bildirim tercihleri özetini getir
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Preferences summary</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Tercih özeti</returns>
     [HttpGet("preferences/summary")]
     [ProducesResponseType(typeof(NotificationPreferencesSummary), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -154,11 +154,11 @@ public class NotificationController : BaseController
     #region Send Notifications
 
     /// <summary>
-    /// Send email notification
+    /// E-posta bildirimi gönder
     /// </summary>
-    /// <param name="request">Email request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="request">E-posta isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("send/email")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -190,11 +190,11 @@ public class NotificationController : BaseController
     }
 
     /// <summary>
-    /// Send SMS notification
+    /// SMS bildirimi gönder
     /// </summary>
-    /// <param name="request">SMS request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="request">SMS isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("send/sms")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -226,11 +226,11 @@ public class NotificationController : BaseController
     }
 
     /// <summary>
-    /// Send push notification
+    /// Push bildirimi gönder
     /// </summary>
-    /// <param name="request">Push notification request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="request">Push bildirim isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("send/push")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

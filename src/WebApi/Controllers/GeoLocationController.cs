@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// GeoLocation controller for location-based operations
+/// Konum tabanlı işlemler için GeoLocation controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/geo")]
@@ -25,14 +25,14 @@ public class GeoLocationController : BaseController
     #region Public Endpoints
 
     /// <summary>
-    /// Get nearby merchants within specified radius, optionally filtered by category type
+    /// Belirtilen yarıçap içindeki yakındaki merchant'ları alır, isteğe bağlı olarak kategori türüne göre filtrelenebilir
     /// </summary>
-    /// <param name="latitude">Latitude</param>
-    /// <param name="longitude">Longitude</param>
-    /// <param name="categoryType">Optional: Service category type (Restaurant=1, Market=2, Pharmacy=3, Water=4, Cafe=5, Bakery=6, Other=99)</param>
-    /// <param name="radius">Radius in kilometers</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Nearby merchants</returns>
+    /// <param name="latitude">Enlem</param>
+    /// <param name="longitude">Boylam</param>
+    /// <param name="categoryType">İsteğe bağlı: Hizmet kategori türü (Restaurant=1, Market=2, Pharmacy=3, Water=4, Cafe=5, Bakery=6, Other=99)</param>
+    /// <param name="radius">Kilometre cinsinden yarıçap</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Yakındaki merchant'lar</returns>
     [HttpGet("merchants/nearby")]
     [ProducesResponseType(typeof(IEnumerable<NearbyMerchantResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -60,11 +60,11 @@ public class GeoLocationController : BaseController
     }
 
     /// <summary>
-    /// Get location suggestions for autocomplete
+    /// Otomatik tamamlama için konum önerilerini al
     /// </summary>
-    /// <param name="query">Search query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Location suggestions</returns>
+    /// <param name="query">Arama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Konum önerileri</returns>
     [HttpGet("suggestions")]
     [ProducesResponseType(typeof(IEnumerable<LocationSuggestionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -77,13 +77,13 @@ public class GeoLocationController : BaseController
     }
 
     /// <summary>
-    /// Calculate delivery estimate for merchant
+    /// Merchant için teslimat tahmini hesapla
     /// </summary>
     /// <param name="merchantId">Merchant ID</param>
-    /// <param name="latitude">Customer latitude</param>
-    /// <param name="longitude">Customer longitude</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Delivery estimate</returns>
+    /// <param name="latitude">Müşteri enlemi</param>
+    /// <param name="longitude">Müşteri boylamı</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Teslimat tahmini</returns>
     [HttpGet("delivery/estimate")]
     [ProducesResponseType(typeof(DeliveryEstimateResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -98,13 +98,13 @@ public class GeoLocationController : BaseController
     }
 
     /// <summary>
-    /// Calculate delivery fee for merchant
+    /// Merchant için teslimat ücreti hesapla
     /// </summary>
     /// <param name="merchantId">Merchant ID</param>
-    /// <param name="latitude">Customer latitude</param>
-    /// <param name="longitude">Customer longitude</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Delivery fee</returns>
+    /// <param name="latitude">Müşteri enlemi</param>
+    /// <param name="longitude">Müşteri boylamı</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Teslimat ücreti</returns>
     [HttpGet("delivery/fee")]
     [ProducesResponseType(typeof(decimal), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -123,11 +123,11 @@ public class GeoLocationController : BaseController
     #region Customer Endpoints
 
     /// <summary>
-    /// Save user location
+    /// Kullanıcı konumunu kaydet
     /// </summary>
-    /// <param name="request">Save location request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="request">Konum kaydetme isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("location")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -148,11 +148,11 @@ public class GeoLocationController : BaseController
     }
 
     /// <summary>
-    /// Get user location history
+    /// Kullanıcı konum geçmişini al
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged location history</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış konum geçmişi</returns>
     [HttpGet("location/history")]
     [Authorize]
     [ProducesResponseType(typeof(PagedResult<UserLocationResponse>), StatusCodes.Status200OK)]
@@ -169,11 +169,11 @@ public class GeoLocationController : BaseController
     }
 
     /// <summary>
-    /// Get merchants in area
+    /// Bölgedeki merchant'ları al
     /// </summary>
-    /// <param name="request">Area search request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Merchants in area</returns>
+    /// <param name="request">Bölge arama isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Bölgedeki merchant'lar</returns>
     [HttpPost("merchants/area")]
     [Authorize]
     [ProducesResponseType(typeof(IEnumerable<MerchantInAreaResponse>), StatusCodes.Status200OK)]
@@ -195,12 +195,12 @@ public class GeoLocationController : BaseController
     #region Admin Endpoints
 
     /// <summary>
-    /// Get location analytics
+    /// Konum analitiklerini al
     /// </summary>
-    /// <param name="startDate">Start date</param>
-    /// <param name="endDate">End date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Location analytics</returns>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Konum analitikleri</returns>
     [HttpGet("analytics")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(LocationAnalyticsResponse), StatusCodes.Status200OK)]
@@ -216,10 +216,10 @@ public class GeoLocationController : BaseController
     }
 
     /// <summary>
-    /// Get delivery zone coverage
+    /// Teslimat bölgesi kapsamını al
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Delivery zone coverage</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Teslimat bölgesi kapsamı</returns>
     [HttpGet("delivery-zones/coverage")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(DeliveryZoneCoverageResponse), StatusCodes.Status200OK)]

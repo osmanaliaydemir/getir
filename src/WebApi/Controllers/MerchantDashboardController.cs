@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Merchant dashboard controller for merchant dashboard operations
+/// Mağaza dashboard işlemleri için mağaza dashboard controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/merchants/{merchantId:guid}/[controller]")]
@@ -24,11 +24,11 @@ public class MerchantDashboardController : BaseController
     }
 
     /// <summary>
-    /// Get dashboard overview
+    /// Dashboard genel görünümünü getirir
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Dashboard data</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Dashboard verileri</returns>
     [HttpGet]
     [ProducesResponseType(typeof(MerchantDashboardResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -45,12 +45,12 @@ public class MerchantDashboardController : BaseController
     }
 
     /// <summary>
-    /// Get recent orders
+    /// Son siparişleri getirir
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="limit">Number of orders to return</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Recent orders</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="limit">Döndürülecek sipariş sayısı</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Son siparişler</returns>
     [HttpGet("recent-orders")]
     [ProducesResponseType(typeof(List<RecentOrderResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -68,12 +68,12 @@ public class MerchantDashboardController : BaseController
     }
 
     /// <summary>
-    /// Get top products
+    /// En çok satan ürünleri getirir
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="limit">Number of products to return</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Top products</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="limit">Döndürülecek ürün sayısı</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>En çok satan ürünler</returns>
     [HttpGet("top-products")]
     [ProducesResponseType(typeof(List<TopProductResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -91,13 +91,13 @@ public class MerchantDashboardController : BaseController
     }
 
     /// <summary>
-    /// Get performance metrics
+    /// Performans metriklerini getirir
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="startDate">Start date</param>
-    /// <param name="endDate">End date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Performance metrics</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Performans metrikleri</returns>
     [HttpGet("performance")]
     [ProducesResponseType(typeof(MerchantPerformanceMetrics), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Merchant controller for managing merchants
+/// Mağazaları yönetmek için mağaza controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -24,11 +24,11 @@ public class MerchantController : BaseController
     }
 
     /// <summary>
-    /// Get all merchants with pagination
+    /// Sayfalama ile tüm mağazaları getir
     /// </summary>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged list of merchants</returns>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış mağaza listesi</returns>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<MerchantResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMerchants(
@@ -40,11 +40,11 @@ public class MerchantController : BaseController
     }
 
     /// <summary>
-    /// Get merchant by ID
+    /// ID'ye göre mağaza getir
     /// </summary>
-    /// <param name="id">Merchant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Merchant details</returns>
+    /// <param name="id">Mağaza ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Mağaza detayları</returns>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(MerchantResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -57,10 +57,10 @@ public class MerchantController : BaseController
     }
 
     /// <summary>
-    /// Get my merchant (current user's merchant)
+    /// Benim mağazamı getir (mevcut kullanıcının mağazası)
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Merchant details</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Mağaza detayları</returns>
     [HttpGet("my-merchant")]
     [Authorize]
     [Authorize(Roles = "MerchantOwner")]
@@ -76,11 +76,11 @@ public class MerchantController : BaseController
     }
 
     /// <summary>
-    /// Create a new merchant
+    /// Yeni mağaza oluştur
     /// </summary>
-    /// <param name="request">Create merchant request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Created merchant</returns>
+    /// <param name="request">Mağaza oluşturma talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Oluşturulan mağaza</returns>
     [HttpPost]
     [Authorize]
     [Authorize(Roles = "Admin,MerchantOwner")]
@@ -102,12 +102,12 @@ public class MerchantController : BaseController
     }
 
     /// <summary>
-    /// Update merchant
+    /// Mağazayı güncelle
     /// </summary>
-    /// <param name="id">Merchant ID</param>
-    /// <param name="request">Update merchant request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Updated merchant</returns>
+    /// <param name="id">Mağaza ID'si</param>
+    /// <param name="request">Mağaza güncelleme talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güncellenen mağaza</returns>
     [HttpPut("{id:guid}")]
     [Authorize]
     [Authorize(Roles = "Admin,MerchantOwner")]
@@ -130,11 +130,11 @@ public class MerchantController : BaseController
     }
 
     /// <summary>
-    /// Delete merchant
+    /// Mağazayı sil
     /// </summary>
-    /// <param name="id">Merchant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="id">Mağaza ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpDelete("{id:guid}")]
     [Authorize]
     [Authorize(Roles = "Admin")]
@@ -150,12 +150,12 @@ public class MerchantController : BaseController
     }
 
     /// <summary>
-    /// Get merchants by category type
+    /// Kategori türüne göre mağazaları getir
     /// </summary>
-    /// <param name="categoryType">Service category type</param>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged list of merchants</returns>
+    /// <param name="categoryType">Hizmet kategori türü</param>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış mağaza listesi</returns>
     [HttpGet("by-category-type/{categoryType}")]
     [ProducesResponseType(typeof(PagedResult<MerchantResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMerchantsByCategoryType(
@@ -168,11 +168,11 @@ public class MerchantController : BaseController
     }
 
     /// <summary>
-    /// Get active merchants by category type (without pagination)
+    /// Kategori türüne göre aktif mağazaları getir (sayfalama yok)
     /// </summary>
-    /// <param name="categoryType">Service category type</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of active merchants</returns>
+    /// <param name="categoryType">Hizmet kategori türü</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Aktif mağaza listesi</returns>
     [HttpGet("active/by-category-type/{categoryType}")]
     [ProducesResponseType(typeof(IEnumerable<MerchantResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetActiveMerchantsByCategoryType(

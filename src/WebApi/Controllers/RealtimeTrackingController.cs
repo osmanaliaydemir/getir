@@ -8,6 +8,9 @@ namespace Getir.WebApi.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
+/// <summary>
+/// Gerçek zamanlı sipariş takibi, ETA hesaplama, bildirimler ve ayarlar için API
+/// </summary>
 public class RealtimeTrackingController : BaseController
 {
     private readonly IOrderTrackingService _orderTrackingService;
@@ -32,6 +35,11 @@ public class RealtimeTrackingController : BaseController
 
     #region Order Tracking
 
+    /// <summary>
+    /// Sipariş ID'ye göre takip bilgisini getirir
+    /// </summary>
+    /// <param name="orderId">Sipariş ID</param>
+    /// <returns>Takip bilgisi</returns>
     [HttpGet("order/{orderId}")]
     [ProducesResponseType(typeof(OrderTrackingDto), 200)]
     [ProducesResponseType(404)]
@@ -53,6 +61,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Takip ID'ye göre takip bilgisini getirir
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <returns>Takip bilgisi</returns>
     [HttpGet("{trackingId}")]
     [ProducesResponseType(typeof(OrderTrackingDto), 200)]
     [ProducesResponseType(404)]
@@ -74,6 +87,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Yeni takip kaydı oluşturur
+    /// </summary>
+    /// <param name="request">Takip oluşturma isteği</param>
+    /// <returns>Oluşturulan takip</returns>
     [HttpPost("create")]
     [ProducesResponseType(typeof(OrderTrackingDto), 201)]
     [ProducesResponseType(400)]
@@ -90,6 +108,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Konum güncellemesi gönderir
+    /// </summary>
+    /// <param name="request">Konum güncelleme isteği</param>
+    /// <returns>Konum güncelleme yanıtı</returns>
     [HttpPost("location/update")]
     [ProducesResponseType(typeof(LocationUpdateResponse), 200)]
     [ProducesResponseType(400)]
@@ -111,6 +134,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Sipariş durumunu günceller
+    /// </summary>
+    /// <param name="request">Durum güncelleme isteği</param>
+    /// <returns>Durum güncelleme yanıtı</returns>
     [HttpPost("status/update")]
     [ProducesResponseType(typeof(StatusUpdateResponse), 200)]
     [ProducesResponseType(400)]
@@ -132,6 +160,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Takibi siler
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <returns>İçerik yok</returns>
     [HttpDelete("{trackingId}")]
     [ProducesResponseType(204)]
     [ProducesResponseType(404)]
@@ -153,6 +186,10 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Aktif takip kayıtlarını getirir
+    /// </summary>
+    /// <returns>Takip listesi</returns>
     [HttpGet("active")]
     [ProducesResponseType(typeof(List<OrderTrackingDto>), 200)]
     public async Task<IActionResult> GetActiveTrackings()
@@ -168,6 +205,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Kurye ID'ye göre takip kayıtlarını getirir
+    /// </summary>
+    /// <param name="courierId">Kurye ID</param>
+    /// <returns>Takip listesi</returns>
     [HttpGet("courier/{courierId}")]
     [ProducesResponseType(typeof(List<OrderTrackingDto>), 200)]
     public async Task<IActionResult> GetTrackingsByCourier(Guid courierId)
@@ -183,6 +225,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Kullanıcı ID'ye göre takip kayıtlarını getirir
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <returns>Takip listesi</returns>
     [HttpGet("user/{userId}")]
     [ProducesResponseType(typeof(List<OrderTrackingDto>), 200)]
     public async Task<IActionResult> GetTrackingsByUser(Guid userId)
@@ -198,6 +245,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Takip kayıtlarında arama yapar
+    /// </summary>
+    /// <param name="request">Arama isteği</param>
+    /// <returns>Arama sonucu</returns>
     [HttpPost("search")]
     [ProducesResponseType(typeof(TrackingSearchResponse), 200)]
     public async Task<IActionResult> SearchTrackings([FromBody] TrackingSearchRequest request)
@@ -213,6 +265,12 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Takip konum geçmişini getirir
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <param name="count">Kayıt adedi</param>
+    /// <returns>Konum geçmişi</returns>
     [HttpGet("{trackingId}/history")]
     [ProducesResponseType(typeof(List<LocationHistoryDto>), 200)]
     public async Task<IActionResult> GetLocationHistory(Guid trackingId, [FromQuery] int count = 50)
@@ -228,6 +286,12 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Takip istatistiklerini getirir
+    /// </summary>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>İstatistikler</returns>
     [HttpGet("statistics")]
     [ProducesResponseType(typeof(TrackingStatisticsDto), 200)]
     public async Task<IActionResult> GetTrackingStatistics([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
@@ -243,6 +307,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Mevcut durum geçişlerini getirir
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <returns>Durum geçişleri</returns>
     [HttpGet("{trackingId}/transitions")]
     [ProducesResponseType(typeof(List<TrackingStatus>), 200)]
     public async Task<IActionResult> GetAvailableTransitions(Guid trackingId)
@@ -258,6 +327,12 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Bir durum geçişini doğrular
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <param name="request">Geçiş doğrulama isteği</param>
+    /// <returns>Doğrulama sonucu</returns>
     [HttpPost("{trackingId}/validate-transition")]
     [ProducesResponseType(typeof(bool), 200)]
     public async Task<IActionResult> ValidateTransition(Guid trackingId, [FromBody] ValidateTransitionRequest request)
@@ -277,6 +352,11 @@ public class RealtimeTrackingController : BaseController
 
     #region ETA Estimation
 
+    /// <summary>
+    /// Güncel ETA bilgisini getirir
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <returns>ETA bilgisi</returns>
     [HttpGet("{trackingId}/eta")]
     [ProducesResponseType(typeof(ETAEstimationDto), 200)]
     [ProducesResponseType(404)]
@@ -298,6 +378,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Yeni ETA tahmini oluşturur
+    /// </summary>
+    /// <param name="request">ETA oluşturma isteği</param>
+    /// <returns>Oluşturulan ETA</returns>
     [HttpPost("eta")]
     [ProducesResponseType(typeof(ETAEstimationDto), 201)]
     [ProducesResponseType(400)]
@@ -314,6 +399,12 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// ETA tahminini günceller
+    /// </summary>
+    /// <param name="id">ETA ID</param>
+    /// <param name="request">ETA güncelleme isteği</param>
+    /// <returns>Güncellenen ETA</returns>
     [HttpPut("eta/{id}")]
     [ProducesResponseType(typeof(ETAEstimationDto), 200)]
     [ProducesResponseType(404)]
@@ -334,6 +425,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// ETA tahminini siler
+    /// </summary>
+    /// <param name="id">ETA ID</param>
+    /// <returns>İçerik yok</returns>
     [HttpDelete("eta/{id}")]
     [ProducesResponseType(204)]
     [ProducesResponseType(404)]
@@ -355,6 +451,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// ETA geçmişini getirir
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <returns>ETA listesi</returns>
     [HttpGet("{trackingId}/eta/history")]
     [ProducesResponseType(typeof(List<ETAEstimationDto>), 200)]
     public async Task<IActionResult> GetETAHistory(Guid trackingId)
@@ -370,6 +471,12 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// ETA hesaplar
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <param name="request">Hesaplama isteği</param>
+    /// <returns>ETA</returns>
     [HttpPost("{trackingId}/eta/calculate")]
     [ProducesResponseType(typeof(ETAEstimationDto), 200)]
     public async Task<IActionResult> CalculateETA(Guid trackingId, [FromBody] CalculateETARequest? request = null)
@@ -388,6 +495,12 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// ETA doğrular
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <param name="request">Doğrulama isteği</param>
+    /// <returns>Doğrulama sonucu</returns>
     [HttpPost("{trackingId}/eta/validate")]
     [ProducesResponseType(typeof(bool), 200)]
     public async Task<IActionResult> ValidateETA(Guid trackingId, [FromBody] ValidateETARequest request)
@@ -403,6 +516,10 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Aktif ETA kayıtlarını getirir
+    /// </summary>
+    /// <returns>ETA listesi</returns>
     [HttpGet("eta/active")]
     [ProducesResponseType(typeof(List<ETAEstimationDto>), 200)]
     public async Task<IActionResult> GetActiveETAEstimations()
@@ -418,6 +535,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// İki nokta arası mesafeyi hesaplar
+    /// </summary>
+    /// <param name="request">Mesafe hesaplama isteği</param>
+    /// <returns>Mesafe (km)</returns>
     [HttpPost("distance/calculate")]
     [ProducesResponseType(typeof(double), 200)]
     public async Task<IActionResult> CalculateDistance([FromBody] CalculateDistanceRequest request)
@@ -437,6 +559,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Tahmini dakika hesaplar
+    /// </summary>
+    /// <param name="request">Dakika hesaplama isteği</param>
+    /// <returns>Dakika</returns>
     [HttpPost("minutes/calculate")]
     [ProducesResponseType(typeof(int), 200)]
     public async Task<IActionResult> CalculateEstimatedMinutes([FromBody] CalculateMinutesRequest request)
@@ -458,6 +585,11 @@ public class RealtimeTrackingController : BaseController
 
     #region Notifications
 
+    /// <summary>
+    /// Takip bildirimi gönderir
+    /// </summary>
+    /// <param name="request">Bildirim gönderme isteği</param>
+    /// <returns>Bildirim yanıtı</returns>
     [HttpPost("notifications/send")]
     [ProducesResponseType(typeof(SendNotificationResponse), 200)]
     [ProducesResponseType(400)]
@@ -474,6 +606,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Takip ID'ye göre bildirimleri getirir
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <returns>Bildirimler</returns>
     [HttpGet("{trackingId}/notifications")]
     [ProducesResponseType(typeof(List<TrackingNotificationDto>), 200)]
     public async Task<IActionResult> GetNotificationsByTrackingId(Guid trackingId)
@@ -489,6 +626,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Kullanıcı ID'ye göre bildirimleri getirir
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <returns>Bildirimler</returns>
     [HttpGet("notifications/user/{userId}")]
     [ProducesResponseType(typeof(List<TrackingNotificationDto>), 200)]
     public async Task<IActionResult> GetNotificationsByUserId(Guid userId)
@@ -504,6 +646,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Kullanıcının okunmamış bildirimlerini getirir
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <returns>Bildirimler</returns>
     [HttpGet("notifications/user/{userId}/unread")]
     [ProducesResponseType(typeof(List<TrackingNotificationDto>), 200)]
     public async Task<IActionResult> GetUnreadNotifications(Guid userId)
@@ -519,6 +666,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Bildirimi okundu işaretler
+    /// </summary>
+    /// <param name="notificationId">Bildirim ID</param>
+    /// <returns>İçerik yok</returns>
     [HttpPut("notifications/{notificationId}/read")]
     [ProducesResponseType(204)]
     [ProducesResponseType(404)]
@@ -540,6 +692,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Kullanıcının tüm bildirimlerini okundu işaretler
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <returns>İçerik yok</returns>
     [HttpPut("notifications/user/{userId}/read-all")]
     [ProducesResponseType(204)]
     public async Task<IActionResult> MarkAllNotificationsAsRead(Guid userId)
@@ -555,6 +712,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Bildirimi siler
+    /// </summary>
+    /// <param name="notificationId">Bildirim ID</param>
+    /// <returns>İçerik yok</returns>
     [HttpDelete("notifications/{notificationId}")]
     [ProducesResponseType(204)]
     [ProducesResponseType(404)]
@@ -576,6 +738,13 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Türe göre bildirimleri getirir
+    /// </summary>
+    /// <param name="type">Bildirim türü</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Bildirimler</returns>
     [HttpGet("notifications/type/{type}")]
     [ProducesResponseType(typeof(List<TrackingNotificationDto>), 200)]
     public async Task<IActionResult> GetNotificationsByType(NotificationType type, [FromQuery] DateTime? startDate = null, [FromQuery] DateTime? endDate = null)
@@ -591,6 +760,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Kullanıcının okunmamış bildirim sayısını getirir
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <returns>Sayı</returns>
     [HttpGet("notifications/user/{userId}/count")]
     [ProducesResponseType(typeof(int), 200)]
     public async Task<IActionResult> GetUnreadNotificationCount(Guid userId)
@@ -610,6 +784,11 @@ public class RealtimeTrackingController : BaseController
 
     #region Settings
 
+    /// <summary>
+    /// Kullanıcı ayarlarını getirir
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <returns>Ayarlar</returns>
     [HttpGet("settings/user/{userId}")]
     [ProducesResponseType(typeof(TrackingSettingsDto), 200)]
     [ProducesResponseType(404)]
@@ -631,6 +810,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Mağaza ayarlarını getirir
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID</param>
+    /// <returns>Ayarlar</returns>
     [HttpGet("settings/merchant/{merchantId}")]
     [ProducesResponseType(typeof(TrackingSettingsDto), 200)]
     [ProducesResponseType(404)]
@@ -652,6 +836,12 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Kullanıcı ayarları oluşturur
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="request">Ayar güncelleme isteği</param>
+    /// <returns>Oluşturulan ayarlar</returns>
     [HttpPost("settings/user/{userId}")]
     [ProducesResponseType(typeof(TrackingSettingsDto), 201)]
     [ProducesResponseType(400)]
@@ -674,6 +864,12 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Mağaza ayarları oluşturur
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID</param>
+    /// <param name="request">Ayar güncelleme isteği</param>
+    /// <returns>Oluşturulan ayarlar</returns>
     [HttpPost("settings/merchant/{merchantId}")]
     [ProducesResponseType(typeof(TrackingSettingsDto), 201)]
     [ProducesResponseType(400)]
@@ -696,6 +892,12 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Kullanıcı ayarlarını günceller
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="request">Ayar güncelleme isteği</param>
+    /// <returns>Güncellenen ayarlar</returns>
     [HttpPut("settings/user/{userId}")]
     [ProducesResponseType(typeof(TrackingSettingsDto), 200)]
     [ProducesResponseType(400)]
@@ -723,6 +925,12 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Mağaza ayarlarını günceller
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID</param>
+    /// <param name="request">Ayar güncelleme isteği</param>
+    /// <returns>Güncellenen ayarlar</returns>
     [HttpPut("settings/merchant/{merchantId}")]
     [ProducesResponseType(typeof(TrackingSettingsDto), 200)]
     [ProducesResponseType(400)]
@@ -750,6 +958,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Kullanıcı ayarlarını siler
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <returns>İçerik yok</returns>
     [HttpDelete("settings/user/{userId}")]
     [ProducesResponseType(204)]
     [ProducesResponseType(404)]
@@ -771,6 +984,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Mağaza ayarlarını siler
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID</param>
+    /// <returns>İçerik yok</returns>
     [HttpDelete("settings/merchant/{merchantId}")]
     [ProducesResponseType(204)]
     [ProducesResponseType(404)]
@@ -792,6 +1010,10 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Varsayılan ayarları getirir
+    /// </summary>
+    /// <returns>Ayarlar</returns>
     [HttpGet("settings/default")]
     [ProducesResponseType(typeof(TrackingSettingsDto), 200)]
     public async Task<IActionResult> GetDefaultSettings()
@@ -807,6 +1029,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Ayarları doğrular
+    /// </summary>
+    /// <param name="request">Ayar doğrulama isteği</param>
+    /// <returns>Doğrulama sonucu</returns>
     [HttpPost("settings/validate")]
     [ProducesResponseType(typeof(bool), 200)]
     public async Task<IActionResult> ValidateSettings([FromBody] UpdateTrackingSettingsRequest request)
@@ -826,6 +1053,11 @@ public class RealtimeTrackingController : BaseController
 
     #region Realtime Data
 
+    /// <summary>
+    /// Gerçek zamanlı takip verisini getirir
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <returns>Gerçek zamanlı veri</returns>
     [HttpGet("realtime/{trackingId}")]
     [ProducesResponseType(typeof(RealtimeTrackingData), 200)]
     [ProducesResponseType(404)]
@@ -847,6 +1079,10 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Aktif gerçek zamanlı verileri getirir
+    /// </summary>
+    /// <returns>Veri listesi</returns>
     [HttpGet("realtime/active")]
     [ProducesResponseType(typeof(List<RealtimeTrackingData>), 200)]
     public async Task<IActionResult> GetActiveRealtimeData()
@@ -862,6 +1098,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Kullanıcının gerçek zamanlı verilerini getirir
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <returns>Veri listesi</returns>
     [HttpGet("realtime/user/{userId}")]
     [ProducesResponseType(typeof(List<RealtimeTrackingData>), 200)]
     public async Task<IActionResult> GetRealtimeDataByUser(Guid userId)
@@ -877,6 +1118,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Kuryenin gerçek zamanlı verilerini getirir
+    /// </summary>
+    /// <param name="courierId">Kurye ID</param>
+    /// <returns>Veri listesi</returns>
     [HttpGet("realtime/courier/{courierId}")]
     [ProducesResponseType(typeof(List<RealtimeTrackingData>), 200)]
     public async Task<IActionResult> GetRealtimeDataByCourier(Guid courierId)
@@ -892,6 +1138,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Takibi başlatır
+    /// </summary>
+    /// <param name="request">Başlatma isteği</param>
+    /// <returns>Başarı</returns>
     [HttpPost("start")]
     [ProducesResponseType(typeof(bool), 200)]
     public async Task<IActionResult> StartTracking([FromBody] StartTrackingRequest request)
@@ -907,6 +1158,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Takibi durdurur
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <returns>Başarı</returns>
     [HttpPost("{trackingId}/stop")]
     [ProducesResponseType(typeof(bool), 200)]
     public async Task<IActionResult> StopTracking(Guid trackingId)
@@ -922,6 +1178,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Takibi duraklatır
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <returns>Başarı</returns>
     [HttpPost("{trackingId}/pause")]
     [ProducesResponseType(typeof(bool), 200)]
     public async Task<IActionResult> PauseTracking(Guid trackingId)
@@ -937,6 +1198,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Takibi devam ettirir
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <returns>Başarı</returns>
     [HttpPost("{trackingId}/resume")]
     [ProducesResponseType(typeof(bool), 200)]
     public async Task<IActionResult> ResumeTracking(Guid trackingId)
@@ -952,6 +1218,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Takip aktif mi kontrol eder
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <returns>Aktiflik</returns>
     [HttpGet("{trackingId}/active")]
     [ProducesResponseType(typeof(bool), 200)]
     public async Task<IActionResult> IsTrackingActive(Guid trackingId)
@@ -967,6 +1238,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Takip metriklerini getirir
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <returns>Metrikler</returns>
     [HttpGet("{trackingId}/metrics")]
     [ProducesResponseType(typeof(Dictionary<string, object>), 200)]
     public async Task<IActionResult> GetTrackingMetrics(Guid trackingId)
@@ -982,6 +1258,11 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Konumu doğrular
+    /// </summary>
+    /// <param name="request">Konum doğrulama isteği</param>
+    /// <returns>Doğrulama sonucu</returns>
     [HttpPost("location/validate")]
     [ProducesResponseType(typeof(bool), 200)]
     public async Task<IActionResult> ValidateLocation([FromBody] ValidateLocationRequest request)
@@ -997,6 +1278,12 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Hedefe olan mesafeyi hesaplar
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <param name="request">Mesafe isteği</param>
+    /// <returns>Mesafe (km)</returns>
     [HttpPost("{trackingId}/distance")]
     [ProducesResponseType(typeof(double), 200)]
     public async Task<IActionResult> CalculateDistanceToDestination(Guid trackingId, [FromBody] CalculateDistanceToDestinationRequest request)
@@ -1012,6 +1299,12 @@ public class RealtimeTrackingController : BaseController
         }
     }
 
+    /// <summary>
+    /// Hedefe yakınlığı kontrol eder
+    /// </summary>
+    /// <param name="trackingId">Takip ID</param>
+    /// <param name="request">Yakınlık isteği</param>
+    /// <returns>Yakın mı</returns>
     [HttpPost("{trackingId}/nearby")]
     [ProducesResponseType(typeof(bool), 200)]
     public async Task<IActionResult> IsNearDestination(Guid trackingId, [FromBody] IsNearDestinationRequest request)

@@ -10,28 +10,16 @@
 | Modül | Tamamlanma | Kalan İş |
 |-------|-----------|----------|
 | **Mobile App** | %100 | - |
-| **Web API** | %85 | 3 madde |
-| **Merchant Portal** | %80 | 5 madde |
+| **Web API** | %98 | 1 madde |
+| **Merchant Portal** | %100 | - |
 
 ---
 
 # 🌐 WEB API - YAPILACAKLAR
 
-## 🔴 CRITICAL (Öncelik 1)
-
-### ✅ ~~1. Unit Test Coverage~~ TAMAMLANDI
-```
-✅ 247 test yazıldı (38/38 servis - %100 coverage!)
-✅ %100 başarı oranı
-✅ 12,000+ satır test kodu
-✅ Global standartlar (xUnit + Moq + FluentAssertions)
-```
-
----
-
 ## 🟡 YÜKSEK ÖNCELİKLİ (Öncelik 1)
 
-### 2. Background Jobs - Hangfire (8-12 saat)
+### 1. Background Jobs - Hangfire (8-12 saat)
 
 **İhtiyaç:**
 - Order timeout check (15 dakika sonra otomatik iptal)
@@ -117,194 +105,44 @@ app.MapHangfireDashboard("/hangfire", new DashboardOptions
 
 ---
 
-## 🟢 ORTA ÖNCELİKLİ (Öncelik 2)
-
-### 3. CORS Policy Hardening (1 saat)
-
-**Sorun:**
-```csharp
-policy.SetIsOriginAllowed(_ => true) // ❌ Allow all origins
-```
-
-**Yapılacaklar:**
-```csharp
-// 1. appsettings.json
-{
-  "Cors": {
-    "AllowedOrigins": [
-      "https://merchant.getir.com",
-      "https://admin.getir.com",
-      "http://localhost:3000",
-      "http://localhost:5173"
-    ]
-  }
-}
-
-// 2. Program.cs
-options.AddPolicy("SignalRCorsPolicy", policy =>
-{
-    var allowedOrigins = builder.Configuration
-        .GetSection("Cors:AllowedOrigins")
-        .Get<string[]>() ?? Array.Empty<string>();
-    
-    if (builder.Environment.IsDevelopment())
-    {
-        policy.SetIsOriginAllowed(_ => true);
-    }
-    else
-    {
-        policy.WithOrigins(allowedOrigins);
-    }
-    
-    policy.AllowAnyMethod()
-          .AllowAnyHeader()
-          .AllowCredentials();
-});
-
-// 3. appsettings.Production.json
-{
-  "Cors": {
-    "AllowedOrigins": [
-      "https://merchant.getir.com",
-      "https://admin.getir.com"
-    ]
-    }
-}
-```
-
-**Çıktı:**
-- Production-safe CORS
-- Environment-based configuration
-- Security enhancement
-
----
-
-# 💼 MERCHANT PORTAL - YAPILACAKLAR
-
-## 🟡 YÜKSEK ÖNCELİKLİ
-
-
-
-## 🟢 ORTA ÖNCELİKLİ
-
-
 # 📊 ÖZET - KALAN İŞLER
 
 | # | Görev | Modül | Süre | Öncelik |
 |---|-------|-------|------|---------|
 | 1 | **Background Jobs (Hangfire)** | **Web API** | **8-12h** | 🟡 **YÜKSEK** |
-| 2 | **CORS Policy Hardening** | **Web API** | **1h** | 🟢 **ORTA** |
 
-**Toplam Kalan:** 9-13 saat (1-2 gün) 🎉
+**Toplam Kalan:** 8-12 saat (1 gün) 🎉
 
 ---
 
 ## 🎯 TAVSİYE EDİLEN SIRALAMA
 
-### ✅ TAMAMLANANLAR (Bu Oturumda)
-1. ~~Unit Test Coverage~~ (40-60h) ✅
-2. ~~Application Insights~~ (2h) ✅ **REMOVED**
-3. ~~Advanced Analytics Dashboard~~ (3-4h) ✅
-4. ~~Payment Tracking Module~~ (4-5h) ✅
-5. ~~Stock Management Enhancement~~ (2-3h) ✅
-6. ~~File Upload Enhancement~~ (2-3h) ✅
-
-**Bu Oturumda Tamamlanan:** ~55 saat 🚀
-
-### 🔥 SON 2 GÖREV
+### 🔥 KALAN GÖREV
 1. **Background Jobs (Hangfire)** (8-12h) - Otomasyon için kritik
-2. **CORS Policy Hardening** (1h) ⚡ Hızlı güvenlik
 
-**Toplam Kalan:** 9-13 saat
+**Toplam Kalan:** 8-12 saat
 
 ---
 
 ## 📈 İLERLEME TAKIBI
 
-### ✅ Tamamlanan (Bu Session)
-- [x] Unit Test Coverage - BATCH 1 (104 test)
-  - StockManagementService (26 test)
-  - ReviewService (28 test)
-  - PaymentService (10 test)
-  - AdminService (11 test)
-  - MerchantService (4 test)
-  - CartService (+6 test, 4→10)
-  - OrderService (+10 test, 5→15)
-- [x] Unit Test Coverage - BATCH 2 (30 test)
-  - ProductCategoryService (5 test)
-  - SearchService (4 test)
-  - FavoritesService (7 test)
-  - UserAddressService (5 test)
-  - CampaignService (2 test)
-  - WorkingHoursService (4 test)
-  - DeliveryZoneService (3 test)
-- [x] Working Hours Integration (1.5 saat)
-  - Backend ↔ Frontend DTO mapping
-  - DayOfWeek enum ↔ string conversion
-  - TimeSpan ↔ string time parsing
-  - IsOpen24Hours logic implementation
-- [x] Advanced Analytics Dashboard (3-4 saat)
-  - Chart.js 4.4.0 integration
-  - Sales Line Chart (dual Y-axis, 7/30 day toggle)
-  - Orders Bar Chart (status breakdown)
-  - Category Pie/Doughnut Chart
-  - 3 API endpoints (mock data ready)
-- [x] Payment Tracking Module (4-5 saat)
-  - Payment history with DataTables
-  - Revenue analytics dashboard
-  - Settlement reports (daily breakdown)
-  - Payment method breakdown charts
-  - Excel/CSV export
-  - 3 views + 1 controller + 1 service
-- [x] Stock Management Enhancement (2-3 saat)
-  - CSV import/export with validation
-  - Bulk stock update modal
-  - Multi-product selection
-  - 7 new models, 5 new service methods
-  - 2 JavaScript modules
-- [x] File Upload Enhancement (2-3 saat)
-  - Drag & drop upload zone
-  - Image compression (Canvas API)
-  - Multiple files support (max 5)
-  - Upload progress with speed & ETA
-  - Main image selection
-  - 4 JavaScript modules + 1 partial view
+### ✅ Tamamlanan (Bu Oturum)
+- [x] **CORS Policy Hardening** (1 saat) ✅
+  - `appsettings.json`: Local URLs (localhost:7001, localhost:7169)
+  - `appsettings.Production.json`: Production URLs (ajilgo.runasp.net, ajilgo-portal.runasp.net)
+  - `Program.cs`: Environment-based CORS policy
+  - Development: Allow all origins (testing)
+  - Production: Restricted to configured origins only
+  - ✅ Build successful
 
-📊 Test Coverage Özet:
-- Toplam Servisler: 38
-- Test Edilen: 38 (%100! 🎉)
-- Toplam Test: 247
-- Coverage: %100 (FULL COVERAGE!)
-- Durum: %100 Passing ✅
-
-### ⏳ Devam Eden
+### ⏳ Yapılacaklar
 - [ ] Background Jobs (Hangfire)
-- [ ] CORS Policy Hardening
-
----
-
-## 🔥 ÖNCELİK PUANI
-
-| Görev | Kritiklik | İş Değeri | Kolaylık | **TOPLAM** |
-|-------|-----------|-----------|----------|------------|
-| CORS Policy | 7/10 | 6/10 | 10/10 | **23/30** ⭐ |
-| Application Insights | 9/10 | 8/10 | 8/10 | **25/30** ⭐⭐ |
-| Payment Tracking | 7/10 | 9/10 | 6/10 | **22/30** ⭐ |
-| Advanced Analytics | 5/10 | 7/10 | 7/10 | **19/30** |
-| Background Jobs | 6/10 | 8/10 | 4/10 | **18/30** |
-| Stock Enhancement | 4/10 | 6/10 | 8/10 | **18/30** |
-| File Upload | 3/10 | 5/10 | 7/10 | **15/30** |
-
-**Önerilen Sıra:** Application Insights → CORS → Payment → Analytics → Background Jobs → Diğerleri
 
 ---
 
 **Rapor Sahibi:** Senior .NET & Flutter Architect  
-**Son Güncelleme:** 20 Ekim 2025, Saat 01:00  
-**Durum:** 2 görev kaldı, 9-13 saat (1-2 gün)
-
-**Not:** Application Insights kaldırıldı - alternatif monitoring çözümü araştırılacak
-**Başarı:** Merchant Portal %98 tamamlandı! 🎉
+**Son Güncelleme:** 20 Ekim 2025, Saat 03:00  
+**Durum:** 1 görev kaldı, 8-12 saat (1 gün) - %98 tamamlandı! 🎉
 
 ---
 

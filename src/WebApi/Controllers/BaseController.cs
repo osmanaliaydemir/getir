@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Base controller class that provides common functionality for all controllers
+/// Tüm controller'lar için ortak işlevsellik sağlayan temel controller sınıfı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -13,7 +13,7 @@ namespace Getir.WebApi.Controllers;
 public abstract class BaseController : ControllerBase
 {
     /// <summary>
-    /// Converts Result<T> to IActionResult with standardized ApiResponse
+    /// Result<T>'yi standartlaştırılmış ApiResponse ile IActionResult'a dönüştürür
     /// </summary>
     protected IActionResult ToActionResult<T>(Result<T> result)
     {

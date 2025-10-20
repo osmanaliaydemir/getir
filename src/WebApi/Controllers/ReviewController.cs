@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Review controller for review management
+/// Değerlendirme yönetimi için değerlendirme controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -22,11 +22,11 @@ public class ReviewController : BaseController
     }
 
     /// <summary>
-    /// Create a new review
+    /// Yeni değerlendirme oluştur
     /// </summary>
-    /// <param name="request">Create review request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Created review</returns>
+    /// <param name="request">Değerlendirme oluşturma talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Oluşturulan değerlendirme</returns>
     [HttpPost]
     [Authorize]
     [ProducesResponseType(typeof(ReviewResponse), StatusCodes.Status201Created)]
@@ -51,12 +51,12 @@ public class ReviewController : BaseController
     }
 
     /// <summary>
-    /// Update an existing review
+    /// Mevcut bir değerlendirmeyi güncelle
     /// </summary>
-    /// <param name="reviewId">Review ID</param>
-    /// <param name="request">Update review request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Updated review</returns>
+    /// <param name="reviewId">Değerlendirme ID</param>
+    /// <param name="request">Değerlendirme güncelleme isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güncellenen değerlendirme</returns>
     [HttpPut("{reviewId:guid}")]
     [Authorize]
     [ProducesResponseType(typeof(ReviewResponse), StatusCodes.Status200OK)]
@@ -79,11 +79,11 @@ public class ReviewController : BaseController
     }
 
     /// <summary>
-    /// Delete a review
+    /// Değerlendirmeyi sil
     /// </summary>
-    /// <param name="reviewId">Review ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="reviewId">Değerlendirme ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpDelete("{reviewId:guid}")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -105,11 +105,11 @@ public class ReviewController : BaseController
     }
 
     /// <summary>
-    /// Get a specific review
+    /// Belirli bir değerlendirmeyi getir
     /// </summary>
-    /// <param name="reviewId">Review ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Review details</returns>
+    /// <param name="reviewId">Değerlendirme ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Değerlendirme detayları</returns>
     [HttpGet("{reviewId:guid}")]
     [ProducesResponseType(typeof(ReviewResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -122,11 +122,11 @@ public class ReviewController : BaseController
     }
 
     /// <summary>
-    /// Get reviews with filters
+    /// Filtrelerle değerlendirmeleri getir
     /// </summary>
-    /// <param name="query">Review query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged reviews</returns>
+    /// <param name="query">Değerlendirme arama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış değerlendirmeler</returns>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<ReviewResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetReviews(
@@ -138,13 +138,13 @@ public class ReviewController : BaseController
     }
 
     /// <summary>
-    /// Get reviews for a specific merchant or courier
+    /// Belirli bir mağaza veya kurye için değerlendirmeleri getir
     /// </summary>
-    /// <param name="entityId">Entity ID</param>
-    /// <param name="entityType">Entity type</param>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged reviews</returns>
+    /// <param name="entityId">Varlık ID</param>
+    /// <param name="entityType">Varlık türü</param>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış değerlendirmeler</returns>
     [HttpGet("entity/{entityId:guid}/{entityType}")]
     [ProducesResponseType(typeof(PagedResult<ReviewResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetReviewsByEntity(
@@ -158,12 +158,12 @@ public class ReviewController : BaseController
     }
 
     /// <summary>
-    /// Get reviews by a specific user
+    /// Belirli bir kullanıcıya ait değerlendirmeleri getir
     /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <param name="query">Pagination query</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged reviews</returns>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış değerlendirmeler</returns>
     [HttpGet("user/{userId:guid}")]
     [ProducesResponseType(typeof(PagedResult<ReviewResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetReviewsByUser(
@@ -176,11 +176,11 @@ public class ReviewController : BaseController
     }
 
     /// <summary>
-    /// Get reviews by order
+    /// Siparişe ait değerlendirmeleri getir
     /// </summary>
-    /// <param name="orderId">Order ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Order reviews</returns>
+    /// <param name="orderId">Sipariş ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sipariş değerlendirmeleri</returns>
     [HttpGet("order/{orderId:guid}")]
     [ProducesResponseType(typeof(IEnumerable<ReviewResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetReviewsByOrder(
@@ -192,12 +192,12 @@ public class ReviewController : BaseController
     }
 
     /// <summary>
-    /// Get review statistics
+    /// Değerlendirme istatistiklerini getir
     /// </summary>
-    /// <param name="entityId">Entity ID</param>
-    /// <param name="entityType">Entity type</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Review statistics</returns>
+    /// <param name="entityId">Varlık ID</param>
+    /// <param name="entityType">Varlık türü</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Değerlendirme istatistikleri</returns>
     [HttpGet("statistics/{entityId:guid}/{entityType}")]
     [ProducesResponseType(typeof(ReviewStatisticsResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetReviewStatistics(
@@ -210,12 +210,12 @@ public class ReviewController : BaseController
     }
 
     /// <summary>
-    /// Report a review
+    /// Bir değerlendirmeyi rapor et
     /// </summary>
-    /// <param name="reviewId">Review ID</param>
-    /// <param name="request">Report review request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="reviewId">Değerlendirme ID</param>
+    /// <param name="request">Raporlama isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("{reviewId:guid}/report")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -238,11 +238,11 @@ public class ReviewController : BaseController
     }
 
     /// <summary>
-    /// Like a review
+    /// Bir değerlendirmeyi beğen
     /// </summary>
-    /// <param name="reviewId">Review ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="reviewId">Değerlendirme ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("{reviewId:guid}/like")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -260,11 +260,11 @@ public class ReviewController : BaseController
     }
 
     /// <summary>
-    /// Unlike a review
+    /// Bir değerlendirmeyi beğenmekten vazgeç
     /// </summary>
-    /// <param name="reviewId">Review ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="reviewId">Değerlendirme ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpDelete("{reviewId:guid}/like")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]

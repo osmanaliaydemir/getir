@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Working hours controller for managing working hours
+/// Çalışma saatlerini yönetmek için çalışma saatleri controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -22,11 +22,11 @@ public class WorkingHoursController : BaseController
     }
 
     /// <summary>
-    /// Get working hours for a merchant
+    /// Mağaza için çalışma saatlerini getir
     /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of working hours</returns>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Çalışma saatleri listesi</returns>
     [HttpGet("merchant/{merchantId:guid}")]
     [ProducesResponseType(typeof(List<WorkingHoursResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

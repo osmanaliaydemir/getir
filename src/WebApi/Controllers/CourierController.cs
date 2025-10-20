@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.WebApi.Controllers;
 
 /// <summary>
-/// Courier controller for managing courier operations
+/// Kurye işlemlerini yönetmek için kurye controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -23,10 +23,10 @@ public class CourierController : BaseController
     }
 
     /// <summary>
-    /// Get courier dashboard
+    /// Kurye dashboard'unu getir
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Courier dashboard data</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kurye dashboard verileri</returns>
     [HttpGet("dashboard")]
     [ProducesResponseType(typeof(CourierDashboardResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -41,10 +41,10 @@ public class CourierController : BaseController
     }
 
     /// <summary>
-    /// Get courier statistics
+    /// Kurye istatistiklerini getir
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Courier statistics</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kurye istatistikleri</returns>
     [HttpGet("stats")]
     [ProducesResponseType(typeof(CourierStatsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -59,12 +59,12 @@ public class CourierController : BaseController
     }
 
     /// <summary>
-    /// Get courier earnings
+    /// Kurye kazançlarını getir
     /// </summary>
-    /// <param name="startDate">Start date</param>
-    /// <param name="endDate">End date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Courier earnings</returns>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kurye kazançları</returns>
     [HttpGet("earnings")]
     [ProducesResponseType(typeof(CourierEarningsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -82,12 +82,12 @@ public class CourierController : BaseController
     }
 
     /// <summary>
-    /// Get assigned orders
+    /// Atanmış siparişleri getir
     /// </summary>
-    /// <param name="page">Page number</param>
-    /// <param name="pageSize">Page size</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Paged assigned orders</returns>
+    /// <param name="page">Sayfa numarası</param>
+    /// <param name="pageSize">Sayfa boyutu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış atanmış siparişler</returns>
     [HttpGet("orders")]
     [ProducesResponseType(typeof(PagedResult<CourierOrderResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -106,11 +106,11 @@ public class CourierController : BaseController
     }
 
     /// <summary>
-    /// Accept order
+    /// Siparişi kabul et
     /// </summary>
-    /// <param name="request">Accept order request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="request">Sipariş kabul talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("orders/accept")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -131,11 +131,11 @@ public class CourierController : BaseController
     }
 
     /// <summary>
-    /// Start delivery
+    /// Teslimatı başlat
     /// </summary>
-    /// <param name="request">Start delivery request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="request">Teslimat başlatma talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("orders/start-delivery")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -156,11 +156,11 @@ public class CourierController : BaseController
     }
 
     /// <summary>
-    /// Complete delivery
+    /// Teslimatı tamamla
     /// </summary>
-    /// <param name="request">Complete delivery request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="request">Teslimat tamamlama talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPost("orders/complete-delivery")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -181,11 +181,11 @@ public class CourierController : BaseController
     }
 
     /// <summary>
-    /// Update courier location
+    /// Kurye konumunu güncelle
     /// </summary>
-    /// <param name="request">Update location request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="request">Konum güncelleme talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPut("location")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -208,11 +208,11 @@ public class CourierController : BaseController
     }
 
     /// <summary>
-    /// Set courier availability
+    /// Kurye uygunluğunu ayarla
     /// </summary>
-    /// <param name="request">Set availability request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success response</returns>
+    /// <param name="request">Uygunluk ayarlama talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
     [HttpPut("availability")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -233,7 +233,7 @@ public class CourierController : BaseController
 }
 
 /// <summary>
-/// Admin courier controller for admin courier management
+/// Admin kurye yönetimi için admin kurye controller'ı
 /// </summary>
 [ApiController]
 [Route("api/v1/admin/[controller]")]
@@ -249,11 +249,11 @@ public class AdminCourierController : BaseController
     }
 
     /// <summary>
-    /// Assign order to courier
+    /// Siparişi kuryeye ata
     /// </summary>
-    /// <param name="request">Assign order request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Assignment response</returns>
+    /// <param name="request">Sipariş atama talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Atama yanıtı</returns>
     [HttpPost("assign-order")]
     [ProducesResponseType(typeof(CourierAssignmentResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -270,11 +270,11 @@ public class AdminCourierController : BaseController
     }
 
     /// <summary>
-    /// Find nearest couriers
+    /// En yakın kuryeleri bul
     /// </summary>
-    /// <param name="request">Find nearest couriers request</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Nearest couriers</returns>
+    /// <param name="request">En yakın kuryeleri bulma talebi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>En yakın kuryeler</returns>
     [HttpPost("find-nearest")]
     [ProducesResponseType(typeof(FindNearestCouriersResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -290,11 +290,11 @@ public class AdminCourierController : BaseController
     }
 
     /// <summary>
-    /// Get top performing couriers
+    /// En iyi performans gösteren kuryeleri getir
     /// </summary>
-    /// <param name="count">Number of couriers to return</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Top performers</returns>
+    /// <param name="count">Döndürülecek kurye sayısı</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>En iyi performans gösterenler</returns>
     [HttpGet("top-performers")]
     [ProducesResponseType(typeof(List<CourierPerformanceResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetTopPerformers(
@@ -306,13 +306,13 @@ public class AdminCourierController : BaseController
     }
 
     /// <summary>
-    /// Get courier earnings detail
+    /// Kurye kazanç detayını getir
     /// </summary>
-    /// <param name="courierId">Courier ID</param>
-    /// <param name="startDate">Start date</param>
-    /// <param name="endDate">End date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Earnings detail</returns>
+    /// <param name="courierId">Kurye ID'si</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kazanç detayı</returns>
     [HttpGet("earnings-detail")]
     [ProducesResponseType(typeof(CourierEarningsDetailResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
