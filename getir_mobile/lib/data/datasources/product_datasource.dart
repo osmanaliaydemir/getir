@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../../domain/entities/product.dart';
 
 abstract class ProductDataSource {
@@ -22,6 +23,9 @@ abstract class ProductDataSource {
     int limit = 20,
   });
   Future<List<String>> getCategories();
+
+  /// Popüler ürünleri getir (en çok satılan ve yüksek ratingli)
+  Future<List<Product>> getPopularProducts({int limit = 10});
 }
 
 class ProductDataSourceImpl implements ProductDataSource {
@@ -49,7 +53,15 @@ class ProductDataSourceImpl implements ProductDataSource {
         queryParameters: queryParams,
       );
 
-      final List<dynamic> data = response.data['data'] ?? response.data;
+      // Response unwrap edilmiş
+      final dynamic responseData = response.data;
+      final List<dynamic> data = responseData is List
+          ? responseData as List<dynamic>
+          : (responseData is Map<String, dynamic> &&
+                    responseData['items'] != null
+                ? responseData['items'] as List<dynamic>
+                : []);
+
       return data.map((json) => _productFromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to fetch products: $e');
@@ -77,7 +89,16 @@ class ProductDataSourceImpl implements ProductDataSource {
         '/api/v1/product/merchant/$merchantId',
         queryParameters: {'page': page, 'pageSize': limit},
       );
-      final List<dynamic> data = response.data['data'] ?? response.data;
+
+      // Response unwrap edilmiş
+      final dynamic responseData = response.data;
+      final List<dynamic> data = responseData is List
+          ? responseData as List<dynamic>
+          : (responseData is Map<String, dynamic> &&
+                    responseData['items'] != null
+                ? responseData['items'] as List<dynamic>
+                : []);
+
       return data.map((json) => _productFromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to fetch merchant products: $e');
@@ -93,17 +114,18 @@ class ProductDataSourceImpl implements ProductDataSource {
     try {
       final response = await _dio.get(
         '/api/v1/search/products',
-        queryParameters: {
-          'query': query,
-          'page': page,
-          'pageSize': limit,
-        },
+        queryParameters: {'query': query, 'page': page, 'pageSize': limit},
       );
 
-      final data = response.data['data'];
-      if (data == null) return [];
+      // Response unwrap edilmiş
+      final dynamic responseData = response.data;
+      final List<dynamic> items = responseData is List
+          ? responseData as List<dynamic>
+          : (responseData is Map<String, dynamic> &&
+                    responseData['items'] != null
+                ? responseData['items'] as List<dynamic>
+                : []);
 
-      final List<dynamic> items = data['items'] ?? data;
       return items.map((json) => _productFromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to search products: $e');
@@ -118,6 +140,29 @@ class ProductDataSourceImpl implements ProductDataSource {
       return data.map((category) => category.toString()).toList();
     } catch (e) {
       throw Exception('Failed to fetch categories: $e');
+    }
+  }
+
+  @override
+  Future<List<Product>> getPopularProducts({int limit = 10}) async {
+    try {
+      final response = await _dio.get(
+        '/api/v1/Product/popular',
+        queryParameters: {'limit': limit},
+      );
+
+      // Response unwrap edilmiş
+      final dynamic responseData = response.data;
+      final List<dynamic> data = responseData is List
+          ? responseData as List<dynamic>
+          : (responseData is Map<String, dynamic> &&
+                    responseData['items'] != null
+                ? responseData['items'] as List<dynamic>
+                : []);
+
+      return data.map((json) => _productFromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch popular products: $e');
     }
   }
 
@@ -143,8 +188,12 @@ class ProductDataSourceImpl implements ProductDataSource {
               ?.map((o) => _productOptionFromJson(o))
               .toList() ??
           [],
-      rating: (json['rating'] ?? 0.0).toDouble(),
-      reviewCount: json['reviewCount'] ?? 0,
+      rating: json['rating'] != null && json['rating'] is num
+          ? (json['rating'] as num).toDouble()
+          : null,
+      reviewCount: json['reviewCount'] is int
+          ? json['reviewCount'] as int
+          : null,
       unit: json['unit'] ?? 'adet',
       discountPrice: json['discountPrice']?.toDouble(),
       discountPercentage: json['discountPercentage']?.toDouble(),

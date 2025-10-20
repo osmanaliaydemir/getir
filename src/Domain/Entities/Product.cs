@@ -16,6 +16,11 @@ public class Product
     public bool IsActive { get; set; }
     public int DisplayOrder { get; set; }
     public string? ExternalId { get; set; } // External system ID for synchronization
+    
+    // Rating & Review fields
+    public decimal? Rating { get; set; } // Average rating (1-5), calculated from reviews
+    public int? ReviewCount { get; set; } // Total number of reviews
+    
     public byte[] RowVersion { get; set; } = default!; // Optimistic locking için
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
@@ -25,4 +30,5 @@ public class Product
     public virtual ProductCategory? ProductCategory { get; set; }
     public virtual ICollection<OrderLine> OrderLines { get; set; } = new List<OrderLine>();
     public virtual ICollection<ProductOptionGroup> OptionGroups { get; set; } = new List<ProductOptionGroup>();
+    public virtual ICollection<ProductReview> ProductReviews { get; set; } = new List<ProductReview>();
 }

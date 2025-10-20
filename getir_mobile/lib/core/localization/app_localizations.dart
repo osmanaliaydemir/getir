@@ -266,6 +266,12 @@ class AppLocalizations {
       _localizedValues[locale.languageCode]!['locationRequired']!;
   String get locationError =>
       _localizedValues[locale.languageCode]!['locationError']!;
+  String get locationPermissionRequired =>
+      _localizedValues[locale.languageCode]!['locationPermissionRequired']!;
+  String get noCategoriesFound =>
+      _localizedValues[locale.languageCode]!['noCategoriesFound']!;
+  String get noMerchantsNearby =>
+      _localizedValues[locale.languageCode]!['noMerchantsNearby']!;
   String get locationPermissionDenied =>
       _localizedValues[locale.languageCode]!['locationPermissionDenied']!;
   String get locationPermissionDeniedForever =>
@@ -623,6 +629,9 @@ class AppLocalizations {
       'locationSet': 'Konum ayarlandı',
       'locationRequired': 'Konum bilgisi gereklidir',
       'locationError': 'Konum alınamadı',
+      'locationPermissionRequired': 'Lütfen konum izni verin',
+      'noCategoriesFound': 'Henüz kategori bulunmuyor',
+      'noMerchantsNearby': 'Yakınınızda mağaza bulunamadı',
       'locationPermissionDenied': 'Konum izni reddedildi',
       'locationPermissionDeniedForever': 'Konum izni kalıcı olarak reddedildi',
 
@@ -894,6 +903,9 @@ class AppLocalizations {
       'locationSet': 'Location set',
       'locationRequired': 'Location information is required',
       'locationError': 'Could not get location',
+      'locationPermissionRequired': 'Please grant location permission',
+      'noCategoriesFound': 'No categories found yet',
+      'noMerchantsNearby': 'No merchants found nearby',
       'locationPermissionDenied': 'Location permission denied',
       'locationPermissionDeniedForever':
           'Location permission permanently denied',
@@ -1172,6 +1184,9 @@ class AppLocalizations {
       'locationSet': 'تم تعيين الموقع',
       'locationRequired': 'معلومات الموقع مطلوبة',
       'locationError': 'لا يمكن الحصول على الموقع',
+      'locationPermissionRequired': 'يرجى منح إذن الموقع',
+      'noCategoriesFound': 'لم يتم العثور على فئات بعد',
+      'noMerchantsNearby': 'لا يوجد تجار قريبون',
       'locationPermissionDenied': 'تم رفض إذن الموقع',
       'locationPermissionDeniedForever': 'تم رفض إذن الموقع نهائياً',
 

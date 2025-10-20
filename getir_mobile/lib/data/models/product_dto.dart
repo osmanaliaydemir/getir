@@ -13,8 +13,8 @@ class ProductDto {
   final int stockQuantity;
   final List<ProductVariantDto> variants;
   final List<ProductOptionDto> options;
-  final double rating;
-  final int reviewCount;
+  final double? rating; // Nullable - ürünün henüz review'ı olmayabilir
+  final int? reviewCount;
   final String unit;
   final double? discountPrice;
   final double? discountPercentage;
@@ -73,8 +73,12 @@ class ProductDto {
               ?.map((e) => ProductOptionDto.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const <ProductOptionDto>[],
-      rating: json['rating'] is num ? (json['rating'] as num).toDouble() : 0.0,
-      reviewCount: json['reviewCount'] is int ? json['reviewCount'] as int : 0,
+      rating: json['rating'] != null && json['rating'] is num
+          ? (json['rating'] as num).toDouble()
+          : null,
+      reviewCount: json['reviewCount'] is int
+          ? json['reviewCount'] as int
+          : null,
       unit: (json['unit'] ?? 'adet').toString(),
       discountPrice: json['discountPrice'] is num
           ? (json['discountPrice'] as num).toDouble()

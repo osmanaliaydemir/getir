@@ -36,6 +36,46 @@ class GeneratedLocalizationsTr extends GeneratedLocalizations {
   String get ok => 'Tamam';
 
   @override
+  String get categories => 'Kategoriler';
+
+  @override
+  String get loadingCategories => 'Kategoriler yükleniyor...';
+
+  @override
+  String get categoriesLoadError => 'Kategoriler yüklenemedi';
+
+  @override
+  String get noCategoriesFound => 'Henüz kategori bulunmuyor';
+
+  @override
+  String get loadingMerchants => 'Mağazalar yükleniyor...';
+
+  @override
+  String get noMerchantsNearby => 'Yakınınızda mağaza bulunamadı';
+
+  @override
+  String get merchantsLoadError => 'Mağazalar yüklenemedi';
+
+  @override
+  String get locationPermissionRequired => 'Lütfen konum izni verin';
+
+  @override
+  String get locationError =>
+      'Konum alınamadı. Lütfen konum izinlerini kontrol edin.';
+
+  @override
+  String get nearbyMerchants => 'Yakınımdaki Mağazalar';
+
+  @override
+  String get popularProducts => 'Popüler Ürünler';
+
+  @override
+  String get selectLocation => 'Konum Seçin';
+
+  @override
+  String get searchHint => 'Mağaza veya ürün arayın...';
+
+  @override
   String get cart => 'Sepet';
 
   @override

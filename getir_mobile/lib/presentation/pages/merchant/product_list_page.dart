@@ -11,10 +11,7 @@ import '../product/product_detail_page.dart';
 class ProductListPage extends StatefulWidget {
   final String merchantId;
 
-  const ProductListPage({
-    super.key,
-    required this.merchantId,
-  });
+  const ProductListPage({super.key, required this.merchantId});
 
   @override
   State<ProductListPage> createState() => _ProductListPageState();
@@ -32,6 +29,8 @@ class _ProductListPageState extends State<ProductListPage> {
     context.read<ProductBloc>().add(LoadCategories());
     // Load products
     context.read<ProductBloc>().add(LoadProductsByMerchant(widget.merchantId));
+    // Load cart
+    context.read<CartBloc>().add(LoadCart());
   }
 
   @override
@@ -87,7 +86,7 @@ class _ProductListPageState extends State<ProductListPage> {
                   if (state is ProductCategoriesLoaded) {
                     _categories = state.categories;
                   }
-                  
+
                   if (_categories.isEmpty) {
                     return const SizedBox.shrink();
                   }
@@ -98,16 +97,20 @@ class _ProductListPageState extends State<ProductListPage> {
                       scrollDirection: Axis.horizontal,
                       itemCount: _categories.length + 1, // +1 for "All" option
                       itemBuilder: (context, index) {
-                        final category = index == 0 ? '' : _categories[index - 1];
+                        final category = index == 0
+                            ? ''
+                            : _categories[index - 1];
                         final isSelected = _selectedCategory == category;
-                        
+
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: FilterChip(
                             label: Text(
                               index == 0 ? l10n.viewAll : category,
                               style: AppTypography.bodySmall.copyWith(
-                                color: isSelected ? AppColors.white : AppColors.primary,
+                                color: isSelected
+                                    ? AppColors.white
+                                    : AppColors.primary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -122,7 +125,9 @@ class _ProductListPageState extends State<ProductListPage> {
                             selectedColor: AppColors.primary,
                             checkmarkColor: AppColors.white,
                             side: BorderSide(
-                              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         );
@@ -141,7 +146,9 @@ class _ProductListPageState extends State<ProductListPage> {
               if (state is ProductLoading) {
                 return const Center(
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.primary,
+                    ),
                   ),
                 );
               }
@@ -167,7 +174,9 @@ class _ProductListPageState extends State<ProductListPage> {
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: () {
-                          context.read<ProductBloc>().add(LoadProductsByMerchant(widget.merchantId));
+                          context.read<ProductBloc>().add(
+                            LoadProductsByMerchant(widget.merchantId),
+                          );
                         },
                         child: Text(l10n.retry),
                       ),
@@ -178,7 +187,7 @@ class _ProductListPageState extends State<ProductListPage> {
 
               if (state is ProductsLoaded) {
                 final products = state.products;
-                
+
                 if (products.isEmpty) {
                   return Center(
                     child: Column(
@@ -260,19 +269,13 @@ class _ProductListPageState extends State<ProductListPage> {
                     width: 80,
                     height: 80,
                     color: Colors.grey[200],
-                    child: const Icon(
-                      Icons.image,
-                      color: Colors.grey,
-                    ),
+                    child: const Icon(Icons.image, color: Colors.grey),
                   ),
                   errorWidget: (context, url, error) => Container(
                     width: 80,
                     height: 80,
                     color: Colors.grey[200],
-                    child: const Icon(
-                      Icons.broken_image,
-                      color: Colors.grey,
-                    ),
+                    child: const Icon(Icons.broken_image, color: Colors.grey),
                   ),
                 ),
               ),
@@ -291,7 +294,8 @@ class _ProductListPageState extends State<ProductListPage> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    if (product.description != null && product.description.isNotEmpty)
+                    if (product.description != null &&
+                        product.description.isNotEmpty)
                       Text(
                         product.description,
                         style: AppTypography.bodySmall.copyWith(
@@ -324,11 +328,7 @@ class _ProductListPageState extends State<ProductListPage> {
                         const Spacer(),
                         // Rating
                         if (product.rating != null && product.rating > 0) ...[
-                          Icon(
-                            Icons.star,
-                            color: Colors.amber,
-                            size: 16,
-                          ),
+                          Icon(Icons.star, color: Colors.amber, size: 16),
                           const SizedBox(width: 2),
                           Text(
                             '${product.rating}',
@@ -347,15 +347,21 @@ class _ProductListPageState extends State<ProductListPage> {
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: product.isAvailable == true ? Colors.green : Colors.red,
+                            color: product.isAvailable == true
+                                ? Colors.green
+                                : Colors.red,
                             shape: BoxShape.circle,
                           ),
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          product.isAvailable == true ? l10n.inStock : l10n.outOfStock,
+                          product.isAvailable == true
+                              ? l10n.inStock
+                              : l10n.outOfStock,
                           style: AppTypography.bodySmall.copyWith(
-                            color: product.isAvailable == true ? Colors.green : Colors.red,
+                            color: product.isAvailable == true
+                                ? Colors.green
+                                : Colors.red,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -364,19 +370,126 @@ class _ProductListPageState extends State<ProductListPage> {
                         if (product.isAvailable == true)
                           BlocBuilder<CartBloc, CartState>(
                             builder: (context, cartState) {
+                              // Sepette bu ürün var mı kontrol et
+                              int quantityInCart = 0;
+                              String? cartItemId;
+
+                              if (cartState is CartLoaded) {
+                                try {
+                                  final cartItem = cartState.cart.items
+                                      .firstWhere(
+                                        (item) => item.productId == product.id,
+                                      );
+                                  quantityInCart = cartItem.quantity;
+                                  cartItemId = cartItem.id;
+                                } catch (e) {
+                                  // Ürün sepette yok
+                                }
+                              }
+
+                              // Sepette varsa: artı/eksi butonları
+                              if (quantityInCart > 0) {
+                                return Container(
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Eksi butonu
+                                      IconButton(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                        ),
+                                        constraints: const BoxConstraints(
+                                          minWidth: 32,
+                                        ),
+                                        onPressed: () {
+                                          if (quantityInCart > 1) {
+                                            context.read<CartBloc>().add(
+                                              UpdateCartItem(
+                                                itemId: cartItemId!,
+                                                quantity: quantityInCart - 1,
+                                              ),
+                                            );
+                                          } else {
+                                            context.read<CartBloc>().add(
+                                              RemoveFromCart(cartItemId!),
+                                            );
+                                          }
+                                        },
+                                        icon: Icon(
+                                          quantityInCart > 1
+                                              ? Icons.remove
+                                              : Icons.delete_outline,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                      ),
+                                      // Adet
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                        ),
+                                        child: Text(
+                                          quantityInCart.toString(),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                      // Artı butonu
+                                      IconButton(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                        ),
+                                        constraints: const BoxConstraints(
+                                          minWidth: 32,
+                                        ),
+                                        onPressed: () {
+                                          context.read<CartBloc>().add(
+                                            UpdateCartItem(
+                                              itemId: cartItemId!,
+                                              quantity: quantityInCart + 1,
+                                            ),
+                                          );
+                                        },
+                                        icon: const Icon(
+                                          Icons.add,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+
+                              // Sepette yoksa: normal sepete ekle butonu
                               return ElevatedButton(
                                 onPressed: () {
                                   context.read<CartBloc>().add(
                                     AddToCart(
+                                      merchantId: product.merchantId,
                                       productId: product.id,
                                       quantity: 1,
+                                      productName: product.name,
+                                      price: product.finalPrice,
+                                      category: product.category,
                                     ),
                                   );
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   foregroundColor: AppColors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -402,7 +515,9 @@ class _ProductListPageState extends State<ProductListPage> {
 
   void _searchProducts(String query) {
     if (query.isEmpty) {
-      context.read<ProductBloc>().add(LoadProductsByMerchant(widget.merchantId));
+      context.read<ProductBloc>().add(
+        LoadProductsByMerchant(widget.merchantId),
+      );
     } else {
       context.read<ProductBloc>().add(SearchProducts(query));
     }
@@ -410,7 +525,9 @@ class _ProductListPageState extends State<ProductListPage> {
 
   void _filterByCategory(String category) {
     if (category.isEmpty) {
-      context.read<ProductBloc>().add(LoadProductsByMerchant(widget.merchantId));
+      context.read<ProductBloc>().add(
+        LoadProductsByMerchant(widget.merchantId),
+      );
     } else {
       context.read<ProductBloc>().add(LoadProductsByCategory(category));
     }

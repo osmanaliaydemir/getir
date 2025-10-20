@@ -36,6 +36,46 @@ class GeneratedLocalizationsEn extends GeneratedLocalizations {
   String get ok => 'OK';
 
   @override
+  String get categories => 'Categories';
+
+  @override
+  String get loadingCategories => 'Loading categories...';
+
+  @override
+  String get categoriesLoadError => 'Failed to load categories';
+
+  @override
+  String get noCategoriesFound => 'No categories found yet';
+
+  @override
+  String get loadingMerchants => 'Loading merchants...';
+
+  @override
+  String get noMerchantsNearby => 'No merchants found nearby';
+
+  @override
+  String get merchantsLoadError => 'Failed to load merchants';
+
+  @override
+  String get locationPermissionRequired => 'Please grant location permission';
+
+  @override
+  String get locationError =>
+      'Unable to get location. Please check location permissions.';
+
+  @override
+  String get nearbyMerchants => 'Nearby Merchants';
+
+  @override
+  String get popularProducts => 'Popular Products';
+
+  @override
+  String get selectLocation => 'Select Location';
+
+  @override
+  String get searchHint => 'Search for stores or products...';
+
+  @override
   String get cart => 'Cart';
 
   @override

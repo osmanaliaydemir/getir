@@ -55,6 +55,10 @@ public record ProductResponse : BaseStatusEntityResponse
     public int StockQuantity { get; init; }
     public string? Unit { get; init; }
     public bool IsAvailable { get; init; }
+    
+    // Rating & Review fields
+    public decimal? Rating { get; init; }        // 0.00 - 5.00
+    public int? ReviewCount { get; init; }       // Toplam review sayısı
 }
 
 // Merchant-specific DTOs

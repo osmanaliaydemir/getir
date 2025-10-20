@@ -32,6 +32,7 @@ import '../../data/datasources/review_datasource.dart';
 import '../../data/datasources/favorites_datasource.dart';
 import '../../data/datasources/orders_datasource.dart';
 import '../../data/datasources/language_datasource.dart';
+import '../../data/datasources/service_category_datasource.dart';
 // Repository Interfaces (Domain) - Using I prefix
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/merchant_repository.dart';
@@ -48,6 +49,7 @@ import '../../domain/repositories/favorites_repository.dart';
 import '../../domain/repositories/orders_repository.dart';
 import '../../domain/repositories/language_repository.dart';
 import '../../domain/repositories/notification_preferences_repository.dart';
+import '../../domain/repositories/service_category_repository.dart';
 
 // Repository Implementations (Data)
 import '../../data/repositories/auth_repository_impl.dart';
@@ -65,6 +67,7 @@ import '../../data/repositories/favorites_repository_impl.dart';
 import '../../data/repositories/orders_repository_impl.dart';
 import '../../data/repositories/language_repository_impl.dart';
 import '../../data/repositories/notification_preferences_repository_impl.dart';
+import '../../data/repositories/service_category_repository_impl.dart';
 
 // Services (replaces 49 Use Case classes)
 import '../../domain/services/auth_service.dart';
@@ -88,6 +91,9 @@ import '../cubits/network/network_cubit.dart';
 import '../cubits/language/language_cubit.dart';
 import '../cubits/theme/theme_cubit.dart';
 import '../cubits/notification_badge/notification_badge_cubit.dart';
+
+// Presentation Cubits
+import '../../presentation/cubit/category/category_cubit.dart';
 
 // BLoCs
 import '../../presentation/bloc/auth/auth_bloc.dart';
@@ -219,6 +225,9 @@ void _registerDatasources() {
   getIt.registerLazySingleton<LanguageDataSource>(
     () => LanguageDataSourceImpl(dio),
   );
+  getIt.registerLazySingleton<ServiceCategoryDataSource>(
+    () => ServiceCategoryDataSourceImpl(dio),
+  );
 }
 
 void _registerRepositories() {
@@ -268,6 +277,9 @@ void _registerRepositories() {
   getIt.registerLazySingleton<INotificationPreferencesRepository>(
     () => NotificationPreferencesRepositoryImpl(getIt()),
   );
+  getIt.registerLazySingleton<IServiceCategoryRepository>(
+    () => ServiceCategoryRepositoryImpl(getIt()),
+  );
 }
 
 void _registerOtherServices(SharedPreferences prefs) {
@@ -299,6 +311,9 @@ void _registerCubits(SharedPreferences prefs, NetworkService networkService) {
   getIt.registerLazySingleton(() => LanguageCubit(prefs));
   getIt.registerLazySingleton(() => ThemeCubit(prefs));
   getIt.registerLazySingleton(() => NotificationBadgeCubit());
+  
+  // Presentation Cubits
+  getIt.registerFactory(() => CategoryCubit(getIt<IServiceCategoryRepository>()));
 }
 
 void _registerBlocs() {
@@ -687,7 +702,6 @@ class _NoOpTrace implements Trace {
   @override
   void putAttribute(String name, String value) {}
 
-  @override
   void putMetric(String name, int value) {}
 
   @override

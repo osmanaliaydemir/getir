@@ -70,6 +70,16 @@ class LoadProductsByCategory extends ProductEvent {
 
 class LoadCategories extends ProductEvent {}
 
+// Popular Products Event
+class LoadPopularProducts extends ProductEvent {
+  final int limit;
+
+  const LoadPopularProducts({this.limit = 10});
+
+  @override
+  List<Object?> get props => [limit];
+}
+
 // 🔄 Pagination Events
 class LoadMoreProducts extends ProductEvent {
   const LoadMoreProducts();
@@ -152,6 +162,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     on<SearchProducts>(_onSearchProducts);
     on<LoadProductsByCategory>(_onLoadProductsByCategory);
     on<LoadCategories>(_onLoadCategories);
+    on<LoadPopularProducts>(_onLoadPopularProducts);
     on<LoadMoreProducts>(_onLoadMoreProducts); // 🔄 Pagination
     on<RefreshProducts>(_onRefreshProducts); // 🔄 Pagination
   }
@@ -372,6 +383,25 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         );
 
         emit(ProductsLoaded(products, pagination: pagination));
+      },
+      failure: (exception) {
+        final message = _getErrorMessage(exception);
+        emit(ProductError(message));
+      },
+    );
+  }
+
+  Future<void> _onLoadPopularProducts(
+    LoadPopularProducts event,
+    Emitter<ProductState> emit,
+  ) async {
+    emit(ProductLoading());
+
+    final result = await _productService.getPopularProducts(limit: event.limit);
+
+    result.when(
+      success: (products) {
+        emit(ProductsLoaded(products));
       },
       failure: (exception) {
         final message = _getErrorMessage(exception);

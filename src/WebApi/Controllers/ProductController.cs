@@ -40,6 +40,23 @@ public class ProductController : BaseController
     }
 
     /// <summary>
+    /// Popüler ürünleri getir (en çok satılan ve yüksek ratingli)
+    /// Ana sayfa için cache'li endpoint
+    /// </summary>
+    /// <param name="limit">Döndürülecek maksimum ürün sayısı (varsayılan: 10)</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Popüler ürün listesi</returns>
+    [HttpGet("popular")]
+    [ProducesResponseType(typeof(List<ProductResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPopularProducts(
+        [FromQuery] int limit = 10,
+        CancellationToken ct = default)
+    {
+        var result = await _productService.GetPopularProductsAsync(limit, ct);
+        return ToActionResult(result);
+    }
+
+    /// <summary>
     /// ID'ye göre ürün getir
     /// </summary>
     /// <param name="id">Ürün ID'si</param>

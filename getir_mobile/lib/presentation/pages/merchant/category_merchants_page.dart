@@ -6,6 +6,7 @@ import '../../../core/localization/app_localizations.dart';
 import '../../../domain/entities/service_category_type.dart';
 import '../../bloc/merchant/merchant_bloc.dart';
 import '../../widgets/merchant/merchant_card.dart';
+import '../../../core/services/logger_service.dart';
 
 class CategoryMerchantsPage extends StatefulWidget {
   final ServiceCategoryType categoryType;
@@ -33,6 +34,12 @@ class _CategoryMerchantsPageState extends State<CategoryMerchantsPage> {
   }
 
   void _loadMerchants() {
+    debugPrint('🔍 [CategoryMerchantsPage] Loading merchants...');
+    debugPrint(
+      '   Category: ${widget.categoryName} (Type: ${widget.categoryType.value})',
+    );
+    debugPrint('   Location: ${widget.latitude}, ${widget.longitude}');
+
     context.read<MerchantBloc>().add(
       LoadNearbyMerchantsByCategory(
         latitude: widget.latitude,
@@ -66,7 +73,12 @@ class _CategoryMerchantsPageState extends State<CategoryMerchantsPage> {
       ),
       body: BlocBuilder<MerchantBloc, MerchantState>(
         builder: (context, state) {
+          debugPrint(
+            '🔄 [CategoryMerchantsPage] State changed: ${state.runtimeType}',
+          );
+
           if (state is MerchantLoading) {
+            debugPrint('⏳ [CategoryMerchantsPage] Loading merchants...');
             return const Center(
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
@@ -75,6 +87,16 @@ class _CategoryMerchantsPageState extends State<CategoryMerchantsPage> {
           }
 
           if (state is MerchantError) {
+            logger.error(
+              'Failed to load merchants for category',
+              tag: 'CategoryMerchantsPage',
+              error: state.message,
+              context: {
+                'category': widget.categoryName,
+                'categoryType': widget.categoryType.value,
+              },
+            );
+            debugPrint('❌ [CategoryMerchantsPage] Error: ${state.message}');
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(32),
@@ -103,8 +125,14 @@ class _CategoryMerchantsPageState extends State<CategoryMerchantsPage> {
 
           if (state is MerchantsLoaded) {
             final merchants = state.merchants;
+            debugPrint(
+              '✅ [CategoryMerchantsPage] Loaded ${merchants.length} merchants',
+            );
 
             if (merchants.isEmpty) {
+              debugPrint(
+                '⚠️ [CategoryMerchantsPage] No merchants found for category ${widget.categoryName}',
+              );
               return _buildEmptyState(l10n);
             }
 

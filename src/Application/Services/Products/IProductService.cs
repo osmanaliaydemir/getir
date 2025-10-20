@@ -41,4 +41,8 @@ public interface IProductService
     // Additional methods for user search
     /// <summary>Ürünleri arar (isim/açıklama, aktif/müsait filtresi).</summary>
     Task<Result<PagedResult<ProductResponse>>> SearchProductsAsync(string searchQuery, PaginationQuery query, CancellationToken cancellationToken = default);
+    
+    // Popular/Featured products
+    /// <summary>Popüler ürünleri getirir (en çok satılan, rating yüksek, ana sayfa için cache).</summary>
+    Task<Result<List<ProductResponse>>> GetPopularProductsAsync(int limit = 10, CancellationToken cancellationToken = default);
 }

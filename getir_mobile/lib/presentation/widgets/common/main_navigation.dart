@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
-import '../../../core/navigation/app_router.dart';
+import '../../bloc/cart/cart_bloc.dart';
 
 class MainNavigation extends StatelessWidget {
   final Widget child;
@@ -32,56 +33,64 @@ class MainNavigation extends StatelessWidget {
           child: Container(
             height: 80,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(
-                  context: context,
-                  icon: Icons.home_outlined,
-                  activeIcon: Icons.home,
-                  label: l10n.home,
-                  route: '/home',
-                  index: 0,
-                  isActive: currentRoute == '/home',
-                ),
-                _buildNavItem(
-                  context: context,
-                  icon: Icons.search_outlined,
-                  activeIcon: Icons.search,
-                  label: l10n.search,
-                  route: '/search',
-                  index: 1,
-                  isActive: currentRoute == '/search',
-                ),
-                _buildNavItem(
-                  context: context,
-                  icon: Icons.shopping_cart_outlined,
-                  activeIcon: Icons.shopping_cart,
-                  label: l10n.cart,
-                  route: '/cart',
-                  index: 2,
-                  badgeCount: 0,
-                  isActive: currentRoute == '/cart',
-                ),
-                _buildNavItem(
-                  context: context,
-                  icon: Icons.receipt_long_outlined,
-                  activeIcon: Icons.receipt_long,
-                  label: l10n.orders,
-                  route: '/orders',
-                  index: 3,
-                  isActive: currentRoute == '/orders',
-                ),
-                _buildNavItem(
-                  context: context,
-                  icon: Icons.person_outline,
-                  activeIcon: Icons.person,
-                  label: l10n.profile,
-                  route: '/profile',
-                  index: 4,
-                  isActive: currentRoute == '/profile',
-                ),
-              ],
+            child: BlocBuilder<CartBloc, CartState>(
+              builder: (context, cartState) {
+                final cartItemCount = cartState is CartLoaded
+                    ? cartState.cart.items.length
+                    : 0;
+
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.home_outlined,
+                      activeIcon: Icons.home,
+                      label: l10n.home,
+                      route: '/home',
+                      index: 0,
+                      isActive: currentRoute == '/home',
+                    ),
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.search_outlined,
+                      activeIcon: Icons.search,
+                      label: l10n.search,
+                      route: '/search',
+                      index: 1,
+                      isActive: currentRoute == '/search',
+                    ),
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.shopping_cart_outlined,
+                      activeIcon: Icons.shopping_cart,
+                      label: l10n.cart,
+                      route: '/cart',
+                      index: 2,
+                      badgeCount: cartItemCount,
+                      isActive: currentRoute == '/cart',
+                    ),
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.receipt_long_outlined,
+                      activeIcon: Icons.receipt_long,
+                      label: l10n.orders,
+                      route: '/orders',
+                      index: 3,
+                      isActive: currentRoute == '/orders',
+                    ),
+                    _buildNavItem(
+                      context: context,
+                      icon: Icons.person_outline,
+                      activeIcon: Icons.person,
+                      label: l10n.profile,
+                      route: '/profile',
+                      index: 4,
+                      isActive: currentRoute == '/profile',
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -106,23 +115,11 @@ class MainNavigation extends StatelessWidget {
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          switch (index) {
-            case 0:
-              AppNavigation.goToHome(context);
-              break;
-            case 1:
-              AppNavigation.goToSearch(context);
-              break;
-            case 2:
-              AppNavigation.goToCart(context);
-              break;
-            case 3:
-              AppNavigation.goToOrders(context);
-              break;
-            case 4:
-              AppNavigation.goToProfile(context);
-              break;
-          }
+          debugPrint('🔘 [BottomNav] Tab $index tapped (route: $route)');
+
+          // GoRouter ile navigate et (context.go root'a döner)
+          debugPrint('   Navigating to $route via GoRouter');
+          context.go(route);
         },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),

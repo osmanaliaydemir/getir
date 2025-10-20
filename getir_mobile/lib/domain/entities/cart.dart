@@ -3,6 +3,8 @@ import 'package:equatable/equatable.dart';
 class Cart extends Equatable {
   final String id;
   final String userId;
+  final String merchantId;
+  final String merchantName;
   final List<CartItem> items;
   final double subtotal;
   final double deliveryFee;
@@ -15,6 +17,8 @@ class Cart extends Equatable {
   const Cart({
     required this.id,
     required this.userId,
+    required this.merchantId,
+    required this.merchantName,
     required this.items,
     required this.subtotal,
     required this.deliveryFee,
@@ -27,23 +31,27 @@ class Cart extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        items,
-        subtotal,
-        deliveryFee,
-        total,
-        couponCode,
-        discountAmount,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    userId,
+    merchantId,
+    merchantName,
+    items,
+    subtotal,
+    deliveryFee,
+    total,
+    couponCode,
+    discountAmount,
+    createdAt,
+    updatedAt,
+  ];
 
   int get itemCount => items.fold(0, (sum, item) => sum + item.quantity);
 
   Cart copyWith({
     String? id,
     String? userId,
+    String? merchantId,
+    String? merchantName,
     List<CartItem>? items,
     double? subtotal,
     double? deliveryFee,
@@ -56,6 +64,8 @@ class Cart extends Equatable {
     return Cart(
       id: id ?? this.id,
       userId: userId ?? this.userId,
+      merchantId: merchantId ?? this.merchantId,
+      merchantName: merchantName ?? this.merchantName,
       items: items ?? this.items,
       subtotal: subtotal ?? this.subtotal,
       deliveryFee: deliveryFee ?? this.deliveryFee,
@@ -103,21 +113,21 @@ class CartItem extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        productId,
-        productName,
-        productImageUrl,
-        unitPrice,
-        quantity,
-        totalPrice,
-        selectedVariantId,
-        selectedVariantName,
-        selectedOptionIds,
-        selectedOptionNames,
-        merchantId,
-        merchantName,
-        addedAt,
-      ];
+    id,
+    productId,
+    productName,
+    productImageUrl,
+    unitPrice,
+    quantity,
+    totalPrice,
+    selectedVariantId,
+    selectedVariantName,
+    selectedOptionIds,
+    selectedOptionNames,
+    merchantId,
+    merchantName,
+    addedAt,
+  ];
 
   CartItem copyWith({
     String? id,

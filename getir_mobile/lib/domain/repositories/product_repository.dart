@@ -22,4 +22,7 @@ abstract class IProductRepository {
     int limit = 20,
   });
   Future<Result<List<String>>> getCategories();
+  
+  /// Popüler ürünleri getir (en çok satılan ve yüksek ratingli)
+  Future<Result<List<Product>>> getPopularProducts({int limit = 10});
 }

@@ -1,13 +1,14 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../../domain/entities/cart.dart';
 
 abstract class CartDataSource {
   Future<Cart> getCart();
   Future<CartItem> addToCart({
+    required String merchantId,
     required String productId,
     required int quantity,
-    String? variantId,
-    List<String>? optionIds,
+    String? notes,
   });
   Future<CartItem> updateCartItem({
     required String itemId,
@@ -28,31 +29,45 @@ class CartDataSourceImpl implements CartDataSource {
   Future<Cart> getCart() async {
     try {
       final response = await _dio.get('/api/v1/cart');
-      return _cartFromJson(response.data);
+      debugPrint(
+        '🛒 [CartDataSource] getCart response type: ${response.data.runtimeType}',
+      );
+
+      // Response unwrap edilmiş olmalı
+      final dynamic data = response.data;
+      return _cartFromJson(data is Map<String, dynamic> ? data : {});
     } catch (e) {
+      debugPrint('❌ [CartDataSource] getCart error: $e');
       throw Exception('Failed to fetch cart: $e');
     }
   }
 
   @override
   Future<CartItem> addToCart({
+    required String merchantId,
     required String productId,
     required int quantity,
-    String? variantId,
-    List<String>? optionIds,
+    String? notes,
   }) async {
     try {
+      debugPrint(
+        '🛒 [CartDataSource] addToCart: merchantId=$merchantId, productId=$productId, quantity=$quantity',
+      );
+
       final response = await _dio.post(
         '/api/v1/cart/items',
         data: {
-          'productId': productId,
-          'quantity': quantity,
-          if (variantId != null) 'variantId': variantId,
-          if (optionIds != null) 'optionIds': optionIds,
+          'MerchantId': merchantId, // Backend PascalCase bekliyor
+          'ProductId': productId,
+          'Quantity': quantity,
+          'Notes': notes,
         },
       );
+
+      debugPrint('✅ [CartDataSource] addToCart success');
       return _cartItemFromJson(response.data);
     } catch (e) {
+      debugPrint('❌ [CartDataSource] addToCart error: $e');
       throw Exception('Failed to add to cart: $e');
     }
   }
@@ -63,12 +78,22 @@ class CartDataSourceImpl implements CartDataSource {
     required int quantity,
   }) async {
     try {
+      debugPrint(
+        '🛒 [CartDataSource] updateCartItem: itemId=$itemId, quantity=$quantity',
+      );
+
       final response = await _dio.put(
         '/api/v1/cart/items/$itemId',
-        data: {'quantity': quantity},
+        data: {
+          'Quantity': quantity, // Backend PascalCase bekliyor
+          'Notes': null, // Backend notes alanı bekliyor
+        },
       );
+
+      debugPrint('✅ [CartDataSource] updateCartItem success');
       return _cartItemFromJson(response.data);
     } catch (e) {
+      debugPrint('❌ [CartDataSource] updateCartItem error: $e');
       throw Exception('Failed to update cart item: $e');
     }
   }
@@ -76,8 +101,11 @@ class CartDataSourceImpl implements CartDataSource {
   @override
   Future<void> removeFromCart(String itemId) async {
     try {
+      debugPrint('🛒 [CartDataSource] removeFromCart: itemId=$itemId');
       await _dio.delete('/api/v1/cart/items/$itemId');
+      debugPrint('✅ [CartDataSource] removeFromCart success');
     } catch (e) {
+      debugPrint('❌ [CartDataSource] removeFromCart error: $e');
       throw Exception('Failed to remove from cart: $e');
     }
   }
@@ -96,7 +124,7 @@ class CartDataSourceImpl implements CartDataSource {
     try {
       final response = await _dio.post(
         '/api/v1/coupon/apply',
-        data: {'couponCode': couponCode},
+        data: {'CouponCode': couponCode}, // Backend PascalCase bekliyor
       );
       return _cartFromJson(response.data);
     } catch (e) {
@@ -118,12 +146,15 @@ class CartDataSourceImpl implements CartDataSource {
     return Cart(
       id: json['id']?.toString() ?? '',
       userId: json['userId']?.toString() ?? '',
+      merchantId: json['merchantId']?.toString() ?? '',
+      merchantName: json['merchantName'] ?? '',
       items:
           (json['items'] as List<dynamic>?)
               ?.map((item) => _cartItemFromJson(item))
               .toList() ??
           [],
-      subtotal: (json['subtotal'] ?? 0.0).toDouble(),
+      subtotal: (json['subTotal'] ?? json['subtotal'] ?? 0.0)
+          .toDouble(), // Backend'den subTotal geliyor (PascalCase)
       deliveryFee: (json['deliveryFee'] ?? 0.0).toDouble(),
       total: (json['total'] ?? 0.0).toDouble(),
       couponCode: json['couponCode'],
@@ -142,7 +173,10 @@ class CartDataSourceImpl implements CartDataSource {
       id: json['id']?.toString() ?? '',
       productId: json['productId']?.toString() ?? '',
       productName: json['productName'] ?? '',
-      productImageUrl: json['productImageUrl'] ?? '',
+      productImageUrl:
+          json['productImage'] ??
+          json['productImageUrl'] ??
+          '', // Backend'den productImage geliyor
       unitPrice: (json['unitPrice'] ?? 0.0).toDouble(),
       quantity: json['quantity'] ?? 0,
       totalPrice: (json['totalPrice'] ?? 0.0).toDouble(),

@@ -46,6 +46,8 @@ public class AppDbContext : DbContext
     public DbSet<ReviewBookmark> ReviewBookmarks { get; set; }
     public DbSet<Rating> Ratings { get; set; }
     public DbSet<RatingHistory> RatingHistories { get; set; }
+    public DbSet<ProductReview> ProductReviews { get; set; }
+    public DbSet<ProductReviewHelpful> ProductReviewHelpfuls { get; set; }
     public DbSet<DeliveryZonePoint> DeliveryZonePoints { get; set; }
     public DbSet<MerchantOnboarding> MerchantOnboardings { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
@@ -227,7 +229,11 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Price).HasPrecision(18, 2);
             entity.Property(e => e.DiscountedPrice).HasPrecision(18, 2);
             entity.Property(e => e.Unit).HasMaxLength(50);
+            entity.Property(e => e.Rating).HasPrecision(3, 2); // 0.00 - 5.00
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => e.Rating);
+            entity.HasIndex(e => e.ReviewCount);
 
             entity.HasOne(e => e.Merchant)
                 .WithMany(m => m.Products)
@@ -601,6 +607,67 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.Review)
                 .WithMany()
                 .HasForeignKey(e => e.ReviewId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ProductReview configuration
+        modelBuilder.Entity<ProductReview>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Comment).HasMaxLength(1000);
+            entity.Property(e => e.ImageUrls).HasMaxLength(2000); // JSON array
+            entity.Property(e => e.ModerationNotes).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            // Indexes for performance
+            entity.HasIndex(e => e.ProductId);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => new { e.ProductId, e.Rating });
+            entity.HasIndex(e => new { e.ProductId, e.CreatedAt });
+            entity.HasIndex(e => new { e.UserId, e.ProductId }).IsUnique(); // Bir kullanıcı bir ürüne sadece bir review yapabilir
+            entity.HasIndex(e => e.IsApproved);
+            entity.HasIndex(e => e.IsDeleted);
+            
+            entity.HasOne(e => e.Product)
+                .WithMany(p => p.ProductReviews)
+                .HasForeignKey(e => e.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.Order)
+                .WithMany()
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.Moderator)
+                .WithMany()
+                .HasForeignKey(e => e.ModeratedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ProductReviewHelpful configuration
+        modelBuilder.Entity<ProductReviewHelpful>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasIndex(e => new { e.ProductReviewId, e.UserId }).IsUnique(); // Bir kullanıcı bir review'a sadece bir kez oy verebilir
+            entity.HasIndex(e => e.ProductReviewId);
+            entity.HasIndex(e => e.IsHelpful);
+            
+            entity.HasOne(e => e.ProductReview)
+                .WithMany(r => r.ProductReviewHelpfuls)
+                .HasForeignKey(e => e.ProductReviewId)
                 .OnDelete(DeleteBehavior.Cascade);
                 
             entity.HasOne(e => e.User)

@@ -26,6 +26,8 @@ import '../../presentation/pages/notifications/notification_settings_page.dart';
 import '../../presentation/pages/settings/settings_page.dart';
 import '../../presentation/pages/error/not_found_page.dart';
 import '../../presentation/widgets/common/main_navigation.dart';
+import '../../presentation/pages/merchant/category_merchants_page.dart';
+import '../../domain/entities/service_category_type.dart';
 import '../services/local_storage_service.dart';
 import '../services/analytics_service.dart';
 import '../di/injection.dart';
@@ -100,6 +102,25 @@ class AppRouter {
       ),
 
       // Product Routes
+      GoRoute(
+        path: '/category-merchants/:categoryType',
+        name: 'category-merchants',
+        builder: (context, state) {
+          final categoryTypeValue = int.parse(
+            state.pathParameters['categoryType']!,
+          );
+          final categoryName = state.uri.queryParameters['name']!;
+          final latitude = double.parse(state.uri.queryParameters['lat']!);
+          final longitude = double.parse(state.uri.queryParameters['lng']!);
+
+          return CategoryMerchantsPage(
+            categoryType: ServiceCategoryType.fromInt(categoryTypeValue),
+            categoryName: categoryName,
+            latitude: latitude,
+            longitude: longitude,
+          );
+        },
+      ),
       GoRoute(
         path: RouteConstants.merchantDetail,
         name: RouteConstants.merchantDetailRouteName,

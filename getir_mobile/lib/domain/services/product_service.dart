@@ -52,4 +52,8 @@ class ProductService {
   Future<Result<List<String>>> getCategories() async {
     return await _repository.getCategories();
   }
+
+  Future<Result<List<Product>>> getPopularProducts({int limit = 10}) async {
+    return await _repository.getPopularProducts(limit: limit);
+  }
 }

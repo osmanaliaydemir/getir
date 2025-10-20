@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../../domain/entities/merchant.dart';
 import '../../domain/entities/service_category_type.dart';
 
@@ -62,7 +63,15 @@ class MerchantDataSourceImpl implements MerchantDataSource {
         queryParameters: queryParams,
       );
 
-      final List<dynamic> data = response.data['data'] ?? response.data;
+      // Response unwrap edilmiş
+      final dynamic responseData = response.data;
+      final List<dynamic> data = responseData is List
+          ? responseData as List<dynamic>
+          : (responseData is Map<String, dynamic> &&
+                    responseData['items'] != null
+                ? responseData['items'] as List<dynamic>
+                : []);
+
       return data.map((json) => _merchantFromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to fetch merchants: $e');
@@ -91,10 +100,15 @@ class MerchantDataSourceImpl implements MerchantDataSource {
         queryParameters: {'query': query, 'page': page, 'pageSize': limit},
       );
 
-      final data = response.data['data'];
-      if (data == null) return [];
+      // Response unwrap edilmiş
+      final dynamic responseData = response.data;
+      final List<dynamic> items = responseData is List
+          ? responseData as List<dynamic>
+          : (responseData is Map<String, dynamic> &&
+                    responseData['items'] != null
+                ? responseData['items'] as List<dynamic>
+                : []);
 
-      final List<dynamic> items = data['items'] ?? data;
       return items.map((json) => _merchantFromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to search merchants: $e');
@@ -109,7 +123,7 @@ class MerchantDataSourceImpl implements MerchantDataSource {
   }) async {
     try {
       final response = await _dio.get(
-        '/api/v1/geolocation/merchants/nearby',
+        '/api/v1/geo/merchants/nearby',
         queryParameters: {
           'latitude': latitude,
           'longitude': longitude,
@@ -117,7 +131,16 @@ class MerchantDataSourceImpl implements MerchantDataSource {
         },
       );
 
-      final List<dynamic> data = response.data['data'] ?? response.data;
+      // Response zaten interceptor'da unwrap edilmiş - direkt array olmalı
+      debugPrint(
+        '🔍 [MerchantDataSource] getNearbyMerchants response type: ${response.data.runtimeType}',
+      );
+
+      final List<dynamic> data = response.data is List
+          ? response.data as List<dynamic>
+          : [];
+
+      debugPrint('✅ [MerchantDataSource] Parsed ${data.length} merchants');
       return data.map((json) => _merchantFromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to fetch nearby merchants: $e');
@@ -133,7 +156,7 @@ class MerchantDataSourceImpl implements MerchantDataSource {
   }) async {
     try {
       final response = await _dio.get(
-        '/api/v1/geolocation/merchants/nearby',
+        '/api/v1/geo/merchants/nearby',
         queryParameters: {
           'latitude': latitude,
           'longitude': longitude,
@@ -142,7 +165,19 @@ class MerchantDataSourceImpl implements MerchantDataSource {
         },
       );
 
-      final List<dynamic> data = response.data['data'] ?? response.data;
+      // Response zaten interceptor'da unwrap edilmiş - direkt array olmalı
+      debugPrint(
+        '🔍 [MerchantDataSource] getNearbyMerchantsByCategory response type: ${response.data.runtimeType}',
+      );
+      debugPrint('   CategoryType: $categoryType');
+
+      final List<dynamic> data = response.data is List
+          ? response.data as List<dynamic>
+          : [];
+
+      debugPrint(
+        '✅ [MerchantDataSource] Parsed ${data.length} merchants for category $categoryType',
+      );
       return data.map((json) => _merchantFromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to fetch nearby merchants by category: $e');

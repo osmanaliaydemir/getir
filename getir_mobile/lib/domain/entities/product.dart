@@ -13,8 +13,8 @@ class Product extends Equatable {
   final int stockQuantity;
   final List<ProductVariant> variants;
   final List<ProductOption> options;
-  final double rating;
-  final int reviewCount;
+  final double? rating; // Nullable - ürünün henüz review'ı olmayabilir
+  final int? reviewCount;
   final String unit; // kg, adet, litre, etc.
   final double? discountPrice;
   final double? discountPercentage;
@@ -49,31 +49,31 @@ class Product extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        description,
-        price,
-        imageUrl,
-        category,
-        merchantId,
-        merchantName,
-        isAvailable,
-        stockQuantity,
-        variants,
-        options,
-        rating,
-        reviewCount,
-        unit,
-        discountPrice,
-        discountPercentage,
-        tags,
-        nutritionalInfo,
-        brand,
-        barcode,
-      ];
+    id,
+    name,
+    description,
+    price,
+    imageUrl,
+    category,
+    merchantId,
+    merchantName,
+    isAvailable,
+    stockQuantity,
+    variants,
+    options,
+    rating,
+    reviewCount,
+    unit,
+    discountPrice,
+    discountPercentage,
+    tags,
+    nutritionalInfo,
+    brand,
+    barcode,
+  ];
 
   double get finalPrice => discountPrice ?? price;
-  
+
   bool get hasDiscount => discountPrice != null && discountPrice! < price;
 
   Product copyWith({

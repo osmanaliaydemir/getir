@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Getir.Application.Common;
 
 /// <summary>
@@ -17,8 +19,9 @@ public class ApiResponse<T>
     public T? Data { get; set; }
     
     /// <summary>
-    /// Alias for mobile compatibility
+    /// Alias for mobile compatibility (JSON'a serialize edilmez)
     /// </summary>
+    [JsonIgnore]
     public T? Value => Data;
 
     /// <summary>

@@ -20,6 +20,7 @@ using Getir.Application.Services.Payments;
 using Getir.Application.Services.ProductCategories;
 using Getir.Application.Services.ProductOptions;
 using Getir.Application.Services.Products;
+using Getir.Application.Services.ProductReviews;
 using Getir.Application.Services.RateLimiting;
 using Getir.Application.Services.RealtimeTracking;
 using Getir.Application.Services.Reviews;
@@ -157,6 +158,7 @@ public static class ApplicationServiceExtensions
         
         // Review Services
         services.AddScoped<IReviewService, ReviewService>();
+        services.AddScoped<IProductReviewService, ProductReviewService>();
         
         return services;
     }

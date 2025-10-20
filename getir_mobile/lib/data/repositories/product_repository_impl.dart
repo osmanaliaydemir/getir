@@ -119,4 +119,22 @@ class ProductRepositoryImpl implements IProductRepository {
       );
     }
   }
+
+  @override
+  Future<Result<List<Product>>> getPopularProducts({int limit = 10}) async {
+    try {
+      final products = await _dataSource.getPopularProducts(limit: limit);
+      return Result.success(products);
+    } on DioException catch (e) {
+      return Result.failure(ExceptionFactory.fromDioError(e));
+    } on AppException catch (e) {
+      return Result.failure(e);
+    } catch (e) {
+      return Result.failure(
+        ApiException(
+          message: 'Failed to get popular products: ${e.toString()}',
+        ),
+      );
+    }
+  }
 }

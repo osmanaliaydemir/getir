@@ -10,10 +10,7 @@ import '../../bloc/cart/cart_bloc.dart';
 class ProductDetailPage extends StatefulWidget {
   final String productId;
 
-  const ProductDetailPage({
-    super.key,
-    required this.productId,
-  });
+  const ProductDetailPage({super.key, required this.productId});
 
   @override
   State<ProductDetailPage> createState() => _ProductDetailPageState();
@@ -56,11 +53,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: AppColors.error,
-                  ),
+                  Icon(Icons.error_outline, size: 64, color: AppColors.error),
                   const SizedBox(height: 16),
                   Text(
                     state.message,
@@ -72,7 +65,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      context.read<ProductBloc>().add(LoadProductById(widget.productId));
+                      context.read<ProductBloc>().add(
+                        LoadProductById(widget.productId),
+                      );
                     },
                     child: Text(l10n.retry),
                   ),
@@ -97,15 +92,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return Column(
       children: [
         // Product images
-        Expanded(
-          flex: 3,
-          child: _buildProductImages(product),
-        ),
+        Expanded(flex: 3, child: _buildProductImages(product)),
         // Product details
-        Expanded(
-          flex: 4,
-          child: _buildProductDetails(product, l10n),
-        ),
+        Expanded(flex: 4, child: _buildProductDetails(product, l10n)),
       ],
     );
   }
@@ -113,9 +102,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Widget _buildProductImages(dynamic product) {
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-      ),
+      decoration: BoxDecoration(color: Colors.grey[100]),
       child: Stack(
         children: [
           // Main product image
@@ -129,18 +116,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 color: Colors.grey[200],
                 child: const Center(
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.primary,
+                    ),
                   ),
                 ),
               ),
               errorWidget: (context, url, error) => Container(
                 color: Colors.grey[200],
                 child: const Center(
-                  child: Icon(
-                    Icons.broken_image,
-                    size: 64,
-                    color: Colors.grey,
-                  ),
+                  child: Icon(Icons.broken_image, size: 64, color: Colors.grey),
                 ),
               ),
             ),
@@ -155,10 +140,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 shape: BoxShape.circle,
               ),
               child: IconButton(
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Colors.white,
-                ),
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
@@ -173,10 +155,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 shape: BoxShape.circle,
               ),
               child: IconButton(
-                icon: const Icon(
-                  Icons.favorite_border,
-                  color: Colors.white,
-                ),
+                icon: const Icon(Icons.favorite_border, color: Colors.white),
                 onPressed: () {
                   // TODO: Add to favorites
                 },
@@ -251,7 +230,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     if (product.hasDiscount == true) ...[
                       const SizedBox(height: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
@@ -276,11 +258,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             if (product.rating != null && product.rating > 0) ...[
               Row(
                 children: [
-                  Icon(
-                    Icons.star,
-                    color: Colors.amber,
-                    size: 20,
-                  ),
+                  Icon(Icons.star, color: Colors.amber, size: 20),
                   const SizedBox(width: 4),
                   Text(
                     '${product.rating}',
@@ -322,18 +300,25 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       });
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: isSelected ? AppColors.primary : AppColors.white,
                         border: Border.all(
-                          color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
                         ),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         variant.name,
                         style: AppTypography.bodyMedium.copyWith(
-                          color: isSelected ? AppColors.white : AppColors.textPrimary,
+                          color: isSelected
+                              ? AppColors.white
+                              : AppColors.textPrimary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -368,13 +353,21 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ...option.values.map<Widget>((value) {
                         return RadioListTile<String>(
                           title: Text(value.name),
-                          subtitle: value.price > 0 ? Text('+₺${value.price}') : null,
+                          subtitle: value.price > 0
+                              ? Text('+₺${value.price}')
+                              : null,
                           value: value.id,
-                          groupValue: _selectedOptionIds.isNotEmpty ? _selectedOptionIds.first : null,
+                          groupValue: _selectedOptionIds.isNotEmpty
+                              ? _selectedOptionIds.first
+                              : null,
                           onChanged: (String? newValue) {
                             setState(() {
-                              _selectedOptionIds = newValue != null ? [newValue] : [];
-                              _selectedOptionNames = newValue != null ? [value.name] : [];
+                              _selectedOptionIds = newValue != null
+                                  ? [newValue]
+                                  : [];
+                              _selectedOptionNames = newValue != null
+                                  ? [value.name]
+                                  : [];
                             });
                           },
                           activeColor: AppColors.primary,
@@ -382,10 +375,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       }).toList()
                     else
                       ...option.values.map<Widget>((value) {
-                        final isSelected = _selectedOptionIds.contains(value.id);
+                        final isSelected = _selectedOptionIds.contains(
+                          value.id,
+                        );
                         return CheckboxListTile(
                           title: Text(value.name),
-                          subtitle: value.price > 0 ? Text('+₺${value.price}') : null,
+                          subtitle: value.price > 0
+                              ? Text('+₺${value.price}')
+                              : null,
                           value: isSelected,
                           onChanged: (bool? newValue) {
                             setState(() {
@@ -408,7 +405,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ],
 
             // Nutritional info
-            if (product.nutritionalInfo != null && product.nutritionalInfo.isNotEmpty) ...[
+            if (product.nutritionalInfo != null &&
+                product.nutritionalInfo.isNotEmpty) ...[
               Text(
                 l10n.nutritionalInfo,
                 style: AppTypography.bodyLarge.copyWith(
@@ -424,16 +422,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
-                  children: product.nutritionalInfo.entries.map<Widget>((entry) {
+                  children: product.nutritionalInfo.entries.map<Widget>((
+                    entry,
+                  ) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            entry.key,
-                            style: AppTypography.bodyMedium,
-                          ),
+                          Text(entry.key, style: AppTypography.bodyMedium),
                           Text(
                             entry.value.toString(),
                             style: AppTypography.bodyMedium.copyWith(
@@ -476,11 +473,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          onPressed: _quantity > 1 ? () {
-                            setState(() {
-                              _quantity--;
-                            });
-                          } : null,
+                          onPressed: _quantity > 1
+                              ? () {
+                                  setState(() {
+                                    _quantity--;
+                                  });
+                                }
+                              : null,
                           icon: const Icon(Icons.remove),
                         ),
                         Container(
@@ -550,16 +549,20 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         }
                       },
                       child: ElevatedButton(
-                        onPressed: product.isAvailable == true ? () {
-                          context.read<CartBloc>().add(
-                            AddToCart(
-                              productId: product.id,
-                              quantity: _quantity,
-                              variantId: _selectedVariantId,
-                              optionIds: _selectedOptionIds.isNotEmpty ? _selectedOptionIds : null,
-                            ),
-                          );
-                        } : null,
+                        onPressed: product.isAvailable == true
+                            ? () {
+                                context.read<CartBloc>().add(
+                                  AddToCart(
+                                    merchantId: product.merchantId,
+                                    productId: product.id,
+                                    quantity: _quantity,
+                                    productName: product.name,
+                                    price: product.finalPrice,
+                                    category: product.category,
+                                  ),
+                                );
+                              }
+                            : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: AppColors.white,
@@ -569,7 +572,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                         ),
                         child: Text(
-                          product.isAvailable == true ? l10n.addToCart : l10n.outOfStock,
+                          product.isAvailable == true
+                              ? l10n.addToCart
+                              : l10n.outOfStock,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -591,7 +596,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   void _calculateTotalPrice(dynamic product) {
     double basePrice = product.finalPrice ?? product.price ?? 0.0;
-    
+
     // Add variant price
     if (_selectedVariantId != null && product.variants != null) {
       final variant = product.variants.firstWhere(
@@ -602,7 +607,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         basePrice = variant.price;
       }
     }
-    
+
     // Add option prices
     double optionPrice = 0.0;
     if (_selectedOptionIds.isNotEmpty && product.options != null) {
@@ -614,7 +619,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         }
       }
     }
-    
+
     _totalPrice = (basePrice + optionPrice) * _quantity;
   }
 }

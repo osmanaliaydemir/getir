@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/animations/loading_animations.dart';
 import '../../../core/constants/route_constants.dart';
 import '../../../core/services/local_storage_service.dart';
+import '../../../core/services/secure_encryption_service.dart';
+import '../../../core/di/injection.dart';
 
 /// Splash screen with Getir branding and animations
 class SplashPage extends StatefulWidget {
@@ -94,18 +96,24 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     final storage = LocalStorageService();
     final hasSeenOnboarding =
         storage.getUserData('has_seen_onboarding') == 'true';
-    final hasToken = await storage.getUserDataAsync('access_token') != null;
+
+    // Token kontrolü - SecureEncryptionService'den (LocalStorage değil!)
+    final encryptionService = getIt<SecureEncryptionService>();
+    final hasToken = await encryptionService.hasAccessToken();
 
     // Navigate to appropriate screen
     if (mounted) {
       if (hasToken) {
         // User is logged in → Go to home
+        debugPrint('✅ [SplashPage] Token found, navigating to home');
         context.go(RouteConstants.home);
       } else if (hasSeenOnboarding) {
         // User has seen onboarding → Go to login
+        debugPrint('⚠️ [SplashPage] No token, navigating to login');
         context.go(RouteConstants.login);
       } else {
         // First time user → Go to onboarding
+        debugPrint('ℹ️ [SplashPage] First time user, navigating to onboarding');
         context.go(RouteConstants.onboarding);
       }
     }
@@ -469,12 +477,16 @@ class _AnimatedSplashPageState extends State<AnimatedSplashPage>
     // Navigate after 3 seconds
     Future.delayed(const Duration(seconds: 3), () async {
       if (mounted) {
-        final storage = LocalStorageService();
-        final hasToken = await storage.getUserDataAsync('access_token') != null;
+        final encryptionService = getIt<SecureEncryptionService>();
+        final hasToken = await encryptionService.hasAccessToken();
 
         if (hasToken) {
+          debugPrint('✅ [AnimatedSplashPage] Token found, navigating to home');
           context.go(RouteConstants.home);
         } else {
+          debugPrint(
+            '⚠️ [AnimatedSplashPage] No token, navigating to onboarding',
+          );
           context.go(RouteConstants.onboarding);
         }
       }

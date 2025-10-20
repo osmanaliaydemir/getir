@@ -4,10 +4,9 @@ import '../entities/cart.dart';
 abstract class ICartRepository {
   Future<Result<Cart>> getCart();
   Future<Result<CartItem>> addToCart({
+    required String merchantId,
     required String productId,
     required int quantity,
-    String? variantId,
-    List<String>? optionIds,
   });
   Future<Result<CartItem>> updateCartItem({
     required String itemId,

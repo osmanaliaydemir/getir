@@ -157,6 +157,84 @@ abstract class GeneratedLocalizations {
   /// **'OK'**
   String get ok;
 
+  /// No description provided for @categories.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get categories;
+
+  /// No description provided for @loadingCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading categories...'**
+  String get loadingCategories;
+
+  /// No description provided for @categoriesLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load categories'**
+  String get categoriesLoadError;
+
+  /// No description provided for @noCategoriesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories found yet'**
+  String get noCategoriesFound;
+
+  /// No description provided for @loadingMerchants.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading merchants...'**
+  String get loadingMerchants;
+
+  /// No description provided for @noMerchantsNearby.
+  ///
+  /// In en, this message translates to:
+  /// **'No merchants found nearby'**
+  String get noMerchantsNearby;
+
+  /// No description provided for @merchantsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load merchants'**
+  String get merchantsLoadError;
+
+  /// No description provided for @locationPermissionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please grant location permission'**
+  String get locationPermissionRequired;
+
+  /// No description provided for @locationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to get location. Please check location permissions.'**
+  String get locationError;
+
+  /// No description provided for @nearbyMerchants.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby Merchants'**
+  String get nearbyMerchants;
+
+  /// No description provided for @popularProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular Products'**
+  String get popularProducts;
+
+  /// No description provided for @selectLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Location'**
+  String get selectLocation;
+
+  /// No description provided for @searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for stores or products...'**
+  String get searchHint;
+
   /// No description provided for @cart.
   ///
   /// In en, this message translates to:

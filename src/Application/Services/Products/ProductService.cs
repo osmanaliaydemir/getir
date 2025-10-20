@@ -74,7 +74,9 @@ public class ProductService : BaseService, IProductService
                         DiscountedPrice = p.DiscountedPrice,
                         StockQuantity = p.StockQuantity,
                         Unit = p.Unit,
-                        IsAvailable = p.IsAvailable
+                        IsAvailable = p.IsAvailable,
+                        Rating = p.Rating,
+                        ReviewCount = p.ReviewCount
                     }).ToList();
 
                     var pagedResult = PagedResult<ProductResponse>.Create(response, total, query.Page, query.PageSize);
@@ -128,7 +130,9 @@ public class ProductService : BaseService, IProductService
                     DiscountedPrice = product.DiscountedPrice,
                     StockQuantity = product.StockQuantity,
                     Unit = product.Unit,
-                    IsAvailable = product.IsAvailable
+                    IsAvailable = product.IsAvailable,
+                    Rating = product.Rating,
+                    ReviewCount = product.ReviewCount
                 };
 
                 return Result.Ok(response);
@@ -190,7 +194,9 @@ public class ProductService : BaseService, IProductService
             DiscountedPrice = createdProduct.DiscountedPrice,
             StockQuantity = createdProduct.StockQuantity,
             Unit = createdProduct.Unit,
-            IsAvailable = createdProduct.IsAvailable
+            IsAvailable = createdProduct.IsAvailable,
+            Rating = createdProduct.Rating,
+            ReviewCount = createdProduct.ReviewCount
         };
 
         return Result.Ok(response);
@@ -250,7 +256,9 @@ public class ProductService : BaseService, IProductService
             DiscountedPrice = updatedProduct.DiscountedPrice,
             StockQuantity = updatedProduct.StockQuantity,
             Unit = updatedProduct.Unit,
-            IsAvailable = updatedProduct.IsAvailable
+            IsAvailable = updatedProduct.IsAvailable,
+            Rating = updatedProduct.Rating,
+            ReviewCount = updatedProduct.ReviewCount
         };
 
         return Result.Ok(response);
@@ -330,7 +338,9 @@ public class ProductService : BaseService, IProductService
             DiscountedPrice = p.DiscountedPrice,
             StockQuantity = p.StockQuantity,
             Unit = p.Unit,
-            IsAvailable = p.IsAvailable
+            IsAvailable = p.IsAvailable,
+            Rating = p.Rating,
+            ReviewCount = p.ReviewCount
         }).ToList();
 
         var pagedResult = PagedResult<ProductResponse>.Create(
@@ -396,7 +406,9 @@ public class ProductService : BaseService, IProductService
             DiscountedPrice = product.DiscountedPrice,
             StockQuantity = product.StockQuantity,
             Unit = product.Unit,
-            IsAvailable = product.IsAvailable
+            IsAvailable = product.IsAvailable,
+            Rating = product.Rating,
+            ReviewCount = product.ReviewCount
         };
 
         return Result.Ok(response);
@@ -451,7 +463,9 @@ public class ProductService : BaseService, IProductService
             DiscountedPrice = product.DiscountedPrice,
             StockQuantity = product.StockQuantity,
             Unit = product.Unit,
-            IsAvailable = product.IsAvailable
+            IsAvailable = product.IsAvailable,
+            Rating = product.Rating,
+            ReviewCount = product.ReviewCount
         };
 
         return Result.Ok(response);
@@ -673,11 +687,141 @@ public class ProductService : BaseService, IProductService
             IsActive = p.IsActive,
             ImageUrl = p.ImageUrl,
             CreatedAt = p.CreatedAt,
-            UpdatedAt = p.UpdatedAt
+            UpdatedAt = p.UpdatedAt,
+            Rating = p.Rating,
+            ReviewCount = p.ReviewCount
         }).ToList();
 
         return Result.Ok(PagedResult<ProductResponse>.Create(responses, totalCount, query.Page, query.PageSize));
     }
+    
+    #region Popular Products
+    /// <summary>
+    /// Popüler ürünleri getirir (en çok satılan, yüksek ratingli, cache).
+    /// Ana sayfa için optimize edilmiş.
+    /// </summary>
+    public async Task<Result<List<ProductResponse>>> GetPopularProductsAsync(int limit = 10, CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetPopularProductsInternalAsync(limit, cancellationToken),
+            "GetPopularProducts",
+            new { limit },
+            cancellationToken);
+    }
+
+    private async Task<Result<List<ProductResponse>>> GetPopularProductsInternalAsync(int limit, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var cacheKey = $"popular_products_{limit}";
+
+            return await GetOrSetCacheAsync(
+                cacheKey,
+                async () =>
+                {
+                    // Son 30 günlük sipariş verilerinden en çok satılan ürünleri bul
+                    var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+
+                    // OrderLine'dan en çok satılan ürünleri hesapla
+                    var popularProductIds = await _unitOfWork.ReadRepository<OrderLine>()
+                        .ListAsync(
+                            ol => ol.Order.CreatedAt >= thirtyDaysAgo &&
+                                  ol.Order.Status != Domain.Enums.OrderStatus.Cancelled,
+                            include: "Product",
+                            cancellationToken: cancellationToken);
+
+                    // Ürün bazında satış miktarlarını topla
+                    var productSales = popularProductIds
+                        .Where(ol => ol.Product != null && ol.Product.IsActive && ol.Product.IsAvailable)
+                        .GroupBy(ol => ol.ProductId)
+                        .Select(g => new
+                        {
+                            ProductId = g.Key,
+                            TotalQuantity = g.Sum(ol => ol.Quantity),
+                            Product = g.First().Product
+                        })
+                        .OrderByDescending(x => x.TotalQuantity)
+                        .Take(limit)
+                        .ToList();
+
+                    // Eğer yeterli satış verisi yoksa, rating yüksek ürünlerle tamamla
+                    if (productSales.Count < limit)
+                    {
+                        var existingIds = productSales.Select(p => p.ProductId).ToList();
+                        var remainingLimit = limit - productSales.Count;
+
+                        var highRatedProducts = await _unitOfWork.ReadRepository<Product>()
+                            .ListAsync(
+                                p => !existingIds.Contains(p.Id) &&
+                                     p.IsActive &&
+                                     p.IsAvailable,
+                                cancellationToken: cancellationToken);
+
+                        var topRated = highRatedProducts
+                            .OrderByDescending(p => p.Rating ?? 0)
+                            .ThenByDescending(p => p.ReviewCount ?? 0)
+                            .Take(remainingLimit)
+                            .Select(p => new
+                            {
+                                ProductId = p.Id,
+                                TotalQuantity = 0,
+                                Product = p
+                            })
+                            .ToList();
+
+                        productSales.AddRange(topRated);
+                    }
+
+                    // Product'ları merchant bilgisi ile birlikte çek
+                    var productIds = productSales.Select(p => p.ProductId).ToList();
+                    var productsWithMerchants = await _unitOfWork.ReadRepository<Product>()
+                        .ListAsync(
+                            p => productIds.Contains(p.Id),
+                            include: "Merchant",
+                            cancellationToken: cancellationToken);
+
+                    // Response oluştur (satış sıralamasını koru)
+                    var productDict = productsWithMerchants.ToDictionary(p => p.Id);
+                    var responses = productSales
+                        .Where(ps => productDict.ContainsKey(ps.ProductId))
+                        .Select(ps =>
+                        {
+                            var p = productDict[ps.ProductId];
+                            return new ProductResponse
+                            {
+                                Id = p.Id,
+                                Name = p.Name,
+                                Description = p.Description,
+                                Price = p.Price,
+                                DiscountedPrice = p.DiscountedPrice,
+                                ImageUrl = p.ImageUrl,
+                                MerchantId = p.MerchantId,
+                                MerchantName = p.Merchant?.Name,
+                                StockQuantity = p.StockQuantity,
+                                Unit = p.Unit,
+                                IsAvailable = p.IsAvailable,
+                                IsActive = p.IsActive,
+                                Rating = p.Rating,
+                                ReviewCount = p.ReviewCount,
+                                CreatedAt = p.CreatedAt,
+                                UpdatedAt = p.UpdatedAt
+                            };
+                        })
+                        .ToList();
+
+                    return ServiceResult.Success(responses);
+                },
+                TimeSpan.FromMinutes(30), // 30 dakika cache - popular products sık değişmez
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            return Result.Fail<List<ProductResponse>>(
+                $"Failed to fetch popular products: {ex.Message}",
+                "POPULAR_PRODUCTS_ERROR");
+        }
+    }
+    #endregion
     #endregion
 }
 

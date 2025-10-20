@@ -1,34 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/cubits/language/language_cubit.dart';
+import '../../../core/di/injection.dart';
+import '../../../domain/entities/service_category.dart';
 import '../../../domain/entities/service_category_type.dart';
+import '../../../domain/entities/product.dart';
 import '../../widgets/common/language_selector.dart';
 import '../../widgets/merchant/merchant_card.dart';
 import '../../widgets/merchant/merchant_card_skeleton.dart';
 import '../../../core/widgets/error_state_widget.dart';
 import '../../bloc/merchant/merchant_bloc.dart';
-import '../merchant/category_merchants_page.dart';
+import '../../bloc/product/product_bloc.dart';
+import '../../bloc/cart/cart_bloc.dart';
+import '../../cubit/category/category_cubit.dart';
 import '../../../core/services/logger_service.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) =>
+              getIt<CategoryCubit>()..loadAllActiveCategories(),
+        ),
+      ],
+      child: const _HomePageContent(),
+    );
+  }
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageContent extends StatefulWidget {
+  const _HomePageContent();
+
+  @override
+  State<_HomePageContent> createState() => _HomePageContentState();
+}
+
+class _HomePageContentState extends State<_HomePageContent> {
   Position? _currentPosition;
 
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
+    // Load popular products
+    context.read<ProductBloc>().add(const LoadPopularProducts(limit: 5));
+    // Load cart
+    context.read<CartBloc>().add(LoadCart());
   }
 
   Future<void> _getCurrentLocation() async {
@@ -54,15 +82,16 @@ class _HomePageState extends State<HomePage> {
       });
 
       // Load nearby merchants
-      context.read<MerchantBloc>().add(
-        LoadNearbyMerchants(
-          latitude: position.latitude,
-          longitude: position.longitude,
-          radius: AppDimensions.nearbyMerchantRadiusKm,
-        ),
-      );
+      if (mounted) {
+        context.read<MerchantBloc>().add(
+          LoadNearbyMerchants(
+            latitude: position.latitude,
+            longitude: position.longitude,
+            radius: AppDimensions.nearbyMerchantRadiusKm,
+          ),
+        );
+      }
     } catch (e, stackTrace) {
-      // Log error
       logger.error(
         'Failed to get location',
         tag: 'HomePage',
@@ -70,14 +99,11 @@ class _HomePageState extends State<HomePage> {
         stackTrace: stackTrace,
       );
 
-      // Show user-friendly error message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Konum alınamadı. Lütfen konum izinlerini kontrol edin.',
-            ),
-            duration: Duration(seconds: 3),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).locationError),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -110,444 +136,283 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppDimensions.spacingL),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Location Header
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(AppDimensions.spacingL),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.cardBorderRadius,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(AppDimensions.shadowOpacity),
-                    spreadRadius: AppDimensions.shadowSpreadRadius,
-                    blurRadius: AppDimensions.shadowBlurRadius,
-                    offset: const Offset(0, AppDimensions.shadowOffsetY),
-                  ),
-                ],
+      body: RefreshIndicator(
+        onRefresh: () async {
+          context.read<CategoryCubit>().refreshCategories();
+          context.read<ProductBloc>().add(const LoadPopularProducts(limit: 5));
+          if (_currentPosition != null) {
+            context.read<MerchantBloc>().add(
+              LoadNearbyMerchants(
+                latitude: _currentPosition!.latitude,
+                longitude: _currentPosition!.longitude,
+                radius: AppDimensions.nearbyMerchantRadiusKm,
               ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.location_on,
-                    color: AppColors.primary,
-                    size: AppDimensions.iconM,
-                  ),
-                  const SizedBox(width: AppDimensions.spacingM),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.selectLocation,
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Kadıköy, İstanbul',
-                          style: AppTypography.bodyLarge.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(
-                    Icons.keyboard_arrow_down,
-                    color: AppColors.textSecondary,
-                  ),
-                ],
-              ),
-            ),
+            );
+          }
+        },
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppDimensions.spacingL),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Location Header
+              _buildLocationHeader(l10n),
+              const SizedBox(height: 24),
 
-            const SizedBox(height: 24),
+              // Search Bar
+              _buildSearchBar(l10n),
+              const SizedBox(height: 24),
 
-            // Search Bar
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: l10n.searchHint,
-                  border: InputBorder.none,
-                  prefixIcon: const Icon(
-                    Icons.search,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
-            ),
+              // Categories Section - API'den çekiliyor ✅
+              _buildCategoriesSection(l10n),
+              const SizedBox(height: 32),
 
-            const SizedBox(height: 24),
+              // Popular Products Section (şimdilik mock)
+              _buildPopularProductsSection(l10n),
+              const SizedBox(height: 32),
 
-            // Categories Section
-            Text(
-              l10n.categories,
-              style: AppTypography.headlineSmall.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
+              // Nearby Merchants Section - API'den çekiliyor ✅
+              _buildNearbyMerchantsSection(l10n),
+              const SizedBox(height: 100), // Bottom padding for navigation
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-            // Categories Grid
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: AppDimensions.categoriesGridCount,
-              crossAxisSpacing: AppDimensions.spacingL,
-              mainAxisSpacing: AppDimensions.spacingL,
-              children: [
-                _buildCategoryItem(
-                  context: context,
-                  categoryType: ServiceCategoryType.market,
-                  icon: Icons.local_grocery_store,
-                  label: 'Market',
-                  color: Colors.orange,
-                ),
-                _buildCategoryItem(
-                  context: context,
-                  categoryType: ServiceCategoryType.restaurant,
-                  icon: Icons.restaurant,
-                  label: 'Restoran',
-                  color: Colors.red,
-                ),
-                _buildCategoryItem(
-                  context: context,
-                  categoryType: ServiceCategoryType.pharmacy,
-                  icon: Icons.local_pharmacy,
-                  label: 'Eczane',
-                  color: Colors.green,
-                ),
-                _buildCategoryItem(
-                  context: context,
-                  categoryType: ServiceCategoryType.water,
-                  icon: Icons.water_drop,
-                  label: 'Su',
-                  color: Colors.blue,
-                ),
-                _buildCategoryItem(
-                  context: context,
-                  categoryType: ServiceCategoryType.cafe,
-                  icon: Icons.local_cafe,
-                  label: 'Kafe',
-                  color: Colors.brown,
-                ),
-                _buildCategoryItem(
-                  context: context,
-                  categoryType: ServiceCategoryType.bakery,
-                  icon: Icons.bakery_dining,
-                  label: 'Pastane',
-                  color: Colors.pink,
-                ),
-                _buildCategoryItem(
-                  context: context,
-                  categoryType: ServiceCategoryType.other,
-                  icon: Icons.more_horiz,
-                  label: 'Diğer',
-                  color: Colors.grey,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 32),
-
-            // Popular Products Section
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildLocationHeader(AppLocalizations l10n) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppDimensions.spacingL),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimensions.cardBorderRadius),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(AppDimensions.shadowOpacity),
+            spreadRadius: AppDimensions.shadowSpreadRadius,
+            blurRadius: AppDimensions.shadowBlurRadius,
+            offset: const Offset(0, AppDimensions.shadowOffsetY),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.location_on,
+            color: AppColors.primary,
+            size: AppDimensions.iconM,
+          ),
+          const SizedBox(width: AppDimensions.spacingM),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n.popularProducts,
-                  style: AppTypography.headlineSmall.copyWith(
-                    fontWeight: FontWeight.bold,
+                  l10n.selectLocation,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
                   ),
                 ),
-                TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    l10n.viewAll,
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                const SizedBox(height: 4),
+                Text(
+                  'Kadıköy, İstanbul',
+                  style: AppTypography.bodyLarge.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+          ),
+          const Icon(Icons.keyboard_arrow_down, color: AppColors.textSecondary),
+        ],
+      ),
+    );
+  }
 
-            // Popular Products List
-            SizedBox(
-              height: 230, // Increased height to fix overflow
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: 5,
-                itemBuilder: (context, index) {
-                  return Container(
-                    width: AppDimensions.productCardWidth,
-                    margin: const EdgeInsets.only(
-                      right: AppDimensions.spacingL,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.cardBorderRadius,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(
-                            AppDimensions.shadowOpacity,
-                          ),
-                          spreadRadius: AppDimensions.shadowSpreadRadius,
-                          blurRadius: AppDimensions.shadowBlurRadius,
-                          offset: const Offset(0, AppDimensions.shadowOffsetY),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min, // Prevent overflow
-                      children: [
-                        // Image section - fixed height
-                        Container(
-                          height: 120,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(
-                                AppDimensions.cardBorderRadius,
-                              ),
-                              topRight: Radius.circular(
-                                AppDimensions.cardBorderRadius,
-                              ),
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.image,
-                            size: AppDimensions.iconXl,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        // Content section - flexible
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.all(
-                              AppDimensions.spacingM,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Ürün ${index + 1}',
-                                  style: AppTypography.bodyMedium.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  maxLines: 1, // Reduced from 2 to 1
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: AppDimensions.spacingXs),
-                                Text(
-                                  '₺${(index + 1) * 10}.00',
-                                  style: AppTypography.bodyMedium.copyWith(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: AppDimensions.spacingS),
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 32, // Fixed button height
-                                  child: ElevatedButton(
-                                    onPressed: () {},
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.primary,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 4, // Reduced padding
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      l10n.addToCart,
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                      ), // Reduced font size
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
+  Widget _buildSearchBar(AppLocalizations l10n) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: l10n.searchHint,
+          border: InputBorder.none,
+          prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
+        ),
+      ),
+    );
+  }
 
-            const SizedBox(height: 32),
+  Widget _buildCategoriesSection(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.categories,
+          style: AppTypography.headlineSmall.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        BlocBuilder<CategoryCubit, CategoryState>(
+          builder: (context, state) {
+            if (state is CategoryLoading) {
+              return _buildCategoriesLoading();
+            } else if (state is CategoryError) {
+              return _buildCategoriesError(state.message);
+            } else if (state is CategoryLoaded) {
+              return _buildCategoriesGrid(state.categories);
+            }
+            return _buildCategoriesLoading();
+          },
+        ),
+      ],
+    );
+  }
 
-            // Nearby Merchants Section
+  Widget _buildCategoriesLoading() {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: AppDimensions.categoriesGridCount,
+      crossAxisSpacing: AppDimensions.spacingL,
+      mainAxisSpacing: AppDimensions.spacingL,
+      children: List.generate(6, (index) => _CategoryShimmer()),
+    );
+  }
+
+  Widget _buildCategoriesError(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, color: AppColors.error, size: 48),
+            const SizedBox(height: 8),
             Text(
-              l10n.nearbyMerchants,
-              style: AppTypography.headlineSmall.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              message,
+              style: const TextStyle(color: AppColors.error),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-
-            // Merchants List - TEMPORARY: Show mock data until API is ready
-            _buildMockMerchantsList(l10n),
-
-            const SizedBox(height: 100), // Bottom padding for navigation
+            ElevatedButton(
+              onPressed: () {
+                context.read<CategoryCubit>().refreshCategories();
+              },
+              child: Text(AppLocalizations.of(context).retry),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCategoriesGrid(List<ServiceCategory> categories) {
+    if (categories.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(AppLocalizations.of(context).noCategoriesFound),
+        ),
+      );
+    }
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: AppDimensions.categoriesGridCount,
+        crossAxisSpacing: AppDimensions.spacingL,
+        mainAxisSpacing: AppDimensions.spacingL,
+      ),
+      itemCount: categories.length,
+      itemBuilder: (context, index) {
+        final category = categories[index];
+        return _buildCategoryItem(context: context, category: category);
+      },
     );
   }
 
   Widget _buildCategoryItem({
     required BuildContext context,
-    required ServiceCategoryType categoryType,
-    required IconData icon,
-    required String label,
-    required Color color,
+    required ServiceCategory category,
   }) {
-    return GestureDetector(
-      onTap: () {
-        // Konum yoksa hata göster
-        if (_currentPosition == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Lütfen konum izni verin'),
-              backgroundColor: AppColors.error,
-            ),
-          );
-          return;
-        }
+    // Icon ve renk eşleştirmesi (fallback)
+    final iconData = _getCategoryIcon(category.type);
+    final color = _getCategoryColor(category.type);
 
-        // Kategori sayfasına git
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CategoryMerchantsPage(
-              categoryType: categoryType,
-              categoryName: label,
-              latitude: _currentPosition!.latitude,
-              longitude: _currentPosition!.longitude,
-            ),
-          ),
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 300),
+      tween: Tween(begin: 0.0, end: 1.0),
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: 0.8 + (value * 0.2),
+          child: Opacity(opacity: value, child: child),
         );
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: AppTypography.bodySmall.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+      child: GestureDetector(
+        onTapDown: (_) {},
+        onTapUp: (_) {},
+        onTapCancel: () {},
+        onTap: () {
+          debugPrint(
+            '📱 [HomePage] Category tapped: ${category.name} (Type: ${category.type.value})',
+          );
 
-  Widget _buildMockMerchantsList(AppLocalizations l10n) {
-    // Mock merchants data until API is ready
-    final mockMerchants = [
-      {
-        'name': 'Migros Kadıköy',
-        'description': 'Taze ürünler, hızlı teslimat',
-        'rating': 4.5,
-        'deliveryFee': 3.50,
-        'estimatedDeliveryTime': 25,
-        'distance': 0.8,
-        'isOpen': true,
-        'category': 'Market',
-      },
-      {
-        'name': 'Burger King',
-        'description': 'Lezzetli hamburgerler',
-        'rating': 4.2,
-        'deliveryFee': 4.00,
-        'estimatedDeliveryTime': 35,
-        'distance': 1.2,
-        'isOpen': true,
-        'category': 'Restoran',
-      },
-      {
-        'name': 'Eczane Plus',
-        'description': 'İlaçlar ve sağlık ürünleri',
-        'rating': 4.7,
-        'deliveryFee': 2.50,
-        'estimatedDeliveryTime': 20,
-        'distance': 0.5,
-        'isOpen': true,
-        'category': 'Eczane',
-      },
-    ];
+          if (_currentPosition == null) {
+            debugPrint('⚠️ [HomePage] No location - showing permission error');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  AppLocalizations.of(context).locationPermissionRequired,
+                ),
+                backgroundColor: AppColors.error,
+              ),
+            );
+            return;
+          }
 
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: mockMerchants.length,
-      itemBuilder: (context, index) {
-        final merchant = mockMerchants[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
+          debugPrint('🚀 [HomePage] Navigating to CategoryMerchantsPage');
+          debugPrint('   Category: ${category.name}');
+          debugPrint('   Type: ${category.type.value}');
+          debugPrint(
+            '   Location: ${_currentPosition!.latitude}, ${_currentPosition!.longitude}',
+          );
+
+          try {
+            // GoRouter ile navigate et (bottom navbar ile uyumlu)
+            context.push(
+              '/category-merchants/${category.type.value}'
+              '?name=${Uri.encodeQueryComponent(category.name)}'
+              '&lat=${_currentPosition!.latitude}'
+              '&lng=${_currentPosition!.longitude}',
+            );
+          } catch (e, stackTrace) {
+            debugPrint('❌ [HomePage] Navigation error: $e');
+            logger.error(
+              'Failed to navigate to category page',
+              tag: 'HomePage',
+              error: e,
+              stackTrace: stackTrace,
+            );
+          }
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
@@ -560,104 +425,401 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                // Merchant logo placeholder
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // İkon veya iconUrl varsa göster (with caching)
+              if (category.iconUrl != null && category.iconUrl!.isNotEmpty)
+                Hero(
+                  tag: 'category_${category.id}',
+                  child: Image.network(
+                    category.iconUrl!,
+                    width: 40,
+                    height: 40,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                : null,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return _buildFallbackIcon(iconData, color);
+                    },
+                    cacheWidth: 80, // Optimize memory
+                    cacheHeight: 80,
                   ),
-                  child: const Icon(Icons.store, color: Colors.grey, size: 30),
+                )
+              else
+                Hero(
+                  tag: 'category_${category.id}',
+                  child: _buildFallbackIcon(iconData, color),
                 ),
-                const SizedBox(width: 16),
-                // Merchant info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        merchant['name'] as String,
-                        style: AppTypography.bodyLarge.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        merchant['description'] as String,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.star, color: Colors.amber, size: 16),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${merchant['rating']}',
-                            style: AppTypography.bodySmall.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Icon(
-                            Icons.access_time,
-                            color: AppColors.textSecondary,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${merchant['estimatedDeliveryTime']} dk',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  category.name, // ✅ API'den gelen isim
+                  style: AppTypography.bodySmall.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (category.merchantCount > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    '${category.merchantCount} mağaza',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 10,
+                    ),
                   ),
                 ),
-                // Delivery info
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        merchant['category'] as String,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '₺${merchant['deliveryFee']}',
-                      style: AppTypography.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFallbackIcon(IconData icon, Color color) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(icon, color: color, size: 24),
+    );
+  }
+
+  IconData _getCategoryIcon(ServiceCategoryType type) {
+    switch (type) {
+      case ServiceCategoryType.restaurant:
+        return Icons.restaurant;
+      case ServiceCategoryType.market:
+        return Icons.local_grocery_store;
+      case ServiceCategoryType.pharmacy:
+        return Icons.local_pharmacy;
+      case ServiceCategoryType.water:
+        return Icons.water_drop;
+      case ServiceCategoryType.cafe:
+        return Icons.local_cafe;
+      case ServiceCategoryType.bakery:
+        return Icons.bakery_dining;
+      case ServiceCategoryType.other:
+        return Icons.more_horiz;
+    }
+  }
+
+  Color _getCategoryColor(ServiceCategoryType type) {
+    switch (type) {
+      case ServiceCategoryType.restaurant:
+        return Colors.red;
+      case ServiceCategoryType.market:
+        return Colors.orange;
+      case ServiceCategoryType.pharmacy:
+        return Colors.green;
+      case ServiceCategoryType.water:
+        return Colors.blue;
+      case ServiceCategoryType.cafe:
+        return Colors.brown;
+      case ServiceCategoryType.bakery:
+        return Colors.pink;
+      case ServiceCategoryType.other:
+        return Colors.grey;
+    }
+  }
+
+  Widget _buildPopularProductsSection(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              l10n.popularProducts,
+              style: AppTypography.headlineSmall.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            TextButton(
+              onPressed: () {},
+              child: Text(
+                l10n.viewAll,
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        BlocBuilder<ProductBloc, ProductState>(
+          builder: (context, state) {
+            if (state is ProductLoading) {
+              return _buildPopularProductsLoading();
+            } else if (state is ProductError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Popüler ürünler yüklenemedi',
+                    style: const TextStyle(color: AppColors.error),
+                  ),
+                ),
+              );
+            } else if (state is ProductsLoaded) {
+              if (state.products.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return _buildPopularProductsList(state.products);
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPopularProductsLoading() {
+    return SizedBox(
+      height: 230,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: 3,
+        itemBuilder: (context, index) {
+          return Container(
+            width: AppDimensions.productCardWidth,
+            margin: const EdgeInsets.only(right: AppDimensions.spacingL),
+            child: Shimmer.fromColors(
+              baseColor: Colors.grey[300]!,
+              highlightColor: Colors.grey[100]!,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.cardBorderRadius,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPopularProductsList(List<Product> products) {
+    return SizedBox(
+      height: 250,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: products.length,
+        itemBuilder: (context, index) {
+          final product = products[index];
+          return Container(
+            width: AppDimensions.productCardWidth,
+            margin: const EdgeInsets.only(right: AppDimensions.spacingL),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(
+                AppDimensions.cardBorderRadius,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(AppDimensions.shadowOpacity),
+                  spreadRadius: AppDimensions.shadowSpreadRadius,
+                  blurRadius: AppDimensions.shadowBlurRadius,
+                  offset: const Offset(0, AppDimensions.shadowOffsetY),
                 ),
               ],
             ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Product Image
+                Container(
+                  height: 120,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(AppDimensions.cardBorderRadius),
+                      topRight: Radius.circular(AppDimensions.cardBorderRadius),
+                    ),
+                  ),
+                  child: product.imageUrl.isNotEmpty
+                      ? Image.network(
+                          product.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.image,
+                              size: AppDimensions.iconXl,
+                              color: Colors.grey,
+                            );
+                          },
+                        )
+                      : const Icon(
+                          Icons.image,
+                          size: AppDimensions.iconXl,
+                          color: Colors.grey,
+                        ),
+                ),
+                // Product Info
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppDimensions.spacingM),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          product.name,
+                          style: AppTypography.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        // Rating
+                        if (product.rating != null && product.rating! > 0)
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.star,
+                                size: 14,
+                                color: Colors.amber,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                product.rating!.toStringAsFixed(1),
+                                style: AppTypography.bodySmall.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              if (product.reviewCount != null &&
+                                  product.reviewCount! > 0)
+                                Text(
+                                  ' (${product.reviewCount})',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        const Spacer(),
+                        Text(
+                          '₺${product.finalPrice.toStringAsFixed(2)}',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        _AddToCartButton(product: product),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildNearbyMerchantsSection(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.nearbyMerchants,
+          style: AppTypography.headlineSmall.copyWith(
+            fontWeight: FontWeight.bold,
           ),
+        ),
+        const SizedBox(height: 16),
+        BlocBuilder<MerchantBloc, MerchantState>(
+          builder: (context, state) {
+            if (state is MerchantLoading) {
+              return _buildMerchantsLoading();
+            } else if (state is MerchantError) {
+              return ErrorStateWidget(
+                errorType: _getErrorTypeFromMessage(state.message),
+                onRetry: () {
+                  if (_currentPosition != null) {
+                    context.read<MerchantBloc>().add(
+                      LoadNearbyMerchants(
+                        latitude: _currentPosition!.latitude,
+                        longitude: _currentPosition!.longitude,
+                        radius: AppDimensions.nearbyMerchantRadiusKm,
+                      ),
+                    );
+                  }
+                },
+              );
+            } else if (state is MerchantsLoaded) {
+              if (state.merchants.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(AppLocalizations.of(context).noMerchantsNearby),
+                  ),
+                );
+              }
+              return _buildMerchantsList(state.merchants);
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMerchantsLoading() {
+    return Column(
+      children: List.generate(
+        3,
+        (index) => Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: MerchantCardSkeleton(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMerchantsList(merchants) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: merchants.length,
+      itemBuilder: (context, index) {
+        final merchant = merchants[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: MerchantCard(merchant: merchant),
         );
       },
     );
@@ -689,5 +851,274 @@ class _HomePageState extends State<HomePage> {
     }
 
     return ErrorType.generic;
+  }
+}
+
+/// Kategori skeleton/shimmer widget
+class _CategoryShimmer extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: 60,
+              height: 12,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Animasyonlu Sepete Ekle Butonu
+class _AddToCartButton extends StatefulWidget {
+  final Product product;
+
+  const _AddToCartButton({required this.product});
+
+  @override
+  State<_AddToCartButton> createState() => _AddToCartButtonState();
+}
+
+class _AddToCartButtonState extends State<_AddToCartButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+  bool _isAdding = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _addToCart() async {
+    if (_isAdding) return;
+
+    setState(() => _isAdding = true);
+
+    // Animasyon başlat
+    await _animationController.forward();
+    await _animationController.reverse();
+
+    // Cart BLoC'a event gönder
+    if (!mounted) return;
+
+    context.read<CartBloc>().add(
+      AddToCart(
+        merchantId: widget.product.merchantId,
+        productId: widget.product.id,
+        quantity: 1,
+        productName: widget.product.name,
+        price: widget.product.finalPrice,
+        category: widget.product.category,
+      ),
+    );
+
+    // Başarı feedback'i
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                '${widget.product.name} sepete eklendi!',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+
+    setState(() => _isAdding = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<CartBloc, CartState>(
+      builder: (context, cartState) {
+        // Sepette bu ürün var mı kontrol et
+        int quantityInCart = 0;
+        String? cartItemId;
+
+        if (cartState is CartLoaded) {
+          try {
+            final cartItem = cartState.cart.items.firstWhere(
+              (item) => item.productId == widget.product.id,
+            );
+            quantityInCart = cartItem.quantity;
+            cartItemId = cartItem.id;
+          } catch (e) {
+            // Ürün sepette yok
+          }
+        }
+
+        // Sepette varsa: artı/eksi butonları
+        if (quantityInCart > 0) {
+          return ScaleTransition(
+            scale: _scaleAnimation,
+            child: Container(
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  // Eksi butonu
+                  Expanded(
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: _isAdding
+                          ? null
+                          : () {
+                              if (quantityInCart > 1) {
+                                context.read<CartBloc>().add(
+                                  UpdateCartItem(
+                                    itemId: cartItemId!,
+                                    quantity: quantityInCart - 1,
+                                  ),
+                                );
+                              } else {
+                                context.read<CartBloc>().add(
+                                  RemoveFromCart(cartItemId!),
+                                );
+                              }
+                            },
+                      icon: Icon(
+                        quantityInCart > 1
+                            ? Icons.remove
+                            : Icons.delete_outline,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                  // Adet
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(
+                      quantityInCart.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  // Artı butonu
+                  Expanded(
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: _isAdding
+                          ? null
+                          : () {
+                              context.read<CartBloc>().add(
+                                UpdateCartItem(
+                                  itemId: cartItemId!,
+                                  quantity: quantityInCart + 1,
+                                ),
+                              );
+                            },
+                      icon: const Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // Sepette yoksa: normal sepete ekle butonu
+        return ScaleTransition(
+          scale: _scaleAnimation,
+          child: SizedBox(
+            width: double.infinity,
+            height: 32,
+            child: ElevatedButton(
+              onPressed: _isAdding ? null : _addToCart,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: AppColors.primary.withOpacity(0.6),
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: _isAdding
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.add_shopping_cart, size: 14),
+                        const SizedBox(width: 4),
+                        Text(
+                          AppLocalizations.of(context).addToCart,
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }

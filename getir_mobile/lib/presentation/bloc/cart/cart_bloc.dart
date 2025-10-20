@@ -16,6 +16,7 @@ abstract class CartEvent extends Equatable {
 class LoadCart extends CartEvent {}
 
 class AddToCart extends CartEvent {
+  final String merchantId;
   final String productId;
   final int quantity;
   final String? variantId;
@@ -25,6 +26,7 @@ class AddToCart extends CartEvent {
   final String? category;
 
   const AddToCart({
+    required this.merchantId,
     required this.productId,
     required this.quantity,
     this.variantId,
@@ -36,6 +38,7 @@ class AddToCart extends CartEvent {
 
   @override
   List<Object?> get props => [
+    merchantId,
     productId,
     quantity,
     variantId,
@@ -187,10 +190,9 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
   Future<void> _onAddToCart(AddToCart event, Emitter<CartState> emit) async {
     final result = await _cartService.addToCart(
+      merchantId: event.merchantId,
       productId: event.productId,
       quantity: event.quantity,
-      variantId: event.variantId,
-      optionIds: event.optionIds,
     );
 
     if (result.isSuccess) {

@@ -35,10 +35,9 @@ class CartService {
   /// - Success: [CartItem] added to cart
   /// - Failure: [ValidationException] on invalid quantity
   Future<Result<CartItem>> addToCart({
+    required String merchantId,
     required String productId,
     required int quantity,
-    String? variantId,
-    List<String>? optionIds,
   }) async {
     // Validate quantity
     if (quantity <= 0) {
@@ -51,10 +50,9 @@ class CartService {
     }
 
     return await _repository.addToCart(
+      merchantId: merchantId,
       productId: productId,
       quantity: quantity,
-      variantId: variantId,
-      optionIds: optionIds,
     );
   }
 

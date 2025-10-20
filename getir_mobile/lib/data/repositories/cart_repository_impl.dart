@@ -28,17 +28,15 @@ class CartRepositoryImpl implements ICartRepository {
 
   @override
   Future<Result<CartItem>> addToCart({
+    required String merchantId,
     required String productId,
     required int quantity,
-    String? variantId,
-    List<String>? optionIds,
   }) async {
     try {
       final cartItem = await _dataSource.addToCart(
+        merchantId: merchantId,
         productId: productId,
         quantity: quantity,
-        variantId: variantId,
-        optionIds: optionIds,
       );
       return Result.success(cartItem);
     } on DioException catch (e) {
