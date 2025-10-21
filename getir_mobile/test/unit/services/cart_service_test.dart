@@ -74,6 +74,7 @@ void main() {
       test('validates quantity must be greater than zero', () async {
         // Act
         final result = await cartService.addToCart(
+          merchantId: 'merchant-123',
           productId: testProductId,
           quantity: 0,
         );
@@ -86,6 +87,7 @@ void main() {
       test('validates quantity must be positive', () async {
         // Act
         final result = await cartService.addToCart(
+          merchantId: 'merchant-123',
           productId: testProductId,
           quantity: -1,
         );
@@ -98,15 +100,15 @@ void main() {
         // Arrange
         when(
           mockRepository.addToCart(
+            merchantId: 'merchant-123',
             productId: testProductId,
             quantity: 2,
-            variantId: null,
-            optionIds: null,
           ),
         ).thenAnswer((_) async => Result.success(MockData.testCartItem));
 
         // Act
         final result = await cartService.addToCart(
+          merchantId: 'merchant-123',
           productId: testProductId,
           quantity: 2,
         );
