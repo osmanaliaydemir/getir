@@ -3,6 +3,8 @@ import '../../../domain/entities/cart.dart';
 class CartDto {
   final String id;
   final String userId;
+  final String merchantId;
+  final String merchantName;
   final List<CartItemDto> items;
   final double subtotal;
   final double deliveryFee;
@@ -15,6 +17,8 @@ class CartDto {
   const CartDto({
     required this.id,
     required this.userId,
+    required this.merchantId,
+    required this.merchantName,
     required this.items,
     required this.subtotal,
     required this.deliveryFee,
@@ -29,6 +33,8 @@ class CartDto {
     return CartDto(
       id: (json['id'] ?? '').toString(),
       userId: (json['userId'] ?? '').toString(),
+      merchantId: (json['merchantId'] ?? '').toString(),
+      merchantName: (json['merchantName'] ?? '').toString(),
       items:
           (json['items'] as List<dynamic>?)
               ?.map((e) => CartItemDto.fromJson(e as Map<String, dynamic>))
@@ -73,6 +79,8 @@ class CartDto {
     return Cart(
       id: id,
       userId: userId,
+      merchantId: merchantId,
+      merchantName: merchantName,
       items: items.map((e) => e.toDomain()).toList(),
       subtotal: subtotal,
       deliveryFee: deliveryFee,
