@@ -65,7 +65,7 @@ public class DashboardController : Controller
     }
 
     /// <summary>
-    /// Satış trendi verilerini getirir (Chart.js için)
+    /// Satış trendi verilerini getirir (Chart.js için) - GERÇEK DATA
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetSalesChartData(int days = 30)
@@ -78,23 +78,30 @@ public class DashboardController : Controller
                 return Json(new { success = false, message = "Merchant not found" });
             }
 
-            // Generate sales trend data for last N days
-            var labels = new List<string>();
-            var revenueData = new List<decimal>();
-            var orderData = new List<int>();
+            // Limit days to reasonable range
+            if (days > 90) days = 90;
+            if (days < 7) days = 7;
 
-            for (int i = days - 1; i >= 0; i--)
+            // Fetch REAL sales data from merchant service
+            var salesTrend = await _merchantService.GetSalesTrendDataAsync(merchantId, days);
+            
+            if (salesTrend == null || !salesTrend.Any())
             {
-                var date = DateTime.Now.Date.AddDays(-i);
-                labels.Add(date.ToString("dd MMM"));
-                
-                // Mock data - in real scenario, fetch from database
-                var dayRevenue = new Random(date.GetHashCode()).Next(500, 5000);
-                var dayOrders = new Random(date.GetHashCode() + 1).Next(5, 50);
-                
-                revenueData.Add(dayRevenue);
-                orderData.Add(dayOrders);
+                // Return empty data instead of fake data
+                return Json(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        labels = new List<string>(),
+                        datasets = new object[] { }
+                    }
+                });
             }
+
+            var labels = salesTrend.Select(s => s.Date.ToString("dd MMM")).ToList();
+            var revenueData = salesTrend.Select(s => s.Revenue).ToList();
+            var orderData = salesTrend.Select(s => s.OrderCount).ToList();
 
             return Json(new
             {
@@ -135,7 +142,7 @@ public class DashboardController : Controller
     }
 
     /// <summary>
-    /// Sipariş durumu dağılımını getirir (Chart.js için)
+    /// Sipariş durumu dağılımını getirir (Chart.js için) - GERÇEK DATA
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetOrdersChartData()
@@ -148,14 +155,20 @@ public class DashboardController : Controller
                 return Json(new { success = false, message = "Merchant not found" });
             }
 
-            var dashboard = await _merchantService.GetDashboardAsync(merchantId);
+            // Fetch REAL order status distribution
+            var orderStatusDistribution = await _merchantService.GetOrderStatusDistributionAsync(merchantId);
+
+            if (orderStatusDistribution == null)
+            {
+                return Json(new { success = false, message = "No order data available" });
+            }
 
             return Json(new
             {
                 success = true,
                 data = new
                 {
-                    labels = new[] { "Bekleyen", "Hazırlanıyor", "Hazır", "Yolda", "Teslim", "İptal" },
+                    labels = new[] { "Bekleyen", "Hazırlanıyor", "Hazır", "Yolda", "Teslim Edildi", "İptal" },
                     datasets = new[]
                     {
                         new
@@ -163,12 +176,12 @@ public class DashboardController : Controller
                             label = "Siparişler",
                             data = new[]
                             {
-                                dashboard?.PendingOrders ?? 0,
-                                new Random().Next(5, 20), // Mock preparing
-                                new Random().Next(2, 10), // Mock ready
-                                new Random().Next(3, 15), // Mock on way
-                                dashboard?.TodayOrders ?? 0,
-                                new Random().Next(0, 5) // Mock cancelled
+                                orderStatusDistribution.PendingCount,
+                                orderStatusDistribution.PreparingCount,
+                                orderStatusDistribution.ReadyCount,
+                                orderStatusDistribution.OnWayCount,
+                                orderStatusDistribution.DeliveredCount,
+                                orderStatusDistribution.CancelledCount
                             },
                             backgroundColor = new[]
                             {
@@ -193,7 +206,7 @@ public class DashboardController : Controller
     }
 
     /// <summary>
-    /// Kategori dağılımını getirir (Chart.js için)
+    /// Kategori dağılımını getirir (Chart.js için) - GERÇEK DATA
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetCategoryChartData()
@@ -206,29 +219,38 @@ public class DashboardController : Controller
                 return Json(new { success = false, message = "Merchant not found" });
             }
 
-            // Mock category data - in real scenario, fetch from database
-            var categories = new[]
+            // Fetch REAL category performance data
+            var categoryPerformance = await _merchantService.GetCategoryPerformanceAsync(merchantId);
+
+            if (categoryPerformance == null || !categoryPerformance.Any())
             {
-                new { Name = "Yiyecek", Revenue = 12500m, Color = "#FF6384" },
-                new { Name = "İçecek", Revenue = 8300m, Color = "#36A2EB" },
-                new { Name = "Atıştırmalık", Revenue = 5200m, Color = "#FFCE56" },
-                new { Name = "Tatlı", Revenue = 6800m, Color = "#4BC0C0" },
-                new { Name = "Diğer", Revenue = 3200m, Color = "#9966FF" }
+                return Json(new { success = false, message = "No category data available" });
+            }
+
+            // Predefined colors for categories
+            var colorPalette = new[]
+            {
+                "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF",
+                "#FF9F40", "#FF6384", "#C9CBCF", "#4BC0C0", "#FF9F40"
             };
+
+            var labels = categoryPerformance.Select(c => c.CategoryName).ToArray();
+            var revenues = categoryPerformance.Select(c => c.TotalRevenue).ToArray();
+            var colors = categoryPerformance.Select((c, index) => colorPalette[index % colorPalette.Length]).ToArray();
 
             return Json(new
             {
                 success = true,
                 data = new
                 {
-                    labels = categories.Select(c => c.Name).ToArray(),
+                    labels,
                     datasets = new[]
                     {
                         new
                         {
                             label = "Ciro (₺)",
-                            data = categories.Select(c => c.Revenue).ToArray(),
-                            backgroundColor = categories.Select(c => c.Color).ToArray(),
+                            data = revenues,
+                            backgroundColor = colors,
                             borderWidth = 2,
                             borderColor = "#fff"
                         }

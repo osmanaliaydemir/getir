@@ -480,3 +480,30 @@ public class StockReportRequest
     public List<Guid>? ProductIds { get; set; }
 }
 
+// Analytics Models for Dashboard Charts
+public class SalesTrendDataResponse
+{
+    public DateTime Date { get; set; }
+    public decimal Revenue { get; set; }
+    public int OrderCount { get; set; }
+}
+
+public class OrderStatusDistributionResponse
+{
+    public int PendingCount { get; set; }
+    public int PreparingCount { get; set; }
+    public int ReadyCount { get; set; }
+    public int OnWayCount { get; set; }
+    public int DeliveredCount { get; set; }
+    public int CancelledCount { get; set; }
+}
+
+public class CategoryPerformanceResponse
+{
+    public Guid CategoryId { get; set; }
+    public string CategoryName { get; set; } = default!;
+    public decimal TotalRevenue { get; set; }
+    public int OrderCount { get; set; }
+    public int ProductCount { get; set; }
+}
+

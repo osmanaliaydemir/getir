@@ -83,15 +83,16 @@ void main() {
         // Arrange
         when(
           mockDataSource.addToCart(
+            merchantId: anyNamed('merchantId'),
             productId: anyNamed('productId'),
             quantity: anyNamed('quantity'),
-            variantId: anyNamed('variantId'),
-            optionIds: anyNamed('optionIds'),
+            notes: anyNamed('notes'),
           ),
         ).thenAnswer((_) async => MockData.testCartItem);
 
         // Act
         final result = await repository.addToCart(
+          merchantId: 'merchant-123',
           productId: 'product-123',
           quantity: 2,
         );
@@ -114,15 +115,16 @@ void main() {
         );
         when(
           mockDataSource.addToCart(
+            merchantId: anyNamed('merchantId'),
             productId: anyNamed('productId'),
             quantity: anyNamed('quantity'),
-            variantId: anyNamed('variantId'),
-            optionIds: anyNamed('optionIds'),
+            notes: anyNamed('notes'),
           ),
         ).thenThrow(dioException);
 
         // Act
         final result = await repository.addToCart(
+          merchantId: 'merchant-123',
           productId: 'product-123',
           quantity: 1,
         );

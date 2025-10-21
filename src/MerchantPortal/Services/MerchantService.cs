@@ -130,5 +130,65 @@ public class MerchantService : IMerchantService
             return null;
         }
     }
+
+    /// <summary>
+    /// Satış trend verilerini getirir (son N gün için).
+    /// </summary>
+    public async Task<List<SalesTrendDataResponse>?> GetSalesTrendDataAsync(Guid merchantId, int days = 30, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _apiClient.GetAsync<ApiResponse<List<SalesTrendDataResponse>>>(
+                $"api/v1/merchants/{merchantId}/analytics/sales-trend?days={days}",
+                ct);
+
+            return response?.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting sales trend for merchant {MerchantId}", merchantId);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Sipariş durumu dağılımını getirir.
+    /// </summary>
+    public async Task<OrderStatusDistributionResponse?> GetOrderStatusDistributionAsync(Guid merchantId, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _apiClient.GetAsync<ApiResponse<OrderStatusDistributionResponse>>(
+                $"api/v1/merchants/{merchantId}/analytics/order-distribution",
+                ct);
+
+            return response?.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting order distribution for merchant {MerchantId}", merchantId);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Kategori performansını getirir.
+    /// </summary>
+    public async Task<List<CategoryPerformanceResponse>?> GetCategoryPerformanceAsync(Guid merchantId, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _apiClient.GetAsync<ApiResponse<List<CategoryPerformanceResponse>>>(
+                $"api/v1/merchants/{merchantId}/analytics/category-performance",
+                ct);
+
+            return response?.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting category performance for merchant {MerchantId}", merchantId);
+            return null;
+        }
+    }
 }
 

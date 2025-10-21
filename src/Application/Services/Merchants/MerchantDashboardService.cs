@@ -258,4 +258,196 @@ public class MerchantDashboardService : BaseService, IMerchantDashboardService
 
         return Result.Ok(stats);
     }
+
+    /// <summary>
+    /// Satış trend verilerini getirir (günlük bazda, cache'lenir 15 dk).
+    /// </summary>
+    public async Task<Result<List<SalesTrendDataResponse>>> GetSalesTrendDataAsync(Guid merchantId, Guid merchantOwnerId, int days = 30, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Ownership kontrolü
+            var merchant = await _unitOfWork.ReadRepository<Merchant>()
+                .FirstOrDefaultAsync(m => m.Id == merchantId && m.OwnerId == merchantOwnerId, cancellationToken: cancellationToken);
+
+            if (merchant == null)
+            {
+                return Result.Fail<List<SalesTrendDataResponse>>("Merchant not found or access denied", "NOT_FOUND_MERCHANT");
+            }
+
+            // Limit days
+            if (days > 90) days = 90;
+            if (days < 7) days = 7;
+
+            // Check cache
+            var cacheKey = $"merchant:{merchantId}:sales-trend:{days}";
+            var cachedData = await _cacheService.GetAsync<List<SalesTrendDataResponse>>(cacheKey, cancellationToken);
+            
+            if (cachedData != null)
+            {
+                return Result.Ok(cachedData);
+            }
+
+            var fromDate = DateTime.UtcNow.Date.AddDays(-days + 1);
+            var toDate = DateTime.UtcNow.Date;
+
+            // Get delivered orders only (actual revenue)
+            var orders = await _unitOfWork.ReadRepository<Order>()
+                .ListAsync(
+                    o => o.MerchantId == merchantId && 
+                         o.Status == OrderStatus.Delivered &&
+                         o.CreatedAt >= fromDate && 
+                         o.CreatedAt <= toDate.AddDays(1),
+                    orderBy: o => o.CreatedAt,
+                    ascending: true,
+                    cancellationToken: cancellationToken);
+
+            var salesTrend = new List<SalesTrendDataResponse>();
+            var currentDate = fromDate;
+
+            while (currentDate <= toDate)
+            {
+                var ordersToday = orders.Where(o => o.CreatedAt.Date == currentDate).ToList();
+                
+                salesTrend.Add(new SalesTrendDataResponse(
+                    currentDate,
+                    ordersToday.Sum(o => o.Total),
+                    ordersToday.Count
+                ));
+
+                currentDate = currentDate.AddDays(1);
+            }
+
+            // Cache for 15 minutes
+            await _cacheService.SetAsync(cacheKey, salesTrend, TimeSpan.FromMinutes(15), cancellationToken);
+
+            return Result.Ok(salesTrend);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting sales trend for merchant {MerchantId}", merchantId);
+            return Result.Fail<List<SalesTrendDataResponse>>("Failed to get sales trend data", "SALES_TREND_ERROR");
+        }
+    }
+
+    /// <summary>
+    /// Sipariş durumu dağılımını getirir (tüm zamanlar, cache'lenir 10 dk).
+    /// </summary>
+    public async Task<Result<OrderStatusDistributionResponse>> GetOrderStatusDistributionAsync(Guid merchantId, Guid merchantOwnerId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Ownership kontrolü
+            var merchant = await _unitOfWork.ReadRepository<Merchant>()
+                .FirstOrDefaultAsync(m => m.Id == merchantId && m.OwnerId == merchantOwnerId, cancellationToken: cancellationToken);
+
+            if (merchant == null)
+            {
+                return Result.Fail<OrderStatusDistributionResponse>("Merchant not found or access denied", "NOT_FOUND_MERCHANT");
+            }
+
+            // Check cache
+            var cacheKey = $"merchant:{merchantId}:order-distribution";
+            var cachedData = await _cacheService.GetAsync<OrderStatusDistributionResponse>(cacheKey, cancellationToken);
+            
+            if (cachedData != null)
+            {
+                return Result.Ok(cachedData);
+            }
+
+            // Get all orders for this merchant
+            var allOrders = await _unitOfWork.ReadRepository<Order>()
+                .ListAsync(
+                    o => o.MerchantId == merchantId,
+                    cancellationToken: cancellationToken);
+
+            var distribution = new OrderStatusDistributionResponse(
+                allOrders.Count(o => o.Status == OrderStatus.Pending || o.Status == OrderStatus.Confirmed),
+                allOrders.Count(o => o.Status == OrderStatus.Preparing),
+                allOrders.Count(o => o.Status == OrderStatus.Ready),
+                allOrders.Count(o => o.Status == OrderStatus.OnTheWay),
+                allOrders.Count(o => o.Status == OrderStatus.Delivered),
+                allOrders.Count(o => o.Status == OrderStatus.Cancelled)
+            );
+
+            // Cache for 10 minutes (order status changes frequently)
+            await _cacheService.SetAsync(cacheKey, distribution, TimeSpan.FromMinutes(10), cancellationToken);
+
+            return Result.Ok(distribution);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting order distribution for merchant {MerchantId}", merchantId);
+            return Result.Fail<OrderStatusDistributionResponse>("Failed to get order distribution", "ORDER_DISTRIBUTION_ERROR");
+        }
+    }
+
+    /// <summary>
+    /// Kategori performansını getirir (gelir bazlı, cache'lenir 20 dk).
+    /// </summary>
+    public async Task<Result<List<CategoryPerformanceResponse>>> GetCategoryPerformanceAsync(Guid merchantId, Guid merchantOwnerId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Ownership kontrolü
+            var merchant = await _unitOfWork.ReadRepository<Merchant>()
+                .FirstOrDefaultAsync(m => m.Id == merchantId && m.OwnerId == merchantOwnerId, cancellationToken: cancellationToken);
+
+            if (merchant == null)
+            {
+                return Result.Fail<List<CategoryPerformanceResponse>>("Merchant not found or access denied", "NOT_FOUND_MERCHANT");
+            }
+
+            // Check cache
+            var cacheKey = $"merchant:{merchantId}:category-performance";
+            var cachedData = await _cacheService.GetAsync<List<CategoryPerformanceResponse>>(cacheKey, cancellationToken);
+            
+            if (cachedData != null)
+            {
+                return Result.Ok(cachedData);
+            }
+
+            // Get all delivered orders with order lines and products
+            var orders = await _unitOfWork.ReadRepository<Order>()
+                .ListAsync(
+                    o => o.MerchantId == merchantId && o.Status == OrderStatus.Delivered,
+                    include: "OrderLines.Product.ProductCategory",
+                    cancellationToken: cancellationToken);
+
+            if (!orders.Any())
+            {
+                return Result.Ok(new List<CategoryPerformanceResponse>());
+            }
+
+            // Group by category and calculate totals
+            var categoryPerformance = orders
+                .SelectMany(o => o.OrderLines)
+                .Where(ol => ol.Product?.ProductCategory != null)
+                .GroupBy(ol => new 
+                { 
+                    CategoryId = ol.Product!.ProductCategory!.Id,
+                    CategoryName = ol.Product.ProductCategory.Name
+                })
+                .Select(g => new CategoryPerformanceResponse(
+                    g.Key.CategoryId,
+                    g.Key.CategoryName,
+                    g.Sum(ol => ol.TotalPrice),
+                    g.Select(ol => ol.OrderId).Distinct().Count(),
+                    g.Select(ol => ol.ProductId).Distinct().Count()
+                ))
+                .OrderByDescending(cp => cp.TotalRevenue)
+                .Take(10) // Top 10 categories
+                .ToList();
+
+            // Cache for 20 minutes
+            await _cacheService.SetAsync(cacheKey, categoryPerformance, TimeSpan.FromMinutes(20), cancellationToken);
+
+            return Result.Ok(categoryPerformance);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting category performance for merchant {MerchantId}", merchantId);
+            return Result.Fail<List<CategoryPerformanceResponse>>("Failed to get category performance", "CATEGORY_PERFORMANCE_ERROR");
+        }
+    }
 }

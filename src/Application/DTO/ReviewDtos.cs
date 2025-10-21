@@ -123,7 +123,8 @@ public record ReviewSearchQuery(
     string? SortBy = null,
     bool SortDescending = true,
     int Page = 1,
-    int PageSize = 20);
+    int PageSize = 20,
+    Guid? CurrentUserId = null); // For checking if current user has voted
 
 public record ReviewSearchResponse(
     List<ReviewResponse> Reviews,

@@ -238,6 +238,10 @@ public class ReviewService : BaseService, IReviewService
         var tags = review.ReviewTags.Select(rt => rt.Tag).ToList();
         var helpfulCount = review.ReviewHelpfuls.Count(rh => rh.IsHelpful);
 
+        // Check if current user has voted (if userId provided via query or context)
+        // For now, we default to false unless explicitly checked
+        var hasVoted = false;
+
         var response = new ReviewResponse(
             review.Id,
             review.ReviewerId,
@@ -251,7 +255,7 @@ public class ReviewService : BaseService, IReviewService
             review.CreatedAt,
             review.UpdatedAt,
             tags,
-            false, // TODO: Check if current user has voted helpful
+            hasVoted,
             helpfulCount,
             0
         );
@@ -278,23 +282,30 @@ public class ReviewService : BaseService, IReviewService
         var totalCount = await _unitOfWork.ReadRepository<Review>()
             .CountAsync(filter, cancellationToken);
 
-        var reviewResponses = reviews.Select(r => new ReviewResponse(
-            r.Id,
-            r.ReviewerId,
-            r.Reviewer.FirstName + " " + r.Reviewer.LastName,
-            r.RevieweeId,
-            r.RevieweeType,
-            r.OrderId,
-            r.Rating,
-            r.Comment,
-            r.IsApproved,
-            r.CreatedAt,
-            r.UpdatedAt,
-            r.ReviewTags.Select(rt => rt.Tag).ToList(),
-            false, // TODO: Check if current user has voted helpful
-            r.ReviewHelpfuls.Count(rh => rh.IsHelpful),
-            0
-        )).ToList();
+        var reviewResponses = reviews.Select(r =>
+        {
+            // Check if current user has voted helpful for this review
+            var hasVoted = query.CurrentUserId.HasValue && 
+                          r.ReviewHelpfuls.Any(rh => rh.UserId == query.CurrentUserId.Value);
+
+            return new ReviewResponse(
+                r.Id,
+                r.ReviewerId,
+                r.Reviewer.FirstName + " " + r.Reviewer.LastName,
+                r.RevieweeId,
+                r.RevieweeType,
+                r.OrderId,
+                r.Rating,
+                r.Comment,
+                r.IsApproved,
+                r.CreatedAt,
+                r.UpdatedAt,
+                r.ReviewTags.Select(rt => rt.Tag).ToList(),
+                hasVoted,
+                r.ReviewHelpfuls.Count(rh => rh.IsHelpful),
+                0
+            );
+        }).ToList();
 
         var pagedResult = PagedResult<ReviewResponse>.Create(
             reviewResponses,

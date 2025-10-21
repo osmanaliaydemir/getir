@@ -99,11 +99,7 @@ void main() {
       test('adds item when validation passes', () async {
         // Arrange
         when(
-          mockRepository.addToCart(
-            merchantId: 'merchant-123',
-            productId: testProductId,
-            quantity: 2,
-          ),
+          mockRepository.addToCart(productId: testProductId, quantity: 2),
         ).thenAnswer((_) async => Result.success(MockData.testCartItem));
 
         // Act

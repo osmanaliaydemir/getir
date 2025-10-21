@@ -20,12 +20,21 @@ public class AdminService : BaseService, IAdminService
 {
     private readonly ISignalRService? _signalRService;
     private readonly IBackgroundTaskService _backgroundTaskService;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public AdminService(IUnitOfWork unitOfWork, ILogger<AdminService> logger, ILoggingService loggingService, ICacheService cacheService, IBackgroundTaskService backgroundTaskService, ISignalRService? signalRService = null)
+    public AdminService(
+        IUnitOfWork unitOfWork, 
+        ILogger<AdminService> logger, 
+        ILoggingService loggingService, 
+        ICacheService cacheService, 
+        IBackgroundTaskService backgroundTaskService, 
+        IPasswordHasher passwordHasher,
+        ISignalRService? signalRService = null)
         : base(unitOfWork, logger, loggingService, cacheService)
     {
         _signalRService = signalRService;
         _backgroundTaskService = backgroundTaskService;
+        _passwordHasher = passwordHasher;
     }
 
     /// <summary>
@@ -490,6 +499,17 @@ public class AdminService : BaseService, IAdminService
             return Result.Fail<AdminUserResponse>("User with this email already exists", "EMAIL_EXISTS");
         }
 
+        // Validate password
+        if (string.IsNullOrWhiteSpace(request.Password))
+        {
+            return Result.Fail<AdminUserResponse>("Password is required", "PASSWORD_REQUIRED");
+        }
+
+        if (request.Password.Length < 8)
+        {
+            return Result.Fail<AdminUserResponse>("Password must be at least 8 characters long", "PASSWORD_TOO_SHORT");
+        }
+
         var user = new User
         {
             Id = Guid.NewGuid(),
@@ -497,7 +517,7 @@ public class AdminService : BaseService, IAdminService
             LastName = request.LastName,
             Email = request.Email,
             PhoneNumber = request.Phone,
-            PasswordHash = "", // TODO: Hash password
+            PasswordHash = _passwordHasher.HashPassword(request.Password),
             Role = Enum.Parse<UserRole>(request.Role),
             IsActive = true,
             CreatedAt = DateTime.UtcNow
@@ -781,15 +801,39 @@ public class AdminService : BaseService, IAdminService
     }
 
     /// <summary>
-    /// Bildirimi okundu olarak işaretler (planlanmış).
+    /// Bildirimi okundu olarak işaretler.
     /// </summary>
     /// <param name="notificationId">Bildirim ID</param>
     /// <param name="cancellationToken">İptal belirteci</param>
     /// <returns>Başarı durumu</returns>
-    public Task<Result> MarkNotificationAsReadAsync(Guid notificationId, CancellationToken cancellationToken = default)
+    public async Task<Result> MarkNotificationAsReadAsync(Guid notificationId, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement notification read tracking
-        return Task.FromResult(Result.Ok());
+        try
+        {
+            var notification = await _unitOfWork.ReadRepository<SystemNotification>()
+                .FirstOrDefaultAsync(n => n.Id == notificationId, cancellationToken: cancellationToken);
+
+            if (notification == null)
+            {
+                return Result.Fail("Notification not found", "NOTIFICATION_NOT_FOUND");
+            }
+
+            // Deactivate notification to mark as read
+            notification.IsActive = false;
+            notification.UpdatedAt = DateTime.UtcNow;
+
+            _unitOfWork.Repository<SystemNotification>().Update(notification);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            _loggingService.LogBusinessEvent("NotificationMarkedAsRead", new { NotificationId = notificationId });
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error marking notification as read: {NotificationId}", notificationId);
+            return Result.Fail("Failed to mark notification as read", "NOTIFICATION_READ_ERROR");
+        }
     }
 
     /// <summary>
@@ -884,18 +928,113 @@ public class AdminService : BaseService, IAdminService
 
     // Placeholder implementations for remaining methods
     /// <summary>
-    /// Admin arama işlemi (placeholder).
+    /// Admin panelinde çok amaçlı arama: Users, Merchants, Orders arası arama yapabilir.
     /// </summary>
     /// <param name="query">Arama sorgusu</param>
     /// <param name="cancellationToken">İptal belirteci</param>
     /// <returns>Arama sonucu</returns>
     public async Task<Result<AdminSearchResponse>> SearchAsync(AdminSearchQuery query, CancellationToken cancellationToken = default)
     {
-        return Result.Ok(new AdminSearchResponse(new List<AdminSearchResultResponse>(), 0, 1, 10, 0));
+        try
+        {
+            if (string.IsNullOrWhiteSpace(query.SearchTerm) || query.SearchTerm.Length < 2)
+            {
+                return Result.Ok(new AdminSearchResponse(new List<AdminSearchResultResponse>(), 0, query.Page, query.PageSize, 0));
+            }
+
+            var results = new List<AdminSearchResultResponse>();
+            var searchTerm = query.SearchTerm.ToLower();
+
+            // Search Users (if EntityType is null or "User")
+            if (string.IsNullOrEmpty(query.EntityType) || query.EntityType.Equals("User", StringComparison.OrdinalIgnoreCase))
+            {
+                var users = await _unitOfWork.ReadRepository<User>()
+                    .ListAsync(
+                        u => (u.FirstName.ToLower().Contains(searchTerm) || 
+                              u.LastName.ToLower().Contains(searchTerm) || 
+                              u.Email.ToLower().Contains(searchTerm)),
+                        take: 50,
+                        cancellationToken: cancellationToken);
+
+                results.AddRange(users.Select(u => new AdminSearchResultResponse(
+                    "User",
+                    u.Id,
+                    $"{u.FirstName} {u.LastName}",
+                    u.Email,
+                    u.IsActive ? "Active" : "Inactive",
+                    u.CreatedAt,
+                    "System"
+                )));
+            }
+
+            // Search Orders (if EntityType is null or "Order")
+            if (string.IsNullOrEmpty(query.EntityType) || query.EntityType.Equals("Order", StringComparison.OrdinalIgnoreCase))
+            {
+                var orders = await _unitOfWork.ReadRepository<Order>()
+                    .ListAsync(
+                        o => o.OrderNumber.ToLower().Contains(searchTerm),
+                        take: 50,
+                        include: "User",
+                        cancellationToken: cancellationToken);
+
+                results.AddRange(orders.Select(o => new AdminSearchResultResponse(
+                    "Order",
+                    o.Id,
+                    $"Order #{o.OrderNumber}",
+                    $"Customer: {o.User?.FirstName} {o.User?.LastName} - Total: {o.Total:C}",
+                    o.Status.ToString(),
+                    o.CreatedAt,
+                    o.User?.Email ?? "Unknown"
+                )));
+            }
+
+            // Apply date filter if provided
+            if (query.FromDate.HasValue)
+            {
+                results = results.Where(r => r.CreatedAt >= query.FromDate.Value).ToList();
+            }
+
+            if (query.ToDate.HasValue)
+            {
+                results = results.Where(r => r.CreatedAt <= query.ToDate.Value).ToList();
+            }
+
+            // Apply status filter if provided
+            if (!string.IsNullOrEmpty(query.Status))
+            {
+                results = results.Where(r => r.Status.Equals(query.Status, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            // Order by creation date (newest first)
+            results = results.OrderByDescending(r => r.CreatedAt).ToList();
+
+            // Pagination
+            var totalCount = results.Count;
+            var totalPages = (int)Math.Ceiling(totalCount / (double)query.PageSize);
+            var pagedResults = results
+                .Skip((query.Page - 1) * query.PageSize)
+                .Take(query.PageSize)
+                .ToList();
+
+            _loggingService.LogBusinessEvent("AdminSearchPerformed", new 
+            { 
+                query.SearchTerm, 
+                query.EntityType, 
+                ResultCount = totalCount 
+            });
+
+            return Result.Ok(new AdminSearchResponse(pagedResults, totalCount, query.Page, query.PageSize, totalPages));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error performing admin search: {SearchTerm}", query.SearchTerm);
+            return Result.Fail<AdminSearchResponse>("Search failed", "SEARCH_ERROR");
+        }
     }
 
     /// <summary>
-    /// Kullanıcı büyüme verilerini döner (placeholder).
+    /// Kullanıcı büyüme verilerini döner: Günlük yeni kullanıcı sayısı ve toplam kullanıcı sayısı.
+    /// Dashboard'da line chart için kullanılır. Cache'lenir (30 dk TTL).
     /// </summary>
     /// <param name="fromDate">Başlangıç</param>
     /// <param name="toDate">Bitiş</param>
@@ -903,11 +1042,74 @@ public class AdminService : BaseService, IAdminService
     /// <returns>Büyüme verileri</returns>
     public async Task<Result<List<UserGrowthDataResponse>>> GetUserGrowthDataAsync(DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
     {
-        return Result.Ok(new List<UserGrowthDataResponse>());
+        try
+        {
+            // Validate date range
+            if (fromDate > toDate)
+            {
+                return Result.Fail<List<UserGrowthDataResponse>>("FromDate cannot be greater than ToDate", "INVALID_DATE_RANGE");
+            }
+
+            // Limit date range to prevent performance issues
+            var daysDiff = (toDate - fromDate).Days;
+            if (daysDiff > 365)
+            {
+                return Result.Fail<List<UserGrowthDataResponse>>("Date range cannot exceed 365 days", "DATE_RANGE_TOO_LARGE");
+            }
+
+            // Check cache first (30 minutes TTL for analytics data)
+            var cacheKey = $"admin:user-growth:{fromDate:yyyyMMdd}:{toDate:yyyyMMdd}";
+            var cachedData = await _cacheService.GetAsync<List<UserGrowthDataResponse>>(cacheKey, cancellationToken);
+            
+            if (cachedData != null)
+            {
+                _logger.LogDebug("User growth data served from cache: {CacheKey}", cacheKey);
+                return Result.Ok(cachedData);
+            }
+
+            // Get all users in range
+            var allUsers = await _unitOfWork.ReadRepository<User>()
+                .ListAsync(
+                    u => u.CreatedAt >= fromDate && u.CreatedAt <= toDate.AddDays(1),
+                    orderBy: u => u.CreatedAt,
+                    ascending: true,
+                    cancellationToken: cancellationToken);
+
+            var growthData = new List<UserGrowthDataResponse>();
+            var currentDate = fromDate.Date;
+            var cumulativeTotal = await _unitOfWork.ReadRepository<User>()
+                .CountAsync(u => u.CreatedAt < fromDate, cancellationToken: cancellationToken);
+
+            // Generate daily data points
+            while (currentDate <= toDate.Date)
+            {
+                var newUsersToday = allUsers.Count(u => u.CreatedAt.Date == currentDate);
+                cumulativeTotal += newUsersToday;
+
+                growthData.Add(new UserGrowthDataResponse(
+                    currentDate,
+                    newUsersToday,
+                    cumulativeTotal
+                ));
+
+                currentDate = currentDate.AddDays(1);
+            }
+
+            // Cache for 30 minutes
+            await _cacheService.SetAsync(cacheKey, growthData, TimeSpan.FromMinutes(30), cancellationToken);
+
+            return Result.Ok(growthData);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting user growth data: {FromDate} - {ToDate}", fromDate, toDate);
+            return Result.Fail<List<UserGrowthDataResponse>>("Failed to get user growth data", "USER_GROWTH_ERROR");
+        }
     }
 
     /// <summary>
-    /// Merchant büyüme verilerini döner (placeholder).
+    /// Merchant büyüme verilerini döner: Günlük yeni merchant sayısı ve toplam merchant sayısı.
+    /// Dashboard'da line chart için kullanılır. Cache'lenir (30 dk TTL).
     /// </summary>
     /// <param name="fromDate">Başlangıç</param>
     /// <param name="toDate">Bitiş</param>
@@ -915,11 +1117,74 @@ public class AdminService : BaseService, IAdminService
     /// <returns>Büyüme verileri</returns>
     public async Task<Result<List<MerchantGrowthDataResponse>>> GetMerchantGrowthDataAsync(DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
     {
-        return Result.Ok(new List<MerchantGrowthDataResponse>());
+        try
+        {
+            // Validate date range
+            if (fromDate > toDate)
+            {
+                return Result.Fail<List<MerchantGrowthDataResponse>>("FromDate cannot be greater than ToDate", "INVALID_DATE_RANGE");
+            }
+
+            // Limit date range to prevent performance issues
+            if ((toDate - fromDate).Days > 365)
+            {
+                return Result.Fail<List<MerchantGrowthDataResponse>>("Date range cannot exceed 365 days", "DATE_RANGE_TOO_LARGE");
+            }
+
+            // Check cache first
+            var cacheKey = $"admin:merchant-growth:{fromDate:yyyyMMdd}:{toDate:yyyyMMdd}";
+            var cachedData = await _cacheService.GetAsync<List<MerchantGrowthDataResponse>>(cacheKey, cancellationToken);
+            
+            if (cachedData != null)
+            {
+                return Result.Ok(cachedData);
+            }
+
+            // Get all merchant owners
+            var allMerchants = await _unitOfWork.ReadRepository<User>()
+                .ListAsync(
+                    u => u.Role == UserRole.MerchantOwner && 
+                         u.CreatedAt >= fromDate && 
+                         u.CreatedAt <= toDate.AddDays(1),
+                    orderBy: u => u.CreatedAt,
+                    ascending: true,
+                    cancellationToken: cancellationToken);
+
+            var growthData = new List<MerchantGrowthDataResponse>();
+            var currentDate = fromDate.Date;
+            var cumulativeTotal = await _unitOfWork.ReadRepository<User>()
+                .CountAsync(u => u.Role == UserRole.MerchantOwner && u.CreatedAt < fromDate, cancellationToken: cancellationToken);
+
+            // Generate daily data points
+            while (currentDate <= toDate.Date)
+            {
+                var newMerchantsToday = allMerchants.Count(m => m.CreatedAt.Date == currentDate);
+                cumulativeTotal += newMerchantsToday;
+
+                growthData.Add(new MerchantGrowthDataResponse(
+                    currentDate,
+                    newMerchantsToday,
+                    cumulativeTotal
+                ));
+
+                currentDate = currentDate.AddDays(1);
+            }
+
+            // Cache for 30 minutes
+            await _cacheService.SetAsync(cacheKey, growthData, TimeSpan.FromMinutes(30), cancellationToken);
+
+            return Result.Ok(growthData);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting merchant growth data: {FromDate} - {ToDate}", fromDate, toDate);
+            return Result.Fail<List<MerchantGrowthDataResponse>>("Failed to get merchant growth data", "MERCHANT_GROWTH_ERROR");
+        }
     }
 
     /// <summary>
-    /// Sipariş trend verilerini döner (placeholder).
+    /// Sipariş trend verilerini döner: Günlük sipariş sayısı ve toplam değer.
+    /// Dashboard'da bar/line chart için kullanılır. Cache'lenir (15 dk TTL - daha sık güncellenmeli).
     /// </summary>
     /// <param name="fromDate">Başlangıç</param>
     /// <param name="toDate">Bitiş</param>
@@ -927,11 +1192,71 @@ public class AdminService : BaseService, IAdminService
     /// <returns>Trend verileri</returns>
     public async Task<Result<List<AdminOrderTrendDataResponse>>> GetOrderTrendDataAsync(DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
     {
-        return Result.Ok(new List<AdminOrderTrendDataResponse>());
+        try
+        {
+            // Validate date range
+            if (fromDate > toDate)
+            {
+                return Result.Fail<List<AdminOrderTrendDataResponse>>("FromDate cannot be greater than ToDate", "INVALID_DATE_RANGE");
+            }
+
+            // Limit to 180 days (orders change frequently)
+            if ((toDate - fromDate).Days > 180)
+            {
+                return Result.Fail<List<AdminOrderTrendDataResponse>>("Date range cannot exceed 180 days", "DATE_RANGE_TOO_LARGE");
+            }
+
+            // Check cache (15 minutes for order data - more dynamic)
+            var cacheKey = $"admin:order-trend:{fromDate:yyyyMMdd}:{toDate:yyyyMMdd}";
+            var cachedData = await _cacheService.GetAsync<List<AdminOrderTrendDataResponse>>(cacheKey, cancellationToken);
+            
+            if (cachedData != null)
+            {
+                return Result.Ok(cachedData);
+            }
+
+            // Get all orders in date range
+            var allOrders = await _unitOfWork.ReadRepository<Order>()
+                .ListAsync(
+                    o => o.CreatedAt >= fromDate && o.CreatedAt <= toDate.AddDays(1),
+                    orderBy: o => o.CreatedAt,
+                    ascending: true,
+                    cancellationToken: cancellationToken);
+
+            var trendData = new List<AdminOrderTrendDataResponse>();
+            var currentDate = fromDate.Date;
+
+            // Generate daily data points
+            while (currentDate <= toDate.Date)
+            {
+                var ordersToday = allOrders.Where(o => o.CreatedAt.Date == currentDate).ToList();
+                var orderCount = ordersToday.Count;
+                var totalValue = ordersToday.Sum(o => o.Total);
+
+                trendData.Add(new AdminOrderTrendDataResponse(
+                    currentDate,
+                    orderCount,
+                    totalValue
+                ));
+
+                currentDate = currentDate.AddDays(1);
+            }
+
+            // Cache for 15 minutes (order data changes frequently)
+            await _cacheService.SetAsync(cacheKey, trendData, TimeSpan.FromMinutes(15), cancellationToken);
+
+            return Result.Ok(trendData);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting order trend data: {FromDate} - {ToDate}", fromDate, toDate);
+            return Result.Fail<List<AdminOrderTrendDataResponse>>("Failed to get order trend data", "ORDER_TREND_ERROR");
+        }
     }
 
     /// <summary>
-    /// Gelir trend verilerini döner (placeholder).
+    /// Gelir trend verilerini döner: Günlük gelir (sadece tamamlanan siparişler) ve sipariş sayısı.
+    /// Dashboard'da revenue line chart için kullanılır. Cache'lenir (20 dk TTL).
     /// </summary>
     /// <param name="fromDate">Başlangıç</param>
     /// <param name="toDate">Bitiş</param>
@@ -939,7 +1264,76 @@ public class AdminService : BaseService, IAdminService
     /// <returns>Trend verileri</returns>
     public async Task<Result<List<RevenueTrendDataResponse>>> GetRevenueTrendDataAsync(DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
     {
-        return Result.Ok(new List<RevenueTrendDataResponse>());
+        try
+        {
+            // Validate date range
+            if (fromDate > toDate)
+            {
+                return Result.Fail<List<RevenueTrendDataResponse>>("FromDate cannot be greater than ToDate", "INVALID_DATE_RANGE");
+            }
+
+            // Limit to 180 days (revenue data is critical but static after delivery)
+            if ((toDate - fromDate).Days > 180)
+            {
+                return Result.Fail<List<RevenueTrendDataResponse>>("Date range cannot exceed 180 days", "DATE_RANGE_TOO_LARGE");
+            }
+
+            // Check cache (20 minutes for revenue data)
+            var cacheKey = $"admin:revenue-trend:{fromDate:yyyyMMdd}:{toDate:yyyyMMdd}";
+            var cachedData = await _cacheService.GetAsync<List<RevenueTrendDataResponse>>(cacheKey, cancellationToken);
+            
+            if (cachedData != null)
+            {
+                return Result.Ok(cachedData);
+            }
+
+            // Get only delivered orders (actual revenue)
+            var completedOrders = await _unitOfWork.ReadRepository<Order>()
+                .ListAsync(
+                    o => o.Status == OrderStatus.Delivered &&
+                         o.CreatedAt >= fromDate && 
+                         o.CreatedAt <= toDate.AddDays(1),
+                    orderBy: o => o.CreatedAt,
+                    ascending: true,
+                    cancellationToken: cancellationToken);
+
+            var revenueTrendData = new List<RevenueTrendDataResponse>();
+            var currentDate = fromDate.Date;
+
+            // Generate daily data points
+            while (currentDate <= toDate.Date)
+            {
+                var ordersToday = completedOrders.Where(o => o.CreatedAt.Date == currentDate).ToList();
+                var orderCount = ordersToday.Count;
+                var revenue = ordersToday.Sum(o => o.Total);
+
+                revenueTrendData.Add(new RevenueTrendDataResponse(
+                    currentDate,
+                    revenue,
+                    orderCount
+                ));
+
+                currentDate = currentDate.AddDays(1);
+            }
+
+            _loggingService.LogBusinessEvent("RevenueTrendDataGenerated", new 
+            { 
+                FromDate = fromDate,
+                ToDate = toDate,
+                TotalRevenue = revenueTrendData.Sum(r => r.Revenue),
+                TotalOrders = revenueTrendData.Sum(r => r.OrderCount)
+            });
+
+            // Cache for 20 minutes
+            await _cacheService.SetAsync(cacheKey, revenueTrendData, TimeSpan.FromMinutes(20), cancellationToken);
+
+            return Result.Ok(revenueTrendData);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting revenue trend data: {FromDate} - {ToDate}", fromDate, toDate);
+            return Result.Fail<List<RevenueTrendDataResponse>>("Failed to get revenue trend data", "REVENUE_TREND_ERROR");
+        }
     }
 
     /// <summary>
@@ -972,37 +1366,166 @@ public class AdminService : BaseService, IAdminService
     }
 
     /// <summary>
-    /// Sistem mesajını yayınlar (placeholder).
+    /// Sistem mesajını tüm kullanıcılara veya belirli rollere yayınlar.
     /// </summary>
     /// <param name="message">Mesaj</param>
-    /// <param name="targetRoles">Hedef roller</param>
+    /// <param name="targetRoles">Hedef roller (boş ise herkese gönderilir)</param>
     /// <param name="cancellationToken">İptal belirteci</param>
     /// <returns>Başarı durumu</returns>
-    public Task<Result> BroadcastSystemMessageAsync(string message, List<string> targetRoles, CancellationToken cancellationToken = default)
+    public async Task<Result> BroadcastSystemMessageAsync(string message, List<string> targetRoles, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement broadcast messaging
-        return Task.FromResult(Result.Ok());
+        try
+        {
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return Result.Fail("Message cannot be empty", "EMPTY_MESSAGE");
+            }
+
+            // Create system notification record for persistence
+            var notification = new SystemNotification
+            {
+                Id = Guid.NewGuid(),
+                Title = "System Announcement",
+                Message = message,
+                Type = "Broadcast",
+                TargetRoles = targetRoles?.Any() == true ? string.Join(",", targetRoles) : "All",
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true,
+                Priority = 2
+            };
+
+            await _unitOfWork.Repository<SystemNotification>().AddAsync(notification, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Send via SignalR if available
+            if (_signalRService != null)
+            {
+                var notificationEvent = new RealtimeNotificationEvent(
+                    notification.Id,
+                    notification.Title,
+                    message,
+                    "system_broadcast",
+                    DateTime.UtcNow,
+                    false, // IsRead
+                    new Dictionary<string, object>
+                    {
+                        ["Priority"] = notification.Priority,
+                        ["ActionUrl"] = notification.ActionUrl ?? "",
+                        ["ActionText"] = notification.ActionText ?? "",
+                        ["TargetRoles"] = targetRoles ?? new List<string>()
+                    });
+
+                if (targetRoles?.Any() == true)
+                {
+                    // Send to specific roles
+                    foreach (var role in targetRoles)
+                    {
+                        await _signalRService.SendNotificationToRoleAsync(role, notificationEvent);
+                    }
+                }
+                else
+                {
+                    // Send to all users (broadcast to all groups)
+                    // Using existing BroadcastOrderStatusChangeAsync as fallback for broadcast
+                    await _signalRService.SendDashboardUpdateAsync("SystemBroadcast", notificationEvent);
+                }
+            }
+
+            _loggingService.LogBusinessEvent("SystemMessageBroadcasted", new 
+            { 
+                Message = message, 
+                TargetRoles = targetRoles, 
+                NotificationId = notification.Id 
+            });
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting system message: {Message}", message);
+            return Result.Fail("Failed to broadcast system message", "BROADCAST_ERROR");
+        }
     }
 
     /// <summary>
-    /// Sistem önbelleğini temizler (placeholder).
+    /// Sistem önbelleğini tamamen temizler.
     /// </summary>
     /// <param name="cancellationToken">İptal belirteci</param>
     /// <returns>Başarı durumu</returns>
-    public Task<Result> ClearCacheAsync(CancellationToken cancellationToken = default)
+    public async Task<Result> ClearCacheAsync(CancellationToken cancellationToken = default)
     {
-        // TODO: Implement cache clearing
-        return Task.FromResult(Result.Ok());
+        try
+        {
+            _logger.LogWarning("Admin initiated cache clear operation");
+
+            // Clear all cache entries
+            await _cacheService.ClearAsync(cancellationToken);
+
+            _loggingService.LogBusinessEvent("CacheCleared", new 
+            { 
+                Timestamp = DateTime.UtcNow,
+                InitiatedBy = "Admin"
+            });
+
+            _logger.LogInformation("Cache cleared successfully");
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error clearing cache");
+            return Result.Fail("Failed to clear cache", "CACHE_CLEAR_ERROR");
+        }
     }
 
     /// <summary>
-    /// Veritabanı yedeği alır (placeholder).
+    /// Veritabanı yedeği alır (background task olarak).
+    /// NOT: Gerçek backup işlemi Infrastructure layer'da background service tarafından yapılır.
+    /// Bu metod backup işini queue'ya ekler.
     /// </summary>
     /// <param name="cancellationToken">İptal belirteci</param>
     /// <returns>Başarı durumu</returns>
-    public Task<Result> BackupDatabaseAsync(CancellationToken cancellationToken = default)
+    public async Task<Result> BackupDatabaseAsync(CancellationToken cancellationToken = default)
     {
-        // TODO: Implement database backup
-        return Task.FromResult(Result.Ok());
+        try
+        {
+            _logger.LogWarning("Admin initiated database backup operation");
+
+            // Create backup job parameters
+            var backupJobId = Guid.NewGuid();
+            var backupFileName = $"Getir_Backup_{DateTime.UtcNow:yyyyMMdd_HHmmss}.bak";
+
+            // Queue database backup as background task
+            // The actual backup implementation should be in Infrastructure layer
+            // using SQL Server backup commands or Azure SQL Database backup APIs
+            var backupTask = new
+            {
+                JobId = backupJobId,
+                FileName = backupFileName,
+                TaskType = "DatabaseBackup",
+                Timestamp = DateTime.UtcNow
+            };
+
+            await _backgroundTaskService.EnqueueTaskAsync(backupTask, TaskPriority.High, cancellationToken);
+            
+            _logger.LogInformation("Database backup task queued: {BackupJobId}, {BackupFileName}", backupJobId, backupFileName);
+
+            _loggingService.LogBusinessEvent("DatabaseBackupQueued", new 
+            { 
+                BackupJobId = backupJobId,
+                BackupFileName = backupFileName,
+                Timestamp = DateTime.UtcNow,
+                InitiatedBy = "Admin"
+            });
+
+            _logger.LogInformation("Database backup queued with job ID: {BackupJobId}", backupJobId);
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error queuing database backup");
+            return Result.Fail("Failed to queue database backup", "DATABASE_BACKUP_ERROR");
+        }
     }
 }

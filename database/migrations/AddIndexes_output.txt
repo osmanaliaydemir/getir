@@ -1,0 +1,19 @@
+Changed database context to 'db29009'.
+Starting Analytics Index Creation...
+Msg 1712, Level 16, State 3, Server S5, Line 13
+Online index operations can only be performed in Enterprise edition of SQL Server or Azure SQL Edge.
+Msg 1712, Level 16, State 3, Server S5, Line 9
+Online index operations can only be performed in Enterprise edition of SQL Server or Azure SQL Edge.
+Msg 1712, Level 16, State 3, Server S5, Line 13
+Online index operations can only be performed in Enterprise edition of SQL Server or Azure SQL Edge.
+Msg 1712, Level 16, State 3, Server S5, Line 13
+Online index operations can only be performed in Enterprise edition of SQL Server or Azure SQL Edge.
+Msg 1712, Level 16, State 3, Server S5, Line 9
+Online index operations can only be performed in Enterprise edition of SQL Server or Azure SQL Edge.
+Msg 1712, Level 16, State 3, Server S5, Line 9
+Online index operations can only be performed in Enterprise edition of SQL Server or Azure SQL Edge.
+Msg 1712, Level 16, State 3, Server S5, Line 13
+Online index operations can only be performed in Enterprise edition of SQL Server or Azure SQL Edge.
+Updating statistics for better query optimization...
+Msg 156, Level 15, State 1, Server S5, Line 15
+Incorrect syntax near the keyword 'FillFactor'.

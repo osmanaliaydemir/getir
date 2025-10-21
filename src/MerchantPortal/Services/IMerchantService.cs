@@ -41,5 +41,30 @@ public interface IMerchantService
     /// <param name="ct">CancellationToken</param>
     /// <returns>En çok satılan ürünler</returns>
     Task<List<TopProductResponse>?> GetTopProductsAsync(Guid merchantId, int limit = 10, CancellationToken ct = default);
+    
+    /// <summary>
+    /// Satış trend verilerini getirir (Chart.js için).
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID</param>
+    /// <param name="days">Kaç günlük data</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Günlük satış verileri</returns>
+    Task<List<SalesTrendDataResponse>?> GetSalesTrendDataAsync(Guid merchantId, int days = 30, CancellationToken ct = default);
+    
+    /// <summary>
+    /// Sipariş durumu dağılımını getirir.
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Durum bazlı sipariş sayıları</returns>
+    Task<OrderStatusDistributionResponse?> GetOrderStatusDistributionAsync(Guid merchantId, CancellationToken ct = default);
+    
+    /// <summary>
+    /// Kategori performansını getirir.
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Kategori bazlı satış performansı</returns>
+    Task<List<CategoryPerformanceResponse>?> GetCategoryPerformanceAsync(Guid merchantId, CancellationToken ct = default);
 }
 

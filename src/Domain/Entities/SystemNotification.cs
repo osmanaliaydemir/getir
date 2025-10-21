@@ -11,6 +11,7 @@ public class SystemNotification
     public string TargetRoles { get; set; } = default!; // Comma-separated roles
     public Guid? CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
     public DateTime? ExpiresAt { get; set; }
     public bool IsActive { get; set; } = true;
     public int Priority { get; set; } = 1; // 1=Low, 2=Medium, 3=High, 4=Critical

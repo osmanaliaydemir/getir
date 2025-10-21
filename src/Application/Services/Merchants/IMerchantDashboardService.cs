@@ -16,4 +16,13 @@ public interface IMerchantDashboardService
     Task<Result<List<TopProductResponse>>> GetTopProductsAsync(Guid merchantId, Guid merchantOwnerId, int limit = 10, CancellationToken cancellationToken = default);
     /// <summary>Performans metriklerini hesaplar (ownership kontrolü).</summary>
     Task<Result<MerchantPerformanceMetrics>> GetPerformanceMetricsAsync(Guid merchantId, Guid merchantOwnerId, DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default);
+    
+    /// <summary>Satış trend verilerini getirir (günlük bazda, son N gün).</summary>
+    Task<Result<List<SalesTrendDataResponse>>> GetSalesTrendDataAsync(Guid merchantId, Guid merchantOwnerId, int days = 30, CancellationToken cancellationToken = default);
+    
+    /// <summary>Sipariş durumu dağılımını getirir.</summary>
+    Task<Result<OrderStatusDistributionResponse>> GetOrderStatusDistributionAsync(Guid merchantId, Guid merchantOwnerId, CancellationToken cancellationToken = default);
+    
+    /// <summary>Kategori performansını getirir (gelir bazlı).</summary>
+    Task<Result<List<CategoryPerformanceResponse>>> GetCategoryPerformanceAsync(Guid merchantId, Guid merchantOwnerId, CancellationToken cancellationToken = default);
 }

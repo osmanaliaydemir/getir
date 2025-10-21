@@ -47,3 +47,24 @@ public record MerchantResponse : BaseRatedEntityResponse
     public bool IsBusy { get; init; }
     public bool IsOpen { get; init; }
 }
+
+// Analytics DTOs for Merchant Dashboard
+public record SalesTrendDataResponse(
+    DateTime Date,
+    decimal Revenue,
+    int OrderCount);
+
+public record OrderStatusDistributionResponse(
+    int PendingCount,
+    int PreparingCount,
+    int ReadyCount,
+    int OnWayCount,
+    int DeliveredCount,
+    int CancelledCount);
+
+public record CategoryPerformanceResponse(
+    Guid CategoryId,
+    string CategoryName,
+    decimal TotalRevenue,
+    int OrderCount,
+    int ProductCount);

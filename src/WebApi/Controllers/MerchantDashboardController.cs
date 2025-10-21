@@ -18,6 +18,9 @@ public class MerchantDashboardController : BaseController
 {
     private readonly IMerchantDashboardService _merchantDashboardService;
 
+    /// <summary>
+    /// Constructor
+    /// </summary>
     public MerchantDashboardController(IMerchantDashboardService merchantDashboardService)
     {
         _merchantDashboardService = merchantDashboardService;
@@ -114,4 +117,70 @@ public class MerchantDashboardController : BaseController
         var result = await _merchantDashboardService.GetPerformanceMetricsAsync(merchantId, userId, startDate, endDate, ct);
         return ToActionResult(result);
     }
+
+    #region Analytics Endpoints
+
+    /// <summary>
+    /// Satış trend verilerini getirir (Chart.js için)
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="days">Kaç günlük veri (7-90)</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Günlük satış verileri</returns>
+    [HttpGet("analytics/sales-trend")]
+    [ProducesResponseType(typeof(List<SalesTrendDataResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetSalesTrendData(
+        [FromRoute] Guid merchantId,
+        [FromQuery] int days = 30,
+        CancellationToken ct = default)
+    {
+        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
+        if (unauthorizedResult != null) return unauthorizedResult;
+
+        var result = await _merchantDashboardService.GetSalesTrendDataAsync(merchantId, userId, days, ct);
+        return ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Sipariş durumu dağılımını getirir
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Status bazlı sipariş sayıları</returns>
+    [HttpGet("analytics/order-distribution")]
+    [ProducesResponseType(typeof(OrderStatusDistributionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetOrderStatusDistribution(
+        [FromRoute] Guid merchantId,
+        CancellationToken ct = default)
+    {
+        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
+        if (unauthorizedResult != null) return unauthorizedResult;
+
+        var result = await _merchantDashboardService.GetOrderStatusDistributionAsync(merchantId, userId, ct);
+        return ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Kategori performansını getirir (gelir bazlı)
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kategori bazlı satış performansı</returns>
+    [HttpGet("analytics/category-performance")]
+    [ProducesResponseType(typeof(List<CategoryPerformanceResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetCategoryPerformance(
+        [FromRoute] Guid merchantId,
+        CancellationToken ct = default)
+    {
+        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
+        if (unauthorizedResult != null) return unauthorizedResult;
+
+        var result = await _merchantDashboardService.GetCategoryPerformanceAsync(merchantId, userId, ct);
+        return ToActionResult(result);
+    }
+
+    #endregion
 }

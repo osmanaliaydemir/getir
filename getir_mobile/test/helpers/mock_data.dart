@@ -112,6 +112,8 @@ class MockData {
   static Cart get emptyCart => Cart(
     id: 'cart-empty',
     userId: 'test-user-123',
+    merchantId: '',
+    merchantName: '',
     items: [],
     subtotal: 0.0,
     deliveryFee: 0.0,
@@ -125,6 +127,8 @@ class MockData {
   static Cart get testCart => Cart(
     id: 'cart-123',
     userId: 'test-user-123',
+    merchantId: 'merchant-123',
+    merchantName: 'Test Market',
     items: [testCartItem],
     subtotal: 29.99,
     deliveryFee: 9.99,
