@@ -176,5 +176,141 @@ public class ProductReviewController : BaseController
         var result = await _productReviewService.RecalculateProductRatingAsync(productId, ct);
         return ToActionResult(result);
     }
+
+    #region Merchant Endpoints
+
+    /// <summary>
+    /// Merchant'ın tüm ürünlerine gelen yorumları getir (MerchantOwner only)
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="rating">Rating filtresi (optional)</param>
+    /// <param name="isApproved">Onay durumu filtresi (optional)</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Review listesi</returns>
+    [HttpGet("merchant/{merchantId:guid}")]
+    [Authorize(Roles = "Admin,MerchantOwner")]
+    [ProducesResponseType(typeof(PagedResult<ProductReviewResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMerchantProductReviews(
+        [FromRoute] Guid merchantId,
+        [FromQuery] PaginationQuery query,
+        [FromQuery] int? rating = null,
+        [FromQuery] bool? isApproved = null,
+        CancellationToken ct = default)
+    {
+        var result = await _productReviewService.GetMerchantProductReviewsAsync(
+            merchantId, 
+            query, 
+            rating, 
+            isApproved, 
+            ct);
+        
+        return ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Merchant'ın tüm ürünleri için review istatistiklerini getir
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Review istatistikleri</returns>
+    [HttpGet("merchant/{merchantId:guid}/stats")]
+    [Authorize(Roles = "Admin,MerchantOwner")]
+    [ProducesResponseType(typeof(ProductReviewStatsResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMerchantReviewStats(
+        [FromRoute] Guid merchantId,
+        CancellationToken ct = default)
+    {
+        var result = await _productReviewService.GetMerchantReviewStatsAsync(merchantId, ct);
+        return ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Ürün review istatistiklerini getir
+    /// </summary>
+    /// <param name="productId">Ürün ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Review istatistikleri</returns>
+    [HttpGet("product/{productId:guid}/stats")]
+    [ProducesResponseType(typeof(ProductReviewStatsResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProductReviewStats(
+        [FromRoute] Guid productId,
+        CancellationToken ct = default)
+    {
+        var result = await _productReviewService.GetProductReviewStatsAsync(productId, ct);
+        return ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Review'a merchant yanıtı ekle (MerchantOwner only)
+    /// </summary>
+    /// <param name="id">Review ID</param>
+    /// <param name="request">Yanıt metni</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
+    [HttpPut("{id:guid}/respond")]
+    [Authorize(Roles = "Admin,MerchantOwner")]
+    [ProducesResponseType(typeof(ProductReviewResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RespondToReview(
+        [FromRoute] Guid id,
+        [FromBody] RespondToReviewRequest request,
+        CancellationToken ct = default)
+    {
+        var validationResult = HandleValidationErrors();
+        if (validationResult != null) return validationResult;
+
+        var result = await _productReviewService.RespondToReviewAsync(id, request, ct);
+        return ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Review'ı onayla (MerchantOwner/Admin)
+    /// </summary>
+    /// <param name="id">Review ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
+    [HttpPut("{id:guid}/approve")]
+    [Authorize(Roles = "Admin,MerchantOwner")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ApproveReview(
+        [FromRoute] Guid id,
+        CancellationToken ct = default)
+    {
+        var result = await _productReviewService.ApproveProductReviewAsync(id, ct);
+        return ToActionResult(result);
+    }
+
+    /// <summary>
+    /// Review'ı reddet (MerchantOwner/Admin)
+    /// </summary>
+    /// <param name="id">Review ID</param>
+    /// <param name="request">Red nedeni</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Başarı yanıtı</returns>
+    [HttpPut("{id:guid}/reject")]
+    [Authorize(Roles = "Admin,MerchantOwner")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RejectReview(
+        [FromRoute] Guid id,
+        [FromBody] RejectReviewRequest request,
+        CancellationToken ct = default)
+    {
+        var validationResult = HandleValidationErrors();
+        if (validationResult != null) return validationResult;
+
+        var result = await _productReviewService.RejectProductReviewAsync(id, request.Reason, ct);
+        return ToActionResult(result);
+    }
+
+    #endregion
 }
+
+/// <summary>
+/// Reject review request DTO
+/// </summary>
+public record RejectReviewRequest(string Reason);
+
 

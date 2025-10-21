@@ -204,5 +204,20 @@
   <data name="InvalidPhone" xml:space="preserve">
     <value>Geçersiz telefon numarası</value>
   </data>
+  <data name="Reviews &amp; Ratings" xml:space="preserve">
+    <value>Yorumlar &amp; Değerlendirmeler</value>
+  </data>
+  <data name="Product Reviews" xml:space="preserve">
+    <value>Ürün Yorumları</value>
+  </data>
+  <data name="Customer Reviews" xml:space="preserve">
+    <value>Müşteri Değerlendirmeleri</value>
+  </data>
+  <data name="Courier Reviews" xml:space="preserve">
+    <value>Kurye Değerlendirmeleri</value>
+  </data>
+  <data name="Review Dashboard" xml:space="preserve">
+    <value>Değerlendirme Dashboard</value>
+  </data>
 </root>
 

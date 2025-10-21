@@ -507,3 +507,55 @@ public class CategoryPerformanceResponse
     public int ProductCount { get; set; }
 }
 
+// Product Review Models
+public class ProductReviewResponse
+{
+    public Guid Id { get; set; }
+    public Guid ProductId { get; set; }
+    public string ProductName { get; set; } = default!;
+    public Guid UserId { get; set; }
+    public string UserName { get; set; } = default!;
+    public int Rating { get; set; }
+    public string? Comment { get; set; }
+    public bool IsVerifiedPurchase { get; set; }
+    public bool IsApproved { get; set; }
+    public int HelpfulCount { get; set; }
+    public int NotHelpfulCount { get; set; }
+    public string? MerchantResponse { get; set; }
+    public DateTime? MerchantRespondedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+
+public class CreateProductReviewRequest
+{
+    public Guid ProductId { get; set; }
+    public int Rating { get; set; }
+    public string? Comment { get; set; }
+    public Guid? OrderId { get; set; }
+}
+
+public class UpdateProductReviewRequest
+{
+    public int Rating { get; set; }
+    public string? Comment { get; set; }
+}
+
+public class ProductReviewStatsResponse
+{
+    public decimal AverageRating { get; set; }
+    public int TotalReviews { get; set; }
+    public int FiveStarCount { get; set; }
+    public int FourStarCount { get; set; }
+    public int ThreeStarCount { get; set; }
+    public int TwoStarCount { get; set; }
+    public int OneStarCount { get; set; }
+    public int VerifiedPurchaseCount { get; set; }
+    public int PendingApprovalCount { get; set; }
+}
+
+public class RespondToReviewRequest
+{
+    public string Response { get; set; } = default!;
+}
+

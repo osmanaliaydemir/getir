@@ -1,5 +1,4 @@
-﻿@inject IViewLocalizer Localizer
-@inject IStringLocalizer<SharedResources> SharedLocalizer
+﻿@inject IStringLocalizer<SharedResources> SharedLocalizer
 @using System.Globalization
 @{
     var currentCulture = CultureInfo.CurrentUICulture;
@@ -85,6 +84,93 @@
         .sidebar-nav i {
             width: 30px;
             margin-right: 10px;
+        }
+        
+        /* Dropdown Menu Styles */
+        .dropdown-menu-item {
+            position: relative;
+        }
+        
+        .dropdown-toggle {
+            display: flex !important;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1.5rem;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .dropdown-toggle:hover,
+        .dropdown-toggle.active {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .dropdown-toggle .fa-chevron-down {
+            transition: transform 0.2s;
+            font-size: 0.8rem;
+        }
+        
+        .dropdown-toggle[aria-expanded="true"] .fa-chevron-down {
+            transform: rotate(180deg);
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: rgba(0,0,0,0.8);
+            border: none;
+            border-radius: 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 0.5rem 0;
+            margin: 0;
+            min-width: 100%;
+            z-index: 1000;
+        }
+        
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1.5rem;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        
+        .dropdown-item:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .dropdown-item.active {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        .dropdown-item i {
+            width: 20px;
+            margin-right: 8px;
+        }
+        
+        /* RTL Support for Dropdown */
+        [dir="rtl"] .dropdown-item i {
+            margin-right: 0;
+            margin-left: 8px;
+        }
+        
+        [dir="rtl"] .dropdown-toggle .fa-chevron-down {
+            margin-right: 0;
+            margin-left: auto;
+        }
+        
+        .dropdown-divider {
+            margin: 0.5rem 0;
+            border-color: rgba(255,255,255,0.2);
         }
         
         .main-content {
@@ -188,6 +274,37 @@
                 <a href="@Url.Action("Index", "Categories")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Categories" ? "active" : "")">
                     <i class="fas fa-tags"></i> @SharedLocalizer["Categories"]
                 </a>
+                
+                <!-- Reviews & Ratings Dropdown Menu -->
+                <div class="dropdown-menu-item">
+                    <a href="#" class="dropdown-toggle @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reviews" || ViewContext.RouteData.Values["Controller"]?.ToString() == "MerchantReviews" ? "active" : "")" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-star"></i> @SharedLocalizer["Reviews & Ratings"]
+                        <i class="fas fa-chevron-down ms-auto"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li>
+                            <a href="@Url.Action("Index", "Reviews")" class="dropdown-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reviews" ? "active" : "")">
+                                <i class="fas fa-star me-2"></i> @SharedLocalizer["Product Reviews"]
+                            </a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("Index", "MerchantReviews")" class="dropdown-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "MerchantReviews" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
+                                <i class="fas fa-comments me-2"></i> @SharedLocalizer["Customer Reviews"]
+                            </a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("CourierReviews", "MerchantReviews")" class="dropdown-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "CourierReviews" ? "active" : "")">
+                                <i class="fas fa-motorcycle me-2"></i> @SharedLocalizer["Courier Reviews"]
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a href="@Url.Action("Dashboard", "MerchantReviews")" class="dropdown-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")">
+                                <i class="fas fa-chart-bar me-2"></i> @SharedLocalizer["Review Dashboard"]
+                            </a>
+                        </li>
+                    </ul>
+                </div>
                 <a href="@Url.Action("Index", "Payments")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Payments" ? "active" : "")">
                     <i class="fas fa-money-bill-wave"></i> @SharedLocalizer["Payments"]
                 </a>

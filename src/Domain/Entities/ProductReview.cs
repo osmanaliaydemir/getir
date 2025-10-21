@@ -38,8 +38,14 @@ public class ProductReview
     public bool IsApproved { get; set; } = true; // Auto-approve by default
     public bool IsModerated { get; set; } = false;
     public string? ModerationNotes { get; set; }
+    public string? RejectionReason { get; set; }
     public Guid? ModeratedBy { get; set; }
     public DateTime? ModeratedAt { get; set; }
+    
+    // Merchant response (merchant can respond to reviews)
+    [MaxLength(2000)]
+    public string? MerchantResponse { get; set; }
+    public DateTime? MerchantRespondedAt { get; set; }
     
     // Soft delete
     public bool IsDeleted { get; set; } = false;

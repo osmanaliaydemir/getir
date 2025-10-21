@@ -1,6 +1,7 @@
 using Getir.Application.Common;
 using Getir.Application.DTO;
 using Getir.Application.Services.Payments;
+using Getir.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -35,9 +36,7 @@ public class PaymentController : BaseController
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> CreatePayment(
-        [FromBody] CreatePaymentRequest request,
-        CancellationToken ct = default)
+    public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentRequest request, CancellationToken ct = default)
     {
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;
@@ -79,10 +78,7 @@ public class PaymentController : BaseController
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetOrderPayments(
-        [FromRoute] Guid orderId,
-        [FromQuery] PaginationQuery query,
-        CancellationToken ct = default)
+    public async Task<IActionResult> GetOrderPayments([FromRoute] Guid orderId, [FromQuery] PaginationQuery query, CancellationToken ct = default)
     {
         var result = await _paymentService.GetOrderPaymentsAsync(orderId, query, ct);
         return ToActionResult(result);
@@ -104,9 +100,7 @@ public class PaymentController : BaseController
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetPendingCashPayments(
-        [FromQuery] PaginationQuery query,
-        CancellationToken ct = default)
+    public async Task<IActionResult> GetPendingCashPayments([FromQuery] PaginationQuery query, CancellationToken ct = default)
     {
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var courierId);
         if (unauthorizedResult != null) return unauthorizedResult;
@@ -129,10 +123,7 @@ public class PaymentController : BaseController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> CollectCashPayment(
-        [FromRoute] Guid paymentId,
-        [FromBody] CollectCashPaymentRequest request,
-        CancellationToken ct = default)
+    public async Task<IActionResult> CollectCashPayment([FromRoute] Guid paymentId, [FromBody] CollectCashPaymentRequest request, CancellationToken ct = default)
     {
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;
@@ -158,10 +149,7 @@ public class PaymentController : BaseController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> FailCashPayment(
-        [FromRoute] Guid paymentId,
-        [FromBody] FailPaymentRequest request,
-        CancellationToken ct = default)
+    public async Task<IActionResult> FailCashPayment([FromRoute] Guid paymentId, [FromBody] FailPaymentRequest request, CancellationToken ct = default)
     {
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;
@@ -185,9 +173,7 @@ public class PaymentController : BaseController
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetCourierCashSummary(
-        [FromQuery] DateTime? date = null,
-        CancellationToken ct = default)
+    public async Task<IActionResult> GetCourierCashSummary([FromQuery] DateTime? date = null, CancellationToken ct = default)
     {
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var courierId);
         if (unauthorizedResult != null) return unauthorizedResult;
@@ -201,34 +187,54 @@ public class PaymentController : BaseController
     #region Merchant Endpoints
 
     /// <summary>
+    /// Mağaza ödeme geçmişini getir (tüm ödeme yöntemleri)
+    /// </summary>
+    /// <param name="merchantId">Mağaza ID'si</param>
+    /// <param name="query">Sayfalama sorgusu</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <param name="paymentMethod">Ödeme yöntemi filtresi</param>
+    /// <param name="status">Ödeme durumu filtresi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış ödeme listesi</returns>
+    [HttpGet("merchant/{merchantId:guid}/transactions")]
+    [Authorize]
+    [Authorize(Roles = "MerchantOwner,Admin")]
+    [ProducesResponseType(typeof(PagedResult<PaymentResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMerchantPayments([FromRoute] Guid merchantId, [FromQuery] PaginationQuery query, [FromQuery] DateTime? startDate = null, [FromQuery] DateTime? endDate = null, [FromQuery] PaymentMethod? paymentMethod = null, [FromQuery] PaymentStatus? status = null, CancellationToken ct = default)
+    {
+        var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
+        if (unauthorizedResult != null) return unauthorizedResult;
+
+        var result = await _paymentService.GetMerchantPaymentsAsync(merchantId, query, startDate, endDate, paymentMethod, status, ct);
+        return ToActionResult(result);
+    }
+
+    /// <summary>
     /// Mağaza nakit ödeme özetini getir
     /// </summary>
+    /// <param name="merchantId">Mağaza ID'si</param>
     /// <param name="startDate">Başlangıç tarihi</param>
     /// <param name="endDate">Bitiş tarihi</param>
     /// <param name="ct">İptal token'ı</param>
     /// <returns>Nakit özeti</returns>
-    [HttpGet("merchant/summary")]
+    [HttpGet("merchant/{merchantId:guid}/summary")]
     [Authorize]
     [Authorize(Roles = "MerchantOwner,Admin")]
     [ProducesResponseType(typeof(MerchantCashSummaryResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetMerchantCashSummary(
-        [FromQuery] DateTime? startDate = null,
-        [FromQuery] DateTime? endDate = null,
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMerchantCashSummary([FromRoute] Guid merchantId, [FromQuery] DateTime? startDate = null, [FromQuery] DateTime? endDate = null,
         CancellationToken ct = default)
     {
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
-
-        // Get merchant by userId (must use IMerchantService or similar)
-        // For now, get merchantId from query parameter as workaround
-        var merchantIdStr = HttpContext.Request.Query["merchantId"].ToString();
-        if (string.IsNullOrEmpty(merchantIdStr) || !Guid.TryParse(merchantIdStr, out var merchantId))
-        {
-            return BadRequest("MerchantId required");
-        }
 
         var result = await _paymentService.GetMerchantCashSummaryAsync(merchantId, startDate, endDate, ct);
         return ToActionResult(result);
@@ -237,28 +243,22 @@ public class PaymentController : BaseController
     /// <summary>
     /// Mağaza mutabakat geçmişini getir
     /// </summary>
+    /// <param name="merchantId">Mağaza ID'si</param>
     /// <param name="query">Sayfalama sorgusu</param>
     /// <param name="ct">İptal token'ı</param>
     /// <returns>Sayfalanmış mutabakatlar</returns>
-    [HttpGet("merchant/settlements")]
+    [HttpGet("merchant/{merchantId:guid}/settlements")]
     [Authorize]
     [Authorize(Roles = "MerchantOwner,Admin")]
     [ProducesResponseType(typeof(PagedResult<SettlementResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetMerchantSettlements(
-        [FromQuery] PaginationQuery query,
-        CancellationToken ct = default)
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMerchantSettlements([FromRoute] Guid merchantId, [FromQuery] PaginationQuery query, CancellationToken ct = default)
     {
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var userId);
         if (unauthorizedResult != null) return unauthorizedResult;
-
-        var merchantIdStr = HttpContext.Request.Query["merchantId"].ToString();
-        if (string.IsNullOrEmpty(merchantIdStr) || !Guid.TryParse(merchantIdStr, out var merchantId))
-        {
-            return BadRequest("MerchantId required");
-        }
 
         var result = await _paymentService.GetMerchantSettlementsAsync(merchantId, query, ct);
         return ToActionResult(result);
@@ -282,10 +282,7 @@ public class PaymentController : BaseController
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetAllCashPayments(
-        [FromQuery] PaginationQuery query,
-        [FromQuery] string? status = null,
-        CancellationToken ct = default)
+    public async Task<IActionResult> GetAllCashPayments([FromQuery] PaginationQuery query, [FromQuery] string? status = null, CancellationToken ct = default)
     {
         var result = await _paymentService.GetAllCashPaymentsAsync(query, status, ct);
         return ToActionResult(result);
@@ -306,10 +303,7 @@ public class PaymentController : BaseController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ProcessSettlement(
-        [FromRoute] Guid merchantId,
-        [FromBody] ProcessSettlementRequest request,
-        CancellationToken ct = default)
+    public async Task<IActionResult> ProcessSettlement([FromRoute] Guid merchantId, [FromBody] ProcessSettlementRequest request, CancellationToken ct = default)
     {
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;

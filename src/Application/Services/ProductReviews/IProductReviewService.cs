@@ -28,5 +28,28 @@ public interface IProductReviewService
     
     /// <summary>Ürün rating'ini yeniden hesapla (internal use)</summary>
     Task<Result> RecalculateProductRatingAsync(Guid productId, CancellationToken cancellationToken = default);
+    
+    /// <summary>Merchant'ın tüm ürünlerine gelen review'ları getir (sayfalama, filtreleme)</summary>
+    Task<Result<PagedResult<ProductReviewResponse>>> GetMerchantProductReviewsAsync(Guid merchantId, PaginationQuery query, int? rating = null, bool? isApproved = null, CancellationToken cancellationToken = default);
+    
+    /// <summary>Merchant'ın tüm ürünleri için review istatistikleri</summary>
+    Task<Result<ProductReviewStatsResponse>> GetMerchantReviewStatsAsync(Guid merchantId, CancellationToken cancellationToken = default);
+    
+    /// <summary>Ürün review istatistiklerini getir</summary>
+    Task<Result<ProductReviewStatsResponse>> GetProductReviewStatsAsync(Guid productId, CancellationToken cancellationToken = default);
+    
+    /// <summary>Review'a merchant yanıtı ekle</summary>
+    Task<Result<ProductReviewResponse>> RespondToReviewAsync(Guid reviewId, RespondToReviewRequest request, CancellationToken cancellationToken = default);
+    
+    /// <summary>Review'ı onayla (merchant moderasyonu)</summary>
+    Task<Result> ApproveProductReviewAsync(Guid reviewId, CancellationToken cancellationToken = default);
+    
+    /// <summary>Review'ı reddet (merchant moderasyonu)</summary>
+    Task<Result> RejectProductReviewAsync(Guid reviewId, string reason, CancellationToken cancellationToken = default);
 }
+
+/// <summary>
+/// Respond to review request DTO
+/// </summary>
+public record RespondToReviewRequest(string Response);
 

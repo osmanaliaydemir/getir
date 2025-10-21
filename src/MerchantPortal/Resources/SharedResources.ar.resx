@@ -204,5 +204,20 @@
   <data name="InvalidPhone" xml:space="preserve">
     <value>رقم الهاتف غير صالح</value>
   </data>
+  <data name="Reviews &amp; Ratings" xml:space="preserve">
+    <value>التقييمات &amp; المراجعات</value>
+  </data>
+  <data name="Product Reviews" xml:space="preserve">
+    <value>مراجعات المنتجات</value>
+  </data>
+  <data name="Customer Reviews" xml:space="preserve">
+    <value>تقييمات العملاء</value>
+  </data>
+  <data name="Courier Reviews" xml:space="preserve">
+    <value>تقييمات المندوبين</value>
+  </data>
+  <data name="Review Dashboard" xml:space="preserve">
+    <value>لوحة التقييمات</value>
+  </data>
 </root>
 

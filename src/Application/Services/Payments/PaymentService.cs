@@ -79,12 +79,7 @@ public class PaymentService : BaseService, IPaymentService
         // 7. Send SignalR notification
         if (_signalRService != null)
         {
-            await _signalRService.SendPaymentCreatedNotificationAsync(
-                payment.Id,
-                order.Id,
-                order.UserId,
-                payment.PaymentMethod,
-                payment.Amount);
+            await _signalRService.SendPaymentCreatedNotificationAsync(payment.Id, order.Id, order.UserId, payment.PaymentMethod, payment.Amount);
         }
 
         // 7. Return response
@@ -152,12 +147,8 @@ public class PaymentService : BaseService, IPaymentService
         // Send SignalR notification
         if (_signalRService != null)
         {
-            await _signalRService.SendPaymentStatusUpdateAsync(
-                payment.Id,
-                payment.OrderId,
-                order?.UserId ?? Guid.Empty,
-                request.Status,
-                request.Notes ?? "Payment status updated");
+            await _signalRService.SendPaymentStatusUpdateAsync(payment.Id, payment.OrderId, order?.UserId ?? Guid.Empty,
+                request.Status, request.Notes ?? "Payment status updated");
         }
 
         return Result.Ok();
@@ -360,17 +351,11 @@ public class PaymentService : BaseService, IPaymentService
         // Send SignalR notifications
         if (_signalRService != null)
         {
-            await _signalRService.SendPaymentCollectedNotificationAsync(
-                payment.Id,
-                payment.OrderId,
-                order?.UserId ?? Guid.Empty,
-                request.CollectedAmount,
-                "Courier");
+            await _signalRService.SendPaymentCollectedNotificationAsync(payment.Id, payment.OrderId, order?.UserId ?? Guid.Empty,
+                request.CollectedAmount, "Courier");
 
-            await _signalRService.SendMerchantPaymentNotificationAsync(
-                order?.MerchantId ?? Guid.Empty,
-                payment.OrderId,
-                request.CollectedAmount,
+            await _signalRService.SendMerchantPaymentNotificationAsync(order?.MerchantId ?? Guid.Empty,
+                payment.OrderId, request.CollectedAmount,
                 "Collected");
         }
 
@@ -418,11 +403,7 @@ public class PaymentService : BaseService, IPaymentService
         // Send SignalR notification
         if (_signalRService != null)
         {
-            await _signalRService.SendPaymentFailedNotificationAsync(
-                payment.Id,
-                payment.OrderId,
-                order?.UserId ?? Guid.Empty,
-                reason);
+            await _signalRService.SendPaymentFailedNotificationAsync(payment.Id, payment.OrderId, order?.UserId ?? Guid.Empty, reason);
         }
 
         return Result.Ok();
@@ -469,23 +450,97 @@ public class PaymentService : BaseService, IPaymentService
             paymentResponses.Add(response);
         }
 
-        var summary = new CourierCashSummaryResponse(
-            courierId,
-            courier.User?.FirstName + " " + courier.User?.LastName ?? "Unknown",
-            targetDate,
-            totalCollected,
-            collections.Count,
-            successfulCollections,
-            failedCollections,
-            paymentResponses
-        );
-
+        var summary = new CourierCashSummaryResponse(courierId, courier.User?.FirstName + " " + courier.User?.LastName ?? "Unknown",
+            targetDate, totalCollected, collections.Count,
+            successfulCollections, failedCollections, paymentResponses);
         return Result.Ok(summary);
     }
     // === MERCHANT METHODS ===
     /// <summary>
     /// Merchant nakit ödeme özetini getirir (toplam, komisyon, net tutar, ödeme listesi).
     /// </summary>
+    /// <summary>
+    /// Merchant'ın tüm ödemelerini getirir (filtreleme desteği ile)
+    /// </summary>
+    public async Task<Result<PagedResult<PaymentResponse>>> GetMerchantPaymentsAsync(Guid merchantId, PaginationQuery query, DateTime? startDate = null, DateTime? endDate = null, PaymentMethod? paymentMethod = null, PaymentStatus? status = null, CancellationToken cancellationToken = default)
+    {
+        // Merchant validation
+        var merchant = await _unitOfWork.ReadRepository<Merchant>()
+            .FirstOrDefaultAsync(m => m.Id == merchantId, cancellationToken: cancellationToken);
+
+        if (merchant == null)
+        {
+            return Result.Fail<PagedResult<PaymentResponse>>("Merchant not found", "NOT_FOUND_MERCHANT");
+        }
+
+        // Date range validation
+        var start = startDate ?? DateTime.UtcNow.Date.AddDays(-30);
+        var end = endDate ?? DateTime.UtcNow.Date.AddDays(1);
+
+        if (start > end)
+        {
+            return Result.Fail<PagedResult<PaymentResponse>>("Start date cannot be greater than end date", "INVALID_DATE_RANGE");
+        }
+
+        // Build filter with all conditions
+        var method = paymentMethod;
+        var stat = status;
+        
+        Expression<Func<Payment, bool>> filter = p => 
+            p.Order.MerchantId == merchantId && 
+            p.CreatedAt >= start && 
+            p.CreatedAt < end &&
+            (!method.HasValue || p.PaymentMethod == method.Value) &&
+            (!stat.HasValue || p.Status == stat.Value);
+
+        // Get total count
+        var totalCount = await _unitOfWork.ReadRepository<Payment>()
+            .CountAsync(filter, cancellationToken);
+
+        if (totalCount == 0)
+        {
+            return Result.Ok(new PagedResult<PaymentResponse>
+            {
+                Items = new List<PaymentResponse>(),
+                Total = 0,
+                Page = query.Page,
+                PageSize = query.PageSize
+            });
+        }
+
+        // Get paginated payments
+        var allPayments = await _unitOfWork.ReadRepository<Payment>()
+            .ListAsync(
+                filter: filter,
+                orderBy: p => p.CreatedAt,
+                ascending: false,
+                cancellationToken: cancellationToken);
+        
+        // Apply pagination in memory (not ideal for large datasets, but works for now)
+        var payments = allPayments
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize)
+            .ToList();
+
+        // Map to responses
+        var paymentResponses = new List<PaymentResponse>();
+        foreach (var payment in payments)
+        {
+            var response = await MapToPaymentResponseAsync(payment, cancellationToken);
+            paymentResponses.Add(response);
+        }
+
+        var pagedResult = new PagedResult<PaymentResponse>
+        {
+            Items = paymentResponses,
+            Total = totalCount,
+            Page = query.Page,
+            PageSize = query.PageSize
+        };
+
+        return Result.Ok(pagedResult);
+    }
+
     public async Task<Result<MerchantCashSummaryResponse>> GetMerchantCashSummaryAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
     {
         var start = startDate ?? DateTime.UtcNow.Date.AddDays(-30);
@@ -678,9 +733,7 @@ public class PaymentService : BaseService, IPaymentService
                 // Courier'a nakit ödeme toplama bildirimi
                 if (order.CourierId.HasValue)
                 {
-                    await _signalRService.SendNotificationToUserAsync(
-                        order.CourierId.Value,
-                        "Nakit Ödeme Toplama",
+                    await _signalRService.SendNotificationToUserAsync(order.CourierId.Value, "Nakit Ödeme Toplama",
                         $"Sipariş #{order.OrderNumber} için {payment.Amount:C} nakit ödeme toplamanız gerekiyor.",
                         "CashCollection");
                 }

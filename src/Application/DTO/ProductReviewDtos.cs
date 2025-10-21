@@ -27,5 +27,18 @@ public record ProductReviewResponse(
     DateTime? UpdatedAt,
     int HelpfulCount,
     int NotHelpfulCount,
-    bool IsApproved);
+    bool IsApproved,
+    string? MerchantResponse = null,
+    DateTime? MerchantRespondedAt = null);
+
+public record ProductReviewStatsResponse(
+    decimal AverageRating,
+    int TotalReviews,
+    int FiveStarCount,
+    int FourStarCount,
+    int ThreeStarCount,
+    int TwoStarCount,
+    int OneStarCount,
+    int VerifiedPurchaseCount,
+    int PendingApprovalCount);
 

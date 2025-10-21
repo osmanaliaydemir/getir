@@ -525,5 +525,304 @@ public class ProductReviewService : BaseService, IProductReviewService
             // Cache temizleme hatası kritik değil, log et ve devam et
         }
     }
+
+    /// <summary>
+    /// Merchant'ın tüm ürünlerine gelen review'ları getir (filtreleme, cache).
+    /// </summary>
+    public async Task<Result<PagedResult<ProductReviewResponse>>> GetMerchantProductReviewsAsync(
+        Guid merchantId, 
+        PaginationQuery query, 
+        int? rating = null, 
+        bool? isApproved = null, 
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Merchant'ın ürünlerini bul
+            var merchantProducts = await _unitOfWork.ReadRepository<Product>()
+                .ListAsync(
+                    p => p.MerchantId == merchantId && p.IsActive,
+                    cancellationToken: cancellationToken);
+
+            if (!merchantProducts.Any())
+            {
+                return Result.Ok(PagedResult<ProductReviewResponse>.Create(
+                    new List<ProductReviewResponse>(), 0, query.Page, query.PageSize));
+            }
+
+            var productIds = merchantProducts.Select(p => p.Id).ToList();
+
+            // Review'ları getir
+            var reviews = await _unitOfWork.ReadRepository<ProductReview>()
+                .GetPagedAsync(
+                    page: query.Page,
+                    pageSize: query.PageSize,
+                    orderBy: r => r.CreatedAt,
+                    ascending: false,
+                    filter: r => productIds.Contains(r.ProductId) &&
+                                (!rating.HasValue || r.Rating == rating.Value) &&
+                                (!isApproved.HasValue || r.IsApproved == isApproved.Value),
+                    include: "Product,User,ProductReviewHelpfuls",
+                    cancellationToken: cancellationToken);
+
+            var totalCount = await _unitOfWork.ReadRepository<ProductReview>()
+                .CountAsync(
+                    r => productIds.Contains(r.ProductId) &&
+                        (!rating.HasValue || r.Rating == rating.Value) &&
+                        (!isApproved.HasValue || r.IsApproved == isApproved.Value),
+                    cancellationToken);
+
+            var reviewResponses = reviews.Select(r => new ProductReviewResponse(
+                r.Id,
+                r.ProductId,
+                r.Product?.Name ?? "Unknown",
+                r.UserId,
+                r.User?.FirstName + " " + r.User?.LastName ?? "Anonymous",
+                r.OrderId,
+                r.Rating,
+                r.Comment,
+                r.ImageUrls,
+                r.IsVerifiedPurchase,
+                r.CreatedAt,
+                r.UpdatedAt,
+                r.ProductReviewHelpfuls.Count(h => h.IsHelpful),
+                r.ProductReviewHelpfuls.Count(h => !h.IsHelpful),
+                r.IsApproved,
+                r.MerchantResponse,
+                r.MerchantRespondedAt
+            )).ToList();
+
+            var pagedResult = PagedResult<ProductReviewResponse>.Create(
+                reviewResponses, totalCount, query.Page, query.PageSize);
+
+            return Result.Ok(pagedResult);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting merchant product reviews for merchant {MerchantId}", merchantId);
+            return Result.Fail<PagedResult<ProductReviewResponse>>("Failed to get merchant product reviews", "MERCHANT_REVIEWS_ERROR");
+        }
+    }
+
+    /// <summary>
+    /// Merchant'ın tüm ürünleri için review istatistikleri.
+    /// </summary>
+    public async Task<Result<ProductReviewStatsResponse>> GetMerchantReviewStatsAsync(Guid merchantId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Merchant'ın ürünlerini bul
+            var merchantProducts = await _unitOfWork.ReadRepository<Product>()
+                .ListAsync(
+                    p => p.MerchantId == merchantId && p.IsActive,
+                    cancellationToken: cancellationToken);
+
+            if (!merchantProducts.Any())
+            {
+                return Result.Ok(new ProductReviewStatsResponse(0, 0, 0, 0, 0, 0, 0, 0, 0));
+            }
+
+            var productIds = merchantProducts.Select(p => p.Id).ToList();
+
+            // Tüm review'ları getir
+            var allReviews = await _unitOfWork.ReadRepository<ProductReview>()
+                .ListAsync(
+                    r => productIds.Contains(r.ProductId),
+                    cancellationToken: cancellationToken);
+
+            if (!allReviews.Any())
+            {
+                return Result.Ok(new ProductReviewStatsResponse(0, 0, 0, 0, 0, 0, 0, 0, 0));
+            }
+
+            var stats = new ProductReviewStatsResponse(
+                (decimal)allReviews.Average(r => r.Rating),
+                allReviews.Count,
+                allReviews.Count(r => r.Rating == 5),
+                allReviews.Count(r => r.Rating == 4),
+                allReviews.Count(r => r.Rating == 3),
+                allReviews.Count(r => r.Rating == 2),
+                allReviews.Count(r => r.Rating == 1),
+                allReviews.Count(r => r.IsVerifiedPurchase),
+                allReviews.Count(r => !r.IsApproved)
+            );
+
+            return Result.Ok(stats);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting merchant review stats for {MerchantId}", merchantId);
+            return Result.Fail<ProductReviewStatsResponse>("Failed to get merchant review stats", "MERCHANT_REVIEW_STATS_ERROR");
+        }
+    }
+
+    /// <summary>
+    /// Ürün review istatistiklerini getir.
+    /// </summary>
+    public async Task<Result<ProductReviewStatsResponse>> GetProductReviewStatsAsync(Guid productId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var reviews = await _unitOfWork.ReadRepository<ProductReview>()
+                .ListAsync(
+                    r => r.ProductId == productId,
+                    cancellationToken: cancellationToken);
+
+            if (!reviews.Any())
+            {
+                return Result.Ok(new ProductReviewStatsResponse(0, 0, 0, 0, 0, 0, 0, 0, 0));
+            }
+
+            var stats = new ProductReviewStatsResponse(
+                (decimal)reviews.Average(r => r.Rating),
+                reviews.Count,
+                reviews.Count(r => r.Rating == 5),
+                reviews.Count(r => r.Rating == 4),
+                reviews.Count(r => r.Rating == 3),
+                reviews.Count(r => r.Rating == 2),
+                reviews.Count(r => r.Rating == 1),
+                reviews.Count(r => r.IsVerifiedPurchase),
+                reviews.Count(r => !r.IsApproved)
+            );
+
+            return Result.Ok(stats);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting product review stats for {ProductId}", productId);
+            return Result.Fail<ProductReviewStatsResponse>("Failed to get product review stats", "PRODUCT_REVIEW_STATS_ERROR");
+        }
+    }
+
+    /// <summary>
+    /// Review'a merchant yanıtı ekle.
+    /// </summary>
+    public async Task<Result<ProductReviewResponse>> RespondToReviewAsync(Guid reviewId, RespondToReviewRequest request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var review = await _unitOfWork.ReadRepository<ProductReview>()
+                .FirstOrDefaultAsync(
+                    r => r.Id == reviewId,
+                    include: "Product,User,ProductReviewHelpfuls",
+                    cancellationToken: cancellationToken);
+
+            if (review == null)
+            {
+                return Result.Fail<ProductReviewResponse>("Review not found", "REVIEW_NOT_FOUND");
+            }
+
+            // Yanıt ekle
+            review.MerchantResponse = request.Response;
+            review.MerchantRespondedAt = DateTime.UtcNow;
+            review.UpdatedAt = DateTime.UtcNow;
+
+            _unitOfWork.Repository<ProductReview>().Update(review);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            _loggingService.LogBusinessEvent("MerchantRespondedToReview", new 
+            { 
+                ReviewId = reviewId, 
+                ProductId = review.ProductId,
+                MerchantId = review.Product?.MerchantId
+            });
+
+            var response = new ProductReviewResponse(
+                review.Id,
+                review.ProductId,
+                review.Product?.Name ?? "Unknown",
+                review.UserId,
+                review.User?.FirstName + " " + review.User?.LastName ?? "Anonymous",
+                review.OrderId,
+                review.Rating,
+                review.Comment,
+                review.ImageUrls,
+                review.IsVerifiedPurchase,
+                review.CreatedAt,
+                review.UpdatedAt,
+                review.ProductReviewHelpfuls.Count(h => h.IsHelpful),
+                review.ProductReviewHelpfuls.Count(h => !h.IsHelpful),
+                review.IsApproved,
+                review.MerchantResponse,
+                review.MerchantRespondedAt
+            );
+
+            return Result.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error responding to review {ReviewId}", reviewId);
+            return Result.Fail<ProductReviewResponse>("Failed to respond to review", "RESPOND_REVIEW_ERROR");
+        }
+    }
+
+    /// <summary>
+    /// Review'ı onayla.
+    /// </summary>
+    public async Task<Result> ApproveProductReviewAsync(Guid reviewId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var review = await _unitOfWork.ReadRepository<ProductReview>()
+                .FirstOrDefaultAsync(r => r.Id == reviewId, cancellationToken: cancellationToken);
+
+            if (review == null)
+            {
+                return Result.Fail("Review not found", "REVIEW_NOT_FOUND");
+            }
+
+            review.IsApproved = true;
+            review.UpdatedAt = DateTime.UtcNow;
+
+            _unitOfWork.Repository<ProductReview>().Update(review);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Cache'i temizle
+            await _cacheService.RemoveAsync($"product:{review.ProductId}:reviews", cancellationToken);
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error approving review {ReviewId}", reviewId);
+            return Result.Fail("Failed to approve review", "APPROVE_REVIEW_ERROR");
+        }
+    }
+
+    /// <summary>
+    /// Review'ı reddet.
+    /// </summary>
+    public async Task<Result> RejectProductReviewAsync(Guid reviewId, string reason, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var review = await _unitOfWork.ReadRepository<ProductReview>()
+                .FirstOrDefaultAsync(r => r.Id == reviewId, cancellationToken: cancellationToken);
+
+            if (review == null)
+            {
+                return Result.Fail("Review not found", "REVIEW_NOT_FOUND");
+            }
+
+            review.IsApproved = false;
+            review.RejectionReason = reason;
+            review.UpdatedAt = DateTime.UtcNow;
+
+            _unitOfWork.Repository<ProductReview>().Update(review);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Cache'i temizle
+            await _cacheService.RemoveAsync($"product:{review.ProductId}:reviews", cancellationToken);
+
+            _loggingService.LogBusinessEvent("ReviewRejected", new { ReviewId = reviewId, Reason = reason });
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error rejecting review {ReviewId}", reviewId);
+            return Result.Fail("Failed to reject review", "REJECT_REVIEW_ERROR");
+        }
+    }
 }
 

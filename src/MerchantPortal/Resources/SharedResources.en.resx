@@ -204,5 +204,20 @@
   <data name="InvalidPhone" xml:space="preserve">
     <value>Invalid phone number</value>
   </data>
+  <data name="Reviews &amp; Ratings" xml:space="preserve">
+    <value>Reviews &amp; Ratings</value>
+  </data>
+  <data name="Product Reviews" xml:space="preserve">
+    <value>Product Reviews</value>
+  </data>
+  <data name="Customer Reviews" xml:space="preserve">
+    <value>Customer Reviews</value>
+  </data>
+  <data name="Courier Reviews" xml:space="preserve">
+    <value>Courier Reviews</value>
+  </data>
+  <data name="Review Dashboard" xml:space="preserve">
+    <value>Review Dashboard</value>
+  </data>
 </root>
 

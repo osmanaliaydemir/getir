@@ -19,7 +19,11 @@ public class PaymentService : IPaymentService
         try
         {
             // Build query string
-            var queryParams = new List<string> { $"merchantId={merchantId}" };
+            var queryParams = new List<string> 
+            { 
+                "Page=1",
+                "PageSize=100" // Adjust as needed
+            };
             
             if (filter.StartDate.HasValue)
                 queryParams.Add($"startDate={filter.StartDate:yyyy-MM-dd}");
@@ -31,7 +35,9 @@ public class PaymentService : IPaymentService
                 queryParams.Add($"status={filter.PaymentStatus}");
 
             var query = string.Join("&", queryParams);
-            var response = await _httpClient.GetAsync($"/api/payments/merchant?{query}");
+            
+            // ✅ FIXED: Correct endpoint path
+            var response = await _httpClient.GetAsync($"api/v1/payment/merchant/{merchantId}/transactions?{query}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -39,7 +45,9 @@ public class PaymentService : IPaymentService
                 return new List<PaymentListItemModel>();
             }
 
-            var payments = await response.Content.ReadFromJsonAsync<List<PaymentResponse>>() ?? new();
+            // Response is PagedResult<PaymentResponse>
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<PaymentResponse>>>();
+            var payments = apiResponse?.Data?.Items ?? new List<PaymentResponse>();
             
             // Map to list item model
             return payments.Select(p => new PaymentListItemModel
@@ -66,11 +74,13 @@ public class PaymentService : IPaymentService
     {
         try
         {
-            var response = await _httpClient.GetAsync($"/api/payments/{paymentId}");
+            // ✅ FIXED: Correct endpoint path
+            var response = await _httpClient.GetAsync($"api/v1/payment/{paymentId}");
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            return await response.Content.ReadFromJsonAsync<PaymentResponse>();
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PaymentResponse>>();
+            return apiResponse?.Data;
         }
         catch (Exception ex)
         {
@@ -83,15 +93,17 @@ public class PaymentService : IPaymentService
     {
         try
         {
+            // ✅ FIXED: Use correct summary endpoint
             var response = await _httpClient.GetAsync(
-                $"/api/payments/settlement-report?merchantId={merchantId}&startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}");
+                $"api/v1/payment/merchant/{merchantId}/summary?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}");
 
             if (!response.IsSuccessStatusCode)
             {
                 return CreateEmptySettlementReport(startDate, endDate);
             }
 
-            var settlement = await response.Content.ReadFromJsonAsync<MerchantCashSummaryResponse>();
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<MerchantCashSummaryResponse>>();
+            var settlement = apiResponse?.Data;
             if (settlement == null)
             {
                 return CreateEmptySettlementReport(startDate, endDate);
@@ -148,15 +160,17 @@ public class PaymentService : IPaymentService
             var monthStart = new DateTime(now.Year, now.Month, 1);
             var yearStart = new DateTime(now.Year, 1, 1);
 
+            // ✅ FIXED: Use correct endpoint
             var response = await _httpClient.GetAsync(
-                $"/api/payments/merchant?merchantId={merchantId}&startDate={yearStart:yyyy-MM-dd}");
+                $"api/v1/payment/merchant/{merchantId}/transactions?Page=1&PageSize=1000&startDate={yearStart:yyyy-MM-dd}");
 
             if (!response.IsSuccessStatusCode)
             {
                 return CreateEmptyAnalytics();
             }
 
-            var payments = await response.Content.ReadFromJsonAsync<List<PaymentResponse>>() ?? new();
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<PaymentResponse>>>();
+            var payments = apiResponse?.Data?.Items ?? new List<PaymentResponse>();
 
             var completedPayments = payments.Where(p => p.Status.ToString() == "Completed").ToList();
 
@@ -194,15 +208,17 @@ public class PaymentService : IPaymentService
             var start = startDate ?? DateTime.Now.AddMonths(-1);
             var end = endDate ?? DateTime.Now;
 
+            // ✅ FIXED: Use correct endpoint
             var response = await _httpClient.GetAsync(
-                $"/api/payments/merchant?merchantId={merchantId}&startDate={start:yyyy-MM-dd}&endDate={end:yyyy-MM-dd}");
+                $"api/v1/payment/merchant/{merchantId}/transactions?Page=1&PageSize=1000&startDate={start:yyyy-MM-dd}&endDate={end:yyyy-MM-dd}");
 
             if (!response.IsSuccessStatusCode)
             {
                 return new List<PaymentMethodBreakdownModel>();
             }
 
-            var payments = await response.Content.ReadFromJsonAsync<List<PaymentResponse>>() ?? new();
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<PaymentResponse>>>();
+            var payments = apiResponse?.Data?.Items ?? new List<PaymentResponse>();
             var completedPayments = payments.Where(p => p.Status.ToString() == "Completed").ToList();
 
             if (!completedPayments.Any())
