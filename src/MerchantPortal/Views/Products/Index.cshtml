@@ -17,7 +17,7 @@
     </div>
     <div class="d-flex gap-2">
         <button type="button" class="btn btn-lg btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bulkStockModal" style="border-radius: 12px; padding: 0.75rem 1.5rem;">
-            <i class="fas fa-boxes me-2"></i> Toplu Stok Güncelle
+            <i class="fas fa-boxes me-2"></i> @LocalizationService.GetString("BulkStockUpdate")
         </button>
     <a href="@Url.Action("Create")" class="btn btn-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; padding: 0.75rem 1.5rem; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);">
         <i class="fas fa-plus me-2"></i> @LocalizationService.GetString("AddProduct")
@@ -35,19 +35,19 @@
         <div class="col-md-3">
             <label class="form-label fw-semibold"><i class="fas fa-tag me-2"></i>@LocalizationService.GetString("Category")</label>
             <select class="form-select" style="border-radius: 10px; border: 2px solid #e5e7eb;">
-                <option>Tüm Kategoriler</option>
-                <option>Gıda</option>
-                <option>İçecek</option>
-                <option>Atıştırmalık</option>
+                <option>@LocalizationService.GetString("AllCategories")</option>
+                <option>@LocalizationService.GetString("Food")</option>
+                <option>@LocalizationService.GetString("Beverage")</option>
+                <option>@LocalizationService.GetString("Snacks")</option>
             </select>
         </div>
         <div class="col-md-3">
             <label class="form-label fw-semibold"><i class="fas fa-filter me-2"></i>@LocalizationService.GetString("Status")</label>
             <select class="form-select" style="border-radius: 10px; border: 2px solid #e5e7eb;">
-                <option>Tümü</option>
-                <option>Aktif</option>
-                <option>Pasif</option>
-                <option>Stokta Yok</option>
+                <option>@LocalizationService.GetString("All")</option>
+                <option>@LocalizationService.GetString("Active")</option>
+                <option>@LocalizationService.GetString("Inactive")</option>
+                <option>@LocalizationService.GetString("OutOfStock")</option>
             </select>
         </div>
         <div class="col-md-2">
@@ -79,26 +79,26 @@
                         @if (discountPercentage > 0)
                         {
                             <div class="product-discount-badge">
-                                <i class="fas fa-percent me-1"></i>@discountPercentage İndirim
+                                <i class="fas fa-percent me-1"></i>@discountPercentage @LocalizationService.GetString("Discount")
                             </div>
                         }
                         
                         @if (product.IsActive && product.IsAvailable)
                         {
                             <div class="product-badge active">
-                                <i class="fas fa-check-circle me-1"></i>Aktif
+                                <i class="fas fa-check-circle me-1"></i>@LocalizationService.GetString("Active")
                             </div>
                         }
                         else if (!product.IsActive)
                         {
                             <div class="product-badge inactive">
-                                <i class="fas fa-pause-circle me-1"></i>Pasif
+                                <i class="fas fa-pause-circle me-1"></i>@LocalizationService.GetString("Inactive")
                             </div>
                         }
                         else
                         {
                             <div class="product-badge out-of-stock">
-                                <i class="fas fa-exclamation-circle me-1"></i>Stokta Yok
+                                <i class="fas fa-exclamation-circle me-1"></i>@LocalizationService.GetString("OutOfStock")
                             </div>
                         }
                         
@@ -148,32 +148,32 @@
                             {
                                 <span class="product-stock stock-available">
                                     <i class="fas fa-check-circle"></i>
-                                    Stokta (@product.StockQuantity @product.Unit)
+                                    @LocalizationService.GetString("InStockWith") (@product.StockQuantity @product.Unit)
                                 </span>
                             }
                             else if (product.StockQuantity > 0)
                             {
                                 <span class="product-stock stock-low">
                                     <i class="fas fa-exclamation-triangle"></i>
-                                    Az Stok (@product.StockQuantity @product.Unit)
+                                    @LocalizationService.GetString("LowStock") (@product.StockQuantity @product.Unit)
                                 </span>
                             }
                             else
                             {
                                 <span class="product-stock stock-out">
                                     <i class="fas fa-times-circle"></i>
-                                    Stokta Yok
+                                    @LocalizationService.GetString("OutOfStock")
                                 </span>
                             }
                         </div>
                         
                         <div class="product-actions mt-auto">
-                            <a href="@Url.Action("Edit", new { id = product.Id })" class="btn btn-primary btn-icon" title="Düzenle">
+                            <a href="@Url.Action("Edit", new { id = product.Id })" class="btn btn-primary btn-icon" title="@LocalizationService.GetString("Edit")">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <form asp-action="Delete" asp-route-id="@product.Id" method="post" style="flex: 1;" onsubmit="return confirm('Bu ürünü silmek istediğinize emin misiniz?');">
+                            <form asp-action="Delete" asp-route-id="@product.Id" method="post" style="flex: 1;" onsubmit="return confirm('@LocalizationService.GetString("ConfirmDelete")');">
                                 @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-danger btn-icon w-100" title="Sil">
+                                <button type="submit" class="btn btn-danger btn-icon w-100" title="@LocalizationService.GetString("Delete")">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
@@ -218,10 +218,10 @@ else
     <div class="text-center py-5 fade-in">
         <div class="chart-container-modern" style="max-width: 500px; margin: 0 auto;">
             <i class="fas fa-box-open fa-5x text-muted mb-4"></i>
-            <h4 class="mb-3">Henüz Ürün Yok</h4>
-            <p class="text-muted mb-4">İlk ürününüzü ekleyerek başlayın!</p>
+            <h4 class="mb-3">@LocalizationService.GetString("NoProductsYet")</h4>
+            <p class="text-muted mb-4">@LocalizationService.GetString("AddFirstProduct")</p>
             <a href="@Url.Action("Create")" class="btn btn-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px;">
-                <i class="fas fa-plus me-2"></i> İlk Ürünü Ekle
+                <i class="fas fa-plus me-2"></i> @LocalizationService.GetString("AddFirstProductBtn")
             </a>
         </div>
     </div>
@@ -233,19 +233,19 @@ else
         <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 25px rgba(0,0,0,0.15);">
             <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px 16px 0 0;">
                 <h5 class="modal-title" id="bulkStockModalLabel">
-                    <i class="fas fa-boxes me-2"></i>Toplu Stok Güncelleme
+                    <i class="fas fa-boxes me-2"></i>@LocalizationService.GetString("BulkStockUpdate")
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-info mb-4">
                     <i class="fas fa-info-circle me-2"></i>
-                    <strong>Bilgi:</strong> Birden fazla ürünün stok seviyesini aynı anda güncelleyebilirsiniz.
+                    <strong>@LocalizationService.GetString("Info"):</strong> @LocalizationService.GetString("BulkUpdateInfo")
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Güncelleme Nedeni (Opsiyonel)</label>
-                    <input type="text" id="bulkUpdateReason" class="form-control" placeholder="Örn: Aylık envanter sayımı" style="border-radius: 10px;">
+                    <label class="form-label fw-bold">@LocalizationService.GetString("UpdateReason") (@LocalizationService.GetString("Optional"))</label>
+                    <input type="text" id="bulkUpdateReason" class="form-control" placeholder="@LocalizationService.GetString("ReasonPlaceholder")" style="border-radius: 10px;">
                 </div>
 
                 <div id="stockUpdateList" class="mt-4">
@@ -268,17 +268,17 @@ else
                                                     }
                                                     <div>
                                                         <div class="fw-bold">@product.Name</div>
-                                                        <small class="text-muted">Mevcut: <span class="badge bg-secondary">@product.StockQuantity</span></small>
+                                                        <small class="text-muted">@LocalizationService.GetString("CurrentStock"): <span class="badge bg-secondary">@product.StockQuantity</span></small>
                                                     </div>
                                                 </div>
                                             </label>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label small mb-1">Yeni Stok</label>
+                                            <label class="form-label small mb-1">@LocalizationService.GetString("NewStock")</label>
                                             <input type="number" class="form-control stock-input" data-product-id="@product.Id" value="@product.StockQuantity" min="0" style="border-radius: 8px;">
                                         </div>
                                         <div class="col-md-2 text-end">
-                                            <a href="/Stock/History?productId=@product.Id" class="btn btn-sm btn-outline-secondary" title="Stok Geçmişi">
+                                            <a href="/Stock/History?productId=@product.Id" class="btn btn-sm btn-outline-secondary" title="@LocalizationService.GetString("StockHistory")">
                                                 <i class="fas fa-history"></i>
                                             </a>
                                         </div>
@@ -292,12 +292,12 @@ else
             <div class="modal-footer" style="border-top: 2px solid #e5e7eb;">
                 <div class="d-flex w-100 justify-content-between align-items-center">
                     <div>
-                        <span id="selectedCount" class="text-muted">0 ürün seçildi</span>
+                        <span id="selectedCount" class="text-muted">0 @LocalizationService.GetString("SelectedItems")</span>
                     </div>
                     <div>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 10px;">İptal</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 10px;">@LocalizationService.GetString("Cancel")</button>
                         <button type="button" id="bulkUpdateBtn" class="btn btn-primary" style="border-radius: 10px;">
-                            <i class="fas fa-save me-2"></i>Güncelle
+                            <i class="fas fa-save me-2"></i>@LocalizationService.GetString("Update")
                         </button>
                     </div>
                 </div>
