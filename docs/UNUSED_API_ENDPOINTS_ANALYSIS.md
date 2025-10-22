@@ -75,11 +75,7 @@
 - `GET /api/v1/userpreferences/merchant` - Kullanıcı tercihleri
 - `PUT /api/v1/userpreferences/merchant` - Tercih güncelleme
 
-### 11. PaymentController ❌ ENDPOINT UYUŞMAZLIĞI!
-**Portal çağrısı:** `/api/payments/merchant` (YANLIŞ!)  
-**Gerçek API:** `/api/v1/payment/...` (DOĞRU!)  
-
-**Sonuç:** Portal çalışmıyor, API bulunamıyor! MOCK data kullanıyor.
+<!-- PaymentController uyuşmazlığı düzeltildi → Bu bölüm kaldırıldı -->
 
 ### 11. SettingsController (Portal Only)
 - Sadece frontend localStorage kullanıyor, backend API YOK
@@ -133,56 +129,15 @@ PUT    /api/merchantdocument/{id}/reject
 
 ---
 
-#### 4. **StockManagementController** - 9 endpoint
-```
-PUT    /api/stock-management/update
-PUT    /api/stock-management/bulk-update
-GET    /api/stock-management/history/{productId}
-GET    /api/stock-management/alerts
-POST   /api/stock-management/alerts/{id}/resolve
-GET    /api/stock-management/low-stock
-... ve 3 tane daha
-```
-
-**Neden kullanılmıyor:** Portal'da UI var ama backend entegrasyonu YOK!
-
-**Kullanılması gereken:** ⚠️ **EVET - ACİL!** - Portal'da stok UI'ı mevcut
-
-**Öncelik:** YÜKSEK
+<!-- StockManagementController entegrasyonu yapıldı → Bu bölüm kaldırıldı -->
 
 ---
 
-#### 5. **StockAlertController** - 7 endpoint
-```
-GET    /api/stock-alert/merchant/{merchantId}
-POST   /api/stock-alert/{id}/resolve
-POST   /api/stock-alert/{id}/snooze
-GET    /api/stock-alert/active
-GET    /api/stock-alert/resolved
-... ve 2 tane daha
-```
-
-**Kullanılması gereken:** ⚠️ **EVET** - Stok uyarı sistemi için
-
-**Öncelik:** ORTA
+<!-- StockAlertController kullanıma alındı → Bu bölüm kaldırıldı -->
 
 ---
 
-#### 6. **PaymentController** - 11 endpoint
-```
-POST   /api/v1/payment
-GET    /api/v1/payment/{id}
-GET    /api/v1/payment/order/{orderId}
-POST   /api/v1/payment/{id}/collect
-POST   /api/v1/payment/{id}/verify
-... ve 6 tane daha
-```
-
-**Neden kullanılmıyor:** Portal'da PaymentService MOCK!
-
-**Kullanılması gereken:** ⚠️ **EVET - ACİL!** - Ödeme takibi kritik
-
-**Öncelik:** YÜKSEK
+<!-- PaymentController entegrasyonu ve endpoint düzeltmeleri tamamlandı → Bu bölüm kaldırıldı -->
 
 ---
 
@@ -323,16 +278,7 @@ Campaign sistemi mevcut ama kullanılmıyor.
 ## 🚨 ACİL EKLENMESİ GEREKENLER
 
 ### Priority 1 (YÜKSEK):
-1. **StockManagementController Integration** ❌
-   - Portal'da UI var ama API entegrasyonu YOK!
-   - `GET /api/stock-management/alerts` 
-   - `PUT /api/stock-management/bulk-update`
-   - `GET /api/stock-management/history/{productId}`
-
-2. **PaymentController Integration** ❌
-   - Portal'da MOCK servis kullanılıyor
-   - `GET /api/v1/payment/merchant/{merchantId}`
-   - Payment history, settlements gerçek olmalı
+<!-- Tüm kalemler tamamlandı → Priority 1 listesi boşaltıldı -->
 
 ### Priority 2 (ORTA):
 3. **MerchantDocumentController**
@@ -354,43 +300,11 @@ Campaign sistemi mevcut ama kullanılmıyor.
 
 ## 📋 DETAYLI CONTROLLER ANALİZİ
 
-### 🔴 StockManagementController (9 endpoints) - KULLANILMIYOR!
-
-| Endpoint | Method | Portal'da Kullanımı |
-|----------|--------|---------------------|
-| `/api/stock-management/update` | PUT | ❌ YOK |
-| `/api/stock-management/bulk-update` | PUT | ❌ YOK (UI var!) |
-| `/api/stock-management/history/{productId}` | GET | ❌ YOK (UI var!) |
-| `/api/stock-management/alerts` | GET | ❌ YOK (UI var!) |
-| `/api/stock-management/alerts/{id}/resolve` | POST | ❌ YOK |
-| `/api/stock-management/low-stock` | GET | ❌ YOK |
-| `/api/stock-management/out-of-stock` | GET | ❌ YOK |
-| `/api/stock-management/settings` | GET | ❌ YOK |
-| `/api/stock-management/settings` | PUT | ❌ YOK |
-
-**SORUN:** Portal'da `StockController` var, `StockService` var AMA backend'e bağlı değil!  
-**Çözüm:** StockService implementation'ı ekle.
+<!-- Detaylı StockManagement "kullanılmıyor" analizi kaldırıldı: entegrasyon tamam -->
 
 ---
 
-### 🔴 PaymentController (11 endpoints) - MOCK VERİ!
-
-| Endpoint | Method | Portal'da Kullanımı |
-|----------|--------|---------------------|
-| `/api/v1/payment` | POST | ❌ YOK |
-| `/api/v1/payment/{id}` | GET | ❌ YOK |
-| `/api/v1/payment/order/{orderId}` | GET | ❌ YOK |
-| `/api/v1/payment/merchant/{merchantId}` | GET | ❌ YOK (MOCK!) |
-| `/api/v1/payment/merchant/{merchantId}/pending` | GET | ❌ YOK |
-| `/api/v1/payment/{id}/collect` | POST | ❌ YOK |
-| `/api/v1/payment/{id}/verify` | POST | ❌ YOK |
-| `/api/v1/payment/{id}/refund` | POST | ❌ YOK |
-| `/api/v1/payment/merchant/{merchantId}/summary` | GET | ❌ YOK (MOCK!) |
-| `/api/v1/payment/merchant/{merchantId}/settlements` | GET | ❌ YOK (MOCK!) |
-| `/api/v1/payment/export` | POST | ❌ YOK |
-
-**SORUN:** Portal'da `PaymentService` var AMA mock data dönüyor!  
-**Çözüm:** PaymentService gerçek API'ye bağla.
+<!-- Detaylı PaymentController "mock veri" analizi kaldırıldı: entegrasyon ve route fix tamam -->
 
 ---
 
@@ -407,9 +321,7 @@ Campaign sistemi mevcut ama kullanılmıyor.
 
 ---
 
-### 🟡 ProductReviewController (7 endpoints) - KULLANILMIYOR
-
-Ürün bazlı review sistemi. Merchant'lar için yararlı ama kritik değil.
+<!-- ProductReviewController artık kullanılıyor → bu bölüm kaldırıldı -->
 
 ---
 
