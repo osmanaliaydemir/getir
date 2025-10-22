@@ -1,5 +1,6 @@
+@inject ILocalizationService LocalizationService
 @{
-    ViewData["Title"] = "Mutabakat Raporları";
+    ViewData["Title"] = LocalizationService.GetString("Settlements");
 }
 
 @section Styles {

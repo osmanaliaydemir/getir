@@ -1,6 +1,7 @@
+@inject ILocalizationService LocalizationService
 @model Getir.MerchantPortal.Models.ReviewDashboardModel
 @{
-    ViewData["Title"] = "Değerlendirme Dashboard";
+    ViewData["Title"] = LocalizationService.GetString("Review Dashboard");
 }
 
 <div class="container-fluid">

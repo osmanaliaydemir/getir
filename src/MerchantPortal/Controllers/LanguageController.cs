@@ -10,11 +10,11 @@ namespace Getir.MerchantPortal.Controllers;
 public class LanguageController : Controller
 {
     /// <summary>
-    /// Set user's preferred culture
+    /// Set user's preferred culture (supports both GET and POST)
     /// </summary>
     /// <param name="culture">Culture code (tr-TR, en-US, ar-SA)</param>
     /// <param name="returnUrl">URL to return after language change</param>
-    [HttpPost]
+    [HttpGet]
     public IActionResult SetLanguage(string culture, string? returnUrl = null)
     {
         // Validate culture
@@ -26,13 +26,13 @@ public class LanguageController : Controller
 
         // Set culture cookie
         Response.Cookies.Append(
-            CookieRequestCultureProvider.DefaultCookieName,
+            "MerchantPortal.Culture", // Use same cookie name as configured in Program.cs
             CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
             new CookieOptions
             {
                 Expires = DateTimeOffset.UtcNow.AddYears(1),
                 HttpOnly = true,
-                Secure = true,
+                Secure = false, // HTTP için false olmalı
                 SameSite = SameSiteMode.Lax,
                 IsEssential = true
             }

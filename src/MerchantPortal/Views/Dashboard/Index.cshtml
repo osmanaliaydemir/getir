@@ -1,7 +1,8 @@
-@inject IStringLocalizer<SharedResources> Localizer
+@inject ILocalizationService LocalizationService
 @using System.Globalization
+@using Getir.MerchantPortal.Services
 @{
-    ViewData["Title"] = Localizer["Dashboard"];
+    ViewData["Title"] = LocalizationService.GetString("Dashboard");
     var dashboard = ViewBag.Dashboard as MerchantDashboardResponse;
     var recentOrders = ViewBag.RecentOrders as List<RecentOrderResponse> ?? new List<RecentOrderResponse>();
     var topProducts = ViewBag.TopProducts as List<TopProductResponse> ?? new List<TopProductResponse>();
@@ -18,7 +19,7 @@
 <div class="alert alert-info alert-dismissible fade show" role="alert">
     <strong>🌐 Culture Debug:</strong> 
     Current UI Culture: <code>@currentCulture</code> | 
-    Localizer Test: <code>@Localizer["Dashboard"]</code> |
+    Localizer Test: <code>@LocalizationService.GetString("Dashboard")</code> |
     Expected: <code>Ana Sayfa</code>
     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 </div>
@@ -27,8 +28,8 @@
 <div class="quick-stats-banner fade-in mb-4">
     <div class="row align-items-center">
         <div class="col-md-8">
-            <h2><i class="fas fa-store me-2"></i>@Localizer["Welcome"], @User.Identity?.Name!</h2>
-            <p class="mb-0">@Localizer["TodayStats"]</p>
+            <h2><i class="fas fa-store me-2"></i>Hoş Geldiniz, @User.Identity?.Name!</h2>
+            <p class="mb-0">Bugünün İstatistikleri</p>
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0">
             <div class="d-flex align-items-center justify-content-md-end gap-2">

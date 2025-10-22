@@ -1,5 +1,6 @@
+@inject ILocalizationService LocalizationService
 @{
-    ViewData["Title"] = "Ödeme Raporları";
+    ViewData["Title"] = LocalizationService.GetString("PaymentReports");
 }
 
 @section Styles {

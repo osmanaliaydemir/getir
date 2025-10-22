@@ -1,6 +1,7 @@
+@inject ILocalizationService LocalizationService
 @model Getir.MerchantPortal.Models.PagedResult<Getir.MerchantPortal.Models.OrderResponse>
 @{
-    ViewData["Title"] = "Siparişler";
+    ViewData["Title"] = LocalizationService.GetString("Orders");
     var currentStatus = ViewBag.CurrentStatus as string;
 }
 
@@ -12,8 +13,8 @@
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-4 fade-in">
     <div>
-        <h2 class="mb-1"><i class="fas fa-shopping-cart me-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>Siparişlerim</h2>
-        <p class="text-muted mb-0">Tüm siparişlerinizi yönetin ve takip edin</p>
+        <h2 class="mb-1"><i class="fas fa-shopping-cart me-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>@LocalizationService.GetString("MyOrders")</h2>
+        <p class="text-muted mb-0">@LocalizationService.GetString("ManageAllOrders")</p>
     </div>
 </div>
 
@@ -22,25 +23,25 @@
     <div class="col-md-3">
         <div class="stats-card-mini">
             <span class="value" style="color: #fbbf24;">@(Model?.Items?.Count(o => o.Status == "Pending") ?? 0)</span>
-            <span class="label">Bekleyen</span>
+            <span class="label">@LocalizationService.GetString("Pending")</span>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stats-card-mini">
             <span class="value" style="color: #8b5cf6;">@(Model?.Items?.Count(o => o.Status == "Preparing") ?? 0)</span>
-            <span class="label">Hazırlanıyor</span>
+            <span class="label">@LocalizationService.GetString("Preparing")</span>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stats-card-mini">
             <span class="value" style="color: #10b981;">@(Model?.Items?.Count(o => o.Status == "Ready") ?? 0)</span>
-            <span class="label">Hazır</span>
+            <span class="label">@LocalizationService.GetString("Ready")</span>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stats-card-mini">
             <span class="value" style="color: #059669;">@(Model?.Items?.Count(o => o.Status == "Delivered") ?? 0)</span>
-            <span class="label">Teslim Edildi</span>
+            <span class="label">@LocalizationService.GetString("Delivered")</span>
         </div>
     </div>
 </div>
@@ -48,25 +49,25 @@
 <!-- Status Tabs -->
 <div class="d-flex gap-2 mb-4 flex-wrap fade-in" style="animation-delay: 0.2s;">
     <a href="@Url.Action("Index")" class="status-tab @(string.IsNullOrEmpty(currentStatus) ? "active" : "")">
-        <i class="fas fa-list me-2"></i>Tümü
+        <i class="fas fa-list me-2"></i>@LocalizationService.GetString("All")
     </a>
     <a href="@Url.Action("Index", new { status = "Pending" })" class="status-tab @(currentStatus == "Pending" ? "active" : "")">
-        <i class="fas fa-clock me-2"></i>Bekleyen
+        <i class="fas fa-clock me-2"></i>@LocalizationService.GetString("Pending")
     </a>
     <a href="@Url.Action("Index", new { status = "Confirmed" })" class="status-tab @(currentStatus == "Confirmed" ? "active" : "")">
-        <i class="fas fa-check me-2"></i>Onaylandı
+        <i class="fas fa-check me-2"></i>@LocalizationService.GetString("Confirmed")
     </a>
     <a href="@Url.Action("Index", new { status = "Preparing" })" class="status-tab @(currentStatus == "Preparing" ? "active" : "")">
-        <i class="fas fa-utensils me-2"></i>Hazırlanıyor
+        <i class="fas fa-utensils me-2"></i>@LocalizationService.GetString("Preparing")
     </a>
     <a href="@Url.Action("Index", new { status = "Ready" })" class="status-tab @(currentStatus == "Ready" ? "active" : "")">
-        <i class="fas fa-check-circle me-2"></i>Hazır
+        <i class="fas fa-check-circle me-2"></i>@LocalizationService.GetString("Ready")
     </a>
     <a href="@Url.Action("Index", new { status = "Delivered" })" class="status-tab @(currentStatus == "Delivered" ? "active" : "")">
-        <i class="fas fa-truck me-2"></i>Teslim Edildi
+        <i class="fas fa-truck me-2"></i>@LocalizationService.GetString("Delivered")
     </a>
     <a href="@Url.Action("Index", new { status = "Cancelled" })" class="status-tab @(currentStatus == "Cancelled" ? "active" : "")">
-        <i class="fas fa-times me-2"></i>İptal
+        <i class="fas fa-times me-2"></i>@LocalizationService.GetString("Cancelled")
     </a>
 </div>
 
@@ -91,12 +92,12 @@
 
         var statusText = order.Status switch
         {
-            "Pending" => "Bekliyor",
-            "Confirmed" => "Onaylandı",
-            "Preparing" => "Hazırlanıyor",
-            "Ready" => "Hazır",
-            "Delivered" => "Teslim Edildi",
-            "Cancelled" => "İptal",
+            "Pending" => LocalizationService.GetString("Pending"),
+            "Confirmed" => LocalizationService.GetString("Confirmed"),
+            "Preparing" => LocalizationService.GetString("Preparing"),
+            "Ready" => LocalizationService.GetString("Ready"),
+            "Delivered" => LocalizationService.GetString("Delivered"),
+            "Cancelled" => LocalizationService.GetString("Cancelled"),
             _ => order.Status
         };
         
@@ -148,12 +149,12 @@
                     {
                         <small class="badge" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #831843;">
                             <i class="fas fa-sticky-note me-1"></i>
-                            Not Var
+                            @LocalizationService.GetString("HasNote")
                         </small>
                     }
                 </div>
                 <a href="@Url.Action("Details", new { id = order.Id })" class="btn btn-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px;">
-                    <i class="fas fa-eye me-1"></i> Detay
+                    <i class="fas fa-eye me-1"></i> @LocalizationService.GetString("Details")
                 </a>
             </div>
         </div>
@@ -193,8 +194,8 @@ else
     <div class="text-center py-5 fade-in">
         <div class="chart-container-modern" style="max-width: 500px; margin: 0 auto;">
             <i class="fas fa-shopping-cart fa-5x text-muted mb-4"></i>
-            <h4 class="mb-3">@(string.IsNullOrEmpty(currentStatus) ? "Henüz Sipariş Yok" : $"{currentStatus} Sipariş Bulunamadı")</h4>
-            <p class="text-muted">@(string.IsNullOrEmpty(currentStatus) ? "İlk siparişiniz geldiğinde burada görünecek." : "Farklı bir filtre seçerek tekrar deneyin.")</p>
+            <h4 class="mb-3">@(string.IsNullOrEmpty(currentStatus) ? LocalizationService.GetString("NoOrdersYet") : $"{currentStatus} {LocalizationService.GetString("NoOrdersFound")}")</h4>
+            <p class="text-muted">@(string.IsNullOrEmpty(currentStatus) ? LocalizationService.GetString("FirstOrderWillAppear") : LocalizationService.GetString("TryDifferentFilter"))</p>
         </div>
     </div>
 }
@@ -218,12 +219,12 @@ else
     {
         return status switch
         {
-            "Pending" => "Bekliyor",
-            "Confirmed" => "Onaylandı",
-            "Preparing" => "Hazırlanıyor",
-            "Ready" => "Hazır",
-            "Delivered" => "Teslim Edildi",
-            "Cancelled" => "İptal",
+            "Pending" => LocalizationService.GetString("Pending"),
+            "Confirmed" => LocalizationService.GetString("Confirmed"),
+            "Preparing" => LocalizationService.GetString("Preparing"),
+            "Ready" => LocalizationService.GetString("Ready"),
+            "Delivered" => LocalizationService.GetString("Delivered"),
+            "Cancelled" => LocalizationService.GetString("Cancelled"),
             _ => status
         };
     }

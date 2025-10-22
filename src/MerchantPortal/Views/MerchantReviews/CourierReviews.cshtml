@@ -1,6 +1,7 @@
+@inject ILocalizationService LocalizationService
 @model List<Getir.MerchantPortal.Models.ReviewResponse>
 @{
-    ViewData["Title"] = "Kurye Değerlendirmeleri";
+    ViewData["Title"] = LocalizationService.GetString("Courier Reviews");
     var stats = ViewBag.Stats as Getir.MerchantPortal.Models.ReviewStatsResponse;
     var filter = ViewBag.Filter as Getir.MerchantPortal.Models.ReviewFilterModel;
 }

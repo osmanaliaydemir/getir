@@ -1,6 +1,7 @@
+@inject ILocalizationService LocalizationService
 @model Getir.MerchantPortal.Models.OrderDetailsResponse
 @{
-    ViewData["Title"] = "Sipariş Detayı";
+    ViewData["Title"] = LocalizationService.GetString("OrderDetails");
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">

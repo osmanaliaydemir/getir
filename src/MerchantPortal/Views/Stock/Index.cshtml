@@ -1,6 +1,7 @@
+@inject ILocalizationService LocalizationService
 @model List<ProductResponse>
 @{
-    ViewData["Title"] = "Stok Yönetimi";
+    ViewData["Title"] = LocalizationService.GetString("StockManagement");
 }
 
 <div class="container-fluid">

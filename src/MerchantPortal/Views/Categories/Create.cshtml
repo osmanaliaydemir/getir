@@ -1,6 +1,7 @@
+@inject ILocalizationService LocalizationService
 @model Getir.MerchantPortal.Models.CreateCategoryRequest
 @{
-    ViewData["Title"] = "Yeni Kategori Ekle";
+    ViewData["Title"] = LocalizationService.GetString("AddCategory");
     var categories = ViewBag.Categories as List<Getir.MerchantPortal.Models.ProductCategoryResponse> ?? new();
 }
 
@@ -8,7 +9,7 @@
     <div class="col-md-8 mx-auto">
         <div class="stat-card">
             <h4 class="mb-4">
-                <i class="fas fa-tags"></i> Yeni Kategori Ekle
+                <i class="fas fa-tags"></i> @LocalizationService.GetString("AddCategory")
             </h4>
 
             <form asp-action="Create" method="post">
@@ -17,11 +18,11 @@
 
                 <div class="mb-3">
                     <label asp-for="ParentCategoryId" class="form-label">
-                        Üst Kategori
-                        <small class="text-muted">(İsteğe bağlı - Ana kategori için boş bırakın)</small>
+                        @LocalizationService.GetString("ParentCategory")
+                        <small class="text-muted">(@LocalizationService.GetString("Optional"))</small>
                     </label>
                     <select asp-for="ParentCategoryId" class="form-select">
-                        <option value="">Ana Kategori (Üst kategori yok)</option>
+                        <option value="">@LocalizationService.GetString("ParentCategory")</option>
                         @foreach (var category in categories.Where(c => c.IsActive))
                         {
                             <option value="@category.Id">
@@ -45,13 +46,13 @@
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Name" class="form-label">Kategori Adı *</label>
+                    <label asp-for="Name" class="form-label">@LocalizationService.GetString("CategoryName") *</label>
                     <input asp-for="Name" class="form-control" placeholder="Örn: Meyve & Sebze, İçecekler, Kahvaltılık..." autofocus />
                     <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Description" class="form-label">Açıklama</label>
+                    <label asp-for="Description" class="form-label">@LocalizationService.GetString("Description")</label>
                     <textarea asp-for="Description" class="form-control" rows="3" placeholder="Kategori hakkında kısa bir açıklama..."></textarea>
                     <span asp-validation-for="Description" class="text-danger"></span>
                 </div>
@@ -96,10 +97,10 @@
 
                 <div class="d-flex justify-content-between mt-4">
                     <a href="@Url.Action("Index")" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Geri
+                        <i class="fas fa-arrow-left"></i> @LocalizationService.GetString("Back")
                     </a>
                     <button type="submit" class="btn btn-getir">
-                        <i class="fas fa-save"></i> Kategoriyi Kaydet
+                        <i class="fas fa-save"></i> @LocalizationService.GetString("Save")
                     </button>
                 </div>
             </form>

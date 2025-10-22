@@ -1,6 +1,7 @@
+@inject ILocalizationService LocalizationService
 @model Getir.MerchantPortal.Models.LoginRequest
 @{
-    ViewData["Title"] = "Giriş Yap";
+    ViewData["Title"] = LocalizationService.GetString("Login");
     Layout = "_Layout";
 }
 
@@ -14,8 +15,8 @@
             <div class="login-logo">
                 <i class="fas fa-store"></i>
             </div>
-            <h2>Getir Merchant Portal</h2>
-            <p class="mb-0">Mağaza yönetim paneline hoş geldiniz</p>
+            <h2>@LocalizationService.GetString("AppTitle")</h2>
+            <p class="mb-0">@LocalizationService.GetString("Welcome")</p>
         </div>
         <div class="login-body">
             <form asp-action="Login" method="post">
@@ -29,32 +30,26 @@
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
                 
                 <div class="mb-3">
-                    <label asp-for="Email" class="form-label">E-posta</label>
+                    <label asp-for="Email" class="form-label">@LocalizationService.GetString("Email")</label>
                     <input asp-for="Email" class="form-control" placeholder="ornek@email.com" autofocus />
                     <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
                 
                 <div class="mb-4">
-                    <label asp-for="Password" class="form-label">Şifre</label>
+                    <label asp-for="Password" class="form-label">@LocalizationService.GetString("Password")</label>
                     <input asp-for="Password" type="password" class="form-control" placeholder="••••••••" />
                     <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
                 
                 <button type="submit" id="loginBtn" class="btn btn-login">
                     <span class="btn-text">
-                        <i class="fas fa-sign-in-alt me-2"></i> Giriş Yap
+                        <i class="fas fa-sign-in-alt me-2"></i> @LocalizationService.GetString("Login")
                     </span>
                     <span class="btn-loading" style="display: none;">
                         <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Giriş yapılıyor...
+                        @LocalizationService.GetString("Loading")...
                     </span>
                 </button>
-                
-                <div class="text-center mt-3">
-                    <small class="text-muted">
-                        Hesabınız yok mu? <a href="#" class="text-decoration-none">Kayıt olun</a>
-                    </small>
-                </div>
             </form>
         </div>
     </div>

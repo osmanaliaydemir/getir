@@ -1,6 +1,7 @@
+@inject ILocalizationService LocalizationService
 @model Getir.MerchantPortal.Models.CreateProductRequest
 @{
-    ViewData["Title"] = "Yeni Ürün Ekle";
+    ViewData["Title"] = LocalizationService.GetString("AddProduct");
     var categories = ViewBag.Categories as List<Getir.MerchantPortal.Models.ProductCategoryResponse> ?? new();
 }
 

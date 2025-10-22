@@ -1,3 +1,4 @@
+@inject ILocalizationService LocalizationService
 @model Getir.MerchantPortal.Models.CategoryTreeNode
 @{
     var level = Model.Category.ParentCategoryId == null ? 0 : 

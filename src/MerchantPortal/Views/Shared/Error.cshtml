@@ -1,6 +1,7 @@
-﻿@model ErrorViewModel
+﻿@inject ILocalizationService LocalizationService
+@model ErrorViewModel
 @{
-    ViewData["Title"] = "Error";
+    ViewData["Title"] = LocalizationService.GetString("Error");
 }
 
 <h1 class="text-danger">Error.</h1>

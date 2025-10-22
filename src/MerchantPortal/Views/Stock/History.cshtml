@@ -1,6 +1,7 @@
+@inject ILocalizationService LocalizationService
 @model List<Getir.MerchantPortal.Models.StockHistoryResponse>
 @{
-    ViewData["Title"] = "Stok Geçmişi";
+    ViewData["Title"] = LocalizationService.GetString("StockHistory");
     var product = ViewBag.Product as Getir.MerchantPortal.Models.ProductResponse;
     var fromDate = ViewBag.FromDate as DateTime?;
     var toDate = ViewBag.ToDate as DateTime?;

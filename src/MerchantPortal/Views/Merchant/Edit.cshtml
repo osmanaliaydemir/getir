@@ -1,6 +1,7 @@
+@inject ILocalizationService LocalizationService
 @model Getir.MerchantPortal.Models.UpdateMerchantRequest
 @{
-    ViewData["Title"] = "Profil Düzenle";
+    ViewData["Title"] = LocalizationService.GetString("Profile");
     var merchantId = ViewBag.MerchantId as Guid?;
 }
 

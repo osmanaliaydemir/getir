@@ -1,8 +1,8 @@
-@using Microsoft.AspNetCore.Mvc.Localization
+@inject ILocalizationService LocalizationService
+@using Getir.MerchantPortal.Services
 @using System.Globalization
-@inject IViewLocalizer Localizer
 @{
-    ViewData["Title"] = Localizer["Access Denied"];
+    ViewData["Title"] = "Erişim Reddedildi";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -17,41 +17,44 @@
                     </div>
                     
                     <!-- Error Title -->
-                    <h1 class="h3 mb-3 text-gray-800">@Localizer["Access Denied"]</h1>
+                    <h1 class="h3 mb-3 text-gray-800">Erişim Reddedildi</h1>
                     
                     <!-- Error Message -->
                     <p class="text-gray-600 mb-4">
-                        @Localizer["You do not have permission to access this page. Please contact your system administrator."]
+                        Bu sayfaya erişim izniniz bulunmamaktadır. Lütfen sistem yöneticinizle iletişime geçin.
                     </p>
                     
                     <!-- Error Code -->
                     <div class="mb-4">
-                        <span class="badge bg-danger fs-6">@Localizer["Error Code: 403"]</span>
+                        <span class="badge bg-danger fs-6">Hata Kodu: 403</span>
                     </div>
                     
                     <!-- Action Buttons -->
                     <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
                         <a href="@Url.Action("Index", "Dashboard")" class="btn btn-primary">
-                            <i class="fas fa-home me-2"></i>@Localizer["Go to Homepage"]
+                            <i class="fas fa-home me-2"></i>Ana Sayfaya Dön
                         </a>
                         <a href="@Url.Action("Login", "Auth")" class="btn btn-outline-secondary">
-                            <i class="fas fa-sign-in-alt me-2"></i>@Localizer["Login Again"]
+                            <i class="fas fa-sign-in-alt me-2"></i>Tekrar Giriş Yap
                         </a>
                         <button onclick="history.back()" class="btn btn-outline-info">
-                            <i class="fas fa-arrow-left me-2"></i>@Localizer["Go Back"]
+                            <i class="fas fa-arrow-left me-2"></i>Geri Dön
                         </button>
                     </div>
                     
                     <!-- Language Switcher -->
                     <div class="mt-3">
                         <div class="btn-group" role="group">
-                            <a href="?culture=tr-TR" class="btn btn-sm btn-outline-primary @(CultureInfo.CurrentCulture.Name == "tr-TR" ? "active" : "")">
+                            <a href="@Url.Action("SetLanguage", "Language", new { culture = "tr-TR", returnUrl = Context.Request.Path })" 
+                               class="btn btn-sm btn-outline-primary @(CultureInfo.CurrentCulture.Name == "tr-TR" ? "active" : "")">
                                 🇹🇷 Türkçe
                             </a>
-                            <a href="?culture=en-US" class="btn btn-sm btn-outline-primary @(CultureInfo.CurrentCulture.Name == "en-US" ? "active" : "")">
+                            <a href="@Url.Action("SetLanguage", "Language", new { culture = "en-US", returnUrl = Context.Request.Path })" 
+                               class="btn btn-sm btn-outline-primary @(CultureInfo.CurrentCulture.Name == "en-US" ? "active" : "")">
                                 🇺🇸 English
                             </a>
-                            <a href="?culture=ar-SA" class="btn btn-sm btn-outline-primary @(CultureInfo.CurrentCulture.Name == "ar-SA" ? "active" : "")">
+                            <a href="@Url.Action("SetLanguage", "Language", new { culture = "ar-SA", returnUrl = Context.Request.Path })" 
+                               class="btn btn-sm btn-outline-primary @(CultureInfo.CurrentCulture.Name == "ar-SA" ? "active" : "")">
                                 🇸🇦 العربية
                             </a>
                         </div>
@@ -60,8 +63,7 @@
                     <!-- Help Text -->
                     <div class="mt-4">
                         <small class="text-muted">
-                            @Localizer["If the problem persists, please contact our"] 
-                            <a href="mailto:support@getir.com" class="text-decoration-none">@Localizer["support team"]</a>.
+                            Sorun devam ederse lütfen <a href="mailto:support@getir.com" class="text-decoration-none">destek ekibimizle</a> iletişime geçin.
                         </small>
                     </div>
                 </div>
@@ -71,26 +73,26 @@
             <div class="card shadow mt-4">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-info-circle me-2"></i>@Localizer["Why am I getting this error?"]
+                        <i class="fas fa-info-circle me-2"></i>Neden bu hatayı alıyorum?
                     </h6>
                 </div>
                 <div class="card-body">
                     <ul class="list-unstyled mb-0">
                         <li class="mb-2">
                             <i class="fas fa-check text-success me-2"></i>
-                            @Localizer["You may not have the required permissions to access this page"]
+                            Bu sayfaya erişim için gerekli izinlere sahip olmayabilirsiniz
                         </li>
                         <li class="mb-2">
                             <i class="fas fa-check text-success me-2"></i>
-                            @Localizer["Your session may have expired"]
+                            Oturumunuzun süresi dolmuş olabilir
                         </li>
                         <li class="mb-2">
                             <i class="fas fa-check text-success me-2"></i>
-                            @Localizer["Your account may be temporarily restricted"]
+                            Hesabınız geçici olarak kısıtlanmış olabilir
                         </li>
                         <li class="mb-0">
                             <i class="fas fa-check text-success me-2"></i>
-                            @Localizer["The system may be in maintenance mode"]
+                            Sistem bakım modunda olabilir
                         </li>
                     </ul>
                 </div>
@@ -110,12 +112,12 @@
         let countdown = 30;
         const countdownElement = document.createElement('div');
         countdownElement.className = 'mt-3 text-muted';
-        countdownElement.innerHTML = `<small>${countdown} @Localizer["seconds until redirecting to homepage..."]</small>`;
+        countdownElement.innerHTML = `<small>${countdown} saniye sonra ana sayfaya yönlendirileceksiniz...</small>`;
         document.querySelector('.card-body').appendChild(countdownElement);
         
         const timer = setInterval(function() {
             countdown--;
-            countdownElement.innerHTML = `<small>${countdown} @Localizer["seconds until redirecting to homepage..."]</small>`;
+            countdownElement.innerHTML = `<small>${countdown} saniye sonra ana sayfaya yönlendirileceksiniz...</small>`;
             
             if (countdown <= 0) {
                 clearInterval(timer);

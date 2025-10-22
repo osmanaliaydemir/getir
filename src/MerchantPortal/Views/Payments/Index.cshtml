@@ -1,5 +1,6 @@
+@inject ILocalizationService LocalizationService
 @{
-    ViewData["Title"] = "Ödeme Geçmişi";
+    ViewData["Title"] = LocalizationService.GetString("PaymentHistory");
 }
 
 @section Styles {

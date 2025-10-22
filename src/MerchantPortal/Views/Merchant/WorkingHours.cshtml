@@ -1,6 +1,7 @@
+@inject ILocalizationService LocalizationService
 @model List<Getir.MerchantPortal.Models.WorkingHoursResponse>
 @{
-    ViewData["Title"] = "Çalışma Saatleri";
+    ViewData["Title"] = LocalizationService.GetString("WorkingHours");
     var merchantId = ViewBag.MerchantId as Guid?;
 }
 

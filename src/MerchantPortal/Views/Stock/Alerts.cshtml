@@ -1,6 +1,7 @@
+@inject ILocalizationService LocalizationService
 @model List<Getir.MerchantPortal.Models.StockAlertResponse>
 @{
-    ViewData["Title"] = "Stok Uyarıları";
+    ViewData["Title"] = LocalizationService.GetString("StockAlerts");
 }
 
 @section Styles {

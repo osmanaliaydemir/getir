@@ -1,10 +1,8 @@
 using Getir.MerchantPortal.Middleware;
 using Getir.MerchantPortal.Services;
-using Getir.MerchantPortal.Resources;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Localization;
-using Microsoft.Extensions.Localization;
 using System.Globalization;
 using Serilog;
 
@@ -33,13 +31,7 @@ builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "Keys")))
     .SetApplicationName("GetirMerchantPortal");
 
-// Localization
-builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
-
-// Add specific resource localization
-builder.Services.AddScoped<IStringLocalizer<SharedResources>, StringLocalizer<SharedResources>>();
-
-// Configure supported cultures
+// Simple Localization
 var supportedCultures = new[]
 {
     new CultureInfo("tr-TR"), // Türkçe (Default)
@@ -53,7 +45,7 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     options.SupportedCultures = supportedCultures;
     options.SupportedUICultures = supportedCultures;
     
-    // Cookie-based culture provider (priority)
+    // Cookie-based culture provider
     options.RequestCultureProviders.Insert(0, new CookieRequestCultureProvider
     {
         CookieName = "MerchantPortal.Culture"
@@ -61,9 +53,7 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 });
 
 // Add services to the container
-builder.Services.AddControllersWithViews()
-    .AddViewLocalization() // View localization
-    .AddDataAnnotationsLocalization(); // Data annotation localization
+builder.Services.AddControllersWithViews();
 
 // Session
 builder.Services.AddSession(options =>
@@ -132,6 +122,9 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddSingleton<ISignalRService, SignalRService>();
 builder.Services.AddScoped<ISettingsService, SettingsService>();
 
+// Simple JSON-based Localization Service
+builder.Services.AddSingleton<ILocalizationService, LocalizationService>();
+
 // Settings
 builder.Services.AddSingleton(apiSettings);
 
@@ -149,6 +142,16 @@ app.UseStaticFiles();
 
 // 🌐 Use Request Localization (before routing!)
 app.UseRequestLocalization();
+
+// 🌐 Use Custom Culture Middleware (after localization, before routing)
+app.UseCultureMiddleware();
+
+// Load translations on startup
+using (var scope = app.Services.CreateScope())
+{
+    var localizationService = scope.ServiceProvider.GetRequiredService<ILocalizationService>();
+    await localizationService.LoadTranslationsAsync();
+}
 
 app.UseRouting();
 

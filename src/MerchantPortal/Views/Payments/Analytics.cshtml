@@ -1,6 +1,7 @@
+@inject ILocalizationService LocalizationService
 @model Getir.MerchantPortal.Models.PaymentStatisticsResponse
 @{
-    ViewData["Title"] = "Gelir Analizi";
+    ViewData["Title"] = LocalizationService.GetString("PaymentAnalytics");
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">

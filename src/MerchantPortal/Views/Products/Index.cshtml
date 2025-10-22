@@ -1,6 +1,7 @@
+@inject ILocalizationService LocalizationService
 @model Getir.MerchantPortal.Models.PagedResult<Getir.MerchantPortal.Models.ProductResponse>
 @{
-    ViewData["Title"] = "Ürünler";
+    ViewData["Title"] = LocalizationService.GetString("Products");
 }
 
 @section Styles {
@@ -11,15 +12,15 @@
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-4 fade-in">
     <div>
-        <h2 class="mb-1"><i class="fas fa-box-open me-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>Ürünlerim</h2>
-        <p class="text-muted mb-0">Tüm ürünlerinizi yönetin</p>
+        <h2 class="mb-1"><i class="fas fa-box-open me-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>@LocalizationService.GetString("ProductList")</h2>
+        <p class="text-muted mb-0">@LocalizationService.GetString("Products")</p>
     </div>
     <div class="d-flex gap-2">
         <button type="button" class="btn btn-lg btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bulkStockModal" style="border-radius: 12px; padding: 0.75rem 1.5rem;">
             <i class="fas fa-boxes me-2"></i> Toplu Stok Güncelle
         </button>
     <a href="@Url.Action("Create")" class="btn btn-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; padding: 0.75rem 1.5rem; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);">
-        <i class="fas fa-plus me-2"></i> Yeni Ürün Ekle
+        <i class="fas fa-plus me-2"></i> @LocalizationService.GetString("AddProduct")
     </a>
     </div>
 </div>
@@ -28,11 +29,11 @@
 <div class="search-filter-bar fade-in" style="animation-delay: 0.1s;">
     <div class="row g-3 align-items-end">
         <div class="col-md-4">
-            <label class="form-label fw-semibold"><i class="fas fa-search me-2"></i>Ürün Ara</label>
-            <input type="text" class="form-control" placeholder="Ürün adı, açıklama..." style="border-radius: 10px; border: 2px solid #e5e7eb;">
+            <label class="form-label fw-semibold"><i class="fas fa-search me-2"></i>@LocalizationService.GetString("Search")</label>
+            <input type="text" class="form-control" placeholder="@LocalizationService.GetString("ProductName")..." style="border-radius: 10px; border: 2px solid #e5e7eb;">
         </div>
         <div class="col-md-3">
-            <label class="form-label fw-semibold"><i class="fas fa-tag me-2"></i>Kategori</label>
+            <label class="form-label fw-semibold"><i class="fas fa-tag me-2"></i>@LocalizationService.GetString("Category")</label>
             <select class="form-select" style="border-radius: 10px; border: 2px solid #e5e7eb;">
                 <option>Tüm Kategoriler</option>
                 <option>Gıda</option>
@@ -41,7 +42,7 @@
             </select>
         </div>
         <div class="col-md-3">
-            <label class="form-label fw-semibold"><i class="fas fa-filter me-2"></i>Durum</label>
+            <label class="form-label fw-semibold"><i class="fas fa-filter me-2"></i>@LocalizationService.GetString("Status")</label>
             <select class="form-select" style="border-radius: 10px; border: 2px solid #e5e7eb;">
                 <option>Tümü</option>
                 <option>Aktif</option>

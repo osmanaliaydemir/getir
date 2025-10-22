@@ -1,5 +1,6 @@
+@inject ILocalizationService LocalizationService
 @{
-    ViewData["Title"] = "Bildirim Tercihleri";
+    ViewData["Title"] = LocalizationService.GetString("Notifications");
 }
 
 @section Styles {

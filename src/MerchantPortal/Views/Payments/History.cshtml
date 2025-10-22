@@ -1,6 +1,7 @@
+@inject ILocalizationService LocalizationService
 @model Getir.MerchantPortal.Models.MerchantCashSummaryResponse
 @{
-    ViewData["Title"] = "Ödeme Geçmişi";
+    ViewData["Title"] = LocalizationService.GetString("PaymentHistory");
     var startDate = ViewBag.StartDate as DateTime?;
     var endDate = ViewBag.EndDate as DateTime?;
 }

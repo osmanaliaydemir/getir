@@ -1,6 +1,7 @@
+@inject ILocalizationService LocalizationService
 @model Getir.MerchantPortal.Models.UpdateCategoryRequest
 @{
-    ViewData["Title"] = "Kategori Düzenle";
+    ViewData["Title"] = LocalizationService.GetString("EditCategory");
     var categories = ViewBag.Categories as List<Getir.MerchantPortal.Models.ProductCategoryResponse> ?? new();
 }
 

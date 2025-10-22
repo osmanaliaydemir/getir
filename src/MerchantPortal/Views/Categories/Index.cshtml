@@ -1,6 +1,7 @@
+@inject ILocalizationService LocalizationService
 @model List<Getir.MerchantPortal.Models.CategoryTreeNode>
 @{
-    ViewData["Title"] = "Kategoriler";
+    ViewData["Title"] = LocalizationService.GetString("Categories");
     var allCategories = ViewBag.AllCategories as List<Getir.MerchantPortal.Models.ProductCategoryResponse> ?? new();
 }
 
@@ -11,23 +12,23 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h3><i class="fas fa-tags"></i> Kategoriler</h3>
+        <h3><i class="fas fa-tags"></i> @LocalizationService.GetString("Categories")</h3>
         <p class="text-muted mb-0" id="reorderHint" style="display: none;">
-            <i class="fas fa-arrows-alt-v me-2"></i>Kategorileri sürükleyerek sıralayın
+            <i class="fas fa-arrows-alt-v me-2"></i>@LocalizationService.GetString("Categories")
         </p>
     </div>
     <div class="d-flex gap-2">
         <button type="button" class="btn btn-outline-primary" id="toggleReorderBtn">
-            <i class="fas fa-arrows-alt-v"></i> Sırala
+            <i class="fas fa-arrows-alt-v"></i> @LocalizationService.GetString("Filter")
         </button>
         <button type="button" class="btn btn-success" id="saveOrderBtn" style="display: none;">
-            <i class="fas fa-save"></i> Sıralamayı Kaydet
+            <i class="fas fa-save"></i> @LocalizationService.GetString("Save")
         </button>
         <button type="button" class="btn btn-secondary" id="cancelOrderBtn" style="display: none;">
-            <i class="fas fa-times"></i> İptal
+            <i class="fas fa-times"></i> @LocalizationService.GetString("Cancel")
         </button>
         <a href="@Url.Action("Create")" class="btn btn-getir">
-            <i class="fas fa-plus"></i> Yeni Kategori Ekle
+            <i class="fas fa-plus"></i> @LocalizationService.GetString("AddCategory")
         </a>
     </div>
 </div>
@@ -36,7 +37,7 @@
     <div class="col-md-8">
         <div class="stat-card">
             <h5 class="mb-3">
-                <i class="fas fa-sitemap"></i> Kategori Ağacı
+                <i class="fas fa-sitemap"></i> @LocalizationService.GetString("CategoryList")
             </h5>
             
             @if (Model != null && Model.Any())
@@ -51,11 +52,10 @@
             else
             {
                 <div class="text-center py-5">
-                    <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
-                    <h5 class="text-muted">Henüz kategori eklemediniz</h5>
-                    <p class="text-muted">Ürünlerinizi organize etmek için kategori oluşturun</p>
-                    <a href="@Url.Action("Create")" class="btn btn-getir mt-3">
-                        <i class="fas fa-plus"></i> İlk Kategoriyi Ekle
+                    <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">@LocalizationService.GetString("NoData")</p>
+                    <a href="@Url.Action("Create")" class="btn btn-getir">
+                        <i class="fas fa-plus me-2"></i>@LocalizationService.GetString("AddCategory")
                     </a>
                 </div>
             }
@@ -65,69 +65,20 @@
     <div class="col-md-4">
         <div class="stat-card">
             <h5 class="mb-3">
-                <i class="fas fa-info-circle"></i> İstatistikler
+                <i class="fas fa-chart-bar"></i> @LocalizationService.GetString("Stats")
             </h5>
-            
-            <div class="mb-3">
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted">Toplam Kategori</span>
-                    <strong>@allCategories.Count</strong>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted">Ana Kategoriler</span>
-                    <strong>@allCategories.Count(c => c.ParentCategoryId == null)</strong>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted">Alt Kategoriler</span>
-                    <strong>@allCategories.Count(c => c.ParentCategoryId != null)</strong>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted">Aktif Kategoriler</span>
-                    <strong>@allCategories.Count(c => c.IsActive)</strong>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <span class="text-muted">Toplam Ürün</span>
-                    <strong>@allCategories.Sum(c => c.ProductCount)</strong>
-                </div>
+            <div class="stat-item">
+                <span class="stat-label">@LocalizationService.GetString("Total"):</span>
+                <span class="stat-value">@allCategories.Count</span>
             </div>
-            
-            <hr />
-            
-            <h6 class="mb-3">En Çok Ürünlü Kategoriler</h6>
-            @foreach (var category in allCategories.OrderByDescending(c => c.ProductCount).Take(5))
-            {
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div>
-                        <i class="fas fa-folder text-muted"></i>
-                        <span class="ms-2">@category.Name</span>
-                    </div>
-                    <span class="badge bg-primary">@category.ProductCount</span>
-                </div>
-            }
-        </div>
-        
-        <div class="stat-card mt-3">
-            <h6 class="mb-3">
-                <i class="fas fa-lightbulb"></i> İpuçları
-            </h6>
-            <ul class="small text-muted mb-0" style="list-style: none; padding-left: 0;">
-                <li class="mb-2">
-                    <i class="fas fa-check text-success"></i>
-                    Kategorileri mantıklı bir hiyerarşi ile düzenleyin
-                </li>
-                <li class="mb-2">
-                    <i class="fas fa-check text-success"></i>
-                    Her ürünü uygun kategoriye atayın
-                </li>
-                <li class="mb-2">
-                    <i class="fas fa-check text-success"></i>
-                    Kategori isimlerini kısa ve açık tutun
-                </li>
-                <li class="mb-2">
-                    <i class="fas fa-check text-success"></i>
-                    Kullanılmayan kategorileri silebilirsiniz
-                </li>
-            </ul>
+            <div class="stat-item">
+                <span class="stat-label">@LocalizationService.GetString("Active"):</span>
+                <span class="stat-value text-success">@allCategories.Count(c => c.IsActive)</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">@LocalizationService.GetString("Inactive"):</span>
+                <span class="stat-value text-muted">@allCategories.Count(c => !c.IsActive)</span>
+            </div>
         </div>
     </div>
 </div>
@@ -135,4 +86,3 @@
 @section Scripts {
     <script src="~/js/modules/categories/categories.js" asp-append-version="true"></script>
 }
-

@@ -13,35 +13,4 @@
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <!-- Disable default embedded resource items to avoid duplicates -->
-    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <!-- Explicitly include .resx files as EmbeddedResource -->
-    <EmbeddedResource Include="Resources\SharedResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>SharedResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\SharedResources.tr.resx">
-      <DependentUpon>SharedResources.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\SharedResources.en.resx">
-      <DependentUpon>SharedResources.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\SharedResources.ar.resx">
-      <DependentUpon>SharedResources.resx</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- Compile generated designer files -->
-    <Compile Update="Resources\**\*.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>%(Filename)</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
 </Project>

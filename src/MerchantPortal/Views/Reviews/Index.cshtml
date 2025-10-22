@@ -1,5 +1,6 @@
+@inject ILocalizationService LocalizationService
 @{
-    ViewData["Title"] = "Ürün Yorumları";
+    ViewData["Title"] = LocalizationService.GetString("Product Reviews");
     var reviews = ViewBag.Reviews as PagedResult<ProductReviewResponse>;
     var stats = ViewBag.Stats as ProductReviewStatsResponse;
     var currentPage = ViewBag.CurrentPage as int? ?? 1;
