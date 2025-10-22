@@ -299,6 +299,37 @@
                 <a href="@Url.Action("Index", "Payments")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Payments" ? "active" : "")">
                     <i class="fas fa-money-bill-wave"></i> @LocalizationService.GetString("Payments")
                 </a>
+                
+                <!-- Reports & Analytics Dropdown Menu -->
+                <div class="dropdown-menu-item">
+                    <a href="#" class="dropdown-toggle @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" ? "active" : "")" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-chart-line"></i> @LocalizationService.GetString("Reports & Analytics")
+                        <i class="fas fa-chevron-down ms-auto"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li>
+                            <a href="@Url.Action("Dashboard", "Reports")" class="dropdown-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")">
+                                <i class="fas fa-chart-bar me-2"></i> @LocalizationService.GetString("Sales Dashboard")
+                            </a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("Revenue", "Reports")" class="dropdown-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["Action"]?.ToString() == "Revenue" ? "active" : "")">
+                                <i class="fas fa-chart-line me-2"></i> @LocalizationService.GetString("Revenue Analytics")
+                            </a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("Customers", "Reports")" class="dropdown-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["Action"]?.ToString() == "Customers" ? "active" : "")">
+                                <i class="fas fa-users me-2"></i> @LocalizationService.GetString("Customer Analytics")
+                            </a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("Products", "Reports")" class="dropdown-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["Action"]?.ToString() == "Products" ? "active" : "")">
+                                <i class="fas fa-box me-2"></i> @LocalizationService.GetString("Product Performance")
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
                 <a href="@Url.Action("Index", "Stock")">
                     <i class="fas fa-cubes"></i> @LocalizationService.GetString("Stock")
                 </a>

@@ -20,6 +20,26 @@ public class StockController : Controller
     }
 
     /// <summary>
+    /// Stock index page - main stock management
+    /// </summary>
+    public async Task<IActionResult> Index()
+    {
+        var merchantIdStr = HttpContext.Session.GetString("MerchantId");
+        if (string.IsNullOrEmpty(merchantIdStr) || !Guid.TryParse(merchantIdStr, out var merchantId))
+        {
+            TempData["Error"] = "Merchant not found";
+            return RedirectToAction("Index", "Home");
+        }
+
+        var products = await _productService.GetProductsByMerchantAsync(merchantId);
+        var stockAlerts = await _stockService.GetStockAlertsAsync();
+        
+        ViewBag.StockAlerts = stockAlerts ?? new List<StockAlertResponse>();
+        
+        return View(products ?? new List<ProductResponse>());
+    }
+
+    /// <summary>
     /// Stock alerts page
     /// </summary>
     public async Task<IActionResult> Alerts()

@@ -22,7 +22,7 @@ public interface IPaymentService
     /// <summary>
     /// Gets revenue analytics
     /// </summary>
-    Task<RevenueAnalyticsModel> GetRevenueAnalyticsAsync(Guid merchantId);
+    Task<RevenueAnalyticsModel> GetRevenueAnalyticsAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null);
 
     /// <summary>
     /// Gets payment method breakdown
@@ -38,4 +38,9 @@ public interface IPaymentService
     /// Exports payments to PDF
     /// </summary>
     Task<byte[]> ExportToPdfAsync(Guid merchantId, PaymentExportRequest request);
+
+    /// <summary>
+    /// Gets merchant settlements from API
+    /// </summary>
+    Task<List<SettlementResponse>> GetMerchantSettlementsAsync(Guid merchantId, int page = 1, int pageSize = 50);
 }

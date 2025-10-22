@@ -83,6 +83,21 @@ public interface IStockService
     Task<byte[]> ExportStockToCsvAsync(Guid merchantId, CancellationToken ct = default);
 
     /// <summary>
+    /// Stok raporu oluşturur (backend report endpoint'i üzerinden).
+    /// </summary>
+    Task<StockReportResponse?> GetStockReportAsync(StockReportRequest request, CancellationToken ct = default);
+
+    /// <summary>
+    /// Stok senkronizasyonu başlatır (external systems) – admin/owner yetkisi gerekir.
+    /// </summary>
+    Task<bool> SynchronizeStockAsync(Guid merchantId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Stok uyarılarını kontrol eder ve oluşturur (low/out/overstock) – backend check-alerts akışı.
+    /// </summary>
+    Task<bool> CheckStockAlertsAsync(Guid merchantId, CancellationToken ct = default);
+
+    /// <summary>
     /// Reorder point ayarlarını getirir.
     /// </summary>
     Task<List<ReorderPointModel>> GetReorderPointsAsync(Guid merchantId, CancellationToken ct = default);

@@ -25,12 +25,8 @@ public class UserController : BaseController
     private readonly IOrderService _orderService;
     private readonly IFavoritesService _favoritesService;
 
-    public UserController(
-        IUserAddressService userAddressService,
-        IAuthService authService,
-        IUserPreferencesService userPreferencesService,
-        IOrderService orderService,
-        IFavoritesService favoritesService)
+    public UserController(IUserAddressService userAddressService, IAuthService authService, IUserPreferencesService userPreferencesService,
+        IOrderService orderService, IFavoritesService favoritesService)
     {
         _userAddressService = userAddressService;
         _authService = authService;
@@ -362,12 +358,12 @@ public class UserController : BaseController
         }
 
         var originalOrder = originalOrderResult.Value!;
-        
+
         if (originalOrder.Items.Count == 0)
         {
             return BadRequest("Original order has no items");
         }
-        
+
         // Create reorder request from original order
         var createRequest = new CreateOrderRequest(
             MerchantId: originalOrder.MerchantId,

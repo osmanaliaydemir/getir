@@ -186,6 +186,11 @@ public class AppDbContext : DbContext
                 .HasForeignKey(e => e.MerchantId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            entity.HasOne(e => e.ServiceCategory)
+                .WithMany()
+                .HasForeignKey(e => e.ServiceCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasOne(e => e.ParentCategory)
                 .WithMany(c => c.SubCategories)
                 .HasForeignKey(e => e.ParentCategoryId)

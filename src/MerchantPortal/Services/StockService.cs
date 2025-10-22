@@ -206,17 +206,100 @@ public class StockService : IStockService
     }
 
     /// <summary>
+    /// Backend report endpoint'i üzerinden stok raporu alır.
+    /// </summary>
+    public async Task<StockReportResponse?> GetStockReportAsync(StockReportRequest request, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _apiClient.PostAsync<ApiResponse<StockReportResponse>>(
+                "api/StockManagement/report",
+                request,
+                ct);
+
+            return response?.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting stock report");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Backend sync endpoint'i üzerinden stok senkronizasyonu başlatır.
+    /// </summary>
+    public async Task<bool> SynchronizeStockAsync(Guid merchantId, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _apiClient.PostAsync<ApiResponse<object>>(
+                $"api/StockManagement/sync/{merchantId}",
+                null,
+                ct);
+
+            return response?.isSuccess == true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error synchronizing stock for merchant {MerchantId}", merchantId);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Backend check-alerts akışını tetikler (JWT/role ile korunur).
+    /// </summary>
+    public async Task<bool> CheckStockAlertsAsync(Guid merchantId, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _apiClient.PostAsync<ApiResponse<object>>(
+                $"api/StockManagement/check-alerts/{merchantId}",
+                null,
+                ct);
+
+            return response?.isSuccess == true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking stock alerts for merchant {MerchantId}", merchantId);
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Düşük stoklu ürünleri getirir.
     /// </summary>
     public async Task<List<LowStockProductModel>> GetLowStockProductsAsync(Guid merchantId, int threshold = 10, CancellationToken ct = default)
     {
         try
         {
-            var response = await _apiClient.GetAsync<ApiResponse<List<LowStockProductModel>>>(
-                $"api/StockManagement/low-stock?threshold={threshold}",
+            // Derive from alerts since low-stock endpoint doesn't exist on backend
+            var alertsResponse = await _apiClient.GetAsync<ApiResponse<List<StockAlertResponse>>>(
+                "api/StockManagement/alerts",
                 ct);
 
-            return response?.Data ?? new List<LowStockProductModel>();
+            var alerts = alertsResponse?.Data ?? new List<StockAlertResponse>();
+
+            var lowOrOut = alerts
+                .Where(a => (a.AlertType == "LowStock" || a.AlertType == "OutOfStock") && !a.IsResolved)
+                .GroupBy(a => a.ProductId)
+                .Select(g => new LowStockProductModel
+                {
+                    ProductId = g.Key,
+                    ProductName = g.First().ProductName,
+                    SKU = string.Empty,
+                    ImageUrl = null,
+                    CurrentStock = g.Max(x => x.CurrentStock),
+                    MinStock = g.Max(x => x.MinimumStock),
+                    MaxStock = g.Max(x => x.MaximumStock),
+                    UnitPrice = 0,
+                    Status = g.Any(x => x.AlertType == "OutOfStock") ? "Critical" : "Low"
+                })
+                .ToList();
+
+            return lowOrOut;
         }
         catch (Exception ex)
         {
@@ -349,20 +432,9 @@ public class StockService : IStockService
     /// </summary>
     public async Task<bool> SetReorderPointAsync(Guid productId, int minStock, int maxStock, CancellationToken ct = default)
     {
-        try
-        {
-            var response = await _apiClient.PutAsync<ApiResponse<object>>(
-                $"api/StockManagement/reorder-point/{productId}",
-                new { MinStock = minStock, MaxStock = maxStock },
-                ct);
-
-            return response?.isSuccess == true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error setting reorder point");
-            return false;
-        }
+        // Backend'de reorder-point uçları yok; şimdilik desteklenmiyor.
+        _logger.LogWarning("SetReorderPointAsync is not supported by backend API");
+        return false;
     }
 
     /// <summary>
@@ -370,19 +442,9 @@ public class StockService : IStockService
     /// </summary>
     public async Task<List<ReorderPointModel>> GetReorderPointsAsync(Guid merchantId, CancellationToken ct = default)
     {
-        try
-        {
-            var response = await _apiClient.GetAsync<ApiResponse<List<ReorderPointModel>>>(
-                "api/StockManagement/reorder-points",
-                ct);
-
-            return response?.Data ?? new List<ReorderPointModel>();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting reorder points");
-            return new List<ReorderPointModel>();
-        }
+        // Backend'de reorder-points uçları yok; şimdilik boş liste dön.
+        _logger.LogWarning("GetReorderPointsAsync is not supported by backend API");
+        return new List<ReorderPointModel>();
     }
 
     private string EscapeCsv(string value)

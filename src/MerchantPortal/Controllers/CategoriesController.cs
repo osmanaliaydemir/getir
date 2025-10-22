@@ -22,12 +22,17 @@ public class CategoriesController : Controller
     /// </summary>
     public async Task<IActionResult> Index()
     {
-        var categoryTree = await _categoryService.GetCategoryTreeAsync();
-        var allCategories = await _categoryService.GetMyCategoriesAsync();
+        // Standart kategorileri getir (ServiceCategory bazlı)
+        var standardCategories = await _categoryService.GetStandardCategoriesAsync();
         
-        ViewBag.AllCategories = allCategories ?? new();
+        // Merchant'ın özel kategorilerini getir
+        var customCategories = await _categoryService.GetMyCategoriesAsync();
         
-        return View(categoryTree ?? new());
+        ViewBag.StandardCategories = standardCategories ?? new();
+        ViewBag.CustomCategories = customCategories ?? new();
+        ViewBag.IsAdmin = IsAdminUser();
+        
+        return View();
     }
 
     /// <summary>
@@ -85,6 +90,13 @@ public class CategoriesController : Controller
             return NotFound();
         }
 
+        // Standart kategorileri düzenleyemez (admin hariç)
+        if (category.MerchantId == null && !IsAdminUser())
+        {
+            TempData["ErrorMessage"] = "Standart kategoriler düzenlenemez";
+            return RedirectToAction(nameof(Index));
+        }
+
         var categories = await _categoryService.GetMyCategoriesAsync();
         // Exclude current category and its descendants to prevent circular reference
         ViewBag.Categories = categories?.Where(c => c.Id != id).ToList() ?? new();
@@ -140,6 +152,21 @@ public class CategoriesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(Guid id)
     {
+        var category = await _categoryService.GetCategoryByIdAsync(id);
+        
+        if (category == null)
+        {
+            TempData["ErrorMessage"] = "Kategori bulunamadı";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Standart kategorileri silemez (admin hariç)
+        if (category.MerchantId == null && !IsAdminUser())
+        {
+            TempData["ErrorMessage"] = "Standart kategoriler silinemez";
+            return RedirectToAction(nameof(Index));
+        }
+
         var result = await _categoryService.DeleteCategoryAsync(id);
 
         if (result)
@@ -152,6 +179,16 @@ public class CategoriesController : Controller
         }
 
         return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>
+    /// Kullanıcının admin olup olmadığını kontrol eder.
+    /// </summary>
+    /// <returns>Admin ise true, değilse false</returns>
+    private bool IsAdminUser()
+    {
+        var userRole = HttpContext.Session.GetString("UserRole");
+        return userRole == "Admin";
     }
 
     /// <summary>

@@ -8,6 +8,8 @@ namespace Getir.Application.Services.ProductCategories;
 /// </summary>
 public interface IProductCategoryService
 {
+    /// <summary>Standart kategorileri getirir (ServiceCategory bazlı, cache).</summary>
+    Task<Result<List<ProductCategoryResponse>>> GetStandardCategoriesAsync(CancellationToken cancellationToken = default);
     /// <summary>Merchant'a ait kategorileri getirir (cache).</summary>
     Task<Result<List<ProductCategoryResponse>>> GetMerchantCategoriesAsync(Guid merchantId, CancellationToken cancellationToken = default);
     /// <summary>Merchant'a ait kategori ağacını getirir (parent-child hiyerarşisi, cache).</summary>

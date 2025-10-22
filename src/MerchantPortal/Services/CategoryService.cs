@@ -81,6 +81,26 @@ public class CategoryService : ICategoryService
     }
 
     /// <summary>
+    /// Standart kategorileri getirir (ServiceCategory bazlı).
+    /// </summary>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Standart kategoriler</returns>
+    public async Task<List<ProductCategoryResponse>?> GetStandardCategoriesAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _apiClient.GetAsync<ApiResponse<List<ProductCategoryResponse>>>("api/v1/productcategory/standard", ct);
+
+            return response?.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting standard categories");
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Kategori detaylarını getirir.
     /// </summary>
     /// <param name="categoryId">Kategori ID</param>

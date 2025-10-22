@@ -570,7 +570,26 @@
     "BkmExpress": "BKM",
     "Papara": "Papara",
     "QrCode": "QR Code",
-    "ExcelExportComingSoon": "Excel export özelliği yakında eklenecek"
+    "ExcelExportComingSoon": "Excel export özelliği yakında eklenecek",
+    "BulkUpdate": "Toplu Güncelle",
+    "DownloadTemplate": "Şablon İndir",
+    "ImportCSV": "CSV İçe Aktar",
+    "ExportCSV": "CSV Dışa Aktar",
+    "TotalProducts": "Toplam Ürün",
+    "Min": "Min",
+    "Max": "Max",
+    "Low": "Düşük",
+    "Normal": "Normal",
+    "ProductsSelected": "ürün seçildi",
+    "OperationType": "İşlem Türü",
+    "SetStockEquals": "Stoku Ayarla (=)",
+    "AddStockPlus": "Stok Ekle (+)",
+    "SubtractStockMinus": "Stok Çıkar (-)",
+    "Apply": "Uygula",
+    "CSVFile": "CSV Dosyası",
+    "CSVFormatHint": "Format: ProductId,ProductName,SKU,CurrentStock,MinStock,MaxStock,Status",
+    "Preview": "Önizleme",
+    "UpdateStockTitle": "Stok Güncelle"
   },
   "en-US": {
     "AppTitle": "Getir Merchant Portal",
@@ -1143,7 +1162,26 @@
     "BkmExpress": "BKM",
     "Papara": "Papara",
     "QrCode": "QR Code",
-    "ExcelExportComingSoon": "Excel export feature coming soon"
+    "ExcelExportComingSoon": "Excel export feature coming soon",
+    "BulkUpdate": "Bulk Update",
+    "DownloadTemplate": "Download Template",
+    "ImportCSV": "Import CSV",
+    "ExportCSV": "Export CSV",
+    "TotalProducts": "Total Products",
+    "Min": "Min",
+    "Max": "Max",
+    "Low": "Low",
+    "Normal": "Normal",
+    "ProductsSelected": "products selected",
+    "OperationType": "Operation Type",
+    "SetStockEquals": "Set Stock (=)",
+    "AddStockPlus": "Add Stock (+)",
+    "SubtractStockMinus": "Subtract Stock (-)",
+    "Apply": "Apply",
+    "CSVFile": "CSV File",
+    "CSVFormatHint": "Format: ProductId,ProductName,SKU,CurrentStock,MinStock,MaxStock,Status",
+    "Preview": "Preview",
+    "UpdateStockTitle": "Update Stock"
   },
   "ar-SA": {
     "AppTitle": "بوابة تاجر جتير",
@@ -1716,6 +1754,550 @@
     "BkmExpress": "BKM",
     "Papara": "Papara",
     "QrCode": "QR Code",
-    "ExcelExportComingSoon": "ميزة تصدير Excel قريباً"
+    "ExcelExportComingSoon": "ميزة تصدير Excel قريباً",
+    "BulkUpdate": "تحديث بالجملة",
+    "DownloadTemplate": "تحميل القالب",
+    "ImportCSV": "استيراد CSV",
+    "ExportCSV": "تصدير CSV",
+    "TotalProducts": "إجمالي المنتجات",
+    "Min": "الحد الأدنى",
+    "Max": "الحد الأقصى",
+    "Low": "منخفض",
+    "Normal": "عادي",
+    "ProductsSelected": "منتج محدد",
+    "OperationType": "نوع العملية",
+    "SetStockEquals": "تعيين المخزون (=)",
+    "AddStockPlus": "إضافة مخزون (+)",
+    "SubtractStockMinus": "طرح مخزون (-)",
+    "Apply": "تطبيق",
+    "CSVFile": "ملف CSV",
+    "CSVFormatHint": "التنسيق: ProductId,ProductName,SKU,CurrentStock,MinStock,MaxStock,Status",
+    "Preview": "معاينة",
+    "UpdateStockTitle": "تحديث المخزون"
+  },
+  "SalesDashboard": {
+    "tr-TR": "Satış Paneli",
+    "en-US": "Sales Dashboard",
+    "ar-SA": "لوحة المبيعات"
+  },
+  "RevenueAnalytics": {
+    "tr-TR": "Gelir Analizi",
+    "en-US": "Revenue Analytics",
+    "ar-SA": "تحليل الإيرادات"
+  },
+  "CustomerAnalytics": {
+    "tr-TR": "Müşteri Analizi",
+    "en-US": "Customer Analytics",
+    "ar-SA": "تحليل العملاء"
+  },
+  "ProductPerformance": {
+    "tr-TR": "Ürün Performansı",
+    "en-US": "Product Performance",
+    "ar-SA": "أداء المنتج"
+  },
+  "TotalRevenue": {
+    "tr-TR": "Toplam Gelir",
+    "en-US": "Total Revenue",
+    "ar-SA": "إجمالي الإيرادات"
+  },
+  "TotalOrders": {
+    "tr-TR": "Toplam Sipariş",
+    "en-US": "Total Orders",
+    "ar-SA": "إجمالي الطلبات"
+  },
+  "CompletedOrders": {
+    "tr-TR": "Tamamlanan Siparişler",
+    "en-US": "Completed Orders",
+    "ar-SA": "الطلبات المكتملة"
+  },
+  "AverageOrderValue": {
+    "tr-TR": "Ortalama Sipariş Değeri",
+    "en-US": "Average Order Value",
+    "ar-SA": "متوسط قيمة الطلب"
+  },
+  "RevenueTrend": {
+    "tr-TR": "Gelir Trendi",
+    "en-US": "Revenue Trend",
+    "ar-SA": "اتجاه الإيرادات"
+  },
+  "OrderGrowth": {
+    "tr-TR": "Sipariş Büyümesi",
+    "en-US": "Order Growth",
+    "ar-SA": "نمو الطلبات"
+  },
+  "TopProducts": {
+    "tr-TR": "En Çok Satan Ürünler",
+    "en-US": "Top Products",
+    "ar-SA": "أفضل المنتجات"
+  },
+  "PaymentMethods": {
+    "tr-TR": "Ödeme Yöntemleri",
+    "en-US": "Payment Methods",
+    "ar-SA": "طرق الدفع"
+  },
+  "CategoryBreakdown": {
+    "tr-TR": "Kategori Dağılımı",
+    "en-US": "Category Breakdown",
+    "ar-SA": "توزيع الفئات"
+  },
+  "Revenue": {
+    "tr-TR": "Gelir",
+    "en-US": "Revenue",
+    "ar-SA": "الإيرادات"
+  },
+  "Sold": {
+    "tr-TR": "Satıldı",
+    "en-US": "Sold",
+    "ar-SA": "تم البيع"
+  },
+  "PerOrder": {
+    "tr-TR": "Sipariş Başına",
+    "en-US": "Per Order",
+    "ar-SA": "لكل طلب"
+  },
+  "DailyRevenue": {
+    "tr-TR": "Günlük Gelir",
+    "en-US": "Daily Revenue",
+    "ar-SA": "الإيرادات اليومية"
+  },
+  "PaymentMethodDistribution": {
+    "tr-TR": "Ödeme Yöntemi Dağılımı",
+    "en-US": "Payment Method Distribution",
+    "ar-SA": "توزيع طرق الدفع"
+  },
+  "RevenueByHour": {
+    "tr-TR": "Saatlik Gelir",
+    "en-US": "Revenue by Hour",
+    "ar-SA": "الإيرادات بالساعة"
+  },
+  "TopRevenueDays": {
+    "tr-TR": "En Yüksek Gelirli Günler",
+    "en-US": "Top Revenue Days",
+    "ar-SA": "أعلى أيام الإيرادات"
+  },
+  "Orders": {
+    "tr-TR": "Siparişler",
+    "en-US": "Orders",
+    "ar-SA": "الطلبات"
+  },
+  "AverageDailyRevenue": {
+    "tr-TR": "Ortalama Günlük Gelir",
+    "en-US": "Average Daily Revenue",
+    "ar-SA": "متوسط الإيرادات اليومية"
+  },
+  "Export": {
+    "tr-TR": "Dışa Aktar",
+    "en-US": "Export",
+    "ar-SA": "تصدير"
+  },
+  "ExportToExcel": {
+    "tr-TR": "Excel'e Aktar",
+    "en-US": "Export to Excel",
+    "ar-SA": "تصدير إلى Excel"
+  },
+  "ExportToPdf": {
+    "tr-TR": "PDF'e Aktar",
+    "en-US": "Export to PDF",
+    "ar-SA": "تصدير إلى PDF"
+  },
+  "ApplyFilter": {
+    "tr-TR": "Filtrele",
+    "en-US": "Apply Filter",
+    "ar-SA": "تطبيق المرشح"
+  },
+  "Reset": {
+    "tr-TR": "Sıfırla",
+    "en-US": "Reset",
+    "ar-SA": "إعادة تعيين"
+  },
+  "Loading": {
+    "tr-TR": "Yükleniyor",
+    "en-US": "Loading",
+    "ar-SA": "جاري التحميل"
+  },
+  "NoDataAvailable": {
+    "tr-TR": "Veri Bulunamadı",
+    "en-US": "No Data Available",
+    "ar-SA": "لا توجد بيانات متاحة"
+  },
+  "ErrorLoadingData": {
+    "tr-TR": "Veri Yüklenirken Hata",
+    "en-US": "Error Loading Data",
+    "ar-SA": "خطأ في تحميل البيانات"
+  },
+  "Reports & Analytics": {
+    "tr-TR": "Raporlar & Analitikler",
+    "en-US": "Reports & Analytics",
+    "ar-SA": "التقارير والتحليلات"
+  },
+  "Sales Dashboard": {
+    "tr-TR": "Satış Paneli",
+    "en-US": "Sales Dashboard",
+    "ar-SA": "لوحة المبيعات"
+  },
+  "Revenue Analytics": {
+    "tr-TR": "Gelir Analizi",
+    "en-US": "Revenue Analytics",
+    "ar-SA": "تحليلات الإيرادات"
+  },
+  "Customer Analytics": {
+    "tr-TR": "Müşteri Analizi",
+    "en-US": "Customer Analytics",
+    "ar-SA": "تحليلات العملاء"
+  },
+  "Product Performance": {
+    "tr-TR": "Ürün Performansı",
+    "en-US": "Product Performance",
+    "ar-SA": "أداء المنتج"
+  },
+  "CustomerAnalyticsDescription": {
+    "tr-TR": "Müşteri davranışları ve segmentasyon analizi",
+    "en-US": "Customer behavior and segmentation analysis",
+    "ar-SA": "تحليل سلوك العملاء والتقسيم"
+  },
+  "ProductPerformanceDescription": {
+    "tr-TR": "Ürün satış performansı ve kategori analizi",
+    "en-US": "Product sales performance and category analysis",
+    "ar-SA": "أداء مبيعات المنتج وتحليل الفئة"
+  },
+  "TotalCustomers": {
+    "tr-TR": "Toplam Müşteri",
+    "en-US": "Total Customers",
+    "ar-SA": "إجمالي العملاء"
+  },
+  "NewCustomers": {
+    "tr-TR": "Yeni Müşteri",
+    "en-US": "New Customers",
+    "ar-SA": "عملاء جدد"
+  },
+  "ReturningCustomers": {
+    "tr-TR": "Dönen Müşteri",
+    "en-US": "Returning Customers",
+    "ar-SA": "العملاء العائدون"
+  },
+  "RetentionRate": {
+    "tr-TR": "Sadakat Oranı",
+    "en-US": "Retention Rate",
+    "ar-SA": "معدل الاحتفاظ"
+  },
+  "CustomerGrowth": {
+    "tr-TR": "Müşteri Büyümesi",
+    "en-US": "Customer Growth",
+    "ar-SA": "نمو العملاء"
+  },
+  "CustomerTypeDistribution": {
+    "tr-TR": "Müşteri Tipi Dağılımı",
+    "en-US": "Customer Type Distribution",
+    "ar-SA": "توزيع نوع العميل"
+  },
+  "CustomerSegments": {
+    "tr-TR": "Müşteri Segmentleri",
+    "en-US": "Customer Segments",
+    "ar-SA": "شرائح العملاء"
+  },
+  "TopCustomers": {
+    "tr-TR": "En İyi Müşteriler",
+    "en-US": "Top Customers",
+    "ar-SA": "أفضل العملاء"
+  },
+  "Customer": {
+    "tr-TR": "Müşteri",
+    "en-US": "Customer",
+    "ar-SA": "عميل"
+  },
+  "TotalSpent": {
+    "tr-TR": "Toplam Harcama",
+    "en-US": "Total Spent",
+    "ar-SA": "إجمالي الإنفاق"
+  },
+  "CustomerLifetimeValue": {
+    "tr-TR": "Müşteri Yaşam Boyu Değeri",
+    "en-US": "Customer Lifetime Value",
+    "ar-SA": "قيمة العميل مدى الحياة"
+  },
+  "CustomerCount": {
+    "tr-TR": "Müşteri Sayısı",
+    "en-US": "Customer Count",
+    "ar-SA": "عدد العملاء"
+  },
+  "AverageLTV": {
+    "tr-TR": "Ortalama Yaşam Boyu Değer",
+    "en-US": "Average Lifetime Value",
+    "ar-SA": "متوسط القيمة مدى الحياة"
+  },
+  "TotalProducts": {
+    "tr-TR": "Toplam Ürün",
+    "en-US": "Total Products",
+    "ar-SA": "إجمالي المنتجات"
+  },
+  "TotalSales": {
+    "tr-TR": "Toplam Satış",
+    "en-US": "Total Sales",
+    "ar-SA": "إجمالي المبيعات"
+  },
+  "SalesGrowth": {
+    "tr-TR": "Satış Büyümesi",
+    "en-US": "Sales Growth",
+    "ar-SA": "نمو المبيعات"
+  },
+  "ProductSalesTrend": {
+    "tr-TR": "Ürün Satış Trendi",
+    "en-US": "Product Sales Trend",
+    "ar-SA": "اتجاه مبيعات المنتج"
+  },
+  "CategoryPerformance": {
+    "tr-TR": "Kategori Performansı",
+    "en-US": "Category Performance",
+    "ar-SA": "أداء الفئة"
+  },
+  "TopProducts": {
+    "tr-TR": "En İyi Ürünler",
+    "en-US": "Top Products",
+    "ar-SA": "أفضل المنتجات"
+  },
+  "LowPerformanceProducts": {
+    "tr-TR": "Düşük Performanslı Ürünler",
+    "en-US": "Low Performance Products",
+    "ar-SA": "منتجات الأداء المنخفض"
+  },
+  "Product": {
+    "tr-TR": "Ürün",
+    "en-US": "Product",
+    "ar-SA": "منتج"
+  },
+  "Sales": {
+    "tr-TR": "Satış",
+    "en-US": "Sales",
+    "ar-SA": "مبيعات"
+  },
+  "Revenue": {
+    "tr-TR": "Gelir",
+    "en-US": "Revenue",
+    "ar-SA": "إيرادات"
+  },
+  "ProductPerformanceMetrics": {
+    "tr-TR": "Ürün Performans Metrikleri",
+    "en-US": "Product Performance Metrics",
+    "ar-SA": "مقاييس أداء المنتج"
+  },
+  "InventoryStatus": {
+    "tr-TR": "Stok Durumu",
+    "en-US": "Inventory Status",
+    "ar-SA": "حالة المخزون"
+  },
+  "SalesVolume": {
+    "tr-TR": "Satış Hacmi",
+    "en-US": "Sales Volume",
+    "ar-SA": "حجم المبيعات"
+  },
+  "ProfitMargin": {
+    "tr-TR": "Kar Marjı",
+    "en-US": "Profit Margin",
+    "ar-SA": "هامش الربح"
+  },
+  "CustomerSatisfaction": {
+    "tr-TR": "Müşteri Memnuniyeti",
+    "en-US": "Customer Satisfaction",
+    "ar-SA": "رضا العملاء"
+  },
+  "MarketShare": {
+    "tr-TR": "Pazar Payı",
+    "en-US": "Market Share",
+    "ar-SA": "حصة السوق"
+  },
+  "CurrentPeriod": {
+    "tr-TR": "Mevcut Dönem",
+    "en-US": "Current Period",
+    "ar-SA": "الفترة الحالية"
+  },
+  "PreviousPeriod": {
+    "tr-TR": "Önceki Dönem",
+    "en-US": "Previous Period",
+    "ar-SA": "الفترة السابقة"
+  },
+  "InStock": {
+    "tr-TR": "Stokta",
+    "en-US": "In Stock",
+    "ar-SA": "متوفر"
+  },
+  "LowStock": {
+    "tr-TR": "Az Stok",
+    "en-US": "Low Stock",
+    "ar-SA": "مخزون منخفض"
+  },
+  "OutOfStock": {
+    "tr-TR": "Stok Yok",
+    "en-US": "Out of Stock",
+    "ar-SA": "نفد المخزون"
+  },
+  "ProductCount": {
+    "tr-TR": "Ürün Sayısı",
+    "en-US": "Product Count",
+    "ar-SA": "عدد المنتجات"
+  },
+  "Refresh": {
+    "tr-TR": "Yenile",
+    "en-US": "Refresh",
+    "ar-SA": "تحديث"
+  },
+  "ExportError": {
+    "tr-TR": "Dışa aktarma hatası",
+    "en-US": "Export error",
+    "ar-SA": "خطأ في التصدير"
+  },
+  "Orders": {
+    "tr-TR": "Siparişler",
+    "en-US": "Orders",
+    "ar-SA": "الطلبات"
+  },
+  "ExportPDF": {
+    "tr-TR": "PDF Olarak Dışa Aktar",
+    "en-US": "Export to PDF",
+    "ar-SA": "تصدير إلى PDF"
+  },
+  "ExportExcel": {
+    "tr-TR": "Excel Olarak Dışa Aktar",
+    "en-US": "Export to Excel",
+    "ar-SA": "تصدير إلى Excel"
+  },
+  "Export": {
+    "tr-TR": "Dışa Aktar",
+    "en-US": "Export",
+    "ar-SA": "تصدير"
+  },
+  "ExportToExcel": {
+    "tr-TR": "Excel'e Dışa Aktar",
+    "en-US": "Export to Excel",
+    "ar-SA": "تصدير إلى Excel"
+  },
+  "ExportToPdf": {
+    "tr-TR": "PDF'e Dışa Aktar",
+    "en-US": "Export to PDF",
+    "ar-SA": "تصدير إلى PDF"
+  },
+  "ApplyFilter": {
+    "tr-TR": "Filtrele",
+    "en-US": "Apply Filter",
+    "ar-SA": "تطبيق المرشح"
+  },
+  "RevenueAnalytics": {
+    "tr-TR": "Gelir Analitikleri",
+    "en-US": "Revenue Analytics",
+    "ar-SA": "تحليلات الإيرادات"
+  },
+  "DailyRevenue": {
+    "tr-TR": "Günlük Gelir",
+    "en-US": "Daily Revenue",
+    "ar-SA": "الإيرادات اليومية"
+  },
+  "WeeklyRevenue": {
+    "tr-TR": "Haftalık Gelir",
+    "en-US": "Weekly Revenue",
+    "ar-SA": "الإيرادات الأسبوعية"
+  },
+  "MonthlyRevenue": {
+    "tr-TR": "Aylık Gelir",
+    "en-US": "Monthly Revenue",
+    "ar-SA": "الإيرادات الشهرية"
+  },
+  "RevenueByHour": {
+    "tr-TR": "Saatlik Gelir",
+    "en-US": "Revenue by Hour",
+    "ar-SA": "الإيرادات بالساعة"
+  },
+  "TopRevenueDays": {
+    "tr-TR": "En Yüksek Gelir Günleri",
+    "en-US": "Top Revenue Days",
+    "ar-SA": "أعلى أيام الإيرادات"
+  },
+  "PaymentMethodDistribution": {
+    "tr-TR": "Ödeme Yöntemi Dağılımı",
+    "en-US": "Payment Method Distribution",
+    "ar-SA": "توزيع طرق الدفع"
+  },
+  "RevenueTrend": {
+    "tr-TR": "Gelir Trendi",
+    "en-US": "Revenue Trend",
+    "ar-SA": "اتجاه الإيرادات"
+  },
+  "AverageOrderValue": {
+    "tr-TR": "Ortalama Sipariş Değeri",
+    "en-US": "Average Order Value",
+    "ar-SA": "متوسط قيمة الطلب"
+  },
+  "TotalOrders": {
+    "tr-TR": "Toplam Sipariş",
+    "en-US": "Total Orders",
+    "ar-SA": "إجمالي الطلبات"
+  },
+  "TotalRevenue": {
+    "tr-TR": "Toplam Gelir",
+    "en-US": "Total Revenue",
+    "ar-SA": "إجمالي الإيرادات"
+  },
+  "RevenueGrowth": {
+    "tr-TR": "Gelir Büyümesi",
+    "en-US": "Revenue Growth",
+    "ar-SA": "نمو الإيرادات"
+  },
+  "OrderGrowth": {
+    "tr-TR": "Sipariş Büyümesi",
+    "en-US": "Order Growth",
+    "ar-SA": "نمو الطلبات"
+  },
+  "BestSellingProducts": {
+    "tr-TR": "En Çok Satan Ürünler",
+    "en-US": "Best Selling Products",
+    "ar-SA": "أفضل المنتجات مبيعاً"
+  },
+  "RevenueByDay": {
+    "tr-TR": "Günlük Gelir",
+    "en-US": "Revenue by Day",
+    "ar-SA": "الإيرادات باليوم"
+  },
+  "OrdersByDay": {
+    "tr-TR": "Günlük Siparişler",
+    "en-US": "Orders by Day",
+    "ar-SA": "الطلبات باليوم"
+  },
+  "PaymentMethodBreakdown": {
+    "tr-TR": "Ödeme Yöntemi Detayı",
+    "en-US": "Payment Method Breakdown",
+    "ar-SA": "تفصيل طرق الدفع"
+  },
+  "CategoryBreakdown": {
+    "tr-TR": "Kategori Detayı",
+    "en-US": "Category Breakdown",
+    "ar-SA": "تفصيل الفئات"
+  },
+  "SalesDashboard": {
+    "tr-TR": "Satış Dashboard'u",
+    "en-US": "Sales Dashboard",
+    "ar-SA": "لوحة المبيعات"
+  },
+  "CompletedOrders": {
+    "tr-TR": "Tamamlanan Siparişler",
+    "en-US": "Completed Orders",
+    "ar-SA": "الطلبات المكتملة"
+  },
+  "PerOrder": {
+    "tr-TR": "Sipariş Başına",
+    "en-US": "Per Order",
+    "ar-SA": "لكل طلب"
+  },
+  "PaymentMethods": {
+    "tr-TR": "Ödeme Yöntemleri",
+    "en-US": "Payment Methods",
+    "ar-SA": "طرق الدفع"
+  },
+  "Sold": {
+    "tr-TR": "Satıldı",
+    "en-US": "Sold",
+    "ar-SA": "مباع"
+  },
+  "Reset": {
+    "tr-TR": "Sıfırla",
+    "en-US": "Reset",
+    "ar-SA": "إعادة تعيين"
   }
 }

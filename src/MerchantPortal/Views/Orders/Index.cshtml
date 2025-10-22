@@ -22,26 +22,26 @@
 <div class="row g-3 mb-4 fade-in" style="animation-delay: 0.1s;">
     <div class="col-md-3">
         <div class="stats-card-mini">
-            <span class="value" style="color: #fbbf24;">@(Model?.Items?.Count(o => o.Status == "Pending") ?? 0)</span>
-            <span class="label">@LocalizationService.GetString("Pending")</span>
+            <span class="value" style="color: #fbbf24;">@(Model?.Items?.Count(o => o?.Status == "Pending") ?? 0)</span>
+            <span class="label">@LocalizationService?.GetString("Pending") ?? "Pending"</span>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stats-card-mini">
-            <span class="value" style="color: #8b5cf6;">@(Model?.Items?.Count(o => o.Status == "Preparing") ?? 0)</span>
-            <span class="label">@LocalizationService.GetString("Preparing")</span>
+            <span class="value" style="color: #8b5cf6;">@(Model?.Items?.Count(o => o?.Status == "Preparing") ?? 0)</span>
+            <span class="label">@LocalizationService?.GetString("Preparing") ?? "Preparing"</span>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stats-card-mini">
-            <span class="value" style="color: #10b981;">@(Model?.Items?.Count(o => o.Status == "Ready") ?? 0)</span>
-            <span class="label">@LocalizationService.GetString("Ready")</span>
+            <span class="value" style="color: #10b981;">@(Model?.Items?.Count(o => o?.Status == "Ready") ?? 0)</span>
+            <span class="label">@LocalizationService?.GetString("Ready") ?? "Ready"</span>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stats-card-mini">
-            <span class="value" style="color: #059669;">@(Model?.Items?.Count(o => o.Status == "Delivered") ?? 0)</span>
-            <span class="label">@LocalizationService.GetString("Delivered")</span>
+            <span class="value" style="color: #059669;">@(Model?.Items?.Count(o => o?.Status == "Delivered") ?? 0)</span>
+            <span class="label">@LocalizationService?.GetString("Delivered") ?? "Delivered"</span>
         </div>
     </div>
 </div>
@@ -77,9 +77,11 @@
     var delay = 0.3;
     foreach (var order in Model.Items)
     {
+        if (order == null) continue;
+        
         delay += 0.05;
-        var statusClass = order.Status.ToLower();
-        var badgeClass = order.Status switch
+        var statusClass = order.Status?.ToLower() ?? "unknown";
+        var badgeClass = (order.Status ?? "") switch
         {
             "Pending" => "warning",
             "Confirmed" => "info",
@@ -90,15 +92,15 @@
             _ => "secondary"
         };
 
-        var statusText = order.Status switch
+        var statusText = (order.Status ?? "") switch
         {
-            "Pending" => LocalizationService.GetString("Pending"),
-            "Confirmed" => LocalizationService.GetString("Confirmed"),
-            "Preparing" => LocalizationService.GetString("Preparing"),
-            "Ready" => LocalizationService.GetString("Ready"),
-            "Delivered" => LocalizationService.GetString("Delivered"),
-            "Cancelled" => LocalizationService.GetString("Cancelled"),
-            _ => order.Status
+            "Pending" => LocalizationService?.GetString("Pending") ?? "Pending",
+            "Confirmed" => LocalizationService?.GetString("Confirmed") ?? "Confirmed",
+            "Preparing" => LocalizationService?.GetString("Preparing") ?? "Preparing",
+            "Ready" => LocalizationService?.GetString("Ready") ?? "Ready",
+            "Delivered" => LocalizationService?.GetString("Delivered") ?? "Delivered",
+            "Cancelled" => LocalizationService?.GetString("Cancelled") ?? "Cancelled",
+            _ => order.Status ?? "Unknown"
         };
         
         <div class="order-card @statusClass mb-3 fade-in" style="animation-delay: @(delay)s;">
@@ -118,16 +120,16 @@
             
             <div class="customer-info">
                 <div class="customer-avatar">
-                    @(order.CustomerName.Substring(0, 1).ToUpper())
+                    @(order.CustomerName?.Substring(0, 1).ToUpper() ?? "?")
                 </div>
                 <div class="customer-details flex-grow-1">
-                    <h6>@order.CustomerName</h6>
+                    <h6>@(order.CustomerName ?? "Unknown Customer")</h6>
                     <small>
-                        <i class="fas fa-phone me-1"></i>@order.CustomerPhone
+                        <i class="fas fa-phone me-1"></i>@(order.CustomerPhone ?? "N/A")
                     </small>
                 </div>
                 <div class="text-end">
-                    <div class="order-amount">₺@order.TotalAmount.ToString("N2")</div>
+                    <div class="order-amount">₺@(order.TotalAmount.ToString("N2") ?? "0.00")</div>
                     <small class="text-muted">@statusText</small>
                 </div>
             </div>
@@ -135,7 +137,7 @@
             <div class="mb-2">
                 <div class="d-flex align-items-start gap-2">
                     <i class="fas fa-map-marker-alt mt-1 text-muted"></i>
-                    <small class="text-muted">@order.DeliveryAddress</small>
+                    <small class="text-muted">@(order.DeliveryAddress ?? "No address")</small>
                 </div>
             </div>
             

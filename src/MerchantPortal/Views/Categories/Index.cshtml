@@ -1,8 +1,9 @@
 @inject ILocalizationService LocalizationService
-@model List<Getir.MerchantPortal.Models.CategoryTreeNode>
 @{
     ViewData["Title"] = LocalizationService.GetString("Categories");
-    var allCategories = ViewBag.AllCategories as List<Getir.MerchantPortal.Models.ProductCategoryResponse> ?? new();
+    var standardCategories = ViewBag.StandardCategories as List<Getir.MerchantPortal.Models.ProductCategoryResponse> ?? new();
+    var customCategories = ViewBag.CustomCategories as List<Getir.MerchantPortal.Models.ProductCategoryResponse> ?? new();
+    var isAdmin = ViewBag.IsAdmin as bool? ?? false;
 }
 
 @section Styles {
@@ -13,76 +14,169 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h3><i class="fas fa-tags"></i> @LocalizationService.GetString("Categories")</h3>
-        <p class="text-muted mb-0" id="reorderHint" style="display: none;">
-            <i class="fas fa-arrows-alt-v me-2"></i>@LocalizationService.GetString("Categories")
-        </p>
+        <p class="text-muted mb-0">@LocalizationService.GetString("CategoryManagementDesc")</p>
     </div>
     <div class="d-flex gap-2">
-        <button type="button" class="btn btn-outline-primary" id="toggleReorderBtn">
-            <i class="fas fa-arrows-alt-v"></i> @LocalizationService.GetString("Filter")
-        </button>
-        <button type="button" class="btn btn-success" id="saveOrderBtn" style="display: none;">
-            <i class="fas fa-save"></i> @LocalizationService.GetString("Save")
-        </button>
-        <button type="button" class="btn btn-secondary" id="cancelOrderBtn" style="display: none;">
-            <i class="fas fa-times"></i> @LocalizationService.GetString("Cancel")
-        </button>
         <a href="@Url.Action("Create")" class="btn btn-getir">
-            <i class="fas fa-plus"></i> @LocalizationService.GetString("AddCategory")
+            <i class="fas fa-plus"></i> @LocalizationService.GetString("AddCustomCategory")
         </a>
     </div>
 </div>
 
 <div class="row">
-    <div class="col-md-8">
+    <!-- Standart Kategoriler -->
+    <div class="col-md-6">
         <div class="stat-card">
             <h5 class="mb-3">
-                <i class="fas fa-sitemap"></i> @LocalizationService.GetString("CategoryList")
+                <i class="fas fa-star text-warning"></i> @LocalizationService.GetString("StandardCategories")
+                @if (isAdmin)
+                {
+                    <small class="text-muted">(@LocalizationService.GetString("AdminCanEdit"))</small>
+                }
+                else
+                {
+                    <small class="text-muted">(@LocalizationService.GetString("ReadOnly"))</small>
+                }
             </h5>
             
-            @if (Model != null && Model.Any())
+            @if (standardCategories.Any())
             {
-                <div class="category-tree">
-                    @foreach (var node in Model)
+                <div class="category-list">
+                    @foreach (var category in standardCategories.OrderBy(c => c.DisplayOrder))
                     {
-                        @await Html.PartialAsync("_CategoryTreeNode", node)
+                        <div class="category-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">@category.Name</h6>
+                                    <small class="text-muted">@category.Description</small>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    @if (isAdmin)
+                                    {
+                                        <a href="@Url.Action("Edit", new { id = category.Id })" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form asp-action="Delete" asp-route-id="@category.Id" method="post" style="display: inline;">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('@LocalizationService.GetString("DeleteConfirm")')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">@LocalizationService.GetString("ReadOnly")</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
                     }
                 </div>
             }
             else
             {
-                <div class="text-center py-5">
-                    <i class="fas fa-tags fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">@LocalizationService.GetString("NoData")</p>
+                <div class="text-center py-4">
+                    <i class="fas fa-star fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">@LocalizationService.GetString("NoStandardCategories")</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Özel Kategoriler -->
+    <div class="col-md-6">
+        <div class="stat-card">
+            <h5 class="mb-3">
+                <i class="fas fa-user-edit text-primary"></i> @LocalizationService.GetString("CustomCategories")
+            </h5>
+            
+            @if (customCategories.Any())
+            {
+                <div class="category-list">
+                    @foreach (var category in customCategories.OrderBy(c => c.DisplayOrder))
+                    {
+                        <div class="category-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">@category.Name</h6>
+                                    <small class="text-muted">@category.Description</small>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="@Url.Action("Edit", new { id = category.Id })" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@category.Id" method="post" style="display: inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('@LocalizationService.GetString("DeleteConfirm")')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-4">
+                    <i class="fas fa-user-edit fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">@LocalizationService.GetString("NoCustomCategories")</p>
                     <a href="@Url.Action("Create")" class="btn btn-getir">
-                        <i class="fas fa-plus me-2"></i>@LocalizationService.GetString("AddCategory")
+                        <i class="fas fa-plus"></i> @LocalizationService.GetString("AddFirstCategory")
                     </a>
                 </div>
             }
         </div>
     </div>
-    
-    <div class="col-md-4">
-        <div class="stat-card">
-            <h5 class="mb-3">
-                <i class="fas fa-chart-bar"></i> @LocalizationService.GetString("Stats")
-            </h5>
-            <div class="stat-item">
-                <span class="stat-label">@LocalizationService.GetString("Total"):</span>
-                <span class="stat-value">@allCategories.Count</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">@LocalizationService.GetString("Active"):</span>
-                <span class="stat-value text-success">@allCategories.Count(c => c.IsActive)</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">@LocalizationService.GetString("Inactive"):</span>
-                <span class="stat-value text-muted">@allCategories.Count(c => !c.IsActive)</span>
-            </div>
-        </div>
-    </div>
 </div>
 
 @section Scripts {
-    <script src="~/js/modules/categories/categories.js" asp-append-version="true"></script>
+    <script>
+        // Kategori silme onayı
+        function confirmDelete(categoryName) {
+            return confirm('@LocalizationService.GetString("DeleteCategoryConfirm")'.replace('{0}', categoryName));
+        }
+    </script>
 }
+
+<style>
+    .category-item {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        background: #fff;
+        transition: all 0.3s ease;
+    }
+
+    .category-item:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transform: translateY(-1px);
+    }
+
+    .category-list {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .stat-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+
+    .btn-getir {
+        background: linear-gradient(135deg, #00d4aa 0%, #00a085 100%);
+        border: none;
+        color: white;
+        font-weight: 500;
+    }
+
+    .btn-getir:hover {
+        background: linear-gradient(135deg, #00a085 0%, #008a73 100%);
+        color: white;
+    }
+</style>

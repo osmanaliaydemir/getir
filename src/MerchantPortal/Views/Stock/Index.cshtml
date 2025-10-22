@@ -6,19 +6,19 @@
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="fas fa-boxes me-2"></i>Stok Yönetimi</h2>
+        <h2><i class="fas fa-boxes me-2"></i>@LocalizationService.GetString("StockManagement")</h2>
         <div class="btn-group">
             <button type="button" class="btn btn-success" onclick="bulkUpdateManager.openModal()">
-                <i class="fas fa-edit me-1"></i>Toplu Güncelle
+                <i class="fas fa-edit me-1"></i>@LocalizationService.GetString("BulkUpdate")
             </button>
             <button type="button" class="btn btn-primary" onclick="csvImporter.downloadTemplate()">
-                <i class="fas fa-download me-1"></i>Şablon İndir
+                <i class="fas fa-download me-1"></i>@LocalizationService.GetString("DownloadTemplate")
             </button>
             <button type="button" class="btn btn-info" onclick="csvImporter.openImportModal()">
-                <i class="fas fa-upload me-1"></i>CSV İçe Aktar
+                <i class="fas fa-upload me-1"></i>@LocalizationService.GetString("ImportCSV")
             </button>
             <a href="/Stock/ExportToCSV" class="btn btn-secondary">
-                <i class="fas fa-file-export me-1"></i>CSV Dışa Aktar
+                <i class="fas fa-file-export me-1"></i>@LocalizationService.GetString("ExportCSV")
             </a>
         </div>
     </div>
@@ -28,7 +28,7 @@
         <div class="col-md-3">
             <div class="card border-success">
                 <div class="card-body">
-                    <h6 class="text-success"><i class="fas fa-check-circle me-1"></i>Normal Stok</h6>
+                    <h6 class="text-success"><i class="fas fa-check-circle me-1"></i>@LocalizationService.GetString("StockNormal")</h6>
                     <h3 id="normalStockCount">-</h3>
                 </div>
             </div>
@@ -36,7 +36,7 @@
         <div class="col-md-3">
             <div class="card border-warning">
                 <div class="card-body">
-                    <h6 class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>Düşük Stok</h6>
+                    <h6 class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>@LocalizationService.GetString("LowStock")</h6>
                     <h3 id="lowStockCount">-</h3>
                 </div>
             </div>
@@ -44,7 +44,7 @@
         <div class="col-md-3">
             <div class="card border-danger">
                 <div class="card-body">
-                    <h6 class="text-danger"><i class="fas fa-times-circle me-1"></i>Tükenen</h6>
+                    <h6 class="text-danger"><i class="fas fa-times-circle me-1"></i>@LocalizationService.GetString("OutOfStock")</h6>
                     <h3 id="outOfStockCount">-</h3>
                 </div>
             </div>
@@ -52,7 +52,7 @@
         <div class="col-md-3">
             <div class="card border-info">
                 <div class="card-body">
-                    <h6 class="text-info"><i class="fas fa-boxes me-1"></i>Toplam Ürün</h6>
+                    <h6 class="text-info"><i class="fas fa-boxes me-1"></i>@LocalizationService.GetString("TotalProducts")</h6>
                     <h3 id="totalProductCount">@Model.Count</h3>
                 </div>
             </div>
@@ -66,13 +66,13 @@
                 <thead>
                     <tr>
                         <th><input type="checkbox" id="selectAll"></th>
-                        <th>Ürün</th>
+                        <th>@LocalizationService.GetString("Product")</th>
                         <th>SKU</th>
-                        <th>Stok</th>
-                        <th>Min</th>
-                        <th>Max</th>
-                        <th>Durum</th>
-                        <th>İşlem</th>
+                        <th>@LocalizationService.GetString("Stock")</th>
+                        <th>@LocalizationService.GetString("Min")</th>
+                        <th>@LocalizationService.GetString("Max")</th>
+                        <th>@LocalizationService.GetString("Status")</th>
+                        <th>@LocalizationService.GetString("Action")</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -92,15 +92,15 @@
                             <td>
                                 @if (product.StockQuantity == 0)
                                 {
-                                    <span class="badge bg-danger">Tükendi</span>
+                                    <span class="badge bg-danger">@LocalizationService.GetString("OutOfStock")</span>
                                 }
                                 else if (product.StockQuantity < (product.MinStock ?? 10))
                                 {
-                                    <span class="badge bg-warning">Düşük</span>
+                                    <span class="badge bg-warning">@LocalizationService.GetString("Low")</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-success">Normal</span>
+                                    <span class="badge bg-success">@LocalizationService.GetString("Normal")</span>
                                 }
                             </td>
                             <td>
@@ -124,37 +124,37 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Toplu Stok Güncelleme</h5>
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>@LocalizationService.GetString("BulkStockUpdate")</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-info">
-                    <strong id="selectedCount">0</strong> ürün seçildi
+                    <strong id="selectedCount">0</strong> @LocalizationService.GetString("ProductsSelected")
                 </div>
                 
                 <div class="mb-3">
-                    <label class="form-label">İşlem Türü</label>
+                    <label class="form-label">@LocalizationService.GetString("OperationType")</label>
                     <select id="bulkOperationType" class="form-select">
-                        <option value="set">Stoku Ayarla (=)</option>
-                        <option value="add">Stok Ekle (+)</option>
-                        <option value="subtract">Stok Çıkar (-)</option>
+                        <option value="set">@LocalizationService.GetString("SetStockEquals")</option>
+                        <option value="add">@LocalizationService.GetString("AddStockPlus")</option>
+                        <option value="subtract">@LocalizationService.GetString("SubtractStockMinus")</option>
                     </select>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Miktar</label>
+                    <label class="form-label">@LocalizationService.GetString("Amount")</label>
                     <input type="number" id="bulkAmount" class="form-control" min="0" required>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Not</label>
+                    <label class="form-label">@LocalizationService.GetString("Note")</label>
                     <textarea id="bulkNote" class="form-control" rows="2"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@LocalizationService.GetString("Cancel")</button>
                 <button type="button" class="btn btn-primary" onclick="bulkUpdateManager.applyUpdate()">
-                    <i class="fas fa-check me-1"></i>Uygula
+                    <i class="fas fa-check me-1"></i>@LocalizationService.GetString("Apply")
                 </button>
             </div>
         </div>
@@ -166,26 +166,26 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-upload me-2"></i>CSV İçe Aktar</h5>
+                <h5 class="modal-title"><i class="fas a-upload me-2"></i>@LocalizationService.GetString("ImportCSV")</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label">CSV Dosyası</label>
+                    <label class="form-label">@LocalizationService.GetString("CSVFile")</label>
                     <input type="file" id="csvFileInput" class="form-control" accept=".csv">
-                    <small class="text-muted">Format: ProductId,ProductName,SKU,CurrentStock,MinStock,MaxStock,Status</small>
+                    <small class="text-muted">@LocalizationService.GetString("CSVFormatHint")</small>
                 </div>
 
                 <div id="importPreview" class="mt-3" style="display:none;">
-                    <h6>Önizleme</h6>
+                    <h6>@LocalizationService.GetString("Preview")</h6>
                     <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
                         <table class="table table-sm">
                             <thead>
                                 <tr>
-                                    <th>Ürün</th>
+                                    <th>@LocalizationService.GetString("Product")</th>
                                     <th>SKU</th>
-                                    <th>Yeni Stok</th>
-                                    <th>Durum</th>
+                                    <th>@LocalizationService.GetString("NewStock")</th>
+                                    <th>@LocalizationService.GetString("Status")</th>
                                 </tr>
                             </thead>
                             <tbody id="importPreviewBody"></tbody>
@@ -196,9 +196,9 @@
                 <div id="importResult" class="alert" style="display:none;"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@LocalizationService.GetString("Cancel")</button>
                 <button type="button" id="btnImport" class="btn btn-primary" onclick="csvImporter.importData()">
-                    <i class="fas fa-upload me-1"></i>İçe Aktar
+                    <i class="fas fa-upload me-1"></i>@LocalizationService.GetString("Import")
                 </button>
             </div>
         </div>
@@ -210,27 +210,27 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Stok Güncelle</h5>
+                <h5 class="modal-title">@LocalizationService.GetString("UpdateStockTitle")</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="updateProductId">
                 <div class="mb-3">
-                    <label class="form-label">Ürün</label>
+                    <label class="form-label">@LocalizationService.GetString("Product")</label>
                     <input type="text" id="updateProductName" class="form-control" readonly>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Mevcut Stok</label>
+                    <label class="form-label">@LocalizationService.GetString("CurrentStock")</label>
                     <input type="number" id="updateCurrentStock" class="form-control" readonly>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Yeni Stok</label>
+                    <label class="form-label">@LocalizationService.GetString("NewStock")</label>
                     <input type="number" id="updateNewStock" class="form-control" min="0" required>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-                <button type="button" class="btn btn-primary" onclick="updateStock()">Güncelle</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@LocalizationService.GetString("Cancel")</button>
+                <button type="button" class="btn btn-primary" onclick="updateStock()">@LocalizationService.GetString("Update")</button>
             </div>
         </div>
     </div>
@@ -250,7 +250,17 @@
                 pageLength: 25,
                 order: [[3, 'asc']], // Sort by stock quantity
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/tr.json'
+                    @{
+                        var culture = System.Globalization.CultureInfo.CurrentCulture.Name;
+                        var dataTablesLang = culture switch
+                        {
+                            "tr-TR" => "tr.json",
+                            "en-US" => "en.json", 
+                            "ar-SA" => "ar.json",
+                            _ => "tr.json"
+                        };
+                    }
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/@dataTablesLang'
                 }
             });
 

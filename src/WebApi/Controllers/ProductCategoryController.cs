@@ -22,6 +22,19 @@ public class ProductCategoryController : BaseController
     }
 
     /// <summary>
+    /// Standart kategorileri getir (ServiceCategory bazlı)
+    /// </summary>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Standart kategori listesi</returns>
+    [HttpGet("standard")]
+    [ProducesResponseType(typeof(List<ProductCategoryResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStandardCategories(CancellationToken ct = default)
+    {
+        var result = await _productCategoryService.GetStandardCategoriesAsync(ct);
+        return ToActionResult<List<ProductCategoryResponse>>(result);
+    }
+
+    /// <summary>
     /// Mağaza kategorilerini getir (düz liste)
     /// </summary>
     /// <param name="merchantId">Mağaza ID'si</param>
@@ -62,9 +75,7 @@ public class ProductCategoryController : BaseController
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(ProductCategoryResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetProductCategoryById(
-        [FromRoute] Guid id,
-        CancellationToken ct = default)
+    public async Task<IActionResult> GetProductCategoryById([FromRoute] Guid id, CancellationToken ct = default)
     {
         var result = await _productCategoryService.GetProductCategoryByIdAsync(id, ct);
         return ToActionResult<ProductCategoryResponse>(result);

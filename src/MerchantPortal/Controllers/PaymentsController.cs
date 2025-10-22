@@ -24,7 +24,7 @@ public class PaymentsController : Controller
     /// </summary>
     public IActionResult Index()
     {
-        ViewBag.Title = "Ödeme Geçmişi";
+        ViewData["Title"] = "PaymentHistory";
         return View();
     }
 
@@ -33,7 +33,7 @@ public class PaymentsController : Controller
     /// </summary>
     public IActionResult Reports()
     {
-        ViewBag.Title = "Ödeme Raporları";
+        ViewData["Title"] = "PaymentReports";
         return View();
     }
 
@@ -42,7 +42,7 @@ public class PaymentsController : Controller
     /// </summary>
     public IActionResult Settlements()
     {
-        ViewBag.Title = "Mutabakat Raporları";
+        ViewData["Title"] = "SettlementReports";
         return View();
     }
 

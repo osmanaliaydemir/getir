@@ -61,26 +61,6 @@ public class DailySettlementModel
 }
 
 /// <summary>
-/// Revenue analytics model
-/// </summary>
-public class RevenueAnalyticsModel
-{
-    public DateTime GeneratedAt { get; set; }
-    public decimal TodayRevenue { get; set; }
-    public decimal WeekRevenue { get; set; }
-    public decimal MonthRevenue { get; set; }
-    public decimal YearRevenue { get; set; }
-    public int TodayOrders { get; set; }
-    public int WeekOrders { get; set; }
-    public int MonthOrders { get; set; }
-    public int YearOrders { get; set; }
-    public decimal AverageOrderValue { get; set; }
-    public Dictionary<string, decimal> RevenueByMethod { get; set; } = new();
-    public Dictionary<string, int> OrdersByMethod { get; set; } = new();
-    public List<TopCustomerModel> TopCustomers { get; set; } = new();
-}
-
-/// <summary>
 /// Top customer model
 /// </summary>
 public class TopCustomerModel

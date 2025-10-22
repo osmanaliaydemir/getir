@@ -286,8 +286,9 @@ Campaign sistemi mevcut ama kullanılmıyor.
    - `POST /api/merchantdocument/merchant/{merchantId}/upload`
    - `GET /api/merchantdocument/merchant/{merchantId}`
 
-4. **ReviewController / ProductReviewController**
-   - Merchant'lar müşteri yorumlarını görmeli
+4. **ReviewController / ProductReviewController** — ProductReview ✅ TAMAMLANDI, ReviewController (genel) beklemede
+   - ProductReview: Merchant ürün yorumları, yanıt ve moderasyon — ✅ canlı
+   - ReviewController (genel): Merchant'a gelen genel yorumlar — ⏳ planlı
    - `GET /api/v1/review/reviewee/{merchantId}`
    - `PUT /api/v1/review/{id}/respond` (yanıt özelliği)
 
@@ -391,21 +392,15 @@ Merchant'lar tatil günlerinde kapalı olma ayarı yapabilir. Kullanışlı ama 
 
 ## 🎯 SONUÇ VE ÖNERİLER
 
-### ⚠️ ACİL DÜZELTME GEREKENLEnpm RI:
+### ⚠️ ACİL DÜZELTME GEREKENLER:
 
-1. **StockService Backend Entegrasyonu** ❌  
-   - UI mevcut ama API bağlı değil  
-   - Merchant'lar stok yönetemiyorlar!
-
-2. **PaymentService Backend Entegrasyonu** ❌  
-   - MOCK data kullanılıyor  
-   - Merchant'lar gerçek ödeme verileri göremiyor!
+*Tüm acil düzeltmeler tamamlandı!* ✅
 
 ### 📈 Eklenmesi Gerekenler (Sprint Planı):
 
 **Sprint 1 (1 hafta):**
-- ✅ Stock Management API integration
-- ✅ Payment API integration (gerçek data)
+- ✅ Stock Management API integration (TAMAMLANDI)
+- ✅ Payment API integration (TAMAMLANDI)
 
 **Sprint 2 (1 hafta):**
 - Review management sayfası (görüntüleme + yanıt)

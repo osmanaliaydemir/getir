@@ -17,7 +17,7 @@ public record UpdateProductCategoryRequest(
 
 public record ProductCategoryResponse(
     Guid Id,
-    Guid MerchantId,
+    Guid? MerchantId,
     string MerchantName,
     Guid? ParentCategoryId,
     string? ParentCategoryName,

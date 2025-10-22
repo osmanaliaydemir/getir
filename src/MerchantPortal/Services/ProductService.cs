@@ -38,6 +38,29 @@ public class ProductService : IProductService
     }
 
     /// <summary>
+    /// Merchant'a ait ürünleri getirir.
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Ürünler</returns>
+    public async Task<List<ProductResponse>?> GetProductsByMerchantAsync(Guid merchantId, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _apiClient.GetAsync<ApiResponse<PagedResult<ProductResponse>>>(
+                $"api/v1/merchants/merchantproduct?page=1&pageSize=1000",
+                ct);
+
+            return response?.Data?.Items;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting products by merchant {MerchantId}", merchantId);
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Ürün detaylarını getirir.
     /// </summary>
     /// <param name="productId">Ürün ID</param>

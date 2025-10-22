@@ -13,6 +13,13 @@ public interface IProductService
     /// <returns>Ürünler</returns>
     Task<PagedResult<ProductResponse>?> GetProductsAsync(int page = 1, int pageSize = 20, CancellationToken ct = default);
     /// <summary>
+    /// Merchant'a ait ürünleri getirir.
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Ürünler</returns>
+    Task<List<ProductResponse>?> GetProductsByMerchantAsync(Guid merchantId, CancellationToken ct = default);
+    /// <summary>
     /// Ürün detaylarını getirir.
     /// </summary>
     /// <param name="productId">Ürün ID</param>

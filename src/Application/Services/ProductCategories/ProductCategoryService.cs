@@ -18,6 +18,68 @@ public class ProductCategoryService : BaseService, IProductCategoryService
         _backgroundTaskService = backgroundTaskService;
     }
     /// <summary>
+    /// Standart kategorileri getirir (ServiceCategory bazlı, cache, performance tracking).
+    /// </summary>
+    public async Task<Result<List<ProductCategoryResponse>>> GetStandardCategoriesAsync(CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithPerformanceTracking(
+            async () => await GetStandardCategoriesInternalAsync(cancellationToken),
+            "GetStandardCategories",
+            new { },
+            cancellationToken);
+    }
+
+    private async Task<Result<List<ProductCategoryResponse>>> GetStandardCategoriesInternalAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var cacheKey = "productcategories:standard";
+
+            return await GetOrSetCacheAsync(cacheKey,
+                async () =>
+                {
+                    var categories = await _unitOfWork.ReadRepository<ProductCategory>()
+                        .ListAsync(
+                            c => c.MerchantId == null && c.ServiceCategoryId != null && c.IsActive,
+                            cancellationToken: cancellationToken);
+
+                    // ServiceCategory'leri manuel olarak yükle
+                    var serviceCategoryIds = categories.Where(c => c.ServiceCategoryId.HasValue).Select(c => c.ServiceCategoryId.Value).Distinct().ToList();
+                    var serviceCategories = await _unitOfWork.ReadRepository<ServiceCategory>()
+                        .ListAsync(sc => serviceCategoryIds.Contains(sc.Id), cancellationToken: cancellationToken);
+                    
+                    var serviceCategoryDict = serviceCategories.ToDictionary(sc => sc.Id, sc => sc.Name);
+
+                    var response = categories.Select(c => new ProductCategoryResponse(
+                        c.Id,
+                        c.MerchantId,
+                        c.ServiceCategoryId.HasValue && serviceCategoryDict.ContainsKey(c.ServiceCategoryId.Value) 
+                            ? serviceCategoryDict[c.ServiceCategoryId.Value] 
+                            : "", // ServiceCategoryName
+                        c.ParentCategoryId,
+                        c.ParentCategory?.Name,
+                        c.Name,
+                        c.Description,
+                        c.ImageUrl,
+                        c.DisplayOrder,
+                        c.IsActive,
+                        c.SubCategories?.Count ?? 0,
+                        c.Products?.Count ?? 0
+                    )).ToList();
+
+                    return ServiceResult.Success(response);
+                },
+                TimeSpan.FromMinutes(CacheKeys.TTL.VeryLong), // 1 hour TTL for categories
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting standard categories");
+            return ServiceResult.HandleException<List<ProductCategoryResponse>>(ex, _logger, "GetStandardCategories");
+        }
+    }
+
+    /// <summary>
     /// Merchant'a ait kategorileri getirir (cache, performance tracking).
     /// </summary>
     public async Task<Result<List<ProductCategoryResponse>>> GetMerchantCategoriesAsync(Guid merchantId, CancellationToken cancellationToken = default)
@@ -167,7 +229,7 @@ public class ProductCategoryService : BaseService, IProductCategoryService
                     var response = new ProductCategoryResponse(
                         category.Id,
                         category.MerchantId,
-                        category.Merchant.Name,
+                        category.Merchant?.Name ?? "",
                         category.ParentCategoryId,
                         category.ParentCategory?.Name,
                         category.Name,
@@ -245,7 +307,7 @@ public class ProductCategoryService : BaseService, IProductCategoryService
         var response = new ProductCategoryResponse(
             createdCategory!.Id,
             createdCategory.MerchantId,
-            createdCategory.Merchant.Name,
+            createdCategory.Merchant?.Name ?? "",
             createdCategory.ParentCategoryId,
             createdCategory.ParentCategory?.Name,
             createdCategory.Name,
@@ -272,8 +334,8 @@ public class ProductCategoryService : BaseService, IProductCategoryService
             return Result.Fail<ProductCategoryResponse>("Product category not found", "NOT_FOUND_PRODUCT_CATEGORY");
         }
 
-        // Sadece merchant sahibi güncelleyebilir
-        if (category.Merchant.OwnerId != currentUserId)
+        // Sadece merchant sahibi güncelleyebilir (standart kategoriler için kontrol yok)
+        if (category.MerchantId.HasValue && category.Merchant?.OwnerId != currentUserId)
         {
             return Result.Fail<ProductCategoryResponse>(
                 "You are not authorized to update this category",
@@ -332,7 +394,7 @@ public class ProductCategoryService : BaseService, IProductCategoryService
         var response = new ProductCategoryResponse(
             updatedCategory!.Id,
             updatedCategory.MerchantId,
-            updatedCategory.Merchant.Name,
+            updatedCategory.Merchant?.Name ?? "",
             updatedCategory.ParentCategoryId,
             updatedCategory.ParentCategory?.Name,
             updatedCategory.Name,
@@ -362,8 +424,8 @@ public class ProductCategoryService : BaseService, IProductCategoryService
             return Result.Fail("Product category not found", "NOT_FOUND_PRODUCT_CATEGORY");
         }
 
-        // Sadece merchant sahibi silebilir
-        if (category.Merchant.OwnerId != currentUserId)
+        // Sadece merchant sahibi silebilir (standart kategoriler için kontrol yok)
+        if (category.MerchantId.HasValue && category.Merchant?.OwnerId != currentUserId)
         {
             return Result.Fail("You are not authorized to delete this category", "FORBIDDEN_NOT_OWNER");
         }

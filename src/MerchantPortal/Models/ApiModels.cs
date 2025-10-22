@@ -229,7 +229,7 @@ public class UpdateProductRequest
 public class ProductCategoryResponse
 {
     public Guid Id { get; set; }
-    public Guid MerchantId { get; set; }
+    public Guid? MerchantId { get; set; }
     public Guid? ParentCategoryId { get; set; }
     public string? ParentCategoryName { get; set; }
     public string Name { get; set; } = default!;
@@ -397,6 +397,208 @@ public class SettlementResponse
     public DateTime CreatedAt { get; set; }
 }
 
+// Report Models
+public class SalesDashboardModel
+{
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public decimal TotalRevenue { get; set; }
+    public int TotalOrders { get; set; }
+    public int CompletedOrders { get; set; }
+    public decimal AverageOrderValue { get; set; }
+    public decimal RevenueGrowth { get; set; }
+    public decimal OrderGrowth { get; set; }
+    public List<ProductPerformanceItem> TopProducts { get; set; } = new();
+    public List<DailyData> RevenueByDay { get; set; } = new();
+    public List<DailyData> OrdersByDay { get; set; } = new();
+    public List<BreakdownItem> PaymentMethodBreakdown { get; set; } = new();
+    public List<BreakdownItem> CategoryBreakdown { get; set; } = new();
+}
+
+public class RevenueAnalyticsModel
+{
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public decimal TotalRevenue { get; set; }
+    public List<DailyData> DailyRevenue { get; set; } = new();
+    public List<WeeklyData> WeeklyRevenue { get; set; } = new();
+    public List<MonthlyData> MonthlyRevenue { get; set; } = new();
+    public decimal RevenueTrend { get; set; }
+    public List<BreakdownItem> PaymentMethodDistribution { get; set; } = new();
+    public List<HourlyData> RevenueByHour { get; set; } = new();
+    public List<DailyData> TopRevenueDays { get; set; } = new();
+}
+
+public class CustomerAnalyticsModel
+{
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public int TotalCustomers { get; set; }
+    public int NewCustomers { get; set; }
+    public int ReturningCustomers { get; set; }
+    public decimal CustomerRetentionRate { get; set; }
+    public decimal AverageOrderFrequency { get; set; }
+    public decimal CustomerLifetimeValue { get; set; }
+    public List<CustomerItem> TopCustomers { get; set; } = new();
+    public List<CustomerSegment> CustomerSegments { get; set; } = new();
+    public List<CustomerGrowthData> CustomerGrowth { get; set; } = new();
+    public List<CustomerLTVData> CustomerLTV { get; set; } = new();
+}
+
+public class ProductPerformanceModel
+{
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public int TotalProducts { get; set; }
+    public decimal TotalSales { get; set; }
+    public decimal AverageOrderValue { get; set; }
+    public decimal SalesGrowth { get; set; }
+    public List<ProductPerformanceItem> TopProducts { get; set; } = new();
+    public List<ProductPerformanceItem> LowPerformanceProducts { get; set; } = new();
+    public List<SalesByDayData> SalesByDay { get; set; } = new();
+    public List<BreakdownItem> CategoryBreakdown { get; set; } = new();
+    public List<ProductPerformanceItem> LowStockProducts { get; set; } = new();
+    public List<ProductPerformanceItem> OutOfStockProducts { get; set; } = new();
+    public List<ProductPerformanceItem> BestSellers { get; set; } = new();
+    public List<ProductPerformanceItem> LowPerformers { get; set; } = new();
+    public List<CategoryPerformance> CategoryPerformance { get; set; } = new();
+    public List<ProductTrend> ProductTrends { get; set; } = new();
+    public List<InventoryTurnover> InventoryTurnover { get; set; } = new();
+    public List<ProfitMargin> ProfitMargins { get; set; } = new();
+}
+
+public class ChartDataModel
+{
+    public string ChartType { get; set; } = default!;
+    public List<object> Data { get; set; } = new();
+    public List<string> Labels { get; set; } = new();
+    public List<string> Colors { get; set; } = new();
+}
+
+public class ReportExportRequest
+{
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public string ReportType { get; set; } = default!;
+    public string Format { get; set; } = "excel";
+}
+
+// Supporting Models
+public class DailyData
+{
+    public DateTime Date { get; set; }
+    public decimal Value { get; set; }
+    public int Count { get; set; }
+}
+
+public class WeeklyData
+{
+    public int Week { get; set; }
+    public int Year { get; set; }
+    public decimal Value { get; set; }
+    public int Count { get; set; }
+}
+
+public class MonthlyData
+{
+    public int Month { get; set; }
+    public int Year { get; set; }
+    public decimal Value { get; set; }
+    public int Count { get; set; }
+}
+
+public class HourlyData
+{
+    public int Hour { get; set; }
+    public decimal Value { get; set; }
+    public int Count { get; set; }
+}
+
+public class BreakdownItem
+{
+    public string Label { get; set; } = default!;
+    public decimal Value { get; set; }
+    public decimal Percentage { get; set; }
+    public string Color { get; set; } = default!;
+}
+
+public class ProductPerformanceItem
+{
+    public Guid ProductId { get; set; }
+    public string ProductName { get; set; } = default!;
+    public string Name { get; set; } = default!;
+    public string Category { get; set; } = default!;
+    public string? ImageUrl { get; set; }
+    public int QuantitySold { get; set; }
+    public int SalesCount { get; set; }
+    public decimal Revenue { get; set; }
+    public decimal Profit { get; set; }
+    public decimal ProfitMargin { get; set; }
+}
+
+public class CustomerItem
+{
+    public Guid CustomerId { get; set; }
+    public string CustomerName { get; set; } = default!;
+    public int OrderCount { get; set; }
+    public decimal TotalSpent { get; set; }
+    public DateTime LastOrderDate { get; set; }
+}
+
+public class CustomerSegment
+{
+    public string SegmentName { get; set; } = default!;
+    public string Segment { get; set; } = default!;
+    public int CustomerCount { get; set; }
+    public int Count { get; set; }
+    public decimal AverageValue { get; set; }
+    public string Color { get; set; } = default!;
+}
+
+public class CategoryPerformance
+{
+    public Guid CategoryId { get; set; }
+    public string CategoryName { get; set; } = default!;
+    public int ProductCount { get; set; }
+    public int OrderCount { get; set; }
+    public decimal Revenue { get; set; }
+    public decimal Percentage { get; set; }
+}
+
+public class ProductTrend
+{
+    public Guid ProductId { get; set; }
+    public string ProductName { get; set; } = default!;
+    public decimal TrendValue { get; set; }
+    public string TrendDirection { get; set; } = default!;
+}
+
+public class InventoryTurnover
+{
+    public Guid ProductId { get; set; }
+    public string ProductName { get; set; } = default!;
+    public decimal TurnoverRate { get; set; }
+    public int DaysInInventory { get; set; }
+}
+
+public class ProfitMargin
+{
+    public Guid ProductId { get; set; }
+    public string ProductName { get; set; } = default!;
+    public decimal Cost { get; set; }
+    public decimal Price { get; set; }
+    public decimal Margin { get; set; }
+    public decimal MarginPercentage { get; set; }
+}
+
+public class ReportDataItem
+{
+    public string ReportType { get; set; } = default!;
+    public DateTime Date { get; set; }
+    public decimal Value { get; set; }
+    public string Details { get; set; } = default!;
+}
+
 public class PaymentStatisticsResponse
 {
     public decimal TodayRevenue { get; set; }
@@ -470,6 +672,53 @@ public class StockSummaryResponse
     public int OverstockItems { get; set; }
     public int ActiveAlerts { get; set; }
     public decimal TotalValue { get; set; }
+}
+
+// Stock Report Models (client-side equivalents for WebApi responses)
+public class StockReportResponse
+{
+    public DateTime GeneratedAt { get; set; }
+    public string ReportType { get; set; } = "CurrentStock";
+    public StockSummaryResponse Summary { get; set; } = new();
+    public List<StockItemReportResponse> Items { get; set; } = new();
+    public List<StockMovementResponse> Movements { get; set; } = new();
+    public List<StockAlertResponse> Alerts { get; set; } = new();
+}
+
+
+public class StockItemReportResponse
+{
+    public Guid ProductId { get; set; }
+    public Guid? ProductVariantId { get; set; }
+    public string ProductName { get; set; } = default!;
+    public string? VariantName { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
+    public int CurrentStock { get; set; }
+    public int MinimumStock { get; set; }
+    public int MaximumStock { get; set; }
+    public decimal UnitPrice { get; set; }
+    public decimal TotalValue { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public DateTime LastMovement { get; set; }
+    public int MovementCount { get; set; }
+    public decimal MovementValue { get; set; }
+}
+
+public class StockMovementResponse
+{
+    public Guid Id { get; set; }
+    public Guid ProductId { get; set; }
+    public Guid? ProductVariantId { get; set; }
+    public string ProductName { get; set; } = default!;
+    public string? VariantName { get; set; }
+    public int Quantity { get; set; }
+    public string ChangeType { get; set; } = string.Empty;
+    public string? Reason { get; set; }
+    public DateTime MovementDate { get; set; }
+    public Guid? OrderId { get; set; }
+    public string? OrderNumber { get; set; }
+    public Guid? ChangedBy { get; set; }
+    public string? ChangedByName { get; set; }
 }
 
 public class StockReportRequest
@@ -552,6 +801,27 @@ public class ProductReviewStatsResponse
     public int OneStarCount { get; set; }
     public int VerifiedPurchaseCount { get; set; }
     public int PendingApprovalCount { get; set; }
+}
+
+// Additional supporting models for Reports
+public class CustomerGrowthData
+{
+    public DateTime Date { get; set; }
+    public int NewCustomers { get; set; }
+    public int ReturningCustomers { get; set; }
+}
+
+public class CustomerLTVData
+{
+    public DateTime Date { get; set; }
+    public decimal AverageLTV { get; set; }
+}
+
+public class SalesByDayData
+{
+    public DateTime Date { get; set; }
+    public int Sales { get; set; }
+    public decimal Revenue { get; set; }
 }
 
 public class RespondToReviewRequest

@@ -74,7 +74,6 @@ public class PaymentService : IPaymentService
     {
         try
         {
-            // ✅ FIXED: Correct endpoint path
             var response = await _httpClient.GetAsync($"api/v1/payment/{paymentId}");
             if (!response.IsSuccessStatusCode)
                 return null;
@@ -93,7 +92,6 @@ public class PaymentService : IPaymentService
     {
         try
         {
-            // ✅ FIXED: Use correct summary endpoint
             var response = await _httpClient.GetAsync(
                 $"api/v1/payment/merchant/{merchantId}/summary?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}");
 
@@ -109,7 +107,6 @@ public class PaymentService : IPaymentService
                 return CreateEmptySettlementReport(startDate, endDate);
             }
 
-            // Generate daily breakdown
             var dailyBreakdown = new List<DailySettlementModel>();
             for (var date = startDate.Date; date <= endDate.Date; date = date.AddDays(1))
             {
@@ -117,7 +114,9 @@ public class PaymentService : IPaymentService
                 if (dayPayments.Any())
                 {
                     var dayRevenue = dayPayments.Sum(p => p.Amount);
-                    var dayCommission = dayRevenue * 0.15m; // 15% commission
+                    var dayCommission = settlement.TotalCommission > 0 
+                        ? (dayRevenue / settlement.TotalAmount) * settlement.TotalCommission 
+                        : 0;
 
                     dailyBreakdown.Add(new DailySettlementModel
                     {
@@ -138,7 +137,10 @@ public class PaymentService : IPaymentService
                 TotalCommission = settlement.TotalCommission,
                 NetAmount = settlement.NetAmount,
                 TotalOrders = settlement.TotalOrders,
-                CompletedOrders = settlement.Payments.Count(p => p.Status.ToString() == "Completed"),
+                CompletedOrders = settlement.Payments.Count(p => p.Status == "Completed"),
+                RevenueByMethod = settlement.Payments
+                    .GroupBy(p => p.PaymentMethod)
+                    .ToDictionary(g => g.Key, g => g.Sum(p => p.Amount)),
                 DailyBreakdown = dailyBreakdown
             };
         }
@@ -149,7 +151,7 @@ public class PaymentService : IPaymentService
         }
     }
 
-    public async Task<RevenueAnalyticsModel> GetRevenueAnalyticsAsync(Guid merchantId)
+    public async Task<RevenueAnalyticsModel> GetRevenueAnalyticsAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null)
     {
         try
         {
@@ -160,7 +162,6 @@ public class PaymentService : IPaymentService
             var monthStart = new DateTime(now.Year, now.Month, 1);
             var yearStart = new DateTime(now.Year, 1, 1);
 
-            // ✅ FIXED: Use correct endpoint
             var response = await _httpClient.GetAsync(
                 $"api/v1/payment/merchant/{merchantId}/transactions?Page=1&PageSize=1000&startDate={yearStart:yyyy-MM-dd}");
 
@@ -172,26 +173,23 @@ public class PaymentService : IPaymentService
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<PaymentResponse>>>();
             var payments = apiResponse?.Data?.Items ?? new List<PaymentResponse>();
 
-            var completedPayments = payments.Where(p => p.Status.ToString() == "Completed").ToList();
+            var completedPayments = payments.Where(p => p.Status == "Completed").ToList();
 
+            var start = startDate ?? DateTime.Now.AddDays(-30);
+            var end = endDate ?? DateTime.Now;
+            
             return new RevenueAnalyticsModel
             {
-                GeneratedAt = now,
-                TodayRevenue = completedPayments.Where(p => p.CreatedAt.Date == todayStart).Sum(p => p.Amount),
-                WeekRevenue = completedPayments.Where(p => p.CreatedAt >= weekStart).Sum(p => p.Amount),
-                MonthRevenue = completedPayments.Where(p => p.CreatedAt >= monthStart).Sum(p => p.Amount),
-                YearRevenue = completedPayments.Sum(p => p.Amount),
-                TodayOrders = completedPayments.Count(p => p.CreatedAt.Date == todayStart),
-                WeekOrders = completedPayments.Count(p => p.CreatedAt >= weekStart),
-                MonthOrders = completedPayments.Count(p => p.CreatedAt >= monthStart),
-                YearOrders = completedPayments.Count,
-                AverageOrderValue = completedPayments.Any() ? completedPayments.Average(p => p.Amount) : 0,
-                RevenueByMethod = completedPayments
-                    .GroupBy(p => p.PaymentMethod.ToString())
-                    .ToDictionary(g => g.Key, g => g.Sum(p => p.Amount)),
-                OrdersByMethod = completedPayments
-                    .GroupBy(p => p.PaymentMethod.ToString())
-                    .ToDictionary(g => g.Key, g => g.Count())
+                StartDate = start,
+                EndDate = end,
+                TotalRevenue = completedPayments.Sum(p => p.Amount),
+                DailyRevenue = GetDailyRevenue(completedPayments, start, end),
+                WeeklyRevenue = GetWeeklyRevenue(completedPayments, start, end),
+                MonthlyRevenue = GetMonthlyRevenue(completedPayments, start, end),
+                RevenueTrend = CalculateRevenueTrend(completedPayments, start, end),
+                PaymentMethodDistribution = GetPaymentMethodDistribution(completedPayments),
+                RevenueByHour = GetRevenueByHour(completedPayments),
+                TopRevenueDays = GetTopRevenueDays(completedPayments, start, end)
             };
         }
         catch (Exception ex)
@@ -201,52 +199,6 @@ public class PaymentService : IPaymentService
         }
     }
 
-    public async Task<List<PaymentMethodBreakdownModel>> GetPaymentMethodBreakdownAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null)
-    {
-        try
-        {
-            var start = startDate ?? DateTime.Now.AddMonths(-1);
-            var end = endDate ?? DateTime.Now;
-
-            // ✅ FIXED: Use correct endpoint
-            var response = await _httpClient.GetAsync(
-                $"api/v1/payment/merchant/{merchantId}/transactions?Page=1&PageSize=1000&startDate={start:yyyy-MM-dd}&endDate={end:yyyy-MM-dd}");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                return new List<PaymentMethodBreakdownModel>();
-            }
-
-            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<PaymentResponse>>>();
-            var payments = apiResponse?.Data?.Items ?? new List<PaymentResponse>();
-            var completedPayments = payments.Where(p => p.Status.ToString() == "Completed").ToList();
-
-            if (!completedPayments.Any())
-                return new List<PaymentMethodBreakdownModel>();
-
-            var totalAmount = completedPayments.Sum(p => p.Amount);
-            var breakdown = completedPayments
-                .GroupBy(p => p.PaymentMethod.ToString())
-                .Select(g => new PaymentMethodBreakdownModel
-                {
-                    Method = g.Key,
-                    DisplayName = GetPaymentMethodDisplayName(g.Key),
-                    OrderCount = g.Count(),
-                    TotalAmount = g.Sum(p => p.Amount),
-                    Percentage = (g.Sum(p => p.Amount) / totalAmount) * 100,
-                    Color = GetPaymentMethodColor(g.Key)
-                })
-                .OrderByDescending(b => b.TotalAmount)
-                .ToList();
-
-            return breakdown;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting payment method breakdown");
-            return new List<PaymentMethodBreakdownModel>();
-        }
-    }
 
     public async Task<byte[]> ExportToExcelAsync(Guid merchantId, PaymentExportRequest request)
     {
@@ -262,7 +214,6 @@ public class PaymentService : IPaymentService
 
             var payments = await GetPaymentHistoryAsync(merchantId, filter);
 
-            // Simple CSV export (can be upgraded to proper Excel with EPPlus or ClosedXML)
             var csv = new StringBuilder();
             csv.AppendLine("Order Number,Payment Method,Status,Amount,Created At,Completed At");
 
@@ -287,6 +238,81 @@ public class PaymentService : IPaymentService
         return await ExportToExcelAsync(merchantId, request);
     }
 
+    /// <summary>
+    /// Get merchant settlements from API
+    /// </summary>
+    public async Task<List<SettlementResponse>> GetMerchantSettlementsAsync(Guid merchantId, int page = 1, int pageSize = 50)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                $"api/v1/payment/merchant/{merchantId}/settlements?Page={page}&PageSize={pageSize}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Failed to get settlements: {StatusCode}", response.StatusCode);
+                return new List<SettlementResponse>();
+            }
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<SettlementResponse>>>();
+            return apiResponse?.Data?.Items ?? new List<SettlementResponse>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting settlements for merchant {MerchantId}", merchantId);
+            return new List<SettlementResponse>();
+        }
+    }
+
+    /// <summary>
+    /// Get payment method breakdown from API data
+    /// </summary>
+    public async Task<List<PaymentMethodBreakdownModel>> GetPaymentMethodBreakdownAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null)
+    {
+        try
+        {
+            var queryParams = new List<string> { "Page=1", "PageSize=1000" };
+            if (startDate.HasValue)
+                queryParams.Add($"startDate={startDate:yyyy-MM-dd}");
+            if (endDate.HasValue)
+                queryParams.Add($"endDate={endDate:yyyy-MM-dd}");
+
+            var query = string.Join("&", queryParams);
+            var response = await _httpClient.GetAsync($"api/v1/payment/merchant/{merchantId}/transactions?{query}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new List<PaymentMethodBreakdownModel>();
+            }
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<PaymentResponse>>>();
+            var payments = apiResponse?.Data?.Items ?? new List<PaymentResponse>();
+            var completedPayments = payments.Where(p => p.Status == "Completed").ToList();
+
+            var totalAmount = completedPayments.Sum(p => p.Amount);
+            if (totalAmount == 0) return new List<PaymentMethodBreakdownModel>();
+
+            return completedPayments
+                .GroupBy(p => p.PaymentMethod)
+                .Select(g => new PaymentMethodBreakdownModel
+                {
+                    Method = g.Key,
+                    DisplayName = GetPaymentMethodDisplayName(g.Key),
+                    OrderCount = g.Count(),
+                    TotalAmount = g.Sum(p => p.Amount),
+                    Percentage = (g.Sum(p => p.Amount) / totalAmount) * 100,
+                    Color = GetPaymentMethodColor(g.Key)
+                })
+                .OrderByDescending(x => x.TotalAmount)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting payment method breakdown");
+            return new List<PaymentMethodBreakdownModel>();
+        }
+    }
+
     #region Helper Methods
 
     private SettlementReportModel CreateEmptySettlementReport(DateTime startDate, DateTime endDate)
@@ -309,20 +335,110 @@ public class PaymentService : IPaymentService
     {
         return new RevenueAnalyticsModel
         {
-            GeneratedAt = DateTime.Now,
-            TodayRevenue = 0,
-            WeekRevenue = 0,
-            MonthRevenue = 0,
-            YearRevenue = 0,
-            TodayOrders = 0,
-            WeekOrders = 0,
-            MonthOrders = 0,
-            YearOrders = 0,
-            AverageOrderValue = 0,
-            RevenueByMethod = new Dictionary<string, decimal>(),
-            OrdersByMethod = new Dictionary<string, int>(),
-            TopCustomers = new List<TopCustomerModel>()
+            StartDate = DateTime.Now.AddDays(-30),
+            EndDate = DateTime.Now,
+            TotalRevenue = 0,
+            DailyRevenue = new List<DailyData>(),
+            WeeklyRevenue = new List<WeeklyData>(),
+            MonthlyRevenue = new List<MonthlyData>(),
+            RevenueTrend = 0,
+            PaymentMethodDistribution = new List<BreakdownItem>(),
+            RevenueByHour = new List<HourlyData>(),
+            TopRevenueDays = new List<DailyData>()
         };
+    }
+
+    private List<DailyData> GetDailyRevenue(List<PaymentResponse> payments, DateTime startDate, DateTime endDate)
+    {
+        var dailyData = new List<DailyData>();
+        for (var date = startDate.Date; date <= endDate.Date; date = date.AddDays(1))
+        {
+            var dayRevenue = payments.Where(p => p.CreatedAt.Date == date).Sum(p => p.Amount);
+            dailyData.Add(new DailyData { Date = date, Value = dayRevenue });
+        }
+        return dailyData;
+    }
+
+    private List<WeeklyData> GetWeeklyRevenue(List<PaymentResponse> payments, DateTime startDate, DateTime endDate)
+    {
+        var weeklyData = new List<WeeklyData>();
+        var currentWeek = startDate.Date.AddDays(-(int)startDate.DayOfWeek);
+        
+        while (currentWeek <= endDate.Date)
+        {
+            var weekEnd = currentWeek.AddDays(6);
+            var weekRevenue = payments.Where(p => p.CreatedAt.Date >= currentWeek && p.CreatedAt.Date <= weekEnd).Sum(p => p.Amount);
+            var weekNumber = GetWeekOfYear(currentWeek);
+            weeklyData.Add(new WeeklyData { Week = weekNumber, Year = currentWeek.Year, Value = weekRevenue });
+            currentWeek = currentWeek.AddDays(7);
+        }
+        return weeklyData;
+    }
+
+    private List<MonthlyData> GetMonthlyRevenue(List<PaymentResponse> payments, DateTime startDate, DateTime endDate)
+    {
+        var monthlyData = new List<MonthlyData>();
+        var currentMonth = new DateTime(startDate.Year, startDate.Month, 1);
+        
+        while (currentMonth <= endDate.Date)
+        {
+            var monthEnd = currentMonth.AddMonths(1).AddDays(-1);
+            var monthRevenue = payments.Where(p => p.CreatedAt.Date >= currentMonth && p.CreatedAt.Date <= monthEnd).Sum(p => p.Amount);
+            monthlyData.Add(new MonthlyData { Month = currentMonth.Month, Year = currentMonth.Year, Value = monthRevenue });
+            currentMonth = currentMonth.AddMonths(1);
+        }
+        return monthlyData;
+    }
+
+    private int GetWeekOfYear(DateTime date)
+    {
+        var culture = System.Globalization.CultureInfo.CurrentCulture;
+        return culture.Calendar.GetWeekOfYear(date, System.Globalization.CalendarWeekRule.FirstDay, DayOfWeek.Monday);
+    }
+
+    private decimal CalculateRevenueTrend(List<PaymentResponse> payments, DateTime startDate, DateTime endDate)
+    {
+        var dailyRevenue = GetDailyRevenue(payments, startDate, endDate);
+        if (dailyRevenue.Count < 2) return 0;
+        
+        var firstHalf = dailyRevenue.Take(dailyRevenue.Count / 2).Sum(x => x.Value);
+        var secondHalf = dailyRevenue.Skip(dailyRevenue.Count / 2).Sum(x => x.Value);
+        
+        if (firstHalf == 0) return 0;
+        return ((secondHalf - firstHalf) / firstHalf) * 100;
+    }
+
+    private List<BreakdownItem> GetPaymentMethodDistribution(List<PaymentResponse> payments)
+    {
+        return payments.GroupBy(p => p.PaymentMethod.ToString())
+            .Select(g => new BreakdownItem
+            {
+                Label = GetPaymentMethodDisplayName(g.Key),
+                Value = g.Sum(p => p.Amount),
+                Percentage = payments.Any() ? (g.Sum(p => p.Amount) / payments.Sum(p => p.Amount)) * 100 : 0,
+                Color = GetPaymentMethodColor(g.Key)
+            })
+            .OrderByDescending(x => x.Value)
+            .ToList();
+    }
+
+    private List<HourlyData> GetRevenueByHour(List<PaymentResponse> payments)
+    {
+        var hourlyData = new List<HourlyData>();
+        for (int hour = 0; hour < 24; hour++)
+        {
+            var hourRevenue = payments.Where(p => p.CreatedAt.Hour == hour).Sum(p => p.Amount);
+            hourlyData.Add(new HourlyData { Hour = hour, Value = hourRevenue });
+        }
+        return hourlyData;
+    }
+
+    private List<DailyData> GetTopRevenueDays(List<PaymentResponse> payments, DateTime startDate, DateTime endDate)
+    {
+        return GetDailyRevenue(payments, startDate, endDate)
+            .OrderByDescending(x => x.Value)
+            .Take(10)
+            .ToList();
     }
 
     private string GetPaymentMethodDisplayName(string method)

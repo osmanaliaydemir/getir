@@ -19,16 +19,50 @@ public class OrdersController : Controller
 
     public async Task<IActionResult> Index(int page = 1, string? status = null)
     {
-        var orders = await _orderService.GetOrdersAsync(page, 20, status);
-        ViewBag.CurrentStatus = status;
-        
-        return View(orders);
+        try
+        {
+            var orders = await _orderService.GetOrdersAsync(page, 20, status);
+            ViewBag.CurrentStatus = status;
+            
+            if (orders == null || orders.Items == null)
+            {
+                orders = new PagedResult<OrderResponse>
+                {
+                    Items = new List<OrderResponse>(),
+                    TotalCount = 0,
+                    Page = page,
+                    PageSize = 20,
+                    TotalPages = 0
+                };
+            }
+            
+            return View(orders);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in Orders Index action");
+            ViewBag.CurrentStatus = status;
+            
+            var emptyOrders = new PagedResult<OrderResponse>
+            {
+                Items = new List<OrderResponse>(),
+                TotalCount = 0,
+                Page = page,
+                PageSize = 20,
+                TotalPages = 0
+            };
+            
+            return View(emptyOrders);
+        }
     }
 
     public async Task<IActionResult> Pending(int page = 1)
     {
         var orders = await _orderService.GetPendingOrdersAsync(page, 20);
-        return View(orders);
+        
+        // View'ın beklediği List<OrderResponse> tipine çevir
+        var orderList = orders?.Items ?? new List<OrderResponse>();
+        return View(orderList);
     }
 
     [HttpGet]

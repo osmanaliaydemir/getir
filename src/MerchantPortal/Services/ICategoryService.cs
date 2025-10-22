@@ -17,6 +17,12 @@ public interface ICategoryService
     /// <returns>Mağaza kategorileri</returns>
     Task<List<ProductCategoryResponse>?> GetMyCategoriesAsync(CancellationToken ct = default);
     /// <summary>
+    /// Standart kategorileri getirir (ServiceCategory bazlı).
+    /// </summary>
+    /// <param name="ct">CancellationToken</param>
+    /// <returns>Standart kategoriler</returns>
+    Task<List<ProductCategoryResponse>?> GetStandardCategoriesAsync(CancellationToken ct = default);
+    /// <summary>
     /// Kategori detaylarını getirir.
     /// </summary>
     /// <param name="categoryId">Kategori ID</param>
