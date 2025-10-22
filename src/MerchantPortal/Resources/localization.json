@@ -173,7 +173,8 @@
     "SelectedItems": "ürün seçildi",
     "StockHistory": "Stok Geçmişi",
     "BulkUpdateInfo": "Birden fazla ürünün stok seviyesini aynı anda güncelleyebilirsiniz.",
-    "ConfirmDelete": "Bu ürünü silmek istediğinize emin misiniz?"
+    "ConfirmDelete": "Bu ürünü silmek istediğinize emin misiniz?",
+    "DiscountedPrice": "İndirimli Fiyat"
   },
   "en-US": {
     "AppTitle": "Getir Merchant Portal",
@@ -349,7 +350,8 @@
     "SelectedItems": "items selected",
     "StockHistory": "Stock History",
     "BulkUpdateInfo": "You can update stock levels for multiple products at once.",
-    "ConfirmDelete": "Are you sure you want to delete this product?"
+    "ConfirmDelete": "Are you sure you want to delete this product?",
+    "DiscountedPrice": "Discounted Price"
   },
   "ar-SA": {
     "AppTitle": "بوابة تاجر جتير",
@@ -525,6 +527,7 @@
     "SelectedItems": "عنصر محدد",
     "StockHistory": "تاريخ المخزون",
     "BulkUpdateInfo": "يمكنك تحديث مستويات المخزون لعدة منتجات في وقت واحد.",
-    "ConfirmDelete": "هل أنت متأكد من حذف هذا المنتج؟"
+    "ConfirmDelete": "هل أنت متأكد من حذف هذا المنتج؟",
+    "DiscountedPrice": "السعر المخفض"
   }
 }

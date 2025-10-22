@@ -9,7 +9,7 @@
     <div class="col-md-8 mx-auto">
         <div class="stat-card">
             <h4 class="mb-4">
-                <i class="fas fa-edit"></i> Ürün Düzenle
+                <i class="fas fa-edit"></i> @LocalizationService.GetString("EditProduct")
             </h4>
 
             <form asp-action="Edit" method="post">
@@ -18,15 +18,15 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="Name" class="form-label">Ürün Adı *</label>
+                        <label asp-for="Name" class="form-label">@LocalizationService.GetString("ProductName") *</label>
                         <input asp-for="Name" class="form-control" />
                         <span asp-validation-for="Name" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label asp-for="ProductCategoryId" class="form-label">Kategori</label>
+                        <label asp-for="ProductCategoryId" class="form-label">@LocalizationService.GetString("Category")</label>
                         <select asp-for="ProductCategoryId" class="form-select">
-                            <option value="">Kategori seçin...</option>
+                            <option value="">@LocalizationService.GetString("Category")...</option>
                             @foreach (var category in categories)
                             {
                                 <option value="@category.Id">@category.Name</option>
@@ -37,26 +37,26 @@
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Description" class="form-label">Açıklama</label>
+                    <label asp-for="Description" class="form-label">@LocalizationService.GetString("Description")</label>
                     <textarea asp-for="Description" class="form-control" rows="3"></textarea>
                     <span asp-validation-for="Description" class="text-danger"></span>
                 </div>
 
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label asp-for="Price" class="form-label">Fiyat (₺) *</label>
+                        <label asp-for="Price" class="form-label">@LocalizationService.GetString("Price") (₺) *</label>
                         <input asp-for="Price" type="number" step="0.01" class="form-control" />
                         <span asp-validation-for="Price" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-4 mb-3">
-                        <label asp-for="DiscountedPrice" class="form-label">İndirimli Fiyat (₺)</label>
+                        <label asp-for="DiscountedPrice" class="form-label">@LocalizationService.GetString("DiscountedPrice") (₺)</label>
                         <input asp-for="DiscountedPrice" type="number" step="0.01" class="form-control" />
                         <span asp-validation-for="DiscountedPrice" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-4 mb-3">
-                        <label asp-for="StockQuantity" class="form-label">Stok Miktarı *</label>
+                        <label asp-for="StockQuantity" class="form-label">@LocalizationService.GetString("StockAmount") *</label>
                         <input asp-for="StockQuantity" type="number" class="form-control" />
                         <span asp-validation-for="StockQuantity" class="text-danger"></span>
                     </div>
@@ -64,20 +64,20 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="Unit" class="form-label">Birim</label>
+                        <label asp-for="Unit" class="form-label">@LocalizationService.GetString("Unit")</label>
                         <input asp-for="Unit" class="form-control" />
                         <span asp-validation-for="Unit" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label asp-for="DisplayOrder" class="form-label">Sıralama</label>
+                        <label asp-for="DisplayOrder" class="form-label">@LocalizationService.GetString("Order")</label>
                         <input asp-for="DisplayOrder" type="number" class="form-control" />
                         <span asp-validation-for="DisplayOrder" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="ImageUrl" class="form-label">Görsel URL</label>
+                    <label asp-for="ImageUrl" class="form-label">@LocalizationService.GetString("Image") URL</label>
                     <input asp-for="ImageUrl" class="form-control" />
                     <span asp-validation-for="ImageUrl" class="text-danger"></span>
                 </div>
@@ -86,24 +86,24 @@
                     <div class="col-md-6 mb-3">
                         <div class="form-check form-switch">
                             <input asp-for="IsAvailable" class="form-check-input" type="checkbox" />
-                            <label asp-for="IsAvailable" class="form-check-label">Stokta Var</label>
+                            <label asp-for="IsAvailable" class="form-check-label">@LocalizationService.GetString("InStock")</label>
                         </div>
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <div class="form-check form-switch">
                             <input asp-for="IsActive" class="form-check-input" type="checkbox" />
-                            <label asp-for="IsActive" class="form-check-label">Aktif</label>
+                            <label asp-for="IsActive" class="form-check-label">@LocalizationService.GetString("Active")</label>
                         </div>
                     </div>
                 </div>
 
                 <div class="d-flex justify-content-between mt-4">
                     <a href="@Url.Action("Index")" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Geri
+                        <i class="fas fa-arrow-left"></i> @LocalizationService.GetString("Back")
                     </a>
                     <button type="submit" class="btn btn-getir">
-                        <i class="fas fa-save"></i> Değişiklikleri Kaydet
+                        <i class="fas fa-save"></i> @LocalizationService.GetString("Save")
                     </button>
                 </div>
             </form>
