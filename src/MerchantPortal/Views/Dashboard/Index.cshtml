@@ -1,5 +1,4 @@
 @inject ILocalizationService LocalizationService
-@using System.Globalization
 @using Getir.MerchantPortal.Services
 @{
     ViewData["Title"] = LocalizationService.GetString("Dashboard");
@@ -8,34 +7,25 @@
     var topProducts = ViewBag.TopProducts as List<TopProductResponse> ?? new List<TopProductResponse>();
     var stockSummary = ViewBag.StockSummary as StockSummaryResponse;
     
-    var currentCulture = CultureInfo.CurrentUICulture.Name;
 }
 
 @section Styles {
     <link rel="stylesheet" href="~/css/dashboard-modern.css" />
 }
 
-<!-- DEBUG: Culture Info (Remove in production) -->
-<div class="alert alert-info alert-dismissible fade show" role="alert">
-    <strong>🌐 Culture Debug:</strong> 
-    Current UI Culture: <code>@currentCulture</code> | 
-    Localizer Test: <code>@LocalizationService.GetString("Dashboard")</code> |
-    Expected: <code>Ana Sayfa</code>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
 
 <!-- Welcome Banner -->
 <div class="quick-stats-banner fade-in mb-4">
     <div class="row align-items-center">
         <div class="col-md-8">
-            <h2><i class="fas fa-store me-2"></i>Hoş Geldiniz, @User.Identity?.Name!</h2>
-            <p class="mb-0">Bugünün İstatistikleri</p>
+            <h2><i class="fas fa-store me-2"></i>@LocalizationService.GetString("Welcome"), @User.Identity?.Name!</h2>
+            <p class="mb-0">@LocalizationService.GetString("TodayStats")</p>
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0">
             <div class="d-flex align-items-center justify-content-md-end gap-2">
                 <i class="fas fa-clock fa-2x opacity-75"></i>
                 <div>
-                    <div class="small opacity-75">Son Güncelleme</div>
+                    <div class="small opacity-75">@LocalizationService.GetString("LastUpdate")</div>
                     <div id="lastUpdate" class="fw-bold">@DateTime.Now.ToString("HH:mm")</div>
                 </div>
             </div>
@@ -51,11 +41,11 @@
             <div class="stat-icon-modern primary">
                 <i class="fas fa-lira-sign"></i>
             </div>
-            <div class="stat-label">Bugünkü Ciro</div>
+            <div class="stat-label">@LocalizationService.GetString("TodayRevenue")</div>
             <div class="stat-value">₺@(dashboard?.TodayRevenue.ToString("N2") ?? "0")</div>
             <div class="stat-change positive">
                 <i class="fas fa-arrow-up"></i>
-                <span>@(dashboard?.TodayOrders ?? 0) sipariş</span>
+                <span>@(dashboard?.TodayOrders ?? 0) @LocalizationService.GetString("OrdersCount")</span>
             </div>
         </div>
     </div>
@@ -66,11 +56,11 @@
             <div class="stat-icon-modern warning">
                 <i class="fas fa-clock"></i>
             </div>
-            <div class="stat-label">Bekleyen Siparişler</div>
+            <div class="stat-label">@LocalizationService.GetString("PendingOrders")</div>
             <div class="stat-value">@(dashboard?.PendingOrders ?? 0)</div>
             <div class="stat-change @(dashboard?.PendingOrders > 0 ? "negative" : "neutral")">
                 <i class="fas fa-exclamation-circle"></i>
-                <span>İşlem bekliyor</span>
+                <span>@LocalizationService.GetString("PendingAction")</span>
             </div>
         </div>
     </div>
@@ -81,11 +71,11 @@
             <div class="stat-icon-modern success">
                 <i class="fas fa-box"></i>
             </div>
-            <div class="stat-label">Aktif Ürünler</div>
+            <div class="stat-label">@LocalizationService.GetString("ActiveProducts")</div>
             <div class="stat-value">@(dashboard?.ActiveProducts ?? 0)</div>
             <div class="stat-change positive">
                 <i class="fas fa-check-circle"></i>
-                <span>Satışta</span>
+                <span>@LocalizationService.GetString("OnSale")</span>
             </div>
         </div>
     </div>
@@ -96,11 +86,11 @@
             <div class="stat-icon-modern info">
                 <i class="fas fa-star"></i>
             </div>
-            <div class="stat-label">Değerlendirme</div>
+            <div class="stat-label">@LocalizationService.GetString("Review")</div>
             <div class="stat-value">@(dashboard?.AverageRating?.ToString("N1") ?? "0.0")</div>
             <div class="stat-change neutral">
                 <i class="fas fa-users"></i>
-                <span>@(dashboard?.TotalReviews ?? 0) yorum</span>
+                <span>@(dashboard?.TotalReviews ?? 0) @LocalizationService.GetString("Reviews")</span>
             </div>
         </div>
     </div>
@@ -113,14 +103,14 @@
             <div class="chart-header">
                 <div class="chart-title">
                     <i class="fas fa-chart-line"></i>
-                    Haftalık Performans
+                    @LocalizationService.GetString("WeeklyPerformance")
                 </div>
             </div>
             <div class="row">
                 <div class="col-6">
                     <div class="metric-row">
                         <div>
-                            <div class="metric-label">Ciro</div>
+                            <div class="metric-label">@LocalizationService.GetString("Revenue")</div>
                             <div class="metric-value text-primary">₺@(dashboard?.WeekRevenue.ToString("N2") ?? "0")</div>
                         </div>
                     </div>
@@ -128,7 +118,7 @@
                 <div class="col-6">
                     <div class="metric-row">
                         <div>
-                            <div class="metric-label">Sipariş</div>
+                            <div class="metric-label">@LocalizationService.GetString("Order")</div>
                             <div class="metric-value text-success">@(dashboard?.WeekOrders ?? 0)</div>
                         </div>
                     </div>
@@ -142,14 +132,14 @@
             <div class="chart-header">
                 <div class="chart-title">
                     <i class="fas fa-calendar-alt"></i>
-                    Aylık Performans
+                    @LocalizationService.GetString("MonthlyPerformance")
                 </div>
             </div>
             <div class="row">
                 <div class="col-6">
                     <div class="metric-row">
                         <div>
-                            <div class="metric-label">Ciro</div>
+                            <div class="metric-label">@LocalizationService.GetString("Revenue")</div>
                             <div class="metric-value text-primary">₺@(dashboard?.MonthRevenue.ToString("N2") ?? "0")</div>
                         </div>
                     </div>
@@ -157,7 +147,7 @@
                 <div class="col-6">
                     <div class="metric-row">
                         <div>
-                            <div class="metric-label">Sipariş</div>
+                            <div class="metric-label">@LocalizationService.GetString("Order")</div>
                             <div class="metric-value text-success">@(dashboard?.MonthOrders ?? 0)</div>
                         </div>
                     </div>
@@ -172,10 +162,10 @@
             <div class="chart-header">
                 <div class="chart-title">
                     <i class="fas fa-boxes"></i>
-                    Stok Durumu
+                    @LocalizationService.GetString("StockStatus")
                 </div>
                 <a href="/Stock/Alerts" class="btn btn-sm btn-outline-primary">
-                    Detay <i class="fas fa-arrow-right ms-1"></i>
+                    @LocalizationService.GetString("Details") <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
             
@@ -185,7 +175,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="text-danger">
                             <i class="fas fa-exclamation-triangle me-1"></i>
-                            <strong>@stockSummary.ActiveAlerts</strong> aktif uyarı
+                            <strong>@stockSummary.ActiveAlerts</strong> @LocalizationService.GetString("ActiveAlerts")
                         </span>
                     </div>
                     <div class="row g-2 mt-2">
@@ -195,7 +185,7 @@
                                 <div class="alert alert-warning mb-0 py-2 px-2 d-flex align-items-center">
                                     <i class="fas fa-exclamation-circle me-2"></i>
                                     <div>
-                                        <small class="d-block">Düşük Stok</small>
+                                        <small class="d-block">@LocalizationService.GetString("LowStock")</small>
                                         <strong>@stockSummary.LowStockItems</strong>
                                     </div>
                                 </div>
@@ -207,7 +197,7 @@
                                 <div class="alert alert-danger mb-0 py-2 px-2 d-flex align-items-center">
                                     <i class="fas fa-times-circle me-2"></i>
                                     <div>
-                                        <small class="d-block">Tükendi</small>
+                                        <small class="d-block">@LocalizationService.GetString("OutOfStock")</small>
                                         <strong>@stockSummary.OutOfStockItems</strong>
                                     </div>
                                 </div>
@@ -220,7 +210,7 @@
             {
                 <div class="text-center py-3">
                     <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-                    <p class="text-muted mb-0 small">Stok seviyeleri normal</p>
+                    <p class="text-muted mb-0 small">@LocalizationService.GetString("StockNormal")</p>
                 </div>
             }
         </div>
@@ -235,11 +225,11 @@
             <div class="chart-header">
                 <div class="chart-title">
                     <i class="fas fa-chart-line"></i>
-                    Satış Trendi (Son 30 Gün)
+                    @LocalizationService.GetString("SalesTrend") (@LocalizationService.GetString("Last30Days"))
                 </div>
                 <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-secondary active" data-period="30">30 Gün</button>
-                    <button type="button" class="btn btn-outline-secondary" data-period="7">7 Gün</button>
+                    <button type="button" class="btn btn-outline-secondary active" data-period="30">@LocalizationService.GetString("Days30")</button>
+                    <button type="button" class="btn btn-outline-secondary" data-period="7">@LocalizationService.GetString("Days7")</button>
                 </div>
             </div>
             <div class="p-3">
@@ -254,7 +244,7 @@
             <div class="chart-header">
                 <div class="chart-title">
                     <i class="fas fa-chart-bar"></i>
-                    Sipariş Durumu
+                    @LocalizationService.GetString("OrderStatus")
                 </div>
             </div>
             <div class="p-3">
@@ -272,7 +262,7 @@
             <div class="chart-header">
                 <div class="chart-title">
                     <i class="fas fa-chart-pie"></i>
-                    Kategori Dağılımı (Ciro)
+                    @LocalizationService.GetString("CategoryDistribution") (@LocalizationService.GetString("Revenue"))
                 </div>
             </div>
             <div class="p-3">
@@ -287,10 +277,10 @@
             <div class="chart-header">
                 <div class="chart-title">
                     <i class="fas fa-fire"></i>
-                    En Çok Satanlar
+                    @LocalizationService.GetString("TopSellers")
                 </div>
                 <a href="/Products/Index" class="btn btn-sm btn-outline-primary">
-                    Tümünü Gör <i class="fas fa-arrow-right ms-1"></i>
+                    @LocalizationService.GetString("ViewAll") <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
             
@@ -322,7 +312,7 @@
                                 <div class="product-name">@product.Name</div>
                                 <div class="product-sales">
                                     <i class="fas fa-shopping-cart me-1"></i>
-                                    <span class="fw-bold">@product.OrderCount</span> satış
+                                    <span class="fw-bold">@product.OrderCount</span> @LocalizationService.GetString("Sales")
                                     <span class="text-muted mx-2">•</span>
                                     <span class="text-success fw-bold">₺@product.TotalRevenue.ToString("N2")</span>
                                 </div>
@@ -338,7 +328,7 @@
             {
                 <div class="text-center py-5">
                     <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">Henüz satış yok</p>
+                    <p class="text-muted">@LocalizationService.GetString("NoSalesYet")</p>
                 </div>
             }
         </div>
@@ -352,10 +342,10 @@
             <div class="chart-header">
                 <div class="chart-title">
                     <i class="fas fa-shopping-bag"></i>
-                    Son Siparişler
+                    @LocalizationService.GetString("RecentOrders")
                 </div>
                 <a href="/Orders/Index" class="btn btn-sm btn-outline-primary">
-                    Tümünü Gör <i class="fas fa-arrow-right ms-1"></i>
+                    @LocalizationService.GetString("ViewAll") <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
             
@@ -365,11 +355,11 @@
                     <table class="table table-modern table-hover mb-0">
                         <thead>
                             <tr>
-                                <th>SİPARİŞ NO</th>
-                                <th>MÜŞTERİ</th>
-                                <th>TUTAR</th>
-                                <th>DURUM</th>
-                                <th>ZAMAN</th>
+                                <th>@LocalizationService.GetString("ORDER_NO")</th>
+                                <th>@LocalizationService.GetString("CUSTOMER")</th>
+                                <th>@LocalizationService.GetString("AMOUNT")</th>
+                                <th>@LocalizationService.GetString("STATUS")</th>
+                                <th>@LocalizationService.GetString("TIME")</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -403,12 +393,12 @@
 
                                             var statusText = order.Status switch
                                             {
-                                                "Pending" => "Bekliyor",
-                                                "Confirmed" => "Onaylandı",
-                                                "Preparing" => "Hazırlanıyor",
-                                                "Ready" => "Hazır",
-                                                "Delivered" => "Teslim Edildi",
-                                                "Cancelled" => "İptal",
+                                                "Pending" => LocalizationService.GetString("Pending"),
+                                                "Confirmed" => LocalizationService.GetString("Confirmed"),
+                                                "Preparing" => LocalizationService.GetString("Preparing"),
+                                                "Ready" => LocalizationService.GetString("Ready"),
+                                                "Delivered" => LocalizationService.GetString("Delivered"),
+                                                "Cancelled" => LocalizationService.GetString("Cancelled"),
                                                 _ => order.Status
                                             };
                                         }
@@ -433,7 +423,7 @@
             {
                 <div class="text-center py-5">
                     <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">Henüz sipariş yok</p>
+                    <p class="text-muted">@LocalizationService.GetString("NoOrdersYetShort")</p>
                 </div>
             }
         </div>

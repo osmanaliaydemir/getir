@@ -39,12 +39,12 @@
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h2><i class="fas fa-file-invoice-dollar me-2"></i>Mutabakat Raporları</h2>
-        <p class="text-muted mb-0">Gelir, komisyon ve net kazanç hesaplamaları</p>
+        <h2><i class="fas fa-file-invoice-dollar me-2"></i>@LocalizationService.GetString("SettlementReports")</h2>
+        <p class="text-muted mb-0">@LocalizationService.GetString("IncomeCommissionNet")</p>
     </div>
     <div>
         <a href="/Payments/Index" class="btn btn-outline-primary">
-            <i class="fas fa-arrow-left me-1"></i> Geri Dön
+            <i class="fas fa-arrow-left me-1"></i> @LocalizationService.GetString("GoBack")
         </a>
     </div>
 </div>
@@ -53,27 +53,27 @@
 <div class="settlement-card">
     <div class="row g-3 align-items-end">
         <div class="col-md-3">
-            <label class="form-label">Başlangıç Tarihi</label>
+            <label class="form-label">@LocalizationService.GetString("StartDate")</label>
             <input type="date" class="form-control" id="settlementStartDate" />
         </div>
         <div class="col-md-3">
-            <label class="form-label">Bitiş Tarihi</label>
+            <label class="form-label">@LocalizationService.GetString("EndDate")</label>
             <input type="date" class="form-control" id="settlementEndDate" />
         </div>
         <div class="col-md-3">
-            <label class="form-label">Hızlı Seçim</label>
+            <label class="form-label">@LocalizationService.GetString("QuickSelect")</label>
             <select class="form-select" id="quickSelect" onchange="selectQuickPeriod()">
-                <option value="">Özel Tarih</option>
-                <option value="today">Bugün</option>
-                <option value="week">Bu Hafta</option>
-                <option value="month" selected>Bu Ay</option>
-                <option value="lastMonth">Geçen Ay</option>
-                <option value="quarter">Bu Çeyrek</option>
+                <option value="">@LocalizationService.GetString("CustomDate")</option>
+                <option value="today">@LocalizationService.GetString("Today")</option>
+                <option value="week">@LocalizationService.GetString("ThisWeek")</option>
+                <option value="month" selected>@LocalizationService.GetString("ThisMonth")</option>
+                <option value="lastMonth">@LocalizationService.GetString("LastMonth")</option>
+                <option value="quarter">@LocalizationService.GetString("ThisQuarter")</option>
             </select>
         </div>
         <div class="col-md-3">
             <button class="btn btn-primary w-100" onclick="loadSettlementReport()">
-                <i class="fas fa-calculator me-1"></i> Rapor Oluştur
+                <i class="fas fa-calculator me-1"></i> @LocalizationService.GetString("GenerateReport")
             </button>
         </div>
     </div>
@@ -83,21 +83,21 @@
 <div class="settlement-card" id="settlementSummary" style="display: none;">
     <h5 class="mb-4">
         <i class="fas fa-file-invoice me-2"></i>
-        Mutabakat Özeti
+        @LocalizationService.GetString("SettlementSummary")
         <small class="text-muted ms-2" id="reportPeriod"></small>
     </h5>
 
     <div class="summary-box">
         <div class="summary-row">
-            <span>Toplam Gelir</span>
+            <span>@LocalizationService.GetString("TotalRevenue")</span>
             <span class="text-success fw-bold" id="summaryRevenue">₺0</span>
         </div>
         <div class="summary-row">
-            <span>Komisyon (%15)</span>
+            <span>@LocalizationService.GetString("CommissionWithRate") (%15)</span>
             <span class="text-danger" id="summaryCommission">₺0</span>
         </div>
         <div class="summary-row">
-            <span>Net Kazanç</span>
+            <span>@LocalizationService.GetString("NetEarnings")</span>
             <span class="text-primary" style="font-size: 1.25rem;" id="summaryNet">₺0</span>
         </div>
     </div>
@@ -106,13 +106,13 @@
         <div class="col-md-6">
 <div class="alert alert-info">
                 <i class="fas fa-shopping-cart me-2"></i>
-                Toplam Sipariş: <strong id="summaryOrders">0</strong>
+                @LocalizationService.GetString("TotalOrders"): <strong id="summaryOrders">0</strong>
             </div>
         </div>
         <div class="col-md-6">
             <div class="alert alert-success">
                 <i class="fas fa-check-circle me-2"></i>
-                Tamamlanan: <strong id="summaryCompleted">0</strong>
+                @LocalizationService.GetString("Completed"): <strong id="summaryCompleted">0</strong>
             </div>
         </div>
     </div>
@@ -122,17 +122,17 @@
 <div class="settlement-card" id="dailyBreakdown" style="display: none;">
     <h5 class="mb-3">
         <i class="fas fa-calendar-alt me-2"></i>
-        Günlük Dağılım
+        @LocalizationService.GetString("DailyBreakdown")
     </h5>
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
                     <tr>
-                    <th>Tarih</th>
-                    <th class="text-end">Gelir</th>
-                    <th class="text-end">Komisyon</th>
-                    <th class="text-end">Net</th>
-                    <th class="text-end">Sipariş</th>
+                    <th>@LocalizationService.GetString("Date")</th>
+                    <th class="text-end">@LocalizationService.GetString("Revenue")</th>
+                    <th class="text-end">@LocalizationService.GetString("Commission")</th>
+                    <th class="text-end">@LocalizationService.GetString("Net")</th>
+                    <th class="text-end">@LocalizationService.GetString("Orders")</th>
                     </tr>
                 </thead>
             <tbody id="dailyBreakdownTable">
@@ -140,7 +140,7 @@
                 </tbody>
             <tfoot>
                 <tr class="fw-bold">
-                    <td>TOPLAM</td>
+                    <td>@LocalizationService.GetString("TOTAL_UPPER")</td>
                     <td class="text-end text-success" id="totalRevenueFoot">₺0</td>
                     <td class="text-end text-danger" id="totalCommissionFoot">₺0</td>
                     <td class="text-end text-primary" id="totalNetFoot">₺0</td>

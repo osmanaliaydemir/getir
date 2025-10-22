@@ -2,7 +2,7 @@
 @using Getir.MerchantPortal.Services
 @using System.Globalization
 @{
-    ViewData["Title"] = "Erişim Reddedildi";
+    ViewData["Title"] = LocalizationService.GetString("AccessDenied");
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -17,28 +17,28 @@
                     </div>
                     
                     <!-- Error Title -->
-                    <h1 class="h3 mb-3 text-gray-800">Erişim Reddedildi</h1>
+                    <h1 class="h3 mb-3 text-gray-800">@LocalizationService.GetString("AccessDenied")</h1>
                     
                     <!-- Error Message -->
                     <p class="text-gray-600 mb-4">
-                        Bu sayfaya erişim izniniz bulunmamaktadır. Lütfen sistem yöneticinizle iletişime geçin.
+                        @LocalizationService.GetString("AccessDeniedMessage")
                     </p>
                     
                     <!-- Error Code -->
                     <div class="mb-4">
-                        <span class="badge bg-danger fs-6">Hata Kodu: 403</span>
+                        <span class="badge bg-danger fs-6">@LocalizationService.GetString("ErrorCode"): 403</span>
                     </div>
                     
                     <!-- Action Buttons -->
                     <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
                         <a href="@Url.Action("Index", "Dashboard")" class="btn btn-primary">
-                            <i class="fas fa-home me-2"></i>Ana Sayfaya Dön
+                            <i class="fas fa-home me-2"></i>@LocalizationService.GetString("GoToHomepage")
                         </a>
                         <a href="@Url.Action("Login", "Auth")" class="btn btn-outline-secondary">
-                            <i class="fas fa-sign-in-alt me-2"></i>Tekrar Giriş Yap
+                            <i class="fas fa-sign-in-alt me-2"></i>@LocalizationService.GetString("LoginAgain")
                         </a>
                         <button onclick="history.back()" class="btn btn-outline-info">
-                            <i class="fas fa-arrow-left me-2"></i>Geri Dön
+                            <i class="fas fa-arrow-left me-2"></i>@LocalizationService.GetString("GoBack")
                         </button>
                     </div>
                     
@@ -63,7 +63,7 @@
                     <!-- Help Text -->
                     <div class="mt-4">
                         <small class="text-muted">
-                            Sorun devam ederse lütfen <a href="mailto:support@getir.com" class="text-decoration-none">destek ekibimizle</a> iletişime geçin.
+                            @LocalizationService.GetString("ContactSupport") <a href="mailto:support@getir.com" class="text-decoration-none">@LocalizationService.GetString("SupportTeam")</a> @LocalizationService.GetString("ContactUs")
                         </small>
                     </div>
                 </div>
@@ -73,26 +73,26 @@
             <div class="card shadow mt-4">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-info-circle me-2"></i>Neden bu hatayı alıyorum?
+                        <i class="fas fa-info-circle me-2"></i>@LocalizationService.GetString("WhyThisError")
                     </h6>
                 </div>
                 <div class="card-body">
                     <ul class="list-unstyled mb-0">
                         <li class="mb-2">
                             <i class="fas fa-check text-success me-2"></i>
-                            Bu sayfaya erişim için gerekli izinlere sahip olmayabilirsiniz
+                            @LocalizationService.GetString("NoPermission")
                         </li>
                         <li class="mb-2">
                             <i class="fas fa-check text-success me-2"></i>
-                            Oturumunuzun süresi dolmuş olabilir
+                            @LocalizationService.GetString("SessionExpired")
                         </li>
                         <li class="mb-2">
                             <i class="fas fa-check text-success me-2"></i>
-                            Hesabınız geçici olarak kısıtlanmış olabilir
+                            @LocalizationService.GetString("AccountRestricted")
                         </li>
                         <li class="mb-0">
                             <i class="fas fa-check text-success me-2"></i>
-                            Sistem bakım modunda olabilir
+                            @LocalizationService.GetString("MaintenanceMode")
                         </li>
                     </ul>
                 </div>
@@ -112,12 +112,12 @@
         let countdown = 30;
         const countdownElement = document.createElement('div');
         countdownElement.className = 'mt-3 text-muted';
-        countdownElement.innerHTML = `<small>${countdown} saniye sonra ana sayfaya yönlendirileceksiniz...</small>`;
+        countdownElement.innerHTML = `<small>${countdown} @LocalizationService.GetString("RedirectCountdown")</small>`;
         document.querySelector('.card-body').appendChild(countdownElement);
         
         const timer = setInterval(function() {
             countdown--;
-            countdownElement.innerHTML = `<small>${countdown} saniye sonra ana sayfaya yönlendirileceksiniz...</small>`;
+            countdownElement.innerHTML = `<small>${countdown} @LocalizationService.GetString("RedirectCountdown")</small>`;
             
             if (countdown <= 0) {
                 clearInterval(timer);

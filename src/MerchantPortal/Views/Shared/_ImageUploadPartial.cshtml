@@ -1,3 +1,5 @@
+@inject ILocalizationService LocalizationService
+@using Getir.MerchantPortal.Services
 @* Image Upload Component with Drag & Drop, Compression, and Multiple Files *@
 
 <div class="image-upload-section">
@@ -5,9 +7,9 @@
     <div class="drag-drop-zone" id="imageDropZone">
         <div class="drop-zone-content">
             <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-primary"></i>
-            <h5>Resimleri Sürükleyin veya Tıklayın</h5>
-            <p class="text-muted mb-0">En fazla 5 resim (JPEG, PNG, WebP - Max 5MB)</p>
-            <small class="text-muted">Resimler otomatik olarak sıkıştırılacak</small>
+            <h5>@LocalizationService.GetString("ImageUploadTitle")</h5>
+            <p class="text-muted mb-0">@LocalizationService.GetString("ImageUploadHint").Replace("{0}", "5").Replace("{1}", "5")</p>
+            <small class="text-muted">@LocalizationService.GetString("ImageAutoCompress")</small>
         </div>
     </div>
 
@@ -20,7 +22,7 @@
     <div class="upload-progress-container" id="uploadProgress" style="display: none;">
         <h6 class="mb-3">
             <i class="fas fa-spinner fa-spin me-2"></i>
-            Yükleniyor...
+            @LocalizationService.GetString("Uploading")
         </h6>
         <div id="progressItems"></div>
     </div>

@@ -5,13 +5,13 @@
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="fas fa-chart-pie"></i> Gelir Analizi</h3>
+    <h3><i class="fas fa-chart-pie"></i> @LocalizationService.GetString("RevenueAnalysis")</h3>
     <div class="btn-group">
         <button class="btn btn-outline-success" onclick="exportToExcel()">
-            <i class="fas fa-file-excel"></i> Excel İndir
+            <i class="fas fa-file-excel"></i> @LocalizationService.GetString("DownloadExcel")
         </button>
         <a href="@Url.Action("Index")" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Geri
+            <i class="fas fa-arrow-left"></i> @LocalizationService.GetString("Back")
         </a>
     </div>
 </div>
@@ -23,7 +23,7 @@
         <div class="col-md-6">
             <div class="stat-card">
                 <h5 class="mb-4">
-                    <i class="fas fa-chart-line text-success"></i> Gelir Trendi
+                    <i class="fas fa-chart-line text-success"></i> @LocalizationService.GetString("RevenueTrend")
                 </h5>
                 <canvas id="revenueTrendChart" height="200"></canvas>
             </div>
@@ -32,7 +32,7 @@
         <div class="col-md-6">
             <div class="stat-card">
                 <h5 class="mb-4">
-                    <i class="fas fa-chart-pie text-primary"></i> Ödeme Yöntemi Dağılımı
+                    <i class="fas fa-chart-pie text-primary"></i> @LocalizationService.GetString("PaymentMethodDistribution")
                 </h5>
                 <canvas id="paymentMethodChart" height="200"></canvas>
             </div>
@@ -43,17 +43,17 @@
     <div class="row g-4 mb-4">
         <div class="col-md-4">
             <div class="stat-card">
-                <h6 class="text-muted mb-3">Günlük Performans</h6>
+                <h6 class="text-muted mb-3">@LocalizationService.GetString("DailyPerformance")</h6>
                 <div class="d-flex justify-content-between mb-2">
-                    <span>Gelir:</span>
+                    <span>@LocalizationService.GetString("Revenue"):</span>
                     <strong class="text-success">₺@Model.TodayRevenue.ToString("N2")</strong>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
-                    <span>Ödeme Sayısı:</span>
+                    <span>@LocalizationService.GetString("PaymentCount"):</span>
                     <strong>@Model.TodayPayments</strong>
                 </div>
                 <div class="d-flex justify-content-between">
-                    <span>Ortalama Sipariş:</span>
+                    <span>@LocalizationService.GetString("AverageOrder"):</span>
                     <strong>₺@((Model.TodayPayments > 0 ? Model.TodayRevenue / Model.TodayPayments : 0).ToString("N2"))</strong>
                 </div>
             </div>
@@ -61,17 +61,17 @@
 
         <div class="col-md-4">
             <div class="stat-card">
-                <h6 class="text-muted mb-3">Haftalık Performans</h6>
+                <h6 class="text-muted mb-3">@LocalizationService.GetString("WeeklyPerformance")</h6>
                 <div class="d-flex justify-content-between mb-2">
-                    <span>Gelir:</span>
+                    <span>@LocalizationService.GetString("Revenue"):</span>
                     <strong class="text-success">₺@Model.WeekRevenue.ToString("N2")</strong>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
-                    <span>Ödeme Sayısı:</span>
+                    <span>@LocalizationService.GetString("PaymentCount"):</span>
                     <strong>@Model.WeekPayments</strong>
                 </div>
                 <div class="d-flex justify-content-between">
-                    <span>Ortalama Sipariş:</span>
+                    <span>@LocalizationService.GetString("AverageOrder"):</span>
                     <strong>₺@((Model.WeekPayments > 0 ? Model.WeekRevenue / Model.WeekPayments : 0).ToString("N2"))</strong>
                 </div>
             </div>
@@ -79,17 +79,17 @@
 
         <div class="col-md-4">
             <div class="stat-card">
-                <h6 class="text-muted mb-3">Aylık Performans</h6>
+                <h6 class="text-muted mb-3">@LocalizationService.GetString("MonthlyPerformance")</h6>
                 <div class="d-flex justify-content-between mb-2">
-                    <span>Gelir:</span>
+                    <span>@LocalizationService.GetString("Revenue"):</span>
                     <strong class="text-success">₺@Model.MonthRevenue.ToString("N2")</strong>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
-                    <span>Ödeme Sayısı:</span>
+                    <span>@LocalizationService.GetString("PaymentCount"):</span>
                     <strong>@Model.MonthPayments</strong>
                 </div>
                 <div class="d-flex justify-content-between">
-                    <span>Ortalama Sipariş:</span>
+                    <span>@LocalizationService.GetString("AverageOrder"):</span>
                     <strong>₺@((Model.MonthPayments > 0 ? Model.MonthRevenue / Model.MonthPayments : 0).ToString("N2"))</strong>
                 </div>
             </div>
@@ -101,29 +101,29 @@
         <div class="col-md-6">
             <div class="stat-card">
                 <h5 class="mb-4">
-                    <i class="fas fa-percent text-warning"></i> Komisyon Detayı
+                    <i class="fas fa-percent text-warning"></i> @LocalizationService.GetString("CommissionDetails")
                 </h5>
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Toplam Gelir:</span>
+                        <span>@LocalizationService.GetString("TotalRevenue"):</span>
                         <strong>₺@Model.MonthRevenue.ToString("N2")</strong>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Getir Komisyonu:</span>
+                        <span>@LocalizationService.GetString("GetirCommission"):</span>
                         <strong class="text-danger">-₺@Model.TotalCommission.ToString("N2")</strong>
                     </div>
                     <hr />
                     <div class="d-flex justify-content-between">
-                        <strong>Net Gelir:</strong>
+                        <strong>@LocalizationService.GetString("NetRevenue"):</strong>
                         <h5 class="mb-0 text-success">₺@((Model.MonthRevenue - Model.TotalCommission).ToString("N2"))</h5>
                     </div>
                 </div>
                 <div class="progress mb-2" style="height: 30px;">
                     <div class="progress-bar bg-success" style="width: @((Model.MonthRevenue > 0 ? (Model.MonthRevenue - Model.TotalCommission) / Model.MonthRevenue * 100 : 0).ToString("F1"))%">
-                        Net: %@((Model.MonthRevenue > 0 ? (Model.MonthRevenue - Model.TotalCommission) / Model.MonthRevenue * 100 : 0).ToString("F1"))
+                        @LocalizationService.GetString("Net"): %@((Model.MonthRevenue > 0 ? (Model.MonthRevenue - Model.TotalCommission) / Model.MonthRevenue * 100 : 0).ToString("F1"))
                     </div>
                     <div class="progress-bar bg-danger" style="width: @((Model.MonthRevenue > 0 ? Model.TotalCommission / Model.MonthRevenue * 100 : 0).ToString("F1"))%">
-                        Komisyon: %@((Model.MonthRevenue > 0 ? Model.TotalCommission / Model.MonthRevenue * 100 : 0).ToString("F1"))
+                        @LocalizationService.GetString("Commission"): %@((Model.MonthRevenue > 0 ? Model.TotalCommission / Model.MonthRevenue * 100 : 0).ToString("F1"))
                     </div>
                 </div>
             </div>
@@ -132,19 +132,18 @@
         <div class="col-md-6">
             <div class="stat-card">
                 <h5 class="mb-4">
-                    <i class="fas fa-university text-info"></i> Settlement Durumu
+                    <i class="fas fa-university text-info"></i> @LocalizationService.GetString("SettlementStatus")
                 </h5>
                 <div class="alert alert-warning">
                     <h4 class="mb-2">₺@Model.PendingSettlement.ToString("N2")</h4>
-                    <small>Bekleyen Settlement Tutarı</small>
+                    <small>@LocalizationService.GetString("PendingSettlementAmount")</small>
                 </div>
                 <p class="small text-muted">
                     <i class="fas fa-clock"></i>
-                    Ödemeleriniz genellikle haftalık olarak banka hesabınıza transfer edilir. 
-                    Transfer işlemleri için <a href="@Url.Action("Settlements")">Settlement Raporları</a> sayfasını kontrol edin.
+                    @LocalizationService.GetString("SettlementInfo")
                 </p>
                 <a href="@Url.Action("Settlements")" class="btn btn-primary w-100">
-                    <i class="fas fa-list"></i> Settlement Geçmişini Görüntüle
+                    <i class="fas fa-list"></i> @LocalizationService.GetString("ViewSettlementHistory")
                 </a>
             </div>
         </div>
@@ -155,7 +154,7 @@ else
     <div class="stat-card">
         <div class="text-center py-5">
             <i class="fas fa-chart-bar fa-4x text-muted mb-3"></i>
-            <h5 class="text-muted">İstatistik verileri yüklenemedi</h5>
+            <h5 class="text-muted">@LocalizationService.GetString("StatisticsDataNotLoaded")</h5>
         </div>
     </div>
 }
@@ -169,9 +168,9 @@ else
             new Chart(revenueTrendCtx, {
                 type: 'line',
                 data: {
-                    labels: ['Bugün', 'Bu Hafta', 'Bu Ay'],
+                    labels: ['@LocalizationService.GetString("Today")', '@LocalizationService.GetString("ThisWeek")', '@LocalizationService.GetString("ThisMonth")'],
                     datasets: [{
-                        label: 'Gelir (₺)',
+                        label: '@LocalizationService.GetString("RevenueInTL")',
                         data: [@(Model?.TodayRevenue ?? 0), @(Model?.WeekRevenue ?? 0), @(Model?.MonthRevenue ?? 0)],
                         borderColor: '#5D3EBC',
                         backgroundColor: 'rgba(93, 62, 188, 0.1)',
@@ -255,19 +254,19 @@ else
         
         function getPaymentMethodName(method) {
             const names = {
-                'Cash': 'Nakit',
-                'CreditCard': 'Kredi Kartı',
-                'VodafonePay': 'Vodafone Pay',
-                'BankTransfer': 'Havale',
-                'BkmExpress': 'BKM',
-                'Papara': 'Papara',
-                'QrCode': 'QR Code'
+                'Cash': '@LocalizationService.GetString("Cash")',
+                'CreditCard': '@LocalizationService.GetString("CreditCard")',
+                'VodafonePay': '@LocalizationService.GetString("VodafonePay")',
+                'BankTransfer': '@LocalizationService.GetString("BankTransfer")',
+                'BkmExpress': '@LocalizationService.GetString("BkmExpress")',
+                'Papara': '@LocalizationService.GetString("Papara")',
+                'QrCode': '@LocalizationService.GetString("QrCode")'
             };
             return names[method] || method;
         }
         
         function exportToExcel() {
-            showToast('Excel export özelliği yakında eklenecek', 'info');
+            showToast('@LocalizationService.GetString("ExcelExportComingSoon")', 'info');
         }
     </script>
 }

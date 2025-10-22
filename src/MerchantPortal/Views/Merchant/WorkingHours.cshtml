@@ -6,16 +6,16 @@
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="fas fa-clock"></i> Çalışma Saatleri</h3>
+    <h3><i class="fas fa-clock"></i> @LocalizationService.GetString("WorkingHours")</h3>
     <a href="@Url.Action("Edit", new { id = merchantId })" class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Profile Dön
+        <i class="fas fa-arrow-left"></i> @LocalizationService.GetString("ReturnToProfile")
     </a>
 </div>
 
 <div class="row">
     <div class="col-md-8">
         <div class="stat-card">
-            <h5 class="mb-4">Haftalık Çalışma Takvimi</h5>
+            <h5 class="mb-4">@LocalizationService.GetString("WeeklySchedule")</h5>
 
             <form asp-action="UpdateWorkingHours" method="post">
                 @Html.AntiForgeryToken()
@@ -29,7 +29,7 @@
                             </div>
 
                             <div class="col-md-3">
-                                <label class="form-label small">Açılış</label>
+                                <label class="form-label small">@LocalizationService.GetString("OpenTime")</label>
                                 <input type="time" 
                                        name="workingHours[@index].OpenTime" 
                                        value="@day.OpenTime.ToString(@"hh\:mm")" 
@@ -38,7 +38,7 @@
                             </div>
 
                             <div class="col-md-3">
-                                <label class="form-label small">Kapanış</label>
+                                <label class="form-label small">@LocalizationService.GetString("CloseTime")</label>
                                 <input type="time" 
                                        name="workingHours[@index].CloseTime" 
                                        value="@day.CloseTime.ToString(@"hh\:mm")" 
@@ -56,7 +56,7 @@
                                            id="24h-@day.DayOfWeek"
                                            onchange="toggle24Hours(this, '@day.DayOfWeek')" />
                                     <label class="form-check-label small" for="24h-@day.DayOfWeek">
-                                        24 Saat
+                                        @LocalizationService.GetString("Hours24")
                                     </label>
                                 </div>
                             </div>
@@ -71,7 +71,7 @@
                                            id="closed-@day.DayOfWeek"
                                            onchange="toggleClosed(this, '@day.DayOfWeek')" />
                                     <label class="form-check-label small" for="closed-@day.DayOfWeek">
-                                        Kapalı
+                                        @LocalizationService.GetString("ClosedDay")
                                     </label>
                                 </div>
                             </div>
@@ -83,10 +83,10 @@
 
                 <div class="d-flex justify-content-between mt-4">
                     <button type="button" class="btn btn-outline-secondary" onclick="copyToAll()">
-                        <i class="fas fa-copy"></i> Pazartesiyi Tüm Günlere Uygula
+                        <i class="fas fa-copy"></i> @LocalizationService.GetString("ApplyMondayToAll")
                     </button>
                     <button type="submit" class="btn btn-getir">
-                        <i class="fas fa-save"></i> Çalışma Saatlerini Kaydet
+                        <i class="fas fa-save"></i> @LocalizationService.GetString("SaveWorkingHours")
                     </button>
                 </div>
             </form>
@@ -96,57 +96,57 @@
     <div class="col-md-4">
         <div class="stat-card">
             <h6 class="mb-3">
-                <i class="fas fa-info-circle"></i> Bilgilendirme
+                <i class="fas fa-info-circle"></i> @LocalizationService.GetString("Information")
             </h6>
             <p class="small text-muted">
-                Çalışma saatlerinizi düzenleyerek müşterilerinizin ne zaman sipariş verebileceğini belirleyebilirsiniz.
+                @LocalizationService.GetString("WorkingHoursInfo")
             </p>
             <hr />
-            <h6 class="mb-3">Özellikler:</h6>
+            <h6 class="mb-3">@LocalizationService.GetString("Features"):</h6>
             <ul class="small text-muted">
                 <li class="mb-2">
-                    <strong>Açılış/Kapanış:</strong> Günlük çalışma saatlerini ayarlayın
+                    <strong>@LocalizationService.GetString("OpenTime")/@LocalizationService.GetString("CloseTime"):</strong> @LocalizationService.GetString("OpenCloseFeature")
                 </li>
                 <li class="mb-2">
-                    <strong>24 Saat:</strong> Kesintisiz hizmet veriyorsanız işaretleyin
+                    <strong>@LocalizationService.GetString("Hours24"):</strong> @LocalizationService.GetString("Hours24Feature")
                 </li>
                 <li class="mb-2">
-                    <strong>Kapalı:</strong> O gün hiç sipariş alınmaz
+                    <strong>@LocalizationService.GetString("ClosedDay"):</strong> @LocalizationService.GetString("ClosedFeature")
                 </li>
             </ul>
         </div>
 
         <div class="stat-card mt-3">
             <h6 class="mb-3">
-                <i class="fas fa-calendar-alt"></i> Hızlı Şablonlar
+                <i class="fas fa-calendar-alt"></i> @LocalizationService.GetString("QuickTemplates")
             </h6>
             <button type="button" class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="applyTemplate('weekdays')">
-                Hafta İçi 09:00-18:00
+                @LocalizationService.GetString("Weekdays")
             </button>
             <button type="button" class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="applyTemplate('retail')">
-                Perakende 10:00-22:00
+                @LocalizationService.GetString("Retail")
             </button>
             <button type="button" class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="applyTemplate('24-7')">
-                7/24 Açık
+                @LocalizationService.GetString("Open247")
             </button>
         </div>
 
         <div class="stat-card mt-3">
             <h6 class="mb-3">
-                <i class="fas fa-lightbulb"></i> İpuçları
+                <i class="fas fa-lightbulb"></i> @LocalizationService.GetString("Tips")
             </h6>
             <ul class="small text-muted mb-0" style="list-style: none; padding-left: 0;">
                 <li class="mb-2">
                     <i class="fas fa-check text-success"></i>
-                    Gerçek çalışma saatlerinizi girin
+                    @LocalizationService.GetString("EnterRealHours")
                 </li>
                 <li class="mb-2">
                     <i class="fas fa-check text-success"></i>
-                    Hazırlık süresi ekstra verin
+                    @LocalizationService.GetString("AddPreparationTime")
                 </li>
                 <li class="mb-2">
                     <i class="fas fa-check text-success"></i>
-                    Tatil günlerini "Kapalı" yapın
+                    @LocalizationService.GetString("MarkHolidaysClosed")
                 </li>
             </ul>
         </div>
@@ -208,7 +208,7 @@
                 document.getElementById('closed-' + day).checked = mondayClosed;
             });
             
-            showToast('Pazartesi saatleri tüm günlere uygulandı', 'success');
+            showToast('@LocalizationService.GetString("MondayAppliedToAll")', 'success');
         }
         
         function applyTemplate(template) {
@@ -227,7 +227,7 @@
                             toggleClosed(document.getElementById('closed-' + day), day);
                         }
                     });
-                    showToast('Hafta içi şablonu uygulandı', 'success');
+                    showToast('@LocalizationService.GetString("WeekdayTemplateApplied")', 'success');
                     break;
                     
                 case 'retail':
@@ -237,7 +237,7 @@
                         document.getElementById('24h-' + day).checked = false;
                         document.getElementById('closed-' + day).checked = false;
                     });
-                    showToast('Perakende şablonu uygulandı', 'success');
+                    showToast('@LocalizationService.GetString("RetailTemplateApplied")', 'success');
                     break;
                     
                 case '24-7':
@@ -246,7 +246,7 @@
                         checkbox.checked = true;
                         toggle24Hours(checkbox, day);
                     });
-                    showToast('7/24 şablonu uygulandı', 'success');
+                    showToast('@LocalizationService.GetString("Template247Applied")', 'success');
                     break;
             }
         }
@@ -274,13 +274,13 @@
     {
         return day switch
         {
-            "Monday" => "Pazartesi",
-            "Tuesday" => "Salı",
-            "Wednesday" => "Çarşamba",
-            "Thursday" => "Perşembe",
-            "Friday" => "Cuma",
-            "Saturday" => "Cumartesi",
-            "Sunday" => "Pazar",
+            "Monday" => LocalizationService.GetString("Monday"),
+            "Tuesday" => LocalizationService.GetString("Tuesday"),
+            "Wednesday" => LocalizationService.GetString("Wednesday"),
+            "Thursday" => LocalizationService.GetString("Thursday"),
+            "Friday" => LocalizationService.GetString("Friday"),
+            "Saturday" => LocalizationService.GetString("Saturday"),
+            "Sunday" => LocalizationService.GetString("Sunday"),
             _ => day
         };
     }

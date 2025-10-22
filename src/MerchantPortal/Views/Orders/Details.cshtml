@@ -5,9 +5,9 @@
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="fas fa-file-invoice"></i> Sipariş Detayı</h3>
+    <h3><i class="fas fa-file-invoice"></i> @LocalizationService.GetString("OrderDetail")</h3>
     <a href="@Url.Action("Index")" class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Geri
+        <i class="fas fa-arrow-left"></i> @LocalizationService.GetString("Back")
     </a>
 </div>
 
@@ -17,7 +17,7 @@
         <div class="stat-card mb-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h5 class="mb-1">Sipariş #@Model.OrderNumber</h5>
+                    <h5 class="mb-1">@LocalizationService.GetString("Order") #@Model.OrderNumber</h5>
                     <small class="text-muted">@Model.CreatedAt.ToString("dd MMMM yyyy, HH:mm")</small>
                 </div>
                 <span class="badge bg-@GetStatusBadgeClass(Model.Status) fs-6">
@@ -27,12 +27,12 @@
 
             <div class="row mb-4">
                 <div class="col-md-6">
-                    <h6 class="text-muted mb-2">Müşteri Bilgileri</h6>
+                    <h6 class="text-muted mb-2">@LocalizationService.GetString("CustomerInfo")</h6>
                     <p class="mb-1"><strong>@Model.CustomerName</strong></p>
                     <p class="mb-1"><i class="fas fa-phone"></i> @Model.CustomerPhone</p>
                 </div>
                 <div class="col-md-6">
-                    <h6 class="text-muted mb-2">Teslimat Adresi</h6>
+                    <h6 class="text-muted mb-2">@LocalizationService.GetString("DeliveryAddress")</h6>
                     <p class="mb-0">
                         <i class="fas fa-map-marker-alt"></i> @Model.DeliveryAddress
                     </p>
@@ -42,22 +42,22 @@
             @if (!string.IsNullOrEmpty(Model.Notes))
             {
                 <div class="alert alert-info">
-                    <strong><i class="fas fa-sticky-note"></i> Not:</strong> @Model.Notes
+                    <strong><i class="fas fa-sticky-note"></i> @LocalizationService.GetString("Note"):</strong> @Model.Notes
                 </div>
             }
         </div>
 
         <!-- Order Items -->
         <div class="stat-card">
-            <h5 class="mb-3">Sipariş İçeriği</h5>
+            <h5 class="mb-3">@LocalizationService.GetString("OrderContent")</h5>
             <div class="table-responsive">
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Ürün</th>
-                            <th>Birim Fiyat</th>
-                            <th>Miktar</th>
-                            <th class="text-end">Toplam</th>
+                            <th>@LocalizationService.GetString("Product")</th>
+                            <th>@LocalizationService.GetString("UnitPrice")</th>
+                            <th>@LocalizationService.GetString("Quantity")</th>
+                            <th class="text-end">@LocalizationService.GetString("Total")</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -87,15 +87,15 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="3" class="text-end"><strong>Ara Toplam:</strong></td>
+                            <td colspan="3" class="text-end"><strong>@LocalizationService.GetString("Subtotal"):</strong></td>
                             <td class="text-end"><strong>₺@Model.SubTotal.ToString("N2")</strong></td>
                         </tr>
                         <tr>
-                            <td colspan="3" class="text-end">Teslimat Ücreti:</td>
+                            <td colspan="3" class="text-end">@LocalizationService.GetString("DeliveryFee"):</td>
                             <td class="text-end">₺@Model.DeliveryFee.ToString("N2")</td>
                         </tr>
                         <tr class="table-active">
-                            <td colspan="3" class="text-end"><strong>TOPLAM:</strong></td>
+                            <td colspan="3" class="text-end"><strong>@LocalizationService.GetString("TOTAL"):</strong></td>
                             <td class="text-end"><h5 class="mb-0">₺@Model.TotalAmount.ToString("N2")</h5></td>
                         </tr>
                     </tfoot>
@@ -107,7 +107,7 @@
     <!-- Order Actions -->
     <div class="col-md-4">
         <div class="stat-card">
-            <h5 class="mb-3">Sipariş İşlemleri</h5>
+            <h5 class="mb-3">@LocalizationService.GetString("OrderActions")</h5>
             
             @if (Model.Status == "Pending")
             {
@@ -115,15 +115,15 @@
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="status" value="Confirmed" />
                     <button type="submit" class="btn btn-success w-100">
-                        <i class="fas fa-check"></i> Siparişi Onayla
+                        <i class="fas fa-check"></i> @LocalizationService.GetString("ConfirmOrder")
                     </button>
                 </form>
 
-                <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Bu siparişi iptal etmek istediğinize emin misiniz?');">
+                <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('@LocalizationService.GetString("CancelOrderConfirm")');">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="status" value="Cancelled" />
                     <button type="submit" class="btn btn-danger w-100">
-                        <i class="fas fa-times"></i> Siparişi İptal Et
+                        <i class="fas fa-times"></i> @LocalizationService.GetString("CancelOrder")
                     </button>
                 </form>
             }
@@ -133,7 +133,7 @@
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="status" value="Preparing" />
                     <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-hourglass-half"></i> Hazırlamaya Başla
+                        <i class="fas fa-hourglass-half"></i> @LocalizationService.GetString("StartPreparing")
                     </button>
                 </form>
             }
@@ -143,7 +143,7 @@
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="status" value="Ready" />
                     <button type="submit" class="btn btn-info w-100">
-                        <i class="fas fa-check-circle"></i> Hazır
+                        <i class="fas fa-check-circle"></i> @LocalizationService.GetString("Ready")
                     </button>
                 </form>
             }
@@ -153,7 +153,7 @@
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="status" value="OnTheWay" />
                     <button type="submit" class="btn btn-warning w-100">
-                        <i class="fas fa-shipping-fast"></i> Kuryeye Verildi
+                        <i class="fas fa-shipping-fast"></i> @LocalizationService.GetString("HandedToCourier")
                     </button>
                 </form>
             }
@@ -161,7 +161,7 @@
             {
                 <div class="alert alert-@(Model.Status == "Completed" || Model.Status == "Delivered" ? "success" : "secondary") mb-0">
                     <i class="fas fa-info-circle"></i> 
-                    Sipariş durumu: <strong>@GetStatusText(Model.Status)</strong>
+                    @LocalizationService.GetString("OrderStatus"): <strong>@GetStatusText(Model.Status)</strong>
                 </div>
             }
 
@@ -169,7 +169,7 @@
             {
                 <div class="mt-3 pt-3 border-top">
                     <small class="text-muted">
-                        <i class="fas fa-clock"></i> Tamamlanma: <br>
+                        <i class="fas fa-clock"></i> @LocalizationService.GetString("CompletedAt"): <br>
                         @Model.CompletedAt.Value.ToString("dd MMMM yyyy, HH:mm")
                     </small>
                 </div>
@@ -178,31 +178,31 @@
 
         <!-- Order Timeline -->
         <div class="stat-card mt-3">
-            <h6 class="mb-3">Sipariş Takip</h6>
+            <h6 class="mb-3">@LocalizationService.GetString("OrderTracking")</h6>
             <div class="timeline">
                 <div class="timeline-item @(IsStatusReached(Model.Status, "Pending") ? "active" : "")">
                     <i class="fas fa-circle"></i>
-                    <small>Sipariş Alındı</small>
+                    <small>@LocalizationService.GetString("OrderReceived")</small>
                 </div>
                 <div class="timeline-item @(IsStatusReached(Model.Status, "Confirmed") ? "active" : "")">
                     <i class="fas fa-circle"></i>
-                    <small>Onaylandı</small>
+                    <small>@LocalizationService.GetString("Confirmed")</small>
                 </div>
                 <div class="timeline-item @(IsStatusReached(Model.Status, "Preparing") ? "active" : "")">
                     <i class="fas fa-circle"></i>
-                    <small>Hazırlanıyor</small>
+                    <small>@LocalizationService.GetString("Preparing")</small>
                 </div>
                 <div class="timeline-item @(IsStatusReached(Model.Status, "Ready") ? "active" : "")">
                     <i class="fas fa-circle"></i>
-                    <small>Hazır</small>
+                    <small>@LocalizationService.GetString("Ready")</small>
                 </div>
                 <div class="timeline-item @(IsStatusReached(Model.Status, "OnTheWay") ? "active" : "")">
                     <i class="fas fa-circle"></i>
-                    <small>Yolda</small>
+                    <small>@LocalizationService.GetString("OnTheWay")</small>
                 </div>
                 <div class="timeline-item @(Model.Status == "Completed" || Model.Status == "Delivered" ? "active" : "")">
                     <i class="fas fa-circle"></i>
-                    <small>Teslim Edildi</small>
+                    <small>@LocalizationService.GetString("Delivered")</small>
                 </div>
             </div>
         </div>
@@ -243,14 +243,14 @@
     {
         return status switch
         {
-            "Pending" => "Bekliyor",
-            "Confirmed" => "Onaylandı",
-            "Preparing" => "Hazırlanıyor",
-            "Ready" => "Hazır",
-            "OnTheWay" => "Yolda",
-            "Delivered" => "Teslim Edildi",
-            "Completed" => "Tamamlandı",
-            "Cancelled" => "İptal",
+            "Pending" => LocalizationService.GetString("Pending"),
+            "Confirmed" => LocalizationService.GetString("Confirmed"),
+            "Preparing" => LocalizationService.GetString("Preparing"),
+            "Ready" => LocalizationService.GetString("Ready"),
+            "OnTheWay" => LocalizationService.GetString("OnTheWay"),
+            "Delivered" => LocalizationService.GetString("Delivered"),
+            "Completed" => LocalizationService.GetString("Completed"),
+            "Cancelled" => LocalizationService.GetString("Cancelled"),
             _ => status
         };
     }

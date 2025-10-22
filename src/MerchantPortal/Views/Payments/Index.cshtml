@@ -45,15 +45,15 @@
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h2><i class="fas fa-money-bill-wave me-2"></i>Ödeme Geçmişi</h2>
-        <p class="text-muted mb-0">Tüm ödeme işlemlerini görüntüleyin ve raporlayın</p>
+        <h2><i class="fas fa-money-bill-wave me-2"></i>@LocalizationService.GetString("PaymentHistory")</h2>
+        <p class="text-muted mb-0">@LocalizationService.GetString("ViewAndReportPayments")</p>
     </div>
     <div>
         <a href="/Payments/Reports" class="btn btn-primary me-2">
-            <i class="fas fa-chart-line me-1"></i> Raporlar
+            <i class="fas fa-chart-line me-1"></i> @LocalizationService.GetString("Reports")
         </a>
         <a href="/Payments/Settlements" class="btn btn-outline-primary">
-            <i class="fas fa-file-invoice-dollar me-1"></i> Mutabakat
+            <i class="fas fa-file-invoice-dollar me-1"></i> @LocalizationService.GetString("Settlements")
         </a>
     </div>
 </div>
@@ -67,7 +67,7 @@
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div>
-                    <div class="small text-muted">Tamamlanan</div>
+                    <div class="small text-muted">@LocalizationService.GetString("Completed")</div>
                     <div class="h4 mb-0" id="completedCount">-</div>
             </div>
             </div>
@@ -80,7 +80,7 @@
                     <i class="fas fa-clock"></i>
                 </div>
                 <div>
-                    <div class="small text-muted">Bekleyen</div>
+                    <div class="small text-muted">@LocalizationService.GetString("Pending")</div>
                     <div class="h4 mb-0" id="pendingCount">-</div>
             </div>
             </div>
@@ -93,7 +93,7 @@
                     <i class="fas fa-lira-sign"></i>
                 </div>
                 <div>
-                    <div class="small text-muted">Toplam Ciro</div>
+                    <div class="small text-muted">@LocalizationService.GetString("TotalTurnover")</div>
                     <div class="h4 mb-0" id="totalRevenue">₺0</div>
             </div>
             </div>
@@ -106,7 +106,7 @@
                     <i class="fas fa-calculator"></i>
                 </div>
                 <div>
-                    <div class="small text-muted">Ort. Tutar</div>
+                    <div class="small text-muted">@LocalizationService.GetString("AverageAmount")</div>
                     <div class="h4 mb-0" id="avgAmount">₺0</div>
             </div>
             </div>
@@ -117,39 +117,39 @@
 <!-- Filters -->
 <div class="payment-card">
     <div class="filter-section">
-        <h5 class="mb-3"><i class="fas fa-filter me-2"></i>Filtreler</h5>
+        <h5 class="mb-3"><i class="fas fa-filter me-2"></i>@LocalizationService.GetString("Filters")</h5>
         <div class="row g-3">
             <div class="col-md-3">
-                <label class="form-label">Başlangıç Tarihi</label>
+                <label class="form-label">@LocalizationService.GetString("StartDate")</label>
                 <input type="date" class="form-control" id="startDate" />
             </div>
             <div class="col-md-3">
-                <label class="form-label">Bitiş Tarihi</label>
+                <label class="form-label">@LocalizationService.GetString("EndDate")</label>
                 <input type="date" class="form-control" id="endDate" />
                     </div>
             <div class="col-md-2">
-                <label class="form-label">Ödeme Yöntemi</label>
+                <label class="form-label">@LocalizationService.GetString("PaymentMethod")</label>
                 <select class="form-select" id="paymentMethod">
-                    <option value="">Tümü</option>
-                    <option value="Cash">Nakit</option>
-                    <option value="CreditCard">Kredi Kartı</option>
-                    <option value="VodafonePay">Vodafone Pay</option>
-                    <option value="BankTransfer">Havale/EFT</option>
+                    <option value="">@LocalizationService.GetString("All")</option>
+                    <option value="Cash">@LocalizationService.GetString("Cash")</option>
+                    <option value="CreditCard">@LocalizationService.GetString("CreditCard")</option>
+                    <option value="VodafonePay">@LocalizationService.GetString("VodafonePay")</option>
+                    <option value="BankTransfer">@LocalizationService.GetString("BankTransfer")</option>
                 </select>
                 </div>
             <div class="col-md-2">
-                <label class="form-label">Durum</label>
+                <label class="form-label">@LocalizationService.GetString("Status")</label>
                 <select class="form-select" id="status">
-                    <option value="">Tümü</option>
-                    <option value="Completed">Tamamlandı</option>
-                    <option value="Pending">Bekliyor</option>
-                    <option value="Failed">Başarısız</option>
+                    <option value="">@LocalizationService.GetString("All")</option>
+                    <option value="Completed">@LocalizationService.GetString("Completed")</option>
+                    <option value="Pending">@LocalizationService.GetString("Pending")</option>
+                    <option value="Failed">@LocalizationService.GetString("Failed")</option>
                 </select>
                     </div>
             <div class="col-md-2">
                 <label class="form-label">&nbsp;</label>
                 <button class="btn btn-primary w-100" onclick="applyFilters()">
-                    <i class="fas fa-search me-1"></i> Filtrele
+                    <i class="fas fa-search me-1"></i> @LocalizationService.GetString("Filter")
                 </button>
             </div>
         </div>
@@ -158,29 +158,29 @@
     <!-- Export Buttons -->
     <div class="d-flex justify-content-end gap-2 mt-3">
         <button class="btn btn-success btn-sm" onclick="exportToExcel()">
-            <i class="fas fa-file-excel me-1"></i> Excel İndir
+            <i class="fas fa-file-excel me-1"></i> @LocalizationService.GetString("DownloadExcel")
         </button>
         <button class="btn btn-danger btn-sm" onclick="exportToPdf()">
-            <i class="fas fa-file-pdf me-1"></i> PDF İndir
+            <i class="fas fa-file-pdf me-1"></i> @LocalizationService.GetString("DownloadPDF")
         </button>
     </div>
 </div>
 
 <!-- Payment History Table -->
 <div class="payment-card">
-    <h5 class="mb-3"><i class="fas fa-list me-2"></i>Ödeme Listesi</h5>
+    <h5 class="mb-3"><i class="fas fa-list me-2"></i>@LocalizationService.GetString("PaymentsList")</h5>
     <div class="table-responsive">
         <table id="paymentsTable" class="table table-hover align-middle">
             <thead>
                 <tr>
-                    <th>Sipariş No</th>
-                    <th>Müşteri</th>
-                    <th>Ödeme Yöntemi</th>
-                    <th>Tutar</th>
-                    <th>Durum</th>
-                    <th>Oluşturma</th>
-                    <th>Tamamlanma</th>
-                    <th>İşlem</th>
+                    <th>@LocalizationService.GetString("OrderNumber")</th>
+                    <th>@LocalizationService.GetString("Customer")</th>
+                    <th>@LocalizationService.GetString("PaymentMethod")</th>
+                    <th>@LocalizationService.GetString("Amount")</th>
+                    <th>@LocalizationService.GetString("Status")</th>
+                    <th>@LocalizationService.GetString("CreatedAtHeader")</th>
+                    <th>@LocalizationService.GetString("CompletedAtHeader")</th>
+                    <th>@LocalizationService.GetString("Action")</th>
                 </tr>
             </thead>
             <tbody>

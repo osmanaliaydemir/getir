@@ -92,12 +92,12 @@
     <div>
         <h2 class="mb-1">
             <i class="fas fa-bell me-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
-            Bildirim Tercihleri
+            @LocalizationService.GetString("NotificationPreferences")
         </h2>
-        <p class="text-muted mb-0">Bildirim ayarlarınızı yönetin</p>
+        <p class="text-muted mb-0">@LocalizationService.GetString("ManageNotifications")</p>
     </div>
     <button type="button" class="btn" style="background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%); color: white; border-radius: 10px;" onclick="saveAllPreferences()">
-        <i class="fas fa-save me-2"></i>Tümünü Kaydet
+        <i class="fas fa-save me-2"></i>@LocalizationService.GetString("SaveAll")
     </button>
 </div>
 
@@ -105,13 +105,13 @@
 <div class="settings-card fade-in" style="animation-delay: 0.1s;">
     <h5>
         <i class="fas fa-bell"></i>
-        Genel Bildirimler
+        @LocalizationService.GetString("GeneralNotifications")
     </h5>
     
     <div class="setting-item">
         <div class="setting-info">
-            <h6>Ses Bildirimleri</h6>
-            <small>Yeni sipariş ve durum değişikliklerinde ses çalsın</small>
+            <h6>@LocalizationService.GetString("SoundNotifications")</h6>
+            <small>@LocalizationService.GetString("SoundNotificationsDesc")</small>
         </div>
         <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" id="soundEnabled" checked>
@@ -120,8 +120,8 @@
     
     <div class="setting-item">
         <div class="setting-info">
-            <h6>Masaüstü Bildirimleri</h6>
-            <small>Browser push notifications (tarayıcı izni gerekir)</small>
+            <h6>@LocalizationService.GetString("DesktopNotifications")</h6>
+            <small>@LocalizationService.GetString("DesktopNotificationsDesc")</small>
         </div>
         <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" id="desktopNotifications" checked>
@@ -130,8 +130,8 @@
     
     <div class="setting-item">
         <div class="setting-info">
-            <h6>E-posta Bildirimleri</h6>
-            <small>Önemli olaylar için e-posta gönder</small>
+            <h6>@LocalizationService.GetString("EmailNotifications")</h6>
+            <small>@LocalizationService.GetString("EmailNotificationsDesc")</small>
         </div>
         <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" id="emailNotifications">
@@ -143,13 +143,13 @@
 <div class="settings-card fade-in" style="animation-delay: 0.2s;">
     <h5>
         <i class="fas fa-filter"></i>
-        Olay Bazlı Bildirimler
+        @LocalizationService.GetString("EventBasedNotifications")
     </h5>
     
     <div class="setting-item">
         <div class="setting-info">
-            <h6><i class="fas fa-shopping-bag text-success me-2"></i>Yeni Sipariş</h6>
-            <small>Müşteriden yeni sipariş geldiğinde bildir</small>
+            <h6><i class="fas fa-shopping-bag text-success me-2"></i>@LocalizationService.GetString("NewOrder")</h6>
+            <small>@LocalizationService.GetString("NotifyOnNewOrder")</small>
         </div>
         <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" id="newOrderNotifications" checked>
@@ -158,8 +158,8 @@
     
     <div class="setting-item">
         <div class="setting-info">
-            <h6><i class="fas fa-sync text-info me-2"></i>Durum Değişiklikleri</h6>
-            <small>Sipariş durumu değiştiğinde bildir</small>
+            <h6><i class="fas fa-sync text-info me-2"></i>@LocalizationService.GetString("StatusChanges")</h6>
+            <small>@LocalizationService.GetString("NotifyOnStatusChange")</small>
         </div>
         <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" id="statusChangeNotifications" checked>
@@ -168,8 +168,8 @@
     
     <div class="setting-item">
         <div class="setting-info">
-            <h6><i class="fas fa-times-circle text-danger me-2"></i>İptal Bildirimleri</h6>
-            <small>Sipariş iptal edildiğinde bildir</small>
+            <h6><i class="fas fa-times-circle text-danger me-2"></i>@LocalizationService.GetString("CancellationNotifications")</h6>
+            <small>@LocalizationService.GetString("NotifyOnCancellation")</small>
         </div>
         <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" id="cancellationNotifications" checked>
@@ -181,13 +181,13 @@
 <div class="settings-card fade-in" style="animation-delay: 0.3s;">
     <h5>
         <i class="fas fa-volume-up"></i>
-        Ses Ayarları
+        @LocalizationService.GetString("SoundSettings")
     </h5>
     
     <div class="setting-item">
         <div class="setting-info flex-grow-1">
-            <h6>Bildirim Sesi</h6>
-            <small>Sipariş bildirimi için kullanılacak ses</small>
+            <h6>@LocalizationService.GetString("NotificationSound")</h6>
+            <small>@LocalizationService.GetString("NotificationSoundDesc")</small>
         </div>
         <div class="d-flex align-items-center gap-2">
             <select class="form-select" id="notificationSound" style="width: 250px;">
@@ -198,7 +198,7 @@
                 <option value="ping">💫 Ping (Hafif)</option>
             </select>
             <button type="button" class="sound-test-btn" onclick="testNotificationSound()">
-                <i class="fas fa-play"></i> Test
+                <i class="fas fa-play"></i> @LocalizationService.GetString("Test")
             </button>
         </div>
     </div>
@@ -208,13 +208,13 @@
 <div class="settings-card fade-in" style="animation-delay: 0.4s;">
     <h5>
         <i class="fas fa-moon"></i>
-        Rahatsız Etme Modu
+        @LocalizationService.GetString("DoNotDisturb")
     </h5>
     
     <div class="setting-item">
         <div class="setting-info">
-            <h6>Rahatsız Etme Modunu Etkinleştir</h6>
-            <small>Belirli saatler arasında bildirim alma</small>
+            <h6>@LocalizationService.GetString("EnableDND")</h6>
+            <small>@LocalizationService.GetString("EnableDNDDesc")</small>
         </div>
         <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" id="doNotDisturbEnabled" onchange="toggleDNDTimeInputs()">
@@ -224,16 +224,16 @@
     <div id="dndTimeInputs" style="display: none;">
         <div class="setting-item">
             <div class="setting-info">
-                <h6>Başlangıç Saati</h6>
-                <small>Rahatsız etme başlangıç</small>
+                <h6>@LocalizationService.GetString("StartTime")</h6>
+                <small>@LocalizationService.GetString("StartTimeDesc")</small>
             </div>
             <input type="time" class="form-control" id="dndStartTime" value="22:00" style="width: 150px;">
         </div>
         
         <div class="setting-item">
             <div class="setting-info">
-                <h6>Bitiş Saati</h6>
-                <small>Rahatsız etme bitiş</small>
+                <h6>@LocalizationService.GetString("EndTime")</h6>
+                <small>@LocalizationService.GetString("EndTimeDesc")</small>
             </div>
             <input type="time" class="form-control" id="dndEndTime" value="08:00" style="width: 150px;">
         </div>
@@ -244,26 +244,26 @@
 <div class="settings-card fade-in" style="animation-delay: 0.5s;">
     <h5>
         <i class="fas fa-desktop"></i>
-        Masaüstü Bildirimleri
+        @LocalizationService.GetString("DesktopNotifications")
     </h5>
     
     <div class="alert alert-info">
         <div class="d-flex align-items-center justify-content-between">
             <div>
                 <i class="fas fa-info-circle me-2"></i>
-                <strong>Tarayıcı İzni:</strong>
-                <span id="permissionStatus">Kontrol ediliyor...</span>
+                <strong>@LocalizationService.GetString("BrowserPermission")</strong>
+                <span id="permissionStatus">@LocalizationService.GetString("Checking")</span>
             </div>
             <button type="button" class="btn btn-primary btn-sm" id="requestPermissionBtn" style="display: none;" onclick="requestDesktopPermission()">
-                <i class="fas fa-bell"></i> İzin Ver
+                <i class="fas fa-bell"></i> @LocalizationService.GetString("Allow")
             </button>
         </div>
     </div>
     
     <div class="setting-item">
         <div class="setting-info">
-            <h6>Test Bildirimi Gönder</h6>
-            <small>Masaüstü bildirimini test edin</small>
+            <h6>@LocalizationService.GetString("SendTestNotification")</h6>
+            <small>@LocalizationService.GetString("SendTest")</small>
         </div>
         <button type="button" class="btn btn-outline-primary" onclick="sendTestDesktopNotification()">
             <i class="fas fa-paper-plane"></i> Test Et
@@ -374,7 +374,7 @@
                 contentType: 'application/json',
                 data: JSON.stringify(preferences),
                 success: function(response) {
-                    if (response.success) {
+                if (response.success) {
                         // Also save to localStorage for signalr-helper.js
                         localStorage.setItem('notificationPreferences', JSON.stringify(preferences));
                         
@@ -384,14 +384,14 @@
                         }
                         
                         // Show success message
-                        showSuccessToast(response.message || 'Bildirim tercihleri başarıyla kaydedildi!');
+                        showSuccessToast(response.message || LocalizationService.GetString('PreferencesSaved'));
                     } else {
-                        showErrorToast(response.message || 'Tercihler kaydedilemedi');
+                        showErrorToast(response.message || LocalizationService.GetString('PreferencesSaveFailed'));
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error('Save preferences error:', error);
-                    showErrorToast('Tercihler kaydedilirken bir hata oluştu: ' + error);
+                    showErrorToast(LocalizationService.GetString('PreferencesSaveError').replace('{0}', error));
                 }
             });
         }
@@ -403,27 +403,27 @@
         
         function checkDesktopNotificationPermission() {
             if (!("Notification" in window)) {
-                $('#permissionStatus').text('Desteklenmiyor').addClass('text-danger');
+                $('#permissionStatus').text(LocalizationService.GetString('NotSupported')).addClass('text-danger');
                 return;
             }
             
             const permission = Notification.permission;
             
             if (permission === "granted") {
-                $('#permissionStatus').text('✅ İzin verildi').addClass('text-success');
+                $('#permissionStatus').text(LocalizationService.GetString('PermissionGranted')).addClass('text-success');
                 $('#requestPermissionBtn').hide();
             } else if (permission === "denied") {
-                $('#permissionStatus').text('❌ İzin reddedildi (Tarayıcı ayarlarından açın)').addClass('text-danger');
+                $('#permissionStatus').text(LocalizationService.GetString('PermissionDenied')).addClass('text-danger');
                 $('#requestPermissionBtn').hide();
             } else {
-                $('#permissionStatus').text('⚠️ İzin verilmedi').addClass('text-warning');
+                $('#permissionStatus').text(LocalizationService.GetString('PermissionNotGranted')).addClass('text-warning');
                 $('#requestPermissionBtn').show();
             }
         }
         
         function requestDesktopPermission() {
             if (!("Notification" in window)) {
-                alert("Tarayıcınız desktop notifications desteklemiyor");
+                alert(LocalizationService.GetString("BrowserNoSupport"));
                 return;
             }
             
@@ -438,12 +438,12 @@
         
         function sendTestDesktopNotification() {
             if (Notification.permission !== "granted") {
-                alert("Lütfen önce bildirim iznini verin");
+                alert(LocalizationService.GetString("PleaseAllowNotifications"));
                 return;
             }
             
             new Notification("Getir Merchant Portal", {
-                body: "Test bildirimi - Bildirimler doğru çalışıyor! ✅",
+                body: LocalizationService.GetString("TestNotificationBody"),
                 icon: "/favicon.ico",
                 badge: "/favicon.ico"
             });
@@ -468,15 +468,15 @@
                 audio.volume = 0.5;
                 audio.play()
                     .then(() => {
-                        showSuccessToast(`🔊 "${sound}" sesi test ediliyor...`);
+                        showSuccessToast(LocalizationService.GetString('SoundTesting').replace('{0}', sound));
                     })
                     .catch(err => {
                         console.error('Sound play failed:', err);
-                        showErrorToast('Ses oynatılamadı. Tarayıcınızın ses izinlerini kontrol edin.');
+                        showErrorToast(LocalizationService.GetString('SoundPlayFailed'));
                     });
             } catch (err) {
                 console.error('Sound test error:', err);
-                showErrorToast('Ses testi başarısız oldu.');
+                showErrorToast(LocalizationService.GetString('SoundTestFailed'));
             }
         }
         

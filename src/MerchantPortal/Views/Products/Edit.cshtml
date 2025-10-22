@@ -26,7 +26,7 @@
                     <div class="col-md-6 mb-3">
                         <label asp-for="ProductCategoryId" class="form-label">@LocalizationService.GetString("Category")</label>
                         <select asp-for="ProductCategoryId" class="form-select">
-                            <option value="">@LocalizationService.GetString("Category")...</option>
+                            <option value="">@LocalizationService.GetString("SelectCategory")</option>
                             @foreach (var category in categories)
                             {
                                 <option value="@category.Id">@category.Name</option>

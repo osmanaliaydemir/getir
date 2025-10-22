@@ -33,7 +33,7 @@
                                 @category.Name
                                 @if (category.ProductCount > 0)
                                 {
-                                    <text> (@category.ProductCount ürün)</text>
+                                    <text> (@category.ProductCount @LocalizationService.GetString("ProductCount"))</text>
                                 }
                             </option>
                         }
@@ -41,7 +41,7 @@
                     <span asp-validation-for="ParentCategoryId" class="text-danger"></span>
                     <small class="form-text text-muted">
                         <i class="fas fa-info-circle"></i>
-                        Bir üst kategori seçerek hiyerarşik yapı oluşturabilirsiniz
+                        @LocalizationService.GetString("CreateHierarchy")
                     </small>
                 </div>
 
@@ -58,32 +58,32 @@
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="ImageUrl" class="form-label">Görsel URL</label>
-                    <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
+                    <label asp-for="ImageUrl" class="form-label">@LocalizationService.GetString("ImageURL")</label>
+                    <input asp-for="ImageUrl" class="form-control" placeholder="@LocalizationService.GetString("ImageURLPlaceholder")" />
                     <span asp-validation-for="ImageUrl" class="text-danger"></span>
                     <small class="form-text text-muted">
                         <i class="fas fa-image"></i>
-                        Kategori için görsel eklemek isterseniz URL girebilirsiniz
+                        @LocalizationService.GetString("AddImageInfo")
                     </small>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="DisplayOrder" class="form-label">Sıralama</label>
+                        <label asp-for="DisplayOrder" class="form-label">@LocalizationService.GetString("DisplayOrder")</label>
                         <input asp-for="DisplayOrder" type="number" class="form-control" placeholder="0" value="0" />
                         <span asp-validation-for="DisplayOrder" class="text-danger"></span>
                         <small class="form-text text-muted">
-                            Küçük değer önce gösterilir
+                            @LocalizationService.GetString("SmallerFirst")
                         </small>
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label class="form-label d-block">Durum</label>
+                        <label class="form-label d-block">@LocalizationService.GetString("Status")</label>
                         <div class="form-check form-switch mt-2">
                             <input asp-for="IsActive" class="form-check-input" type="checkbox" checked />
                             <label asp-for="IsActive" class="form-check-label">
-                                Aktif
-                                <small class="text-muted">(Müşterilere gösterilsin mi?)</small>
+                                @LocalizationService.GetString("Active")
+                                <small class="text-muted">(@LocalizationService.GetString("ShowToCustomers"))</small>
                             </label>
                         </div>
                     </div>
@@ -91,8 +91,8 @@
 
                 <div class="alert alert-info">
                     <i class="fas fa-lightbulb"></i>
-                    <strong>İpucu:</strong> Kategorileri hiyerarşik olarak organize ederek müşterilerinizin ürünleri daha kolay bulmasını sağlayabilirsiniz.
-                    Örnek: "Meşrubat" kategorisini "İçecekler" kategorisinin altında oluşturabilirsiniz.
+                    <strong>@LocalizationService.GetString("Tip"):</strong> @LocalizationService.GetString("HierarchyTip")
+                    @LocalizationService.GetString("HierarchyExample")
                 </div>
 
                 <div class="d-flex justify-content-between mt-4">

@@ -7,7 +7,7 @@
 }
 
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800">Kurye Değerlendirmeleri</h1>
+    <h1 class="h3 mb-4 text-gray-800">@LocalizationService.GetString("Courier Reviews")</h1>
 
     <!-- Stats Cards -->
     <div class="row mb-4">
@@ -16,7 +16,7 @@
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Ortalama Puan</div>
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">@LocalizationService.GetString("AverageScore")</div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
                                 @(stats?.AverageRating.ToString("F1") ?? "0.0") 
                                 <i class="fas fa-star text-warning"></i>
@@ -35,7 +35,7 @@
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Toplam Değerlendirme</div>
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">@LocalizationService.GetString("TotalReviewsCount")</div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">@(stats?.TotalReviews ?? 0)</div>
                         </div>
                         <div class="col-auto">
@@ -51,7 +51,7 @@
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">5 Yıldız</div>
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">@LocalizationService.GetString("FiveStars")</div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">@(stats?.RatingDistribution.GetValueOrDefault(5, 0))</div>
                         </div>
                         <div class="col-auto">
@@ -67,7 +67,7 @@
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">1 Yıldız</div>
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">@LocalizationService.GetString("OneStar")</div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">@(stats?.RatingDistribution.GetValueOrDefault(1, 0))</div>
                         </div>
                         <div class="col-auto">
@@ -86,7 +86,7 @@
             <div class="col-lg-6">
                 <div class="card shadow mb-4">
                     <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Kurye Puan Dağılımı</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">@LocalizationService.GetString("CourierRatingDistribution")</h6>
                     </div>
                     <div class="card-body">
                         @for (int i = 5; i >= 1; i--)
@@ -95,7 +95,7 @@
                             var percentage = stats.TotalReviews > 0 ? (count * 100.0 / stats.TotalReviews) : 0;
                             <div class="mb-2">
                                 <div class="d-flex justify-content-between">
-                                    <span>@i Yıldız</span>
+                                    <span>@i @LocalizationService.GetString("Stars")</span>
                                     <span>@count (@percentage.ToString("F1")%)</span>
                                 </div>
                                 <div class="progress">
@@ -115,29 +115,29 @@
         <div class="card-body">
             <form method="get" class="row g-3">
                 <div class="col-md-3">
-                    <label class="form-label">Puan Filtresi</label>
+                    <label class="form-label">@LocalizationService.GetString("RatingFilter")</label>
                     <select name="Rating" class="form-select">
-                        <option value="">Tümü</option>
-                        <option value="5" selected="@(filter?.Rating == 5)">5 Yıldız</option>
-                        <option value="4" selected="@(filter?.Rating == 4)">4 Yıldız</option>
-                        <option value="3" selected="@(filter?.Rating == 3)">3 Yıldız</option>
-                        <option value="2" selected="@(filter?.Rating == 2)">2 Yıldız</option>
-                        <option value="1" selected="@(filter?.Rating == 1)">1 Yıldız</option>
+                        <option value="">@LocalizationService.GetString("All")</option>
+                        <option value="5" selected="@(filter?.Rating == 5)">5 @LocalizationService.GetString("Stars")</option>
+                        <option value="4" selected="@(filter?.Rating == 4)">4 @LocalizationService.GetString("Stars")</option>
+                        <option value="3" selected="@(filter?.Rating == 3)">3 @LocalizationService.GetString("Stars")</option>
+                        <option value="2" selected="@(filter?.Rating == 2)">2 @LocalizationService.GetString("Stars")</option>
+                        <option value="1" selected="@(filter?.Rating == 1)">1 @LocalizationService.GetString("Stars")</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Başlangıç Tarihi</label>
+                    <label class="form-label">@LocalizationService.GetString("StartDate")</label>
                     <input type="date" name="StartDate" class="form-control" value="@(filter?.StartDate?.ToString("yyyy-MM-dd"))" />
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Bitiş Tarihi</label>
+                    <label class="form-label">@LocalizationService.GetString("EndDate")</label>
                     <input type="date" name="EndDate" class="form-control" value="@(filter?.EndDate?.ToString("yyyy-MM-dd"))" />
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">&nbsp;</label>
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">Filtrele</button>
-                        <a href="@Url.Action("CourierReviews")" class="btn btn-outline-secondary">Temizle</a>
+                        <button type="submit" class="btn btn-primary">@LocalizationService.GetString("ApplyFilter")</button>
+                        <a href="@Url.Action("CourierReviews")" class="btn btn-outline-secondary">@LocalizationService.GetString("ClearFilter")</a>
                     </div>
                 </div>
             </form>
@@ -147,15 +147,15 @@
     <!-- Reviews List -->
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary">Kurye Değerlendirmeleri</h6>
+            <h6 class="m-0 font-weight-bold text-primary">@LocalizationService.GetString("CourierReviewsTitle")</h6>
             <div class="dropdown no-arrow">
                 <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown">
                     <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
                 </a>
                 <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in">
-                    <div class="dropdown-header">İşlemler:</div>
-                    <a class="dropdown-item" href="#" onclick="exportReviews()">Excel'e Aktar</a>
-                    <a class="dropdown-item" href="#" onclick="printReviews()">Yazdır</a>
+                    <div class="dropdown-header">@LocalizationService.GetString("Operations"):</div>
+                    <a class="dropdown-item" href="#" onclick="exportReviews()">@LocalizationService.GetString("ExportToExcel")</a>
+                    <a class="dropdown-item" href="#" onclick="printReviews()">@LocalizationService.GetString("Print")</a>
                 </div>
             </div>
         </div>
@@ -196,10 +196,10 @@
                                 <div class="d-flex flex-column gap-2">
                                     <button class="btn btn-sm btn-outline-@(review.IsLiked ? "danger" : "secondary")" 
                                             onclick="toggleLike('@review.Id', @review.IsLiked.ToString().ToLower())">
-                                        <i class="fas fa-heart"></i> @(review.IsLiked ? "Beğenme" : "Beğen")
+                                        <i class="fas fa-heart"></i> @(review.IsLiked ? LocalizationService.GetString("Unlike") : LocalizationService.GetString("Like"))
                                     </button>
                                     <button class="btn btn-sm btn-outline-warning" onclick="reportReview('@review.Id')">
-                                        <i class="fas fa-flag"></i> Rapor Et
+                                        <i class="fas fa-flag"></i> @LocalizationService.GetString("Report")
                                     </button>
                                 </div>
                             </div>
@@ -211,8 +211,8 @@
             {
                 <div class="text-center py-5">
                     <i class="fas fa-motorcycle fa-3x text-gray-300 mb-3"></i>
-                    <h5 class="text-gray-600">Henüz kurye değerlendirmesi bulunmamaktadır</h5>
-                    <p class="text-gray-500">Müşterileriniz kuryeleri değerlendirdikten sonra burada görünecektir.</p>
+                    <h5 class="text-gray-600">@LocalizationService.GetString("NoCourierReviewsYet")</h5>
+                    <p class="text-gray-500">@LocalizationService.GetString("CourierReviewsWillAppear")</p>
                 </div>
             }
         </div>
@@ -224,22 +224,22 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Değerlendirmeyi Rapor Et</h5>
+                <h5 class="modal-title">@LocalizationService.GetString("ReportReview")</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="reportForm">
                     <input type="hidden" id="reportReviewId" />
                     <div class="mb-3">
-                        <label for="reportReason" class="form-label">Rapor Nedeni</label>
+                        <label for="reportReason" class="form-label">@LocalizationService.GetString("ReportReason")</label>
                         <textarea class="form-control" id="reportReason" rows="3" maxlength="500" required></textarea>
-                        <div class="form-text">Maksimum 500 karakter</div>
+                        <div class="form-text">@LocalizationService.GetString("MaxCharacters")</div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-                <button type="button" class="btn btn-warning" onclick="submitReport()">Rapor Et</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@LocalizationService.GetString("Cancel")</button>
+                <button type="button" class="btn btn-warning" onclick="submitReport()">@LocalizationService.GetString("ReportBtn")</button>
             </div>
         </div>
     </div>
@@ -284,7 +284,7 @@
             const reason = document.getElementById('reportReason').value;
             
             if (!reason.trim()) {
-                alert('Lütfen rapor nedenini girin');
+                alert('@LocalizationService.GetString("PleaseEnterReason")');
                 return;
             }
 
@@ -302,7 +302,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Rapor başarıyla gönderildi');
+                    alert('@LocalizationService.GetString("ReportSentSuccess")');
                     bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide();
                 } else {
                     alert(data.message);
@@ -310,12 +310,12 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Bir hata oluştu');
+                alert('@LocalizationService.GetString("AnErrorOccurred")');
             });
         }
 
         function exportReviews() {
-            alert('Excel export özelliği yakında eklenecek');
+            alert('@LocalizationService.GetString("ExportFeatureComingSoon")');
         }
 
         function printReviews() {

@@ -9,7 +9,7 @@
     <div class="col-md-8 mx-auto">
         <div class="stat-card">
             <h4 class="mb-4">
-                <i class="fas fa-edit"></i> Kategori Düzenle
+                <i class="fas fa-edit"></i> @LocalizationService.GetString("EditCategory")
             </h4>
 
             <form asp-action="Edit" method="post">
@@ -18,11 +18,11 @@
 
                 <div class="mb-3">
                     <label asp-for="ParentCategoryId" class="form-label">
-                        Üst Kategori
-                        <small class="text-muted">(İsteğe bağlı)</small>
+                        @LocalizationService.GetString("ParentCategory")
+                        <small class="text-muted">(@LocalizationService.GetString("Optional"))</small>
                     </label>
                     <select asp-for="ParentCategoryId" class="form-select">
-                        <option value="">Ana Kategori (Üst kategori yok)</option>
+                        <option value="">@LocalizationService.GetString("ParentCategory")</option>
                         @foreach (var category in categories.Where(c => c.IsActive))
                         {
                             <option value="@category.Id">
@@ -33,7 +33,7 @@
                                 @category.Name
                                 @if (category.ProductCount > 0)
                                 {
-                                    <text> (@category.ProductCount ürün)</text>
+                                    <text> (@category.ProductCount @LocalizationService.GetString("ProductCount"))</text>
                                 }
                             </option>
                         }
@@ -42,36 +42,36 @@
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Name" class="form-label">Kategori Adı *</label>
+                    <label asp-for="Name" class="form-label">@LocalizationService.GetString("CategoryName") *</label>
                     <input asp-for="Name" class="form-control" />
                     <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Description" class="form-label">Açıklama</label>
+                    <label asp-for="Description" class="form-label">@LocalizationService.GetString("Description")</label>
                     <textarea asp-for="Description" class="form-control" rows="3"></textarea>
                     <span asp-validation-for="Description" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="ImageUrl" class="form-label">Görsel URL</label>
+                    <label asp-for="ImageUrl" class="form-label">@LocalizationService.GetString("ImageURL")</label>
                     <input asp-for="ImageUrl" class="form-control" />
                     <span asp-validation-for="ImageUrl" class="text-danger"></span>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="DisplayOrder" class="form-label">Sıralama</label>
+                        <label asp-for="DisplayOrder" class="form-label">@LocalizationService.GetString("DisplayOrder")</label>
                         <input asp-for="DisplayOrder" type="number" class="form-control" />
                         <span asp-validation-for="DisplayOrder" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label class="form-label d-block">Durum</label>
+                        <label class="form-label d-block">@LocalizationService.GetString("Status")</label>
                         <div class="form-check form-switch mt-2">
                             <input asp-for="IsActive" class="form-check-input" type="checkbox" />
                             <label asp-for="IsActive" class="form-check-label">
-                                Aktif
+                                @LocalizationService.GetString("Active")
                             </label>
                         </div>
                     </div>
@@ -79,15 +79,15 @@
 
                 <div class="alert alert-warning">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <strong>Dikkat:</strong> Kategoriyi pasif hale getirirseniz, bu kategorideki ürünler müşterilere gösterilmeyebilir.
+                    <strong>@LocalizationService.GetString("Attention"):</strong> @LocalizationService.GetString("DeactivateCategoryWarning")
                 </div>
 
                 <div class="d-flex justify-content-between mt-4">
                     <a href="@Url.Action("Index")" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Geri
+                        <i class="fas fa-arrow-left"></i> @LocalizationService.GetString("Back")
                     </a>
                     <button type="submit" class="btn btn-getir">
-                        <i class="fas fa-save"></i> Değişiklikleri Kaydet
+                        <i class="fas fa-save"></i> @LocalizationService.GetString("SaveChanges")
                     </button>
                 </div>
             </form>

@@ -13,9 +13,9 @@
     <div>
         <h2 class="mb-1">
             <i class="fas fa-star text-warning me-2"></i>
-            Ürün Yorumları
+            @LocalizationService.GetString("Product Reviews")
         </h2>
-        <p class="text-muted mb-0">Müşterilerinizin ürünleriniz hakkındaki görüşleri</p>
+        <p class="text-muted mb-0">@LocalizationService.GetString("ReviewsWillAppearHere")</p>
     </div>
 </div>
 
@@ -29,7 +29,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <p class="text-muted mb-1">Ortalama Puan</p>
+                            <p class="text-muted mb-1">@LocalizationService.GetString("AverageScore")</p>
                             <h3 class="mb-0">@stats.AverageRating.ToString("F1") <small class="text-muted">/ 5</small></h3>
                             <div class="star-rating mt-1">
                                 @for (int i = 1; i <= 5; i++)
@@ -63,7 +63,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <p class="text-muted mb-1">Toplam Yorum</p>
+                            <p class="text-muted mb-1">@LocalizationService.GetString("TotalReviewsCount")</p>
                             <h3 class="mb-0">@stats.TotalReviews</h3>
                             <small class="text-success">
                                 <i class="fas fa-check-circle"></i> @stats.VerifiedPurchaseCount doğrulanmış
@@ -83,7 +83,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <p class="text-muted mb-1">Onay Bekleyen</p>
+                            <p class="text-muted mb-1">@LocalizationService.GetString("Pending")</p>
                             <h3 class="mb-0">@stats.PendingApprovalCount</h3>
                             @if (stats.PendingApprovalCount > 0)
                             {
@@ -112,7 +112,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <p class="text-muted mb-1">5 Yıldız</p>
+                            <p class="text-muted mb-1">@LocalizationService.GetString("FiveStars")</p>
                             <h3 class="mb-0">@stats.FiveStarCount</h3>
                             @if (stats.TotalReviews > 0)
                             {
@@ -134,7 +134,7 @@
     <!-- Rating Distribution -->
     <div class="card mb-4">
         <div class="card-header bg-white">
-            <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Puan Dağılımı</h5>
+            <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>@LocalizationService.GetString("RatingDistribution")</h5>
         </div>
         <div class="card-body">
             <div class="rating-distribution">
@@ -178,28 +178,28 @@
     <div class="card-body">
         <form method="get" class="row g-3">
             <div class="col-md-3">
-                <label class="form-label">Puan Filtresi</label>
+                <label class="form-label">@LocalizationService.GetString("RatingFilter")</label>
                 <select name="rating" class="form-select" onchange="this.form.submit()">
-                    <option value="">Tümü</option>
-                    <option value="5" selected="@(selectedRating == 5)">5 Yıldız</option>
-                    <option value="4" selected="@(selectedRating == 4)">4 Yıldız</option>
-                    <option value="3" selected="@(selectedRating == 3)">3 Yıldız</option>
-                    <option value="2" selected="@(selectedRating == 2)">2 Yıldız</option>
-                    <option value="1" selected="@(selectedRating == 1)">1 Yıldız</option>
+                    <option value="">@LocalizationService.GetString("All")</option>
+                    <option value="5" selected="@(selectedRating == 5)">5 @LocalizationService.GetString("Stars")</option>
+                    <option value="4" selected="@(selectedRating == 4)">4 @LocalizationService.GetString("Stars")</option>
+                    <option value="3" selected="@(selectedRating == 3)">3 @LocalizationService.GetString("Stars")</option>
+                    <option value="2" selected="@(selectedRating == 2)">2 @LocalizationService.GetString("Stars")</option>
+                    <option value="1" selected="@(selectedRating == 1)">1 @LocalizationService.GetString("Stars")</option>
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label">Onay Durumu</label>
+                <label class="form-label">@LocalizationService.GetString("Status")</label>
                 <select name="approved" class="form-select" onchange="this.form.submit()">
-                    <option value="">Tümü</option>
-                    <option value="true" selected="@(selectedApproval == true)">Onaylanmış</option>
-                    <option value="false" selected="@(selectedApproval == false)">Onay Bekleyen</option>
+                    <option value="">@LocalizationService.GetString("All")</option>
+                    <option value="true" selected="@(selectedApproval == true)">@LocalizationService.GetString("Approved")</option>
+                    <option value="false" selected="@(selectedApproval == false)">@LocalizationService.GetString("Pending")</option>
                 </select>
             </div>
             <div class="col-md-3">
                 <label class="form-label">&nbsp;</label>
                 <a href="@Url.Action("Index")" class="btn btn-outline-secondary w-100">
-                    <i class="fas fa-redo"></i> Filtreleri Temizle
+                    <i class="fas fa-redo"></i> @LocalizationService.GetString("ClearFilter")
                 </a>
             </div>
         </form>
@@ -209,7 +209,7 @@
 <!-- Reviews List -->
 <div class="card">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Yorumlar (@(reviews?.TotalCount ?? 0))</h5>
+        <h5 class="mb-0">@LocalizationService.GetString("Reviews") (@(reviews?.TotalCount ?? 0))</h5>
     </div>
     <div class="card-body p-0">
         @if (reviews?.Items != null && reviews.Items.Any())
@@ -248,19 +248,19 @@
                                         @if (review.IsVerifiedPurchase)
                                         {
                                             <span class="badge bg-success">
-                                                <i class="fas fa-check-circle"></i> Doğrulanmış Alım
+                                                <i class="fas fa-check-circle"></i> @LocalizationService.GetString("VerifiedPurchase")
                                             </span>
                                         }
                                         @if (!review.IsApproved)
                                         {
                                             <span class="badge bg-warning">
-                                                <i class="fas fa-clock"></i> Onay Bekliyor
+                                                <i class="fas fa-clock"></i> @LocalizationService.GetString("Pending")
                                             </span>
                                         }
                                         else
                                         {
                                             <span class="badge bg-success">
-                                                <i class="fas fa-check"></i> Onaylandı
+                                                <i class="fas fa-check"></i> @LocalizationService.GetString("Approved")
                                             </span>
                                         }
                                     </div>
@@ -288,9 +288,9 @@
                                 <!-- Helpful Count -->
                                 <div class="mb-2">
                                     <small class="text-muted">
-                                        <i class="fas fa-thumbs-up text-success"></i> @review.HelpfulCount kişi faydalı buldu
+                                        <i class="fas fa-thumbs-up text-success"></i> @review.HelpfulCount @LocalizationService.GetString("Helpful")
                                         <span class="mx-2">|</span>
-                                        <i class="fas fa-thumbs-down text-danger"></i> @review.NotHelpfulCount kişi faydalı bulmadı
+                                        <i class="fas fa-thumbs-down text-danger"></i> @review.NotHelpfulCount @LocalizationService.GetString("NotHelpful")
                                     </small>
                                 </div>
 
@@ -300,7 +300,7 @@
                                     <div class="merchant-response p-3 bg-light rounded mt-3">
                                         <div class="d-flex align-items-center mb-2">
                                             <i class="fas fa-store text-primary me-2"></i>
-                                            <strong>Mağaza Yanıtı</strong>
+                                            <strong>@LocalizationService.GetString("StoreResponse")</strong>
                                             <small class="text-muted ms-2">
                                                 @review.MerchantRespondedAt?.ToString("dd MMM yyyy")
                                             </small>
@@ -317,7 +317,7 @@
                                     {
                                         <button type="button" class="btn btn-sm btn-primary mb-2" 
                                                 onclick="openResponseModal('@review.Id', '@review.ProductName')">
-                                            <i class="fas fa-reply"></i> Yanıtla
+                                            <i class="fas fa-reply"></i> @LocalizationService.GetString("RespondToReviewBtn")
                                         </button>
                                     }
 
@@ -325,17 +325,17 @@
                                     {
                                         <button type="button" class="btn btn-sm btn-success mb-2" 
                                                 onclick="approveReview('@review.Id')">
-                                            <i class="fas fa-check"></i> Onayla
+                                            <i class="fas fa-check"></i> @LocalizationService.GetString("Approve")
                                         </button>
                                         <button type="button" class="btn btn-sm btn-danger mb-2" 
                                                 onclick="openRejectModal('@review.Id', '@review.ProductName')">
-                                            <i class="fas fa-times"></i> Reddet
+                                            <i class="fas fa-times"></i> @LocalizationService.GetString("Reject")
                                         </button>
                                     }
 
                                     <button type="button" class="btn btn-sm btn-outline-secondary" 
                                             onclick="viewReviewDetails('@review.Id')">
-                                        <i class="fas fa-info-circle"></i> Detaylar
+                                        <i class="fas fa-info-circle"></i> @LocalizationService.GetString("Details")
                                     </button>
                                 </div>
                             </div>
@@ -383,8 +383,8 @@
         {
             <div class="text-center py-5">
                 <i class="fas fa-star fa-4x text-muted mb-3"></i>
-                <h5 class="text-muted">Henüz yorum yok</h5>
-                <p class="text-muted">Müşterileriniz ürünleriniz hakkında yorum yaptığında burada göreceksiniz.</p>
+                <h5 class="text-muted">@LocalizationService.GetString("NoReviewsYet")</h5>
+                <p class="text-muted">@LocalizationService.GetString("NoReviewsSubtitle")</p>
             </div>
         }
     </div>
@@ -396,26 +396,26 @@
         <div class="modal-content">
             <form id="respondForm">
                 <div class="modal-header">
-                    <h5 class="modal-title">Yoruma Yanıt Ver</h5>
+                    <h5 class="modal-title">@LocalizationService.GetString("RespondToReview")</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="respondReviewId" />
                     <div class="mb-3">
-                        <label class="form-label">Ürün</label>
+                        <label class="form-label">@LocalizationService.GetString("Product")</label>
                         <input type="text" id="respondProductName" class="form-control" readonly />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Yanıtınız</label>
+                        <label class="form-label">@LocalizationService.GetString("YourResponse")</label>
                         <textarea id="respondText" class="form-control" rows="4" 
-                                  placeholder="Müşterinize nazik ve profesyonel bir yanıt yazın..." required></textarea>
-                        <div class="form-text">Yanıtınız müşteriler tarafından görülebilecektir.</div>
+                                  placeholder="@LocalizationService.GetString("ResponsePlaceholder")" required></textarea>
+                        <div class="form-text">@LocalizationService.GetString("ResponseInfo")</div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@LocalizationService.GetString("Cancel")</button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane"></i> Yanıtı Gönder
+                        <i class="fas fa-paper-plane"></i> @LocalizationService.GetString("Send")
                     </button>
                 </div>
             </form>
@@ -429,29 +429,29 @@
         <div class="modal-content">
             <form id="rejectForm">
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">Yorumu Reddet</h5>
+                    <h5 class="modal-title">@LocalizationService.GetString("RejectReview")</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="rejectReviewId" />
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <strong>Uyarı:</strong> Bu işlem geri alınamaz!
+                        <strong>@LocalizationService.GetString("Warning"):</strong> @LocalizationService.GetString("IrreversibleAction")
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Ürün</label>
+                        <label class="form-label">@LocalizationService.GetString("Product")</label>
                         <input type="text" id="rejectProductName" class="form-control" readonly />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Red Nedeni</label>
+                        <label class="form-label">@LocalizationService.GetString("RejectReason")</label>
                         <textarea id="rejectReason" class="form-control" rows="3" 
-                                  placeholder="Neden reddedildiğini açıklayın..." required></textarea>
+                                  placeholder="@LocalizationService.GetString("RejectReasonPlaceholder")" required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@LocalizationService.GetString("Cancel")</button>
                     <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-ban"></i> Reddet
+                        <i class="fas fa-ban"></i> @LocalizationService.GetString("Reject")
                     </button>
                 </div>
             </form>
