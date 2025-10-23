@@ -8,11 +8,30 @@ namespace Getir.Application.Common;
 /// </summary>
 public abstract class BaseService
 {
+    /// <summary>
+    /// Unit of work instance
+    /// </summary>
     protected readonly IUnitOfWork _unitOfWork;
+    /// <summary>
+    /// Logger instance
+    /// </summary>
     protected readonly ILogger _logger;
+    /// <summary>
+    /// Logging service instance
+    /// </summary>
     protected readonly ILoggingService _loggingService;
+    /// <summary>
+    /// Cache service instance
+    /// </summary>
     protected readonly ICacheService _cacheService;
 
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    /// <param name="unitOfWork">Unit of work instance</param>
+    /// <param name="logger">Logger instance</param>
+    /// <param name="loggingService">Logging service instance</param>
+    /// <param name="cacheService">Cache service instance</param>
     protected BaseService(
         IUnitOfWork unitOfWork,
         ILogger logger,
@@ -28,6 +47,12 @@ public abstract class BaseService
     /// <summary>
     /// Performance tracking ile operasyon çalıştırır
     /// </summary>
+    /// <typeparam name="T">Result tipi</typeparam>
+    /// <param name="operation">Operasyon</param>
+    /// <param name="operationName">Operasyon adı</param>
+    /// <param name="metadata">Metadata</param>
+    /// <param name="cancellationToken">CancellationToken</param>
+    /// <returns>Result</returns>
     protected async Task<Result<T>> ExecuteWithPerformanceTracking<T>(
         Func<Task<Result<T>>> operation,
         string operationName,
@@ -69,6 +94,11 @@ public abstract class BaseService
     /// <summary>
     /// Performance tracking ile operasyon çalıştırır (void)
     /// </summary>
+    /// <param name="operation">Operasyon</param>
+    /// <param name="operationName">Operasyon adı</param>
+    /// <param name="metadata">Metadata</param>
+    /// <param name="cancellationToken">CancellationToken</param>
+    /// <returns>Result</returns>
     protected async Task<Result> ExecuteWithPerformanceTracking(
         Func<Task<Result>> operation,
         string operationName,
@@ -110,6 +140,12 @@ public abstract class BaseService
     /// <summary>
     /// Cache'den veri getirir veya cache miss durumunda factory'den getirir
     /// </summary>
+    /// <typeparam name="T">Result tipi</typeparam>
+    /// <param name="cacheKey">Cache anahtarı</param>
+    /// <param name="factory">Factory</param>
+    /// <param name="expiration">Expiration</param>
+    /// <param name="cancellationToken">CancellationToken</param>
+    /// <returns>Result</returns>
     protected async Task<Result<T>> GetOrSetCacheAsync<T>(
         string cacheKey,
         Func<Task<Result<T>>> factory,
@@ -149,6 +185,8 @@ public abstract class BaseService
     /// <summary>
     /// Cache'i temizler
     /// </summary>
+    /// <param name="pattern">Pattern</param>
+    /// <param name="cancellationToken">CancellationToken</param>
     protected async Task InvalidateCacheAsync(string pattern, CancellationToken cancellationToken = default)
     {
         try

@@ -5,13 +5,18 @@ using System.Diagnostics;
 namespace Getir.Application.Common;
 
 /// <summary>
-/// Performance optimization extensions for Entity Framework queries
+/// Entity Framework sorguları için performans optimizasyonu uzantıları
 /// </summary>
 public static class PerformanceExtensions
 {
     /// <summary>
-    /// Execute query with performance tracking
+    /// Performans takibi ile sorgu çalıştır
     /// </summary>
+    /// <typeparam name="T">Dönüş tipi</typeparam>
+    /// <param name="task">Çalıştırılacak task</param>
+    /// <param name="operationName">İşlem adı</param>
+    /// <param name="logger">Logger instance</param>
+    /// <returns>İşlem sonucu</returns>
     public static async Task<T> ExecuteWithPerformanceTrackingAsync<T>(
         this Task<T> task, 
         string operationName, 
@@ -38,8 +43,12 @@ public static class PerformanceExtensions
     }
 
     /// <summary>
-    /// Execute query with performance tracking and return count
+    /// Performans takibi ile sorgu çalıştır ve sayı döndür
     /// </summary>
+    /// <param name="task">Çalıştırılacak task</param>
+    /// <param name="operationName">İşlem adı</param>
+    /// <param name="logger">Logger instance</param>
+    /// <returns>İşlem sonucu (sayı)</returns>
     public static async Task<int> ExecuteWithPerformanceTrackingAsync(
         this Task<int> task, 
         string operationName, 
@@ -66,8 +75,12 @@ public static class PerformanceExtensions
     }
 
     /// <summary>
-    /// Execute query with performance tracking and return boolean
+    /// Performans takibi ile sorgu çalıştır ve boolean döndür
     /// </summary>
+    /// <param name="task">Çalıştırılacak task</param>
+    /// <param name="operationName">İşlem adı</param>
+    /// <param name="logger">Logger instance</param>
+    /// <returns>İşlem sonucu (boolean)</returns>
     public static async Task<bool> ExecuteWithPerformanceTrackingAsync(
         this Task<bool> task, 
         string operationName, 
@@ -94,24 +107,34 @@ public static class PerformanceExtensions
     }
 
     /// <summary>
-    /// Optimize query for read-only operations
+    /// Sorguyu read-only operasyonlar için optimize et
     /// </summary>
+    /// <typeparam name="T">Entity tipi</typeparam>
+    /// <param name="query">Optimize edilecek sorgu</param>
+    /// <returns>Optimize edilmiş sorgu</returns>
     public static IQueryable<T> AsOptimizedReadOnly<T>(this IQueryable<T> query) where T : class
     {
         return query.AsNoTracking();
     }
 
     /// <summary>
-    /// Optimize query for complex includes to prevent N+1
+    /// Sorguyu karmaşık include'lar için optimize et (N+1 önleme)
     /// </summary>
+    /// <typeparam name="T">Entity tipi</typeparam>
+    /// <param name="query">Optimize edilecek sorgu</param>
+    /// <returns>Optimize edilmiş sorgu</returns>
     public static IQueryable<T> AsOptimizedWithIncludes<T>(this IQueryable<T> query) where T : class
     {
         return query.AsNoTracking();
     }
 
     /// <summary>
-    /// Execute query with timeout
+    /// Timeout ile sorgu çalıştır
     /// </summary>
+    /// <typeparam name="T">Dönüş tipi</typeparam>
+    /// <param name="task">Çalıştırılacak task</param>
+    /// <param name="timeout">Timeout süresi</param>
+    /// <returns>İşlem sonucu</returns>
     public static async Task<T> WithTimeoutAsync<T>(this Task<T> task, TimeSpan timeout)
     {
         using var cts = new CancellationTokenSource(timeout);
@@ -126,8 +149,13 @@ public static class PerformanceExtensions
     }
 
     /// <summary>
-    /// Execute query with retry policy
+    /// Retry policy ile sorgu çalıştır
     /// </summary>
+    /// <typeparam name="T">Dönüş tipi</typeparam>
+    /// <param name="operation">Çalıştırılacak işlem</param>
+    /// <param name="maxRetries">Maksimum deneme sayısı</param>
+    /// <param name="delay">Denemeler arası bekleme süresi</param>
+    /// <returns>İşlem sonucu</returns>
     public static async Task<T> WithRetryAsync<T>(
         this Func<Task<T>> operation, 
         int maxRetries = 3, 

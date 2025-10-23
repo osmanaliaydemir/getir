@@ -1,19 +1,51 @@
 namespace Getir.Domain.Enums;
 
+/// <summary>
+/// Sipariş durumları
+/// </summary>
 public enum OrderStatus
 {
+    /// <summary>
+    /// Beklemede
+    /// </summary>
     Pending = 0,
+    /// <summary>
+    /// Onaylandı
+    /// </summary>
     Confirmed = 1,
+    /// <summary>
+    /// Hazırlanıyor
+    /// </summary>
     Preparing = 2,
+    /// <summary>
+    /// Hazır
+    /// </summary>
     Ready = 3,
+    /// <summary>
+    /// Teslim Edildi
+    /// </summary>
     PickedUp = 4,
+    /// <summary>
+    /// Yolda
+    /// </summary>
     OnTheWay = 5,
+    /// <summary>
+    /// Teslim Edildi
+    /// </summary>
     Delivered = 6,
+    /// <summary>
+    /// İptal Edildi
+    /// </summary>
     Cancelled = 7
 }
 
 public static class OrderStatusExtensions
 {
+    /// <summary>
+    /// Sipariş durumunun string değerini döndürür
+    /// </summary>
+    /// <param name="status">Sipariş durumu</param>
+    /// <returns>Sipariş durumunun string değeri</returns>
     public static string ToStringValue(this OrderStatus status)
     {
         return status switch
@@ -30,6 +62,11 @@ public static class OrderStatusExtensions
         };
     }
 
+    /// <summary>
+    /// Sipariş durumunun string değerinden döndürür
+    /// </summary>
+    /// <param name="status">Sipariş durumunun string değeri</param>
+    /// <returns>Sipariş durumu</returns>
     public static OrderStatus FromString(string status)
     {
         return status.ToLowerInvariant() switch
@@ -46,6 +83,12 @@ public static class OrderStatusExtensions
         };
     }
 
+    /// <summary>
+    /// Sipariş durumunun bir sonraki duruma geçebilip geçemeyeceğini döndürür
+    /// </summary>
+    /// <param name="from">Önceki sipariş durumu</param>
+    /// <param name="to">Sonraki sipariş durumu</param>
+    /// <returns>Sipariş durumunun bir sonraki duruma geçebilip geçemeyeceği</returns>
     public static bool CanTransitionTo(this OrderStatus from, OrderStatus to)
     {
         return (from, to) switch

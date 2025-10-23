@@ -7,323 +7,323 @@ public static class ApplicationConstants
 {
     #region Request Limits
     /// <summary>
-    /// Maximum request body size in bytes (10MB)
+    /// Maximum istek boyutu (10MB)
     /// </summary>
     public const int MaxRequestSizeBytes = 10 * 1024 * 1024;
     
     /// <summary>
-    /// Maximum number of items in a single order
+    /// Maximum sipariş item sayısı
     /// </summary>
     public const int MaxOrderItems = 50;
     
     /// <summary>
-    /// Maximum number of products in a single request
+    /// Maximum ürün sayısı
     /// </summary>
     public const int MaxProductsPerRequest = 100;
     
     /// <summary>
-    /// Maximum number of reviews per page
+    /// Maximum yorum sayısı
     /// </summary>
     public const int MaxReviewsPerPage = 100;
     #endregion
 
     #region Pagination
     /// <summary>
-    /// Default page size for paginated results
+    /// Default sayfa boyutu
     /// </summary>
     public const int DefaultPageSize = 20;
     
     /// <summary>
-    /// Maximum page size for paginated results
+    /// Maximum sayfa boyutu
     /// </summary>
     public const int MaxPageSize = 100;
     
     /// <summary>
-    /// Minimum page size for paginated results
+    /// Minimum sayfa boyutu
     /// </summary>
     public const int MinPageSize = 1;
     #endregion
 
     #region Cache
     /// <summary>
-    /// Default cache duration in minutes
+    /// Default cache süresi (dakika)
     /// </summary>
     public const int DefaultCacheMinutes = 30;
     
     /// <summary>
-    /// Long-term cache duration in minutes
+    /// Long-term cache süresi (dakika)
     /// </summary>
     public const int LongCacheMinutes = 60;
     
     /// <summary>
-    /// Short-term cache duration in minutes
+    /// Short-term cache süresi (dakika)
     /// </summary>
     public const int ShortCacheMinutes = 10;
     
     /// <summary>
-    /// Background task queue capacity
+    /// Background task queue kapasitesi
     /// </summary>
     public const int BackgroundTaskQueueCapacity = 1000;
     #endregion
 
     #region Validation Limits
     /// <summary>
-    /// Maximum length for names (first name, last name, etc.)
+    /// Maximum ad uzunluğu (ad, soyad, vb.)
     /// </summary>
     public const int MaxNameLength = 100;
     
     /// <summary>
-    /// Maximum length for email addresses
+    /// Maximum email adresi uzunluğu
     /// </summary>
     public const int MaxEmailLength = 256;
     
     /// <summary>
-    /// Maximum length for descriptions
+    /// Maximum açıklama uzunluğu
     /// </summary>
     public const int MaxDescriptionLength = 500;
     
     /// <summary>
-    /// Maximum length for comments
+    /// Maximum yorum uzunluğu
     /// </summary>
     public const int MaxCommentLength = 1000;
     
     /// <summary>
-    /// Maximum length for phone numbers
+    /// Maximum telefon numarası uzunluğu
     /// </summary>
     public const int MaxPhoneNumberLength = 20;
     
     /// <summary>
-    /// Maximum length for addresses
+    /// Maximum adres uzunluğu
     /// </summary>
     public const int MaxAddressLength = 500;
     
     /// <summary>
-    /// Maximum length for product names
+    /// Maximum ürün adı uzunluğu
     /// </summary>
     public const int MaxProductNameLength = 200;
     
     /// <summary>
-    /// Maximum length for merchant names
+    /// Maximum merchant adı uzunluğu
     /// </summary>
     public const int MaxMerchantNameLength = 200;
     
     /// <summary>
-    /// Maximum length for category names
+    /// Maximum kategori adı uzunluğu
     /// </summary>
     public const int MaxCategoryNameLength = 200;
     
     /// <summary>
-    /// Maximum length for URLs
+    /// Maximum URL uzunluğu
     /// </summary>
     public const int MaxUrlLength = 500;
     
     /// <summary>
-    /// Maximum quantity for products
+    /// Maximum ürün miktarı
     /// </summary>
     public const int MaxQuantity = 1000;
     
     /// <summary>
-    /// Maximum rating value
+    /// Maximum puan değeri
     /// </summary>
     public const int MaxRating = 5;
     
     /// <summary>
-    /// Minimum rating value
+    /// Minimum puan değeri
     /// </summary>
     public const int MinRating = 1;
     #endregion
 
     #region Business Rules
     /// <summary>
-    /// Minimum order amount in currency
+    /// Minimum sipariş miktarı (para birimi)
     /// </summary>
     public const decimal MinOrderAmount = 10.00m;
     
     /// <summary>
-    /// Maximum discount percentage
+    /// Maximum indirim yüzdesi
     /// </summary>
     public const decimal MaxDiscountPercentage = 50.0m;
     
     /// <summary>
-    /// Maximum retry attempts for operations
+    /// Maximum retry deneme sayısı
     /// </summary>
     public const int MaxRetryAttempts = 3;
     
     /// <summary>
-    /// Default average delivery time in minutes
+    /// Default average delivery süresi (dakika)
     /// </summary>
     public const int DefaultDeliveryTimeMinutes = 30;
     
     /// <summary>
-    /// Maximum delivery time in minutes
+    /// Maximum delivery süresi (dakika)
     /// </summary>
     public const int MaxDeliveryTimeMinutes = 120;
     
     /// <summary>
-    /// Minimum delivery time in minutes
+    /// Minimum delivery süresi (dakika)
     /// </summary>
     public const int MinDeliveryTimeMinutes = 5;
     #endregion
 
     #region Performance
     /// <summary>
-    /// Database command timeout in seconds
+    /// Database komut zaman aşımı (saniye)
     /// </summary>
     public const int DatabaseCommandTimeoutSeconds = 120;
     
     /// <summary>
-    /// SignalR client timeout in seconds
+    /// SignalR client zaman aşımı (saniye)
     /// </summary>
     public const int SignalRClientTimeoutSeconds = 30;
     
     /// <summary>
-    /// Performance warning threshold in milliseconds
+    /// Performans uyarı eşiği (milisaniye)
     /// </summary>
     public const int PerformanceWarningThresholdMs = 1000;
     
     /// <summary>
-    /// Maximum number of recent items to display
+    /// Maximum yakın zamanda gösterilecek item sayısı
     /// </summary>
     public const int MaxRecentItems = 10;
     
     /// <summary>
-    /// Maximum number of top items to display
+    /// Maximum en üstte gösterilecek item sayısı
     /// </summary>
     public const int MaxTopItems = 10;
     #endregion
 
     #region Time Periods
     /// <summary>
-    /// Number of days for recent data analysis
+    /// Yakın zamanda analiz için gün sayısı
     /// </summary>
     public const int RecentDataDays = 30;
     
     /// <summary>
-    /// Number of days for monthly analysis
+    /// Aylık analiz için gün sayısı
     /// </summary>
     public const int MonthlyAnalysisDays = 30;
     
     /// <summary>
-    /// Number of days for weekly analysis
+    /// Haftalık analiz için gün sayısı
     /// </summary>
     public const int WeeklyAnalysisDays = 7;
     
     /// <summary>
-    /// Number of days for daily analysis
+    /// Günlük analiz için gün sayısı
     /// </summary>
     public const int DailyAnalysisDays = 1;
     #endregion
 
     #region Geographic
     /// <summary>
-    /// Default latitude precision
+    /// Default enlem hassasiyeti
     /// </summary>
     public const int LatitudePrecision = 10;
     
     /// <summary>
-    /// Default longitude precision
+    /// Default boylam hassasiyeti
     /// </summary>
     public const int LongitudePrecision = 8;
     
     /// <summary>
-    /// Default average courier speed in km/h
+    /// Default kurye ortalama hızı (km/h)
     /// </summary>
     public const int DefaultCourierSpeedKmh = 30;
     #endregion
 
     #region Percentages
     /// <summary>
-    /// Minimum disk space percentage before warning
+    /// Minimum disk alanı yüzdesi uyarısı
     /// </summary>
     public const int MinDiskSpacePercentage = 10;
     
     /// <summary>
-    /// Maximum completion rate percentage
+    /// Maximum tamamlama oranı yüzdesi
     /// </summary>
     public const int MaxCompletionRatePercentage = 100;
     
     /// <summary>
-    /// Default positive review rate percentage
+    /// Default pozitif yorum oranı yüzdesi
     /// </summary>
     public const int DefaultPositiveReviewRatePercentage = 80;
     #endregion
 
     #region Background Tasks
     /// <summary>
-    /// Background task delay in milliseconds
+    /// Background task gecikme süresi (milisaniye)
     /// </summary>
     public const int BackgroundTaskDelayMs = 100;
     
     /// <summary>
-    /// Maximum background task execution time in minutes
+    /// Maximum background task çalışma süresi (dakika)
     /// </summary>
     public const int MaxBackgroundTaskExecutionMinutes = 30;
     #endregion
 
     #region File Upload
     /// <summary>
-    /// Maximum file size in bytes (5MB)
+    /// Maximum dosya boyutu (5MB)
     /// </summary>
     public const int MaxFileSizeBytes = 5 * 1024 * 1024;
     
     /// <summary>
-    /// Allowed image file extensions
+    /// İzin verilen resim dosya uzantıları
     /// </summary>
     public static readonly string[] AllowedImageExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
     
     /// <summary>
-    /// Allowed document file extensions
+    /// İzin verilen belge dosya uzantıları
     /// </summary>
     public static readonly string[] AllowedDocumentExtensions = { ".pdf", ".doc", ".docx", ".txt" };
     #endregion
 
     #region Security
     /// <summary>
-    /// Minimum password length
+    /// Minimum şifre uzunluğu
     /// </summary>
     public const int MinPasswordLength = 6;
     
     /// <summary>
-    /// Maximum password length
+    /// Maximum şifre uzunluğu
     /// </summary>
     public const int MaxPasswordLength = 100;
     
     /// <summary>
-    /// JWT token expiration in minutes
+    /// JWT token süresi (dakika)
     /// </summary>
     public const int JwtTokenExpirationMinutes = 60;
     
     /// <summary>
-    /// Refresh token expiration in minutes (7 days)
+    /// Refresh token süresi (7 gün)
     /// </summary>
     public const int RefreshTokenExpirationMinutes = 10080;
     #endregion
 
     #region Database
     /// <summary>
-    /// Maximum retry count for database operations
+    /// Maximum retry deneme sayısı
     /// </summary>
     public const int MaxDatabaseRetryCount = 5;
     
     /// <summary>
-    /// Maximum retry delay in seconds
+    /// Maximum retry gecikme süresi (saniye)
     /// </summary>
     public const int MaxDatabaseRetryDelaySeconds = 30;
     
     /// <summary>
-    /// Default database connection timeout in seconds
+    /// Default database bağlantı zaman aşımı (saniye)
     /// </summary>
     public const int DefaultDatabaseConnectionTimeoutSeconds = 30;
     #endregion
 
     #region API
     /// <summary>
-    /// Default API version
+    /// Default API sürümü
     /// </summary>
     public const string DefaultApiVersion = "v1";
     
     /// <summary>
-    /// Maximum API response size in bytes
+    /// Maximum API response boyutu (bytes)
     /// </summary>
     public const int MaxApiResponseSizeBytes = 1024 * 1024; // 1MB
     #endregion

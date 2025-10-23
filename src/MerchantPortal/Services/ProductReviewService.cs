@@ -3,13 +3,18 @@ using Getir.MerchantPortal.Models;
 namespace Getir.MerchantPortal.Services;
 
 /// <summary>
-/// Product review servisi implementasyonu
+/// Ürün değerlendirme servisi implementasyonu
 /// </summary>
 public class ProductReviewService : IProductReviewService
 {
     private readonly IApiClient _apiClient;
     private readonly ILogger<ProductReviewService> _logger;
 
+    /// <summary>
+    /// ProductReviewService constructor
+    /// </summary>
+    /// <param name="apiClient">API client</param>
+    /// <param name="logger">Logger instance</param>
     public ProductReviewService(IApiClient apiClient, ILogger<ProductReviewService> logger)
     {
         _apiClient = apiClient;
@@ -17,8 +22,15 @@ public class ProductReviewService : IProductReviewService
     }
 
     /// <summary>
-    /// Merchant'ın tüm ürünlerine gelen yorumları getirir.
+    /// Merchant ürün değerlendirmelerini getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="page">Sayfa numarası</param>
+    /// <param name="pageSize">Sayfa boyutu</param>
+    /// <param name="rating">Puan filtresi</param>
+    /// <param name="isApproved">Onay durumu filtresi</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış değerlendirme listesi</returns>
     public async Task<PagedResult<ProductReviewResponse>?> GetMerchantProductReviewsAsync(
         Guid merchantId, 
         int page = 1, 
@@ -57,8 +69,13 @@ public class ProductReviewService : IProductReviewService
     }
 
     /// <summary>
-    /// Belirli bir ürünün yorumlarını getirir.
+    /// Ürün değerlendirmelerini getir
     /// </summary>
+    /// <param name="productId">Ürün ID</param>
+    /// <param name="page">Sayfa numarası</param>
+    /// <param name="pageSize">Sayfa boyutu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sayfalanmış değerlendirme listesi</returns>
     public async Task<PagedResult<ProductReviewResponse>?> GetProductReviewsAsync(
         Guid productId, 
         int page = 1, 
@@ -81,8 +98,11 @@ public class ProductReviewService : IProductReviewService
     }
 
     /// <summary>
-    /// Review detayını getirir.
+    /// Değerlendirme detaylarını getir
     /// </summary>
+    /// <param name="reviewId">Değerlendirme ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Değerlendirme detayları</returns>
     public async Task<ProductReviewResponse?> GetReviewByIdAsync(Guid reviewId, CancellationToken ct = default)
     {
         try
@@ -101,8 +121,11 @@ public class ProductReviewService : IProductReviewService
     }
 
     /// <summary>
-    /// Ürün review istatistiklerini getirir.
+    /// Ürün değerlendirme istatistiklerini getir
     /// </summary>
+    /// <param name="productId">Ürün ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Değerlendirme istatistikleri</returns>
     public async Task<ProductReviewStatsResponse?> GetProductReviewStatsAsync(Guid productId, CancellationToken ct = default)
     {
         try
@@ -121,8 +144,11 @@ public class ProductReviewService : IProductReviewService
     }
 
     /// <summary>
-    /// Merchant'ın tüm ürünleri için review istatistiklerini getirir.
+    /// Merchant değerlendirme istatistiklerini getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Değerlendirme istatistikleri</returns>
     public async Task<ProductReviewStatsResponse?> GetMerchantReviewStatsAsync(Guid merchantId, CancellationToken ct = default)
     {
         try
@@ -141,8 +167,12 @@ public class ProductReviewService : IProductReviewService
     }
 
     /// <summary>
-    /// Review'a merchant yanıtı ekler.
+    /// Değerlendirmeye yanıt ver
     /// </summary>
+    /// <param name="reviewId">Değerlendirme ID</param>
+    /// <param name="response">Yanıt metni</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>İşlem başarı durumu</returns>
     public async Task<bool> RespondToReviewAsync(Guid reviewId, string response, CancellationToken ct = default)
     {
         try
@@ -164,8 +194,11 @@ public class ProductReviewService : IProductReviewService
     }
 
     /// <summary>
-    /// Review'ı onaylar.
+    /// Değerlendirmeyi onayla
     /// </summary>
+    /// <param name="reviewId">Değerlendirme ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>İşlem başarı durumu</returns>
     public async Task<bool> ApproveReviewAsync(Guid reviewId, CancellationToken ct = default)
     {
         try
@@ -185,8 +218,12 @@ public class ProductReviewService : IProductReviewService
     }
 
     /// <summary>
-    /// Review'ı reddeder.
+    /// Değerlendirmeyi reddet
     /// </summary>
+    /// <param name="reviewId">Değerlendirme ID</param>
+    /// <param name="reason">Red nedeni</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>İşlem başarı durumu</returns>
     public async Task<bool> RejectReviewAsync(Guid reviewId, string reason, CancellationToken ct = default)
     {
         try

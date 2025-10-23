@@ -12,6 +12,12 @@ public class SettingsController : Controller
     private readonly ISettingsService _settingsService;
     private readonly IAuthService _authService;
 
+    /// <summary>
+    /// SettingsController constructor
+    /// </summary>
+    /// <param name="logger">Logger instance</param>
+    /// <param name="settingsService">Ayarlar servisi</param>
+    /// <param name="authService">Kimlik doğrulama servisi</param>
     public SettingsController(ILogger<SettingsController> logger, ISettingsService settingsService, IAuthService authService)
     {
         _logger = logger;
@@ -20,16 +26,18 @@ public class SettingsController : Controller
     }
 
     /// <summary>
-    /// Ayarlar sayfasını gösterir.
+    /// Ayarlar sayfasını göster
     /// </summary>
+    /// <returns>Ayarlar sayfası</returns>
     public IActionResult Index()
     {
         return View();
     }
 
     /// <summary>
-    /// Bildirim tercihlerini gösterir.
+    /// Bildirim tercihleri sayfasını göster
     /// </summary>
+    /// <returns>Bildirim tercihleri sayfası</returns>
     [HttpGet]
     public async Task<IActionResult> Notifications()
     {
@@ -51,8 +59,9 @@ public class SettingsController : Controller
     }
 
     /// <summary>
-    /// Bildirim tercihlerini getirir.
+    /// Bildirim tercihlerini getir
     /// </summary>
+    /// <returns>JSON bildirim tercihleri</returns>
     [HttpGet("preferences")]
     public async Task<IActionResult> GetNotificationPreferences()
     {
@@ -75,9 +84,10 @@ public class SettingsController : Controller
     }
 
     /// <summary>
-    /// Bildirim tercihlerini kaydeder.
+    /// Bildirim tercihlerini kaydet
     /// </summary>
     /// <param name="preferences">Bildirim tercihleri</param>
+    /// <returns>JSON sonuç</returns>
     [HttpPost]
     public async Task<IActionResult> SaveNotificationPreferences([FromBody] UpdateNotificationPreferencesDto preferences)
     {
@@ -103,8 +113,10 @@ public class SettingsController : Controller
     }
 
     /// <summary>
-    /// Şifre değiştirme endpoint
+    /// Şifre değiştir
     /// </summary>
+    /// <param name="model">Şifre değiştirme bilgileri</param>
+    /// <returns>JSON sonuç</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordModel model)

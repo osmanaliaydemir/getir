@@ -1,5 +1,8 @@
 namespace Getir.Domain.Enums;
 
+/// <summary>
+/// Rate limit türleri
+/// </summary>
 public enum RateLimitType
 {
     Endpoint = 1,
@@ -8,6 +11,9 @@ public enum RateLimitType
     Global = 4
 }
 
+/// <summary>
+/// Rate limit periyodu
+/// </summary>
 public enum RateLimitPeriod
 {
     PerSecond = 1,
@@ -16,6 +22,9 @@ public enum RateLimitPeriod
     PerDay = 4
 }
 
+/// <summary>
+/// Rate limit eylemi
+/// </summary>
 public enum RateLimitAction
 {
     Allow = 1,
@@ -24,8 +33,16 @@ public enum RateLimitAction
     Log = 4
 }
 
+/// <summary>
+/// Rate limit türleri uzantıları
+/// </summary>
 public static class RateLimitTypeExtensions
 {
+    /// <summary>
+    /// Rate limit türünün görünen adını döndürür
+    /// </summary>
+    /// <param name="type">Rate limit türü</param>
+    /// <returns>Rate limit türünün görünen adı</returns>
     public static string GetDisplayName(this RateLimitType type)
     {
         return type switch
@@ -38,6 +55,11 @@ public static class RateLimitTypeExtensions
         };
     }
 
+    /// <summary>
+    /// Rate limit türünün açıklamasını döndürür
+    /// </summary>
+    /// <param name="type">Rate limit türü</param>
+    /// <returns>Rate limit türünün açıklaması</returns>
     public static string GetDescription(this RateLimitType type)
     {
         return type switch
@@ -51,8 +73,16 @@ public static class RateLimitTypeExtensions
     }
 }
 
+/// <summary>
+/// Rate limit periyodu uzantıları
+/// </summary>
 public static class RateLimitPeriodExtensions
 {
+    /// <summary>
+    /// Rate limit periyodunun TimeSpan'ını döndürür
+    /// </summary>
+    /// <param name="period">Rate limit periyodu</param>
+    /// <returns>Rate limit periyodunun TimeSpan'ı</returns>
     public static TimeSpan GetTimeSpan(this RateLimitPeriod period)
     {
         return period switch
@@ -65,6 +95,11 @@ public static class RateLimitPeriodExtensions
         };
     }
 
+    /// <summary>
+    /// Rate limit periyodunun görünen adını döndürür
+    /// </summary>
+    /// <param name="period">Rate limit periyodu</param>
+    /// <returns>Rate limit periyodunun görünen adı</returns>
     public static string GetDisplayName(this RateLimitPeriod period)
     {
         return period switch

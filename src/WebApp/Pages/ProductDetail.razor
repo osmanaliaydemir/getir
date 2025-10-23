@@ -1,0 +1,361 @@
+@page "/product/{ProductId:guid}"
+@inject ProductService ProductService
+@inject CartService CartService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>@(product?.Name ?? "Ürün") - Getir</PageTitle>
+
+@if (isLoading)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Yükleniyor...</span>
+        </div>
+        <p class="mt-3">Ürün bilgileri yükleniyor...</p>
+    </div>
+}
+else if (product == null)
+{
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center">
+                <div class="card">
+                    <div class="card-body py-5">
+                        <i class="bi bi-exclamation-triangle display-1 text-warning mb-4"></i>
+                        <h3>Ürün Bulunamadı</h3>
+                        <p class="text-muted mb-4">
+                            Aradığınız ürün bulunamadı veya artık mevcut değil.
+                        </p>
+                        <a href="/" class="btn btn-primary btn-lg">
+                            <i class="bi bi-house"></i>
+                            Ana Sayfaya Dön
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container py-4">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
+                <li class="breadcrumb-item"><a href="/products">Ürünler</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@product.Name</li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <!-- Ürün Görseli -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body p-4">
+                        <div class="product-image-container">
+                            <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? "https://via.placeholder.com/500x500/007bff/ffffff?text=" + Uri.EscapeDataString(product.Name) : product.ImageUrl)" 
+                                 class="img-fluid rounded product-main-image" 
+                                 alt="@product.Name" />
+                        </div>
+                        
+                        <!-- Ürün Durumu -->
+                        <div class="mt-3">
+                            @if (product.IsAvailable)
+                            {
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i>
+                                    Stokta Var
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-x-circle"></i>
+                                    Stokta Yok
+                                </span>
+                            }
+                            
+                            @if (product.StockQuantity > 0)
+                            {
+                                <span class="badge bg-info ms-2">
+                                    <i class="bi bi-box"></i>
+                                    @product.StockQuantity @product.Unit
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ürün Bilgileri -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body p-4">
+                        <h1 class="product-title mb-3">@product.Name</h1>
+                        
+                        <!-- Mağaza Bilgisi -->
+                        <div class="merchant-info mb-3">
+                            <small class="text-muted">
+                                <i class="bi bi-shop"></i>
+                                @product.MerchantName
+                            </small>
+                        </div>
+
+                        <!-- Fiyat Bilgisi -->
+                        <div class="price-section mb-4">
+                            @if (product.DiscountedPrice.HasValue && product.DiscountedPrice < product.Price)
+                            {
+                                <div class="d-flex align-items-center">
+                                    <span class="current-price h3 text-primary me-3">₺@product.DiscountedPrice.Value.ToString("F2")</span>
+                                    <span class="old-price text-muted text-decoration-line-through">₺@product.Price.ToString("F2")</span>
+                                    <span class="discount-badge badge bg-danger ms-2">
+                                        %@((int)((product.Price - product.DiscountedPrice.Value) / product.Price * 100)) İndirim
+                                    </span>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="current-price h3 text-primary">₺@product.Price.ToString("F2")</span>
+                            }
+                        </div>
+
+                        <!-- Açıklama -->
+                        @if (!string.IsNullOrEmpty(product.Description))
+                        {
+                            <div class="description-section mb-4">
+                                <h5>Açıklama</h5>
+                                <p class="text-muted">@product.Description</p>
+                            </div>
+                        }
+
+                        <!-- Rating -->
+                        @if (product.Rating.HasValue)
+                        {
+                            <div class="rating-section mb-4">
+                                <h6>Değerlendirme</h6>
+                                <div class="d-flex align-items-center">
+                                    <div class="rating-stars me-2">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= product.Rating.Value)
+                                            {
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                            }
+                                            else if (i - 0.5m <= product.Rating.Value)
+                                            {
+                                                <i class="bi bi-star-half text-warning"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-star text-muted"></i>
+                                            }
+                                        }
+                                    </div>
+                                    <span class="rating-value fw-bold">@product.Rating.Value.ToString("F1")</span>
+                                    <span class="rating-count text-muted ms-2">(@product.ReviewCount değerlendirme)</span>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Miktar Seçimi -->
+                        <div class="quantity-section mb-4">
+                            <h6>Miktar</h6>
+                            <div class="input-group" style="max-width: 150px;">
+                                <button class="btn btn-outline-secondary" type="button" @onclick="DecreaseQuantity" disabled="@(quantity <= 1)">
+                                    <i class="bi bi-dash"></i>
+                                </button>
+                                <input type="number" class="form-control text-center" @bind="quantity" min="1" max="@product.StockQuantity" />
+                                <button class="btn btn-outline-secondary" type="button" @onclick="IncreaseQuantity" disabled="@(quantity >= product.StockQuantity)">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Sepete Ekle Butonu -->
+                        <div class="add-to-cart-section">
+                            @if (product.IsAvailable)
+                            {
+                                <button class="btn btn-primary btn-lg w-100 mb-3" @onclick="AddToCart" disabled="@isAddingToCart">
+                                    @if (isAddingToCart)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    }
+                                    <i class="bi bi-cart-plus"></i>
+                                    Sepete Ekle
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-secondary btn-lg w-100 mb-3" disabled>
+                                    <i class="bi bi-x-circle"></i>
+                                    Stokta Yok
+                                </button>
+                            }
+                            
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-outline-primary" @onclick="AddToFavorites">
+                                    <i class="bi bi-heart"></i>
+                                    Favorilere Ekle
+                                </button>
+                                <button class="btn btn-outline-secondary" @onclick="ShareProduct">
+                                    <i class="bi bi-share"></i>
+                                    Paylaş
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Benzer Ürünler -->
+        @if (similarProducts?.Any() == true)
+        {
+            <div class="row mt-5">
+                <div class="col-12">
+                    <h3 class="mb-4">
+                        <i class="bi bi-grid-3x3-gap"></i>
+                        Benzer Ürünler
+                    </h3>
+                    <div class="row">
+                        @foreach (var similarProduct in similarProducts)
+                        {
+                            <div class="col-md-3 mb-4">
+                                <div class="card h-100 product-card">
+                                    <img src="@(string.IsNullOrEmpty(similarProduct.ImageUrl) ? "https://via.placeholder.com/300x200/007bff/ffffff?text=" + Uri.EscapeDataString(similarProduct.Name) : similarProduct.ImageUrl)" 
+                                         class="card-img-top product-card-image" 
+                                         alt="@similarProduct.Name" />
+                                    <div class="card-body">
+                                        <h6 class="card-title">@similarProduct.Name</h6>
+                                        <p class="card-text text-muted small">@similarProduct.MerchantName</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fw-bold text-primary">₺@similarProduct.Price.ToString("F2")</span>
+                                            <a href="/product/@similarProduct.Id" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid ProductId { get; set; }
+
+    private ProductResponse? product;
+    private List<ProductResponse>? similarProducts;
+    private bool isLoading = true;
+    private bool isAddingToCart = false;
+    private int quantity = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProduct();
+    }
+
+    private async Task LoadProduct()
+    {
+        try
+        {
+            isLoading = true;
+            
+            // Ürün detayını ve benzer ürünleri paralel olarak yükle
+            var productTask = ProductService.GetProductByIdAsync(ProductId);
+            var similarProductsTask = ProductService.GetSimilarProductsAsync(ProductId, 4);
+            
+            await Task.WhenAll(productTask, similarProductsTask);
+            
+            product = await productTask;
+            similarProducts = await similarProductsTask;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading product: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void IncreaseQuantity()
+    {
+        if (product != null && quantity < product.StockQuantity)
+        {
+            quantity++;
+        }
+    }
+
+    private void DecreaseQuantity()
+    {
+        if (quantity > 1)
+        {
+            quantity--;
+        }
+    }
+
+    private async Task AddToCart()
+    {
+        if (product == null) return;
+
+        try
+        {
+            isAddingToCart = true;
+            
+            var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+            if (!isAuthenticated)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            var request = new AddToCartRequest
+            {
+                MerchantId = product.MerchantId,
+                ProductId = product.Id,
+                Quantity = quantity
+            };
+
+            var success = await CartService.AddToCartAsync(request);
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Ürün sepete eklendi!");
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Ürün sepete eklenirken bir hata oluştu.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Bir hata oluştu: " + ex.Message);
+        }
+        finally
+        {
+            isAddingToCart = false;
+        }
+    }
+
+    private void AddToFavorites()
+    {
+        // TODO: Implement favorites functionality
+        JSRuntime.InvokeVoidAsync("alert", "Favorilere ekleme özelliği yakında!");
+    }
+
+    private void ShareProduct()
+    {
+        // TODO: Implement share functionality
+        JSRuntime.InvokeVoidAsync("alert", "Paylaşım özelliği yakında!");
+    }
+}
+

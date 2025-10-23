@@ -8,12 +8,23 @@ public class PaymentService : IPaymentService
     private readonly HttpClient _httpClient;
     private readonly ILogger<PaymentService> _logger;
 
+    /// <summary>
+    /// PaymentService constructor
+    /// </summary>
+    /// <param name="httpClient">HTTP client</param>
+    /// <param name="logger">Logger instance</param>
     public PaymentService(HttpClient httpClient, ILogger<PaymentService> logger)
     {
         _httpClient = httpClient;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Ödeme geçmişini getir
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="filter">Filtre parametreleri</param>
+    /// <returns>Ödeme geçmişi listesi</returns>
     public async Task<List<PaymentListItemModel>> GetPaymentHistoryAsync(Guid merchantId, PaymentFilterModel filter)
     {
         try
@@ -70,6 +81,11 @@ public class PaymentService : IPaymentService
         }
     }
 
+    /// <summary>
+    /// Ödeme detaylarını getir
+    /// </summary>
+    /// <param name="paymentId">Ödeme ID</param>
+    /// <returns>Ödeme detayları</returns>
     public async Task<PaymentResponse?> GetPaymentByIdAsync(Guid paymentId)
     {
         try
@@ -88,6 +104,13 @@ public class PaymentService : IPaymentService
         }
     }
 
+    /// <summary>
+    /// Mutabakat raporunu getir
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Mutabakat raporu</returns>
     public async Task<SettlementReportModel> GetSettlementReportAsync(Guid merchantId, DateTime startDate, DateTime endDate)
     {
         try
@@ -151,6 +174,13 @@ public class PaymentService : IPaymentService
         }
     }
 
+    /// <summary>
+    /// Gelir analizlerini getir
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Gelir analizleri</returns>
     public async Task<RevenueAnalyticsModel> GetRevenueAnalyticsAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null)
     {
         try
@@ -200,6 +230,12 @@ public class PaymentService : IPaymentService
     }
 
 
+    /// <summary>
+    /// Ödemeleri Excel'e aktar
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="request">Aktarım isteği</param>
+    /// <returns>Excel dosyası</returns>
     public async Task<byte[]> ExportToExcelAsync(Guid merchantId, PaymentExportRequest request)
     {
         try
@@ -231,6 +267,12 @@ public class PaymentService : IPaymentService
         }
     }
 
+    /// <summary>
+    /// Ödemeleri PDF'e aktar
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="request">Aktarım isteği</param>
+    /// <returns>PDF dosyası</returns>
     public async Task<byte[]> ExportToPdfAsync(Guid merchantId, PaymentExportRequest request)
     {
         // TODO: Implement PDF export with iTextSharp or similar library
@@ -239,8 +281,12 @@ public class PaymentService : IPaymentService
     }
 
     /// <summary>
-    /// Get merchant settlements from API
+    /// Merchant mutabakatlarını getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="page">Sayfa numarası</param>
+    /// <param name="pageSize">Sayfa boyutu</param>
+    /// <returns>Mutabakat listesi</returns>
     public async Task<List<SettlementResponse>> GetMerchantSettlementsAsync(Guid merchantId, int page = 1, int pageSize = 50)
     {
         try
@@ -265,8 +311,12 @@ public class PaymentService : IPaymentService
     }
 
     /// <summary>
-    /// Get payment method breakdown from API data
+    /// Ödeme yöntemi dağılımını getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Ödeme yöntemi dağılımı</returns>
     public async Task<List<PaymentMethodBreakdownModel>> GetPaymentMethodBreakdownAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null)
     {
         try
@@ -315,6 +365,12 @@ public class PaymentService : IPaymentService
 
     #region Helper Methods
 
+    /// <summary>
+    /// Boş mutabakat raporu oluştur
+    /// </summary>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Boş mutabakat raporu</returns>
     private SettlementReportModel CreateEmptySettlementReport(DateTime startDate, DateTime endDate)
     {
         return new SettlementReportModel
@@ -331,6 +387,10 @@ public class PaymentService : IPaymentService
         };
     }
 
+    /// <summary>
+    /// Boş analiz verileri oluştur
+    /// </summary>
+    /// <returns>Boş analiz verileri</returns>
     private RevenueAnalyticsModel CreateEmptyAnalytics()
     {
         return new RevenueAnalyticsModel
@@ -348,6 +408,13 @@ public class PaymentService : IPaymentService
         };
     }
 
+    /// <summary>
+    /// Günlük gelir verilerini getir
+    /// </summary>
+    /// <param name="payments">Ödeme listesi</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Günlük gelir verileri</returns>
     private List<DailyData> GetDailyRevenue(List<PaymentResponse> payments, DateTime startDate, DateTime endDate)
     {
         var dailyData = new List<DailyData>();
@@ -359,6 +426,13 @@ public class PaymentService : IPaymentService
         return dailyData;
     }
 
+    /// <summary>
+    /// Haftalık gelir verilerini getir
+    /// </summary>
+    /// <param name="payments">Ödeme listesi</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Haftalık gelir verileri</returns>
     private List<WeeklyData> GetWeeklyRevenue(List<PaymentResponse> payments, DateTime startDate, DateTime endDate)
     {
         var weeklyData = new List<WeeklyData>();
@@ -375,6 +449,13 @@ public class PaymentService : IPaymentService
         return weeklyData;
     }
 
+    /// <summary>
+    /// Aylık gelir verilerini getir
+    /// </summary>
+    /// <param name="payments">Ödeme listesi</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Aylık gelir verileri</returns>
     private List<MonthlyData> GetMonthlyRevenue(List<PaymentResponse> payments, DateTime startDate, DateTime endDate)
     {
         var monthlyData = new List<MonthlyData>();
@@ -390,12 +471,24 @@ public class PaymentService : IPaymentService
         return monthlyData;
     }
 
+    /// <summary>
+    /// Yılın hafta numarasını getir
+    /// </summary>
+    /// <param name="date">Tarih</param>
+    /// <returns>Hafta numarası</returns>
     private int GetWeekOfYear(DateTime date)
     {
         var culture = System.Globalization.CultureInfo.CurrentCulture;
         return culture.Calendar.GetWeekOfYear(date, System.Globalization.CalendarWeekRule.FirstDay, DayOfWeek.Monday);
     }
 
+    /// <summary>
+    /// Gelir trendini hesapla
+    /// </summary>
+    /// <param name="payments">Ödeme listesi</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Gelir trendi yüzdesi</returns>
     private decimal CalculateRevenueTrend(List<PaymentResponse> payments, DateTime startDate, DateTime endDate)
     {
         var dailyRevenue = GetDailyRevenue(payments, startDate, endDate);
@@ -408,6 +501,11 @@ public class PaymentService : IPaymentService
         return ((secondHalf - firstHalf) / firstHalf) * 100;
     }
 
+    /// <summary>
+    /// Ödeme yöntemi dağılımını getir
+    /// </summary>
+    /// <param name="payments">Ödeme listesi</param>
+    /// <returns>Ödeme yöntemi dağılımı</returns>
     private List<BreakdownItem> GetPaymentMethodDistribution(List<PaymentResponse> payments)
     {
         return payments.GroupBy(p => p.PaymentMethod.ToString())
@@ -422,6 +520,11 @@ public class PaymentService : IPaymentService
             .ToList();
     }
 
+    /// <summary>
+    /// Saatlik gelir verilerini getir
+    /// </summary>
+    /// <param name="payments">Ödeme listesi</param>
+    /// <returns>Saatlik gelir verileri</returns>
     private List<HourlyData> GetRevenueByHour(List<PaymentResponse> payments)
     {
         var hourlyData = new List<HourlyData>();
@@ -433,6 +536,13 @@ public class PaymentService : IPaymentService
         return hourlyData;
     }
 
+    /// <summary>
+    /// En yüksek gelirli günleri getir
+    /// </summary>
+    /// <param name="payments">Ödeme listesi</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>En yüksek gelirli günler</returns>
     private List<DailyData> GetTopRevenueDays(List<PaymentResponse> payments, DateTime startDate, DateTime endDate)
     {
         return GetDailyRevenue(payments, startDate, endDate)
@@ -441,6 +551,11 @@ public class PaymentService : IPaymentService
             .ToList();
     }
 
+    /// <summary>
+    /// Ödeme yöntemi görünen adını getir
+    /// </summary>
+    /// <param name="method">Ödeme yöntemi</param>
+    /// <returns>Görünen ad</returns>
     private string GetPaymentMethodDisplayName(string method)
     {
         return method switch
@@ -456,6 +571,11 @@ public class PaymentService : IPaymentService
         };
     }
 
+    /// <summary>
+    /// Ödeme yöntemi rengini getir
+    /// </summary>
+    /// <param name="method">Ödeme yöntemi</param>
+    /// <returns>Renk kodu</returns>
     private string GetPaymentMethodColor(string method)
     {
         return method switch

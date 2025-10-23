@@ -1,43 +1,43 @@
 namespace Getir.Application.Common;
 
 /// <summary>
-/// Centralized cache key naming strategy
-/// Follows Redis best practices: namespace:entity:identifier
+/// Centralized cache key naming strategy (Önbellek anahtarı adlandırma stratejisi)
+/// Redis en iyi uygulamalarını takip eder: namespace:entity:identifier
 /// </summary>
 public static class CacheKeys
 {
-    // Time-to-Live constants (in minutes)
+    // Time-to-Live constants (saniye)
     public static class TTL
     {
-        public const int VeryShort = 2;      // 2 minutes - for volatile data
-        public const int Short = 5;          // 5 minutes - for dynamic data
-        public const int Medium = 15;        // 15 minutes - for semi-static data
-        public const int Long = 30;          // 30 minutes - for static data
-        public const int VeryLong = 60;      // 1 hour - for rarely changing data
-        public const int ExtraLong = 240;    // 4 hours - for configuration data
+        public const int VeryShort = 2;      // 2 saniye - volatil veri için
+        public const int Short = 5;          // 5 saniye - dinamik veri için
+        public const int Medium = 15;        // 15 saniye - yarı statik veri için
+        public const int Long = 30;          // 30 saniye - statik veri için
+        public const int VeryLong = 60;      // 1 saat - nadir değişen veri için
+        public const int ExtraLong = 240;    // 4 saat - yapılandırma veri için
     }
 
     #region Products
 
     /// <summary>
-    /// Single product by ID: "product:123e4567-e89b-12d3-a456-426614174000"
+    /// Tek bir ürün: "product:123e4567-e89b-12d3-a456-426614174000"
     /// </summary>
     public static string Product(Guid productId) => $"product:{productId}";
 
     /// <summary>
-    /// Products by merchant with pagination: "products:merchant:123e4567:page:1:size:20"
+    /// Satıcının ürünleri: "products:merchant:123e4567:page:1:size:20"
     /// </summary>
     public static string ProductsByMerchant(Guid merchantId, int page, int pageSize)
         => $"products:merchant:{merchantId}:page:{page}:size:{pageSize}";
 
     /// <summary>
-    /// Products by category with pagination: "products:category:123e4567:page:1:size:20"
+    /// Kategoriye göre ürünler: "products:category:123e4567:page:1:size:20"
     /// </summary>
     public static string ProductsByCategory(Guid categoryId, int page, int pageSize)
         => $"products:category:{categoryId}:page:{page}:size:{pageSize}";
 
     /// <summary>
-    /// All products pattern for invalidation: "product:*" or "products:merchant:123e4567:*"
+    /// Tüm ürünler pattern için geçersiz kılma: "product:*" or "products:merchant:123e4567:*"
     /// </summary>
     public static string AllProducts() => "product:*";
     public static string AllProductsByMerchant(Guid merchantId) => $"products:merchant:{merchantId}:*";
@@ -47,22 +47,22 @@ public static class CacheKeys
     #region Product Categories
 
     /// <summary>
-    /// Single category: "category:123e4567-e89b-12d3-a456-426614174000"
+    /// Tek bir kategori: "category:123e4567-e89b-12d3-a456-426614174000"
     /// </summary>
     public static string ProductCategory(Guid categoryId) => $"category:{categoryId}";
 
     /// <summary>
-    /// All categories list: "categories:all"
+    /// Tüm kategoriler listesi: "categories:all"
     /// </summary>
     public static string AllProductCategories() => "categories:all";
 
     /// <summary>
-    /// Categories by merchant: "categories:merchant:123e4567"
+    /// Satıcının kategorileri: "categories:merchant:123e4567"
     /// </summary>
     public static string CategoriesByMerchant(Guid merchantId) => $"categories:merchant:{merchantId}";
 
     /// <summary>
-    /// All categories pattern: "category:*" or "categories:*"
+    /// Tüm kategoriler pattern: "category:*" or "categories:*"
     /// </summary>
     public static string AllCategoriesPattern() => "categor*";
 
@@ -71,29 +71,29 @@ public static class CacheKeys
     #region Merchants
 
     /// <summary>
-    /// Single merchant: "merchant:123e4567-e89b-12d3-a456-426614174000"
+    /// Tek bir satıcı: "merchant:123e4567-e89b-12d3-a456-426614174000"
     /// </summary>
     public static string Merchant(Guid merchantId) => $"merchant:{merchantId}";
 
     /// <summary>
-    /// Merchant by owner ID: "merchant:owner:123e4567"
+    /// Satıcının sahibi: "merchant:owner:123e4567"
     /// </summary>
     public static string MerchantByOwner(Guid ownerId) => $"merchant:owner:{ownerId}";
 
     /// <summary>
-    /// Merchants in delivery zone: "merchants:zone:123e4567:page:1"
+    /// Teslimat bölgesindeki satıcılar: "merchants:zone:123e4567:page:1"
     /// </summary>
     public static string MerchantsByZone(Guid zoneId, int page, int pageSize)
         => $"merchants:zone:{zoneId}:page:{page}:size:{pageSize}";
 
     /// <summary>
-    /// Active merchants: "merchants:active:page:1:size:20"
+    /// Aktif satıcılar (sayfalama): "merchants:active:page:1:size:20"
     /// </summary>
     public static string ActiveMerchants(int page, int pageSize)
         => $"merchants:active:page:{page}:size:{pageSize}";
 
     /// <summary>
-    /// All merchants pattern: "merchant:*" or "merchants:*"
+    /// Tüm satıcılar pattern: "merchant:*" or "merchants:*"
     /// </summary>
     public static string AllMerchants() => "merchant*";
 
@@ -102,33 +102,33 @@ public static class CacheKeys
     #region Delivery Zones
 
     /// <summary>
-    /// All delivery zones: "zones:all"
+    /// Tüm teslimat bölgeleri: "zones:all"
     /// </summary>
     public static string AllDeliveryZones() => "zones:all";
 
     /// <summary>
-    /// Active delivery zones: "zones:active"
+    /// Aktif teslimat bölgeleri: "zones:active"
     /// </summary>
     public static string ActiveDeliveryZones() => "zones:active";
 
     /// <summary>
-    /// Zones by coordinates (geo-cache): "zones:geo:lat:41.0082:lon:28.9784"
+    /// Koordinatlar (geo-cache) bazında teslimat bölgeleri: "zones:geo:lat:41.0082:lon:28.9784"
     /// </summary>
     public static string ZonesByCoordinates(double latitude, double longitude)
         => $"zones:geo:lat:{latitude:F4}:lon:{longitude:F4}";
 
     /// <summary>
-    /// Delivery zones by merchant: "zones:merchant:{merchantId}"
+    /// Satıcının teslimat bölgeleri: "zones:merchant:{merchantId}"
     /// </summary>
     public static string DeliveryZonesByMerchant(Guid merchantId) => $"zones:merchant:{merchantId}";
 
     /// <summary>
-    /// Single delivery zone: "zone:{zoneId}"
+    /// Tek bir teslimat bölgesi: "zone:{zoneId}"
     /// </summary>
     public static string DeliveryZone(Guid zoneId) => $"zone:{zoneId}";
 
     /// <summary>
-    /// All delivery zones pattern: "zone*"
+    /// Tüm teslimat bölgeleri pattern: "zone*"
     /// </summary>
     public static string AllDeliveryZonesPattern() => "zone*";
 
@@ -137,19 +137,19 @@ public static class CacheKeys
     #region Reviews
 
     /// <summary>
-    /// Product reviews with pagination: "reviews:product:123e4567:page:1:size:10"
+    /// Ürün incelemeleri (sayfalama): "reviews:product:123e4567:page:1:size:10"
     /// </summary>
     public static string ProductReviews(Guid productId, int page, int pageSize)
         => $"reviews:product:{productId}:page:{page}:size:{pageSize}";
 
     /// <summary>
-    /// Merchant reviews: "reviews:merchant:123e4567:page:1:size:10"
+    /// Satıcı incelemeleri: "reviews:merchant:123e4567:page:1:size:10"
     /// </summary>
     public static string MerchantReviews(Guid merchantId, int page, int pageSize)
         => $"reviews:merchant:{merchantId}:page:{page}:size:{pageSize}";
 
     /// <summary>
-    /// Product average rating: "rating:product:123e4567"
+    /// Ürün ortalama puanı: "rating:product:123e4567"
     /// </summary>
     public static string ProductRating(Guid productId) => $"rating:product:{productId}";
 
@@ -158,18 +158,18 @@ public static class CacheKeys
     #region Search
 
     /// <summary>
-    /// Search results: "search:query:pizza:location:123e4567:page:1"
+    /// Arama sonuçları (konum bazında): "search:query:pizza:location:123e4567:page:1"
     /// </summary>
     public static string SearchResults(string query, Guid? locationId, int page, int pageSize)
         => $"search:query:{NormalizeSearchQuery(query)}:location:{locationId?.ToString() ?? "all"}:page:{page}:size:{pageSize}";
 
     /// <summary>
-    /// Popular searches: "search:popular:limit:10"
+    /// Popüler aramalar: "search:popular:limit:10"
     /// </summary>
     public static string PopularSearches(int limit) => $"search:popular:limit:{limit}";
 
     /// <summary>
-    /// Clear all search cache: "search:*"
+    /// Tüm arama cache'ini temizle: "search:*"
     /// </summary>
     public static string AllSearchResults() => "search:*";
 
@@ -181,7 +181,7 @@ public static class CacheKeys
     #region Cart (Short TTL)
 
     /// <summary>
-    /// User cart: "cart:user:123e4567-e89b-12d3-a456-426614174000"
+    /// Kullanıcı sepeti: "cart:user:123e4567-e89b-12d3-a456-426614174000"
     /// WARNING: Use with caution, short TTL recommended
     /// </summary>
     public static string UserCart(Guid userId) => $"cart:user:{userId}";
@@ -191,13 +191,13 @@ public static class CacheKeys
     #region Coupons
 
     /// <summary>
-    /// Available coupons list: "coupons:available:page:1:size:20"
+    /// Mevcut kuponlar listesi: "coupons:available:page:1:size:20"
     /// </summary>
     public static string AvailableCoupons(int page, int pageSize)
         => $"coupons:available:page:{page}:size:{pageSize}";
 
     /// <summary>
-    /// User's coupons: "coupons:user:123e4567"
+    /// Kullanıcının kuponları: "coupons:user:123e4567"
     /// </summary>
     public static string UserCoupons(Guid userId) => $"coupons:user:{userId}";
 
@@ -206,7 +206,7 @@ public static class CacheKeys
     #region Working Hours
 
     /// <summary>
-    /// Merchant working hours: "hours:merchant:123e4567"
+    /// Satıcı çalışma saatleri: "hours:merchant:123e4567"
     /// </summary>
     public static string MerchantWorkingHours(Guid merchantId) => $"hours:merchant:{merchantId}";
 
@@ -215,13 +215,13 @@ public static class CacheKeys
     #region Statistics & Analytics
 
     /// <summary>
-    /// Merchant dashboard stats: "stats:merchant:123e4567:date:2025-01-15"
+    /// Satıcı dashboard istatistikleri: "stats:merchant:123e4567:date:2025-01-15"
     /// </summary>
     public static string MerchantStats(Guid merchantId, DateTime date)
         => $"stats:merchant:{merchantId}:date:{date:yyyy-MM-dd}";
 
     /// <summary>
-    /// Platform-wide statistics: "stats:platform:date:2025-01-15"
+    /// Platform genel istatistikleri: "stats:platform:date:2025-01-15"
     /// </summary>
     public static string PlatformStats(DateTime date)
         => $"stats:platform:date:{date:yyyy-MM-dd}";
@@ -231,12 +231,12 @@ public static class CacheKeys
     #region User Preferences
 
     /// <summary>
-    /// User language preference: "pref:user:123e4567:language"
+    /// Kullanıcı dil tercihi: "pref:user:123e4567:language"
     /// </summary>
     public static string UserLanguagePreference(Guid userId) => $"pref:user:{userId}:language";
 
     /// <summary>
-    /// User notification preferences: "pref:user:123e4567:notifications"
+    /// Kullanıcı bildirim tercihleri: "pref:user:123e4567:notifications"
     /// </summary>
     public static string UserNotificationPreferences(Guid userId) => $"pref:user:{userId}:notifications";
 
@@ -245,12 +245,12 @@ public static class CacheKeys
     #region System Configuration
 
     /// <summary>
-    /// System settings: "config:system:setting-name"
+    /// Sistem ayarları: "config:system:setting-name" (örneğin: "payment_gateway", "notification_channels", "delivery_options")
     /// </summary>
     public static string SystemConfig(string settingName) => $"config:system:{settingName}";
 
     /// <summary>
-    /// Feature flags: "config:feature:{featureName}"
+    /// Özellik flag'leri: "config:feature:{featureName}" (örneğin: "new_payment_gateway", "sms_notifications", "geo_location_tracking")
     /// </summary>
     public static string FeatureFlag(string featureName) => $"config:feature:{featureName}";
 
@@ -259,30 +259,30 @@ public static class CacheKeys
     #region Service Categories
 
     /// <summary>
-    /// All service categories: "service-categories:all:page:{page}:size:{size}"
+    /// Tüm hizmet kategorileri: "service-categories:all:page:{page}:size:{size}"
     /// </summary>
     public static string AllServiceCategories(int page, int pageSize)
         => $"service-categories:all:page:{page}:size:{pageSize}";
 
     /// <summary>
-    /// Single service category: "service-category:{categoryId}"
+    /// Tek bir hizmet kategorisi: "service-category:{categoryId}"
     /// </summary>
     public static string ServiceCategory(Guid categoryId) => $"service-category:{categoryId}";
 
     /// <summary>
-    /// Service categories by type: "service-categories:type:{type}:page:{page}"
+    /// Hizmet kategorileri (tür bazında): "service-categories:type:{type}:page:{page}"
     /// </summary>
     public static string ServiceCategoriesByType(string type, int page, int pageSize)
         => $"service-categories:type:{type}:page:{page}:size:{pageSize}";
 
     /// <summary>
-    /// Active service categories by type: "service-categories:active:type:{type}"
+    /// Aktif hizmet kategorileri (tür bazında): "service-categories:active:type:{type}"
     /// </summary>
     public static string ActiveServiceCategoriesByType(string type)
         => $"service-categories:active:type:{type}";
 
     /// <summary>
-    /// All service categories pattern: "service-categor*"
+    /// Tüm hizmet kategorileri pattern: "service-categor*"
     /// </summary>
     public static string AllServiceCategoriesPattern() => "service-categor*";
 
@@ -291,33 +291,33 @@ public static class CacheKeys
     #region Special Holidays
 
     /// <summary>
-    /// All special holidays: "holidays:all"
+    /// Tüm özel tatiller: "holidays:all"
     /// </summary>
     public static string AllSpecialHolidays() => "holidays:all";
 
     /// <summary>
-    /// Special holidays by merchant: "holidays:merchant:{merchantId}"
+    /// Özel tatiller (satıcı bazında): "holidays:merchant:{merchantId}"
     /// </summary>
     public static string SpecialHolidaysByMerchant(Guid merchantId) => $"holidays:merchant:{merchantId}";
 
     /// <summary>
-    /// Special holidays by date range: "holidays:merchant:{merchantId}:{start}:{end}"
+    /// Özel tatiller (tarih aralığı bazında): "holidays:merchant:{merchantId}:{start}:{end}"
     /// </summary>
     public static string SpecialHolidaysByDateRange(Guid merchantId, DateTime startDate, DateTime endDate)
         => $"holidays:merchant:{merchantId}:{startDate:yyyy-MM-dd}:{endDate:yyyy-MM-dd}";
 
     /// <summary>
-    /// Single special holiday: "holiday:{holidayId}"
+    /// Tek bir özel tatil: "holiday:{holidayId}"
     /// </summary>
     public static string SpecialHoliday(Guid holidayId) => $"holiday:{holidayId}";
 
     /// <summary>
-    /// Upcoming holidays: "holidays:upcoming:merchant:{merchantId}"
+    /// Yaklaşan özel tatiller: "holidays:upcoming:merchant:{merchantId}"
     /// </summary>
     public static string UpcomingHolidays(Guid merchantId) => $"holidays:upcoming:merchant:{merchantId}";
 
     /// <summary>
-    /// All holidays pattern: "holiday*"
+    /// Tüm özel tatiller pattern: "holiday*"
     /// </summary>
     public static string AllHolidaysPattern() => "holiday*";
 
@@ -326,19 +326,19 @@ public static class CacheKeys
     #region Reviews & Ratings
 
     /// <summary>
-    /// Reviews by entity: "reviews:{entityType}:{entityId}:page:{page}"
+    /// Incelemeler (varlık bazında): "reviews:{entityType}:{entityId}:page:{page}"
     /// </summary>
     public static string ReviewsByEntity(string entityType, Guid entityId, int page, int pageSize)
         => $"reviews:{entityType}:{entityId}:page:{page}:size:{pageSize}";
 
     /// <summary>
-    /// Rating stats: "rating:stats:{entityType}:{entityId}"
+    /// Puan istatistikleri: "rating:stats:{entityType}:{entityId}"
     /// </summary>
     public static string RatingStats(string entityType, Guid entityId)
         => $"rating:stats:{entityType}:{entityId}";
 
     /// <summary>
-    /// All reviews pattern for entity: "reviews:{entityType}:{entityId}:*"
+    /// Tüm incelemeler pattern (varlık bazında): "reviews:{entityType}:{entityId}:*"
     /// </summary>
     public static string AllReviewsByEntity(string entityType, Guid entityId)
         => $"reviews:{entityType}:{entityId}:*";
@@ -348,23 +348,23 @@ public static class CacheKeys
     #region Languages & Translations
 
     /// <summary>
-    /// All translations for language: "translations:{languageCode}:all"
+    /// Tüm çeviriler (dil bazında): "translations:{languageCode}:all"
     /// </summary>
     public static string AllTranslations(string languageCode) => $"translations:{languageCode}:all";
 
     /// <summary>
-    /// Single translation: "translation:{languageCode}:{key}"
+    /// Tek bir çeviri: "translation:{languageCode}:{key}"
     /// </summary>
     public static string Translation(string languageCode, string key)
         => $"translation:{languageCode}:{key.Replace(":", "-")}";
 
     /// <summary>
-    /// Supported languages: "languages:supported"
+    /// Desteklenen diller: "languages:supported"
     /// </summary>
     public static string SupportedLanguages() => "languages:supported";
 
     /// <summary>
-    /// All translations pattern: "translation*"
+    /// Tüm çeviriler pattern: "translation*"
     /// </summary>
     public static string AllTranslationsPattern() => "translation*";
 
@@ -373,18 +373,18 @@ public static class CacheKeys
     #region Campaigns
 
     /// <summary>
-    /// Active campaigns: "campaigns:active:page:{page}"
+    /// Aktif kampanyalar: "campaigns:active:page:{page}"
     /// </summary>
     public static string ActiveCampaigns(int page, int pageSize)
         => $"campaigns:active:page:{page}:size:{pageSize}";
 
     /// <summary>
-    /// Campaign by id: "campaign:{campaignId}"
+    /// Kampanya (id bazında): "campaign:{campaignId}"
     /// </summary>
     public static string Campaign(Guid campaignId) => $"campaign:{campaignId}";
 
     /// <summary>
-    /// All campaigns pattern: "campaign*"
+    /// Tüm kampanyalar pattern: "campaign*"
     /// </summary>
     public static string AllCampaignsPattern() => "campaign*";
 
@@ -393,12 +393,12 @@ public static class CacheKeys
     #region Working Hours
 
     /// <summary>
-    /// Working hours by merchant: "working-hours:merchant:{merchantId}"
+    /// Satıcının çalışma saatleri: "working-hours:merchant:{merchantId}"
     /// </summary>
     public static string WorkingHoursByMerchant(Guid merchantId) => $"working-hours:merchant:{merchantId}";
 
     /// <summary>
-    /// All working hours pattern: "working-hours:*"
+    /// Tüm çalışma saatleri pattern: "working-hours:*"
     /// </summary>
     public static string AllWorkingHoursPattern() => "working-hours:*";
 

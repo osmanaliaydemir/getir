@@ -7,6 +7,11 @@ public class MerchantService : IMerchantService
     private readonly IApiClient _apiClient;
     private readonly ILogger<MerchantService> _logger;
 
+    /// <summary>
+    /// MerchantService constructor
+    /// </summary>
+    /// <param name="apiClient">API client</param>
+    /// <param name="logger">Logger instance</param>
     public MerchantService(IApiClient apiClient, ILogger<MerchantService> logger)
     {
         _apiClient = apiClient;
@@ -14,10 +19,10 @@ public class MerchantService : IMerchantService
     }
 
     /// <summary>
-    /// Mağazayı getirir.
+    /// Mağazayı getir
     /// </summary>
-    /// <param name="ct">CancellationToken</param>
-    /// <returns>Mağaza</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Mağaza bilgileri</returns>
     public async Task<MerchantResponse?> GetMyMerchantAsync(CancellationToken ct = default)
     {
         try
@@ -36,12 +41,12 @@ public class MerchantService : IMerchantService
     }
 
     /// <summary>
-    /// Mağazayı günceller.
+    /// Mağazayı güncelle
     /// </summary>
     /// <param name="merchantId">Mağaza ID</param>
-    /// <param name="request">Mağaza güncelleme isteği</param>
-    /// <param name="ct">CancellationToken</param>
-    /// <returns>Mağaza</returns>
+    /// <param name="request">Güncelleme isteği</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güncellenmiş mağaza bilgileri</returns>
     public async Task<MerchantResponse?> UpdateMerchantAsync(Guid merchantId, UpdateMerchantRequest request, CancellationToken ct = default)
     {
         try
@@ -61,11 +66,11 @@ public class MerchantService : IMerchantService
     }
 
     /// <summary>
-    /// Mağaza dashboard'ını getirir.
+    /// Mağaza dashboard'ını getir
     /// </summary>
     /// <param name="merchantId">Mağaza ID</param>
-    /// <param name="ct">CancellationToken</param>
-    /// <returns>Mağaza dashboard'ı</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Dashboard verileri</returns>
     public async Task<MerchantDashboardResponse?> GetDashboardAsync(Guid merchantId, CancellationToken ct = default)
     {
         try
@@ -84,11 +89,11 @@ public class MerchantService : IMerchantService
     }
 
     /// <summary>
-    /// Son siparişleri getirir.
+    /// Son siparişleri getir
     /// </summary>
     /// <param name="merchantId">Mağaza ID</param>
-    /// <param name="limit">Limit</param>
-    /// <param name="ct">CancellationToken</param>
+    /// <param name="limit">Kayıt limiti</param>
+    /// <param name="ct">İptal token'ı</param>
     /// <returns>Son siparişler</returns>
     public async Task<List<RecentOrderResponse>?> GetRecentOrdersAsync(Guid merchantId, int limit = 10, CancellationToken ct = default)
     {
@@ -108,11 +113,11 @@ public class MerchantService : IMerchantService
     }
 
     /// <summary>
-    /// En çok satılan ürünleri getirir.
+    /// En çok satılan ürünleri getir
     /// </summary>
     /// <param name="merchantId">Mağaza ID</param>
-    /// <param name="limit">Limit</param>
-    /// <param name="ct">CancellationToken</param>
+    /// <param name="limit">Kayıt limiti</param>
+    /// <param name="ct">İptal token'ı</param>
     /// <returns>En çok satılan ürünler</returns>
     public async Task<List<TopProductResponse>?> GetTopProductsAsync(Guid merchantId, int limit = 10, CancellationToken ct = default)
     {
@@ -132,8 +137,12 @@ public class MerchantService : IMerchantService
     }
 
     /// <summary>
-    /// Satış trend verilerini getirir (son N gün için).
+    /// Satış trend verilerini getir
     /// </summary>
+    /// <param name="merchantId">Mağaza ID</param>
+    /// <param name="days">Gün sayısı</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Satış trend verileri</returns>
     public async Task<List<SalesTrendDataResponse>?> GetSalesTrendDataAsync(Guid merchantId, int days = 30, CancellationToken ct = default)
     {
         try
@@ -152,8 +161,11 @@ public class MerchantService : IMerchantService
     }
 
     /// <summary>
-    /// Sipariş durumu dağılımını getirir.
+    /// Sipariş durumu dağılımını getir
     /// </summary>
+    /// <param name="merchantId">Mağaza ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Sipariş durumu dağılımı</returns>
     public async Task<OrderStatusDistributionResponse?> GetOrderStatusDistributionAsync(Guid merchantId, CancellationToken ct = default)
     {
         try
@@ -172,8 +184,11 @@ public class MerchantService : IMerchantService
     }
 
     /// <summary>
-    /// Kategori performansını getirir.
+    /// Kategori performansını getir
     /// </summary>
+    /// <param name="merchantId">Mağaza ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kategori performans verileri</returns>
     public async Task<List<CategoryPerformanceResponse>?> GetCategoryPerformanceAsync(Guid merchantId, CancellationToken ct = default)
     {
         try

@@ -13,12 +13,24 @@ public class MemoryCacheService : ICacheService
     private readonly IMemoryCache _memoryCache;
     private readonly ILogger<MemoryCacheService> _logger;
 
+    /// <summary>
+    /// MemoryCacheService constructor
+    /// </summary>
+    /// <param name="memoryCache">Memory cache instance</param>
+    /// <param name="logger">Logger instance</param>
     public MemoryCacheService(IMemoryCache memoryCache, ILogger<MemoryCacheService> logger)
     {
         _memoryCache = memoryCache;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Cache'den değer getir
+    /// </summary>
+    /// <typeparam name="T">Değer tipi</typeparam>
+    /// <param name="key">Cache anahtarı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Cache değeri veya null</returns>
     public Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default) where T : class
     {
         try
@@ -34,6 +46,15 @@ public class MemoryCacheService : ICacheService
         }
     }
 
+    /// <summary>
+    /// Cache'e değer kaydet
+    /// </summary>
+    /// <typeparam name="T">Değer tipi</typeparam>
+    /// <param name="key">Cache anahtarı</param>
+    /// <param name="value">Kaydedilecek değer</param>
+    /// <param name="expiration">Süre sonu</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Task</returns>
     public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class
     {
         try
@@ -54,6 +75,12 @@ public class MemoryCacheService : ICacheService
         }
     }
 
+    /// <summary>
+    /// Cache'den değer sil
+    /// </summary>
+    /// <param name="key">Cache anahtarı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Task</returns>
     public Task RemoveAsync(string key, CancellationToken cancellationToken = default)
     {
         try
@@ -69,6 +96,12 @@ public class MemoryCacheService : ICacheService
         }
     }
 
+    /// <summary>
+    /// Pattern'e göre cache değerlerini sil
+    /// </summary>
+    /// <param name="pattern">Silinecek pattern</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Task</returns>
     public Task RemoveByPatternAsync(string pattern, CancellationToken cancellationToken = default)
     {
         // Memory cache doesn't support pattern-based removal efficiently
@@ -77,6 +110,12 @@ public class MemoryCacheService : ICacheService
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Cache'de değer var mı kontrol et
+    /// </summary>
+    /// <param name="key">Cache anahtarı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Değer var mı</returns>
     public Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
     {
         try
@@ -92,6 +131,11 @@ public class MemoryCacheService : ICacheService
         }
     }
 
+    /// <summary>
+    /// Tüm cache'i temizle
+    /// </summary>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Task</returns>
     public Task ClearAsync(CancellationToken cancellationToken = default)
     {
         try

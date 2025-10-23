@@ -24,6 +24,12 @@ public class EmailTemplateService : IEmailTemplateService
         _templates = InitializeTemplates();
     }
 
+    /// <summary>
+    /// Email template'i getir
+    /// </summary>
+    /// <param name="templateName">Template adı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Email template'i</returns>
     public Task<Result<EmailTemplate>> GetTemplateAsync(
         string templateName, 
         CancellationToken cancellationToken = default)
@@ -45,6 +51,13 @@ public class EmailTemplateService : IEmailTemplateService
         }
     }
 
+    /// <summary>
+    /// Email template'i içeriğini renderle
+    /// </summary>
+    /// <param name="templateName">Template adı</param>
+    /// <param name="templateData">Template verileri</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Renderlenmiş template içeriği</returns>
     public async Task<Result<string>> RenderTemplateAsync(
         string templateName, 
         Dictionary<string, object> templateData, 
@@ -77,6 +90,12 @@ public class EmailTemplateService : IEmailTemplateService
         }
     }
 
+    /// <summary>
+    /// Email isteği oluştur
+    /// </summary>
+    /// <param name="request">Email isteği</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Email isteği</returns>
     public async Task<Result<EmailRequest>> CreateEmailFromTemplateAsync(
         EmailTemplateRequest request, 
         CancellationToken cancellationToken = default)
@@ -118,6 +137,11 @@ public class EmailTemplateService : IEmailTemplateService
         }
     }
 
+    /// <summary>
+    /// Tüm email template'lerini getir
+    /// </summary>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Tüm email template'leri</returns>
     public Task<Result<IEnumerable<EmailTemplate>>> GetAllTemplatesAsync(
         CancellationToken cancellationToken = default)
     {
@@ -136,6 +160,10 @@ public class EmailTemplateService : IEmailTemplateService
 
     #region Helper Methods
 
+    /// <summary>
+    /// Email template'lerini initialize et
+    /// </summary>
+    /// <returns>Email template'leri</returns>
     private Dictionary<string, EmailTemplate> InitializeTemplates()
     {
         return new Dictionary<string, EmailTemplate>
@@ -232,6 +260,12 @@ public class EmailTemplateService : IEmailTemplateService
         };
     }
 
+    /// <summary>
+    /// Email template'i içeriğini renderle
+    /// </summary>
+    /// <param name="template">Template içeriği</param>
+    /// <param name="data">Template verileri</param>
+    /// <returns>Renderlenmiş template içeriği</returns>
     private string RenderTemplateContent(string template, Dictionary<string, object> data)
     {
         var result = template;
@@ -246,6 +280,11 @@ public class EmailTemplateService : IEmailTemplateService
         return result;
     }
 
+    /// <summary>
+    /// Email adresini maskele
+    /// </summary>
+    /// <param name="emailAddress">Email adresi</param>
+    /// <returns>Maskeleli email adresi</returns>
     private string MaskEmailAddress(string emailAddress)
     {
         if (string.IsNullOrEmpty(emailAddress) || !emailAddress.Contains('@'))
@@ -266,6 +305,10 @@ public class EmailTemplateService : IEmailTemplateService
 
     #region Template Content
 
+    /// <summary>
+    /// Hoşgeldin email template'i
+    /// </summary>
+    /// <returns>Hoşgeldin email template'i</returns>
     private string GetWelcomeTemplate()
     {
         return @"
@@ -312,6 +355,10 @@ public class EmailTemplateService : IEmailTemplateService
 </html>";
     }
 
+    /// <summary>
+    /// Sipariş onayı email template'i
+    /// </summary>
+    /// <returns>Sipariş onayı email template'i</returns>
     private string GetOrderConfirmationTemplate()
     {
         return @"
@@ -360,6 +407,10 @@ public class EmailTemplateService : IEmailTemplateService
 </html>";
     }
 
+    /// <summary>
+    /// Sipariş hazır email template'i
+    /// </summary>
+    /// <returns>Sipariş hazır email template'i</returns>
     private string GetOrderReadyTemplate()
     {
         return @"
@@ -396,6 +447,10 @@ public class EmailTemplateService : IEmailTemplateService
 </html>";
     }
 
+    /// <summary>
+    /// Sipariş teslim email template'i
+    /// </summary>
+    /// <returns>Sipariş teslim email template'i</returns>
     private string GetOrderDeliveredTemplate()
     {
         return @"

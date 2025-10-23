@@ -4,14 +4,18 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 namespace Getir.MerchantPortal.Middleware;
 
 /// <summary>
-/// Validates that authenticated users have a valid session with JWT token
-/// Prevents authentication loop when cookie exists but session is expired
+/// Kimlik doğrulanmış kullanıcıların geçerli JWT token'a sahip olduğunu doğrular
 /// </summary>
 public class SessionValidationMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<SessionValidationMiddleware> _logger;
 
+    /// <summary>
+    /// SessionValidationMiddleware constructor
+    /// </summary>
+    /// <param name="next">Sonraki middleware</param>
+    /// <param name="logger">Logger instance</param>
     public SessionValidationMiddleware(
         RequestDelegate next,
         ILogger<SessionValidationMiddleware> logger)
@@ -20,6 +24,11 @@ public class SessionValidationMiddleware
         _logger = logger;
     }
 
+    /// <summary>
+    /// Middleware'i çalıştır
+    /// </summary>
+    /// <param name="context">HTTP context</param>
+    /// <returns>Task</returns>
     public async Task InvokeAsync(HttpContext context)
     {
         // Skip validation for login/logout pages and static files
@@ -64,10 +73,15 @@ public class SessionValidationMiddleware
 }
 
 /// <summary>
-/// Extension method to register the middleware
+/// Middleware kayıt extension metodu
 /// </summary>
 public static class SessionValidationMiddlewareExtensions
 {
+    /// <summary>
+    /// Session validation middleware'i kaydet
+    /// </summary>
+    /// <param name="builder">Application builder</param>
+    /// <returns>Application builder</returns>
     public static IApplicationBuilder UseSessionValidation(this IApplicationBuilder builder)
     {
         return builder.UseMiddleware<SessionValidationMiddleware>();

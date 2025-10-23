@@ -22,8 +22,10 @@ public class AuthController : Controller
     }
 
     /// <summary>
-    /// Giriş ekranını gösterir. Eğer kullanıcı giriş yaptıysa Dashboard'a yönlendirir.
+    /// Giriş ekranını göster
     /// </summary>
+    /// <param name="returnUrl">Yönlendirilecek URL</param>
+    /// <returns>Giriş sayfası veya Dashboard'a yönlendirme</returns>
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)
     {
@@ -37,10 +39,11 @@ public class AuthController : Controller
     }
 
     /// <summary>
-    /// Kullanıcı giriş isteğini işler. Başarılıysa oturum açar ve yönlendirir.
+    /// Kullanıcı giriş isteğini işle
     /// </summary>
-    /// <param name="model">Giriş isteği için gerekli bilgiler</param>
-    /// <param name="returnUrl">Başarılı girişten sonra yönlendirilecek adres (isteğe bağlı)</param>
+    /// <param name="model">Giriş bilgileri</param>
+    /// <param name="returnUrl">Yönlendirilecek URL</param>
+    /// <returns>Giriş sayfası veya Dashboard'a yönlendirme</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginRequest model, string? returnUrl = null)
@@ -125,8 +128,9 @@ public class AuthController : Controller
     }
 
     /// <summary>
-    /// Kullanıcı oturumunu kapatır.
+    /// Kullanıcı oturumunu kapat
     /// </summary>
+    /// <returns>Giriş sayfasına yönlendirme</returns>
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -142,8 +146,9 @@ public class AuthController : Controller
     }
 
     /// <summary>
-    /// Erişim iznin olmadığında gösterilecek sayfa.
+    /// Erişim reddedildi sayfasını göster
     /// </summary>
+    /// <returns>Erişim reddedildi sayfası</returns>
     [HttpGet]
     public IActionResult AccessDenied()
     {
@@ -151,8 +156,9 @@ public class AuthController : Controller
     }
 
     /// <summary>
-    /// Load MerchantId to session from API
+    /// API'den MerchantId'yi session'a yükle
     /// </summary>
+    /// <returns>Task</returns>
     private async Task LoadMerchantIdToSession()
     {
         try

@@ -1,0 +1,570 @@
+@page "/security"
+@inject UserService UserService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<PageTitle>Güvenlik - Getir</PageTitle>
+
+@if (!isAuthenticated)
+{
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center">
+                <div class="card">
+                    <div class="card-body py-5">
+                        <i class="bi bi-person-x display-1 text-warning mb-4"></i>
+                        <h3>Giriş Yapın</h3>
+                        <p class="text-muted mb-4">
+                            Güvenlik ayarlarınızı görüntülemek için giriş yapmanız gerekiyor.
+                        </p>
+                        <a href="/login" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            Giriş Yap
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else if (isLoading)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Yükleniyor...</span>
+        </div>
+        <p class="mt-3">Güvenlik bilgileriniz yükleniyor...</p>
+    </div>
+}
+else
+{
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Güvenlik</li>
+            </ol>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Şifre Değiştirme -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">
+                            <i class="bi bi-key"></i>
+                            Şifre Değiştir
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <form @onsubmit="ChangePassword">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Mevcut Şifre *</label>
+                                    <input type="password" class="form-control" @bind="changePasswordRequest.CurrentPassword" required />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Yeni Şifre *</label>
+                                    <input type="password" class="form-control" @bind="changePasswordRequest.NewPassword" required />
+                                    <small class="text-muted">En az 8 karakter, büyük harf, küçük harf ve rakam içermeli.</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Yeni Şifre Tekrar *</label>
+                                    <input type="password" class="form-control" @bind="changePasswordRequest.ConfirmPassword" required />
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary" disabled="@isChangingPassword">
+                                    @if (isChangingPassword)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    }
+                                    <i class="bi bi-check"></i>
+                                    Şifreyi Değiştir
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- E-posta Değiştirme -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">
+                            <i class="bi bi-envelope"></i>
+                            E-posta Adresi Değiştir
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <form @onsubmit="ChangeEmail">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Mevcut E-posta</label>
+                                    <input type="email" class="form-control" value="@currentEmail" readonly />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Yeni E-posta *</label>
+                                    <input type="email" class="form-control" @bind="newEmail" required />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Şifre *</label>
+                                    <input type="password" class="form-control" @bind="emailChangePassword" required />
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary" disabled="@isChangingEmail">
+                                    @if (isChangingEmail)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    }
+                                    <i class="bi bi-check"></i>
+                                    E-posta Değiştir
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Telefon Değiştirme -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">
+                            <i class="bi bi-telephone"></i>
+                            Telefon Numarası Değiştir
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <form @onsubmit="ChangePhone">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Mevcut Telefon</label>
+                                    <input type="tel" class="form-control" value="@currentPhone" readonly />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Yeni Telefon *</label>
+                                    <input type="tel" class="form-control" @bind="newPhone" required />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Şifre *</label>
+                                    <input type="password" class="form-control" @bind="phoneChangePassword" required />
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary" disabled="@isChangingPhone">
+                                    @if (isChangingPhone)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    }
+                                    <i class="bi bi-check"></i>
+                                    Telefon Değiştir
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- İki Faktörlü Doğrulama -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">
+                            <i class="bi bi-shield-check"></i>
+                            İki Faktörlü Doğrulama (2FA)
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h6>Güvenliğinizi artırın</h6>
+                                <p class="text-muted mb-0">
+                                    İki faktörlü doğrulama ile hesabınızı ekstra güvenlik katmanı ile koruyun.
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" @bind="twoFactorEnabled" @bind:after="ToggleTwoFactor">
+                                    <label class="form-check-label">
+                                        @(twoFactorEnabled ? "Aktif" : "Pasif")
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        @if (twoFactorEnabled)
+                        {
+                            <div class="mt-3 p-3 bg-success bg-opacity-10 rounded">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    <span class="text-success">İki faktörlü doğrulama aktif</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Oturum Yönetimi -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="bi bi-laptop"></i>
+                            Aktif Oturumlar
+                        </h4>
+                        <button class="btn btn-outline-danger btn-sm" @onclick="LogoutAllDevices">
+                            <i class="bi bi-x-circle"></i>
+                            Tüm Oturumları Sonlandır
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        @if (activeSessions?.Any() == true)
+                        {
+                            @foreach (var session in activeSessions)
+                            {
+                                <div class="d-flex align-items-center justify-content-between p-3 border rounded mb-2 @(session.IsCurrent ? "border-primary bg-primary bg-opacity-10" : "")">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi @GetDeviceIcon(session.DeviceType) me-3"></i>
+                                        <div>
+                                            <h6 class="mb-1">@session.DeviceName</h6>
+                                            <small class="text-muted">@session.Location • @session.LastActivity.ToString("dd.MM.yyyy HH:mm")</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        @if (session.IsCurrent)
+                                        {
+                                            <span class="badge bg-primary me-2">Mevcut Oturum</span>
+                                        }
+                                        @if (!session.IsCurrent)
+                                        {
+                                            <button class="btn btn-outline-danger btn-sm" @onclick="@(() => LogoutDevice(session.Id))">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center py-3">
+                                <i class="bi bi-laptop display-4 text-muted mb-3"></i>
+                                <p class="text-muted">Aktif oturum bulunamadı</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Yan Panel -->
+            <div class="col-lg-4">
+                <!-- Güvenlik Durumu -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-shield-check"></i>
+                            Güvenlik Durumu
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="security-score mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Güvenlik Skoru</span>
+                                <span class="fw-bold @GetSecurityScoreClass(securityScore)">@securityScore/100</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar @GetSecurityScoreClass(securityScore)" 
+                                     style="width: @(securityScore)%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="security-checklist">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi @(hasStrongPassword ? "bi-check-circle text-success" : "bi-x-circle text-danger") me-2"></i>
+                                <small>Güçlü Şifre</small>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi @(twoFactorEnabled ? "bi-check-circle text-success" : "bi-x-circle text-danger") me-2"></i>
+                                <small>İki Faktörlü Doğrulama</small>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi @(hasVerifiedEmail ? "bi-check-circle text-success" : "bi-x-circle text-danger") me-2"></i>
+                                <small>Doğrulanmış E-posta</small>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi @(hasVerifiedPhone ? "bi-check-circle text-success" : "bi-x-circle text-danger") me-2"></i>
+                                <small>Doğrulanmış Telefon</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Güvenlik İpuçları -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-lightbulb"></i>
+                            Güvenlik İpuçları
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="bi bi-check text-success me-2"></i>
+                                <small>Güçlü ve benzersiz şifreler kullanın</small>
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check text-success me-2"></i>
+                                <small>İki faktörlü doğrulamayı aktifleştirin</small>
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check text-success me-2"></i>
+                                <small>Şüpheli aktiviteleri takip edin</small>
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check text-success me-2"></i>
+                                <small>Güvenilir cihazlardan giriş yapın</small>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isAuthenticated = false;
+    private bool isLoading = true;
+    private bool isChangingPassword = false;
+    private bool isChangingEmail = false;
+    private bool isChangingPhone = false;
+    private bool twoFactorEnabled = false;
+    private bool hasStrongPassword = true;
+    private bool hasVerifiedEmail = true;
+    private bool hasVerifiedPhone = true;
+    private int securityScore = 85;
+    private string currentEmail = "osmanali@example.com";
+    private string currentPhone = "+90 555 123 45 67";
+    private string newEmail = string.Empty;
+    private string newPhone = string.Empty;
+    private string emailChangePassword = string.Empty;
+    private string phoneChangePassword = string.Empty;
+    private ChangePasswordRequest changePasswordRequest = new();
+    private List<ActiveSession>? activeSessions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        if (isAuthenticated)
+        {
+            await LoadSecurityInfo();
+        }
+        isLoading = false;
+        AuthService.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    }
+
+    private async void OnAuthenticationStateChanged()
+    {
+        isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        if (isAuthenticated)
+        {
+            await LoadSecurityInfo();
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AuthService.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
+
+    private async Task LoadSecurityInfo()
+    {
+        try
+        {
+            isLoading = true;
+            // TODO: API'den güvenlik bilgilerini çek
+            // var securityInfo = await UserService.GetSecurityInfoAsync();
+            
+            // Şimdilik mock data
+            activeSessions = new List<ActiveSession>
+            {
+                new ActiveSession
+                {
+                    Id = Guid.NewGuid(),
+                    DeviceName = "Chrome - Windows 10",
+                    DeviceType = "Desktop",
+                    Location = "İstanbul, Türkiye",
+                    LastActivity = DateTime.Now.AddMinutes(-5),
+                    IsCurrent = true
+                },
+                new ActiveSession
+                {
+                    Id = Guid.NewGuid(),
+                    DeviceName = "Safari - iPhone",
+                    DeviceType = "Mobile",
+                    Location = "Ankara, Türkiye",
+                    LastActivity = DateTime.Now.AddHours(-2),
+                    IsCurrent = false
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Güvenlik bilgileri yüklenirken bir hata oluştu: " + ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ChangePassword()
+    {
+        try
+        {
+            isChangingPassword = true;
+            var success = await UserService.ChangePasswordAsync(changePasswordRequest);
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", "Şifre başarıyla değiştirildi!");
+                changePasswordRequest = new ChangePasswordRequest();
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Şifre değiştirilirken bir hata oluştu.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+        finally
+        {
+            isChangingPassword = false;
+        }
+    }
+
+    private async Task ChangeEmail()
+    {
+        try
+        {
+            isChangingEmail = true;
+            // TODO: API'ye e-posta değiştirme isteği gönder
+            await JSRuntime.InvokeVoidAsync("showSuccess", "E-posta değiştirme isteği gönderildi! Yeni e-posta adresinizi kontrol edin.");
+            newEmail = string.Empty;
+            emailChangePassword = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+        finally
+        {
+            isChangingEmail = false;
+        }
+    }
+
+    private async Task ChangePhone()
+    {
+        try
+        {
+            isChangingPhone = true;
+            // TODO: API'ye telefon değiştirme isteği gönder
+            await JSRuntime.InvokeVoidAsync("showSuccess", "Telefon değiştirme isteği gönderildi! SMS ile doğrulama kodu gönderilecek.");
+            newPhone = string.Empty;
+            phoneChangePassword = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+        finally
+        {
+            isChangingPhone = false;
+        }
+    }
+
+    private async Task ToggleTwoFactor()
+    {
+        try
+        {
+            // TODO: API'de 2FA durumunu değiştir
+            await JSRuntime.InvokeVoidAsync("showSuccess", 
+                twoFactorEnabled ? "İki faktörlü doğrulama aktifleştirildi!" : "İki faktörlü doğrulama devre dışı bırakıldı!");
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+    }
+
+    private async Task LogoutDevice(Guid sessionId)
+    {
+        try
+        {
+            var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Bu cihazdan çıkış yapmak istediğinizden emin misiniz?");
+            if (!confirmed) return;
+
+            // TODO: API'de oturumu sonlandır
+            await JSRuntime.InvokeVoidAsync("showSuccess", "Cihazdan çıkış yapıldı!");
+            await LoadSecurityInfo();
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+    }
+
+    private async Task LogoutAllDevices()
+    {
+        try
+        {
+            var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Tüm cihazlardan çıkış yapmak istediğinizden emin misiniz?");
+            if (!confirmed) return;
+
+            // TODO: API'de tüm oturumları sonlandır
+            await JSRuntime.InvokeVoidAsync("showSuccess", "Tüm cihazlardan çıkış yapıldı!");
+            await LoadSecurityInfo();
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+    }
+
+    private string GetDeviceIcon(string deviceType)
+    {
+        return deviceType switch
+        {
+            "Desktop" => "bi-laptop",
+            "Mobile" => "bi-phone",
+            "Tablet" => "bi-tablet",
+            _ => "bi-device-hdd"
+        };
+    }
+
+    private string GetSecurityScoreClass(int score)
+    {
+        return score switch
+        {
+            >= 80 => "bg-success",
+            >= 60 => "bg-warning",
+            _ => "bg-danger"
+        };
+    }
+}
+
+@* Models *@
+@code {
+    public class ActiveSession
+    {
+        public Guid Id { get; set; }
+        public string DeviceName { get; set; } = string.Empty;
+        public string DeviceType { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+        public DateTime LastActivity { get; set; }
+        public bool IsCurrent { get; set; }
+    }
+}

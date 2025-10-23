@@ -11,6 +11,11 @@ public class ReportsController : Controller
     private readonly IReportService _reportService;
     private readonly ILogger<ReportsController> _logger;
 
+    /// <summary>
+    /// ReportsController constructor
+    /// </summary>
+    /// <param name="reportService">Rapor servisi</param>
+    /// <param name="logger">Logger instance</param>
     public ReportsController(
         IReportService reportService,
         ILogger<ReportsController> logger)
@@ -20,8 +25,9 @@ public class ReportsController : Controller
     }
 
     /// <summary>
-    /// Sales dashboard page
+    /// Satış dashboard sayfasını göster
     /// </summary>
+    /// <returns>Satış dashboard sayfası</returns>
     public IActionResult Dashboard()
     {
         ViewData["Title"] = "SalesDashboard";
@@ -29,8 +35,9 @@ public class ReportsController : Controller
     }
 
     /// <summary>
-    /// Revenue analytics page
+    /// Gelir analitikleri sayfasını göster
     /// </summary>
+    /// <returns>Gelir analitikleri sayfası</returns>
     public IActionResult Revenue()
     {
         ViewData["Title"] = "RevenueAnalytics";
@@ -38,8 +45,9 @@ public class ReportsController : Controller
     }
 
     /// <summary>
-    /// Customer analytics page
+    /// Müşteri analitikleri sayfasını göster
     /// </summary>
+    /// <returns>Müşteri analitikleri sayfası</returns>
     public IActionResult Customers()
     {
         ViewData["Title"] = "CustomerAnalytics";
@@ -47,8 +55,9 @@ public class ReportsController : Controller
     }
 
     /// <summary>
-    /// Product performance page
+    /// Ürün performansı sayfasını göster
     /// </summary>
+    /// <returns>Ürün performansı sayfası</returns>
     public IActionResult Products()
     {
         ViewData["Title"] = "ProductPerformance";
@@ -56,8 +65,11 @@ public class ReportsController : Controller
     }
 
     /// <summary>
-    /// Get sales dashboard data
+    /// Satış dashboard verilerini getir
     /// </summary>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>JSON dashboard verileri</returns>
     [HttpGet]
     public async Task<IActionResult> GetSalesDashboard(DateTime? startDate = null, DateTime? endDate = null)
     {
@@ -81,8 +93,11 @@ public class ReportsController : Controller
     }
 
     /// <summary>
-    /// Get revenue analytics data
+    /// Gelir analitik verilerini getir
     /// </summary>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>JSON analitik verileri</returns>
     [HttpGet]
     public async Task<IActionResult> GetRevenueAnalytics(DateTime? startDate = null, DateTime? endDate = null)
     {
@@ -106,8 +121,11 @@ public class ReportsController : Controller
     }
 
     /// <summary>
-    /// Get customer analytics data
+    /// Müşteri analitik verilerini getir
     /// </summary>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>JSON müşteri verileri</returns>
     [HttpGet]
     public async Task<IActionResult> GetCustomerAnalytics(DateTime? startDate = null, DateTime? endDate = null)
     {
@@ -131,8 +149,11 @@ public class ReportsController : Controller
     }
 
     /// <summary>
-    /// Get product performance data
+    /// Ürün performans verilerini getir
     /// </summary>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>JSON ürün performans verileri</returns>
     [HttpGet]
     public async Task<IActionResult> GetProductPerformance(DateTime? startDate = null, DateTime? endDate = null)
     {
@@ -156,8 +177,12 @@ public class ReportsController : Controller
     }
 
     /// <summary>
-    /// Get chart data
+    /// Chart verilerini getir
     /// </summary>
+    /// <param name="chartType">Chart türü</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>JSON chart verileri</returns>
     [HttpGet]
     public async Task<IActionResult> GetChartData(string chartType, DateTime? startDate = null, DateTime? endDate = null)
     {
@@ -181,8 +206,10 @@ public class ReportsController : Controller
     }
 
     /// <summary>
-    /// Export report to Excel
+    /// Raporu Excel'e aktar
     /// </summary>
+    /// <param name="request">Aktarım parametreleri</param>
+    /// <returns>Excel dosyası</returns>
     [HttpPost]
     public async Task<IActionResult> ExportToExcel([FromBody] ReportExportRequest request)
     {
@@ -207,8 +234,10 @@ public class ReportsController : Controller
     }
 
     /// <summary>
-    /// Export report to PDF
+    /// Raporu PDF'e aktar
     /// </summary>
+    /// <param name="request">Aktarım parametreleri</param>
+    /// <returns>PDF dosyası</returns>
     [HttpPost]
     public async Task<IActionResult> ExportToPdf([FromBody] ReportExportRequest request)
     {

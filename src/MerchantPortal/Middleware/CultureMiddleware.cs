@@ -4,17 +4,26 @@ using System.Globalization;
 namespace Getir.MerchantPortal.Middleware;
 
 /// <summary>
-/// Custom culture middleware for better localization handling
+/// Özelleştirilmiş kültür middleware'i
 /// </summary>
 public class CultureMiddleware
 {
     private readonly RequestDelegate _next;
 
+    /// <summary>
+    /// CultureMiddleware constructor
+    /// </summary>
+    /// <param name="next">Sonraki middleware</param>
     public CultureMiddleware(RequestDelegate next)
     {
         _next = next;
     }
 
+    /// <summary>
+    /// Middleware'i çalıştır
+    /// </summary>
+    /// <param name="context">HTTP context</param>
+    /// <returns>Task</returns>
     public async Task InvokeAsync(HttpContext context)
     {
         // Get culture from cookie
@@ -51,10 +60,15 @@ public class CultureMiddleware
 }
 
 /// <summary>
-/// Extension method to register the middleware
+/// Middleware kayıt extension metodu
 /// </summary>
 public static class CultureMiddlewareExtensions
 {
+    /// <summary>
+    /// Culture middleware'i kaydet
+    /// </summary>
+    /// <param name="builder">Application builder</param>
+    /// <returns>Application builder</returns>
     public static IApplicationBuilder UseCultureMiddleware(this IApplicationBuilder builder)
     {
         return builder.UseMiddleware<CultureMiddleware>();

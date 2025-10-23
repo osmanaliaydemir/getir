@@ -1,32 +1,32 @@
 namespace Getir.Domain.Enums;
 
 /// <summary>
-/// Inventory count status
+/// Envanter sayım durumları
 /// </summary>
 public enum InventoryCountStatus
 {
     /// <summary>
-    /// Count is in progress
+    /// Envanter sayımı devam ediyor
     /// </summary>
     InProgress = 0,
     
     /// <summary>
-    /// Count has been completed
+    /// Envanter sayımı tamamlandı
     /// </summary>
     Completed = 1,
     
     /// <summary>
-    /// Count has been cancelled
+    /// Envanter sayımı iptal edildi
     /// </summary>
     Cancelled = 2,
     
     /// <summary>
-    /// Count is pending approval
+    /// Envanter sayımı onay bekliyor
     /// </summary>
     PendingApproval = 3,
     
     /// <summary>
-    /// Count has been approved
+    /// Envanter sayımı onaylandı
     /// </summary>
     Approved = 4
 }

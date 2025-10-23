@@ -1,32 +1,32 @@
 namespace Getir.Domain.Enums;
 
 /// <summary>
-/// Inventory discrepancy status
+/// Stok sapması durumları
 /// </summary>
 public enum InventoryDiscrepancyStatus
 {
     /// <summary>
-    /// Discrepancy is pending resolution
+    /// Stok sapması bekleniyor
     /// </summary>
     Pending = 0,
     
     /// <summary>
-    /// Discrepancy has been resolved
+    /// Stok sapması çözüldü
     /// </summary>
     Resolved = 1,
     
     /// <summary>
-    /// Discrepancy is under investigation
+    /// Stok sapması incelemeye alındı
     /// </summary>
     Investigating = 2,
     
     /// <summary>
-    /// Discrepancy has been approved
+    /// Stok sapması onaylandı
     /// </summary>
     Approved = 3,
     
     /// <summary>
-    /// Discrepancy has been rejected
+    /// Stok sapması reddedildi
     /// </summary>
     Rejected = 4
 }

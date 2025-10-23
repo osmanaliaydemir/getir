@@ -5,7 +5,7 @@ namespace Getir.Application.Common;
 /// </summary>
 public static class ErrorCodes
 {
-    // General errors
+    #region General errors
     public const string INTERNAL_ERROR = "INTERNAL_ERROR";
     public const string VALIDATION_ERROR = "VALIDATION_ERROR";
     public const string NOT_FOUND = "NOT_FOUND";
@@ -15,18 +15,24 @@ public static class ErrorCodes
     public const string BAD_REQUEST = "BAD_REQUEST";
     public const string INVALID_OPERATION = "INVALID_OPERATION";
     
-    // Transaction errors
+    #endregion
+
+    #region Transaction errors
     public const string TRANSACTION_ERROR = "TRANSACTION_ERROR";
     public const string CONCURRENCY_ERROR = "CONCURRENCY_ERROR";
     
-    // Authentication errors
+    #endregion
+
+    #region Authentication errors
     public const string AUTH_EMAIL_EXISTS = "AUTH_EMAIL_EXISTS";
     public const string AUTH_INVALID_CREDENTIALS = "AUTH_INVALID_CREDENTIALS";
     public const string AUTH_ACCOUNT_DEACTIVATED = "AUTH_ACCOUNT_DEACTIVATED";
     public const string AUTH_INVALID_REFRESH_TOKEN = "AUTH_INVALID_REFRESH_TOKEN";
     public const string AUTH_REFRESH_TOKEN_EXPIRED = "AUTH_REFRESH_TOKEN_EXPIRED";
     
-    // Business logic errors
+    #endregion
+
+    #region Business logic errors
     public const string INSUFFICIENT_STOCK = "INSUFFICIENT_STOCK";
     public const string BELOW_MINIMUM_ORDER = "BELOW_MINIMUM_ORDER";
     public const string ORDER_NOT_FOUND = "ORDER_NOT_FOUND";
@@ -42,13 +48,18 @@ public static class ErrorCodes
     public const string PRODUCT_ALREADY_IN_FAVORITES = "PRODUCT_ALREADY_IN_FAVORITES";
     public const string PRODUCT_NOT_IN_FAVORITES = "PRODUCT_NOT_IN_FAVORITES";
     
-    // Courier errors
+    #endregion
+
+    #region Courier errors
     public const string COURIER_NOT_FOUND = "COURIER_NOT_FOUND";
     public const string COURIER_NOT_AVAILABLE = "COURIER_NOT_AVAILABLE";
     public const string INVALID_STOCK_QUANTITY = "INVALID_STOCK_QUANTITY";
     
-    // System errors
+    #endregion
+
+    #region System errors
     public const string EXTERNAL_SERVICE_ERROR = "EXTERNAL_SERVICE_ERROR";
     public const string RATE_LIMIT_EXCEEDED = "RATE_LIMIT_EXCEEDED";
     public const string SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE";
+    #endregion
 }

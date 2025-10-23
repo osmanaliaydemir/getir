@@ -7,6 +7,11 @@ public class SettingsService : ISettingsService
     private readonly IApiClient _apiClient;
     private readonly ILogger<SettingsService> _logger;
 
+    /// <summary>
+    /// SettingsService constructor
+    /// </summary>
+    /// <param name="apiClient">API client</param>
+    /// <param name="logger">Logger instance</param>
     public SettingsService(IApiClient apiClient, ILogger<SettingsService> logger)
     {
         _apiClient = apiClient;
@@ -14,7 +19,7 @@ public class SettingsService : ISettingsService
     }
 
     /// <summary>
-    /// Bildirim tercihlerini getirir.
+    /// Bildirim tercihlerini getir
     /// </summary>
     /// <returns>Bildirim tercihleri</returns>
     public async Task<MerchantNotificationPreferencesDto?> GetNotificationPreferencesAsync()
@@ -34,10 +39,10 @@ public class SettingsService : ISettingsService
     }
 
     /// <summary>
-    /// Bildirim tercihlerini günceller.
+    /// Bildirim tercihlerini güncelle
     /// </summary>
     /// <param name="preferences">Bildirim tercihleri</param>
-    /// <returns>Başarılı olup olmadığı</returns>
+    /// <returns>İşlem başarı durumu</returns>
     public async Task<bool> UpdateNotificationPreferencesAsync(UpdateNotificationPreferencesDto preferences)
     {
         try

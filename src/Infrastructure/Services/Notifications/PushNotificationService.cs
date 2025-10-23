@@ -41,6 +41,12 @@ public class PushNotificationService : IPushNotificationService
         }
     }
 
+    /// <summary>
+    /// Push notification gönder
+    /// </summary>
+    /// <param name="request">Push notification isteği</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Push notification gönderim sonucu</returns>
     public async Task<Result> SendPushNotificationAsync(PushNotificationRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -83,6 +89,12 @@ public class PushNotificationService : IPushNotificationService
         }
     }
 
+    /// <summary>
+    /// Birden fazla push notification gönder
+    /// </summary>
+    /// <param name="requests">Push notification istekleri</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Birden fazla push notification gönderim sonucu</returns>
     public async Task<Result> SendBulkPushNotificationAsync(IEnumerable<PushNotificationRequest> requests, CancellationToken cancellationToken = default)
     {
         try
@@ -136,6 +148,12 @@ public class PushNotificationService : IPushNotificationService
         }
     }
 
+    /// <summary>
+    /// Push notification to topic gönder
+    /// </summary>
+    /// <param name="request">Push notification to topic isteği</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Push notification to topic gönderim sonucu</returns>
     public async Task<Result> SendPushToTopicAsync(PushTopicRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -196,6 +214,13 @@ public class PushNotificationService : IPushNotificationService
         }
     }
 
+    /// <summary>
+    /// Push notification to user gönder
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="request">Push notification to user isteği</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Push notification to user gönderim sonucu</returns>
     public async Task<Result> SendPushToUserAsync(Guid userId, PushNotificationRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -246,6 +271,12 @@ public class PushNotificationService : IPushNotificationService
         }
     }
 
+    /// <summary>
+    /// Device token kaydet
+    /// </summary>
+    /// <param name="request">Device token isteği</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Device token kaydetme sonucu</returns>
     public async Task<Result> RegisterDeviceTokenAsync(DeviceTokenRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -307,6 +338,12 @@ public class PushNotificationService : IPushNotificationService
         }
     }
 
+    /// <summary>
+    /// Device token sil
+    /// </summary>
+    /// <param name="deviceToken">Device token</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Device token silme sonucu</returns>
     public async Task<Result> UnregisterDeviceTokenAsync(string deviceToken, CancellationToken cancellationToken = default)
     {
         try
@@ -343,6 +380,12 @@ public class PushNotificationService : IPushNotificationService
         }
     }
 
+    /// <summary>
+    /// Push notification durumunu getir
+    /// </summary>
+    /// <param name="messageId">Mesaj ID</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Push notification durumunu</returns>
     public Task<Result<PushNotificationStatus>> GetNotificationStatusAsync(string messageId, CancellationToken cancellationToken = default)
     {
         try
@@ -367,6 +410,11 @@ public class PushNotificationService : IPushNotificationService
 
     #region Helper Methods
 
+    /// <summary>
+    /// FCM mesajı oluştur
+    /// </summary>
+    /// <param name="request">Push notification isteği</param>
+    /// <returns>FCM mesajı</returns>
     private object CreateFcmMessage(PushNotificationRequest request)
     {
         return new
@@ -407,6 +455,12 @@ public class PushNotificationService : IPushNotificationService
         };
     }
 
+    /// <summary>
+    /// FCM API'ye gönder
+    /// </summary>
+    /// <param name="fcmMessage">FCM mesajı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>FCM API'ye gönderim sonucu</returns>
     private async Task<Result> SendToFcmAsync(object fcmMessage, CancellationToken cancellationToken)
     {
         try
@@ -435,6 +489,11 @@ public class PushNotificationService : IPushNotificationService
         }
     }
 
+    /// <summary>
+    /// Device token'ı maskele
+    /// </summary>
+    /// <param name="deviceToken">Device token</param>
+    /// <returns>Maskeleli device token</returns>
     private string MaskDeviceToken(string deviceToken)
     {
         if (string.IsNullOrEmpty(deviceToken) || deviceToken.Length < 8)

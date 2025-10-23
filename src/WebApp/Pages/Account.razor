@@ -1,0 +1,675 @@
+@page "/account"
+@inject UserService UserService
+@inject OrderService OrderService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<PageTitle>Hesabım - Getir</PageTitle>
+
+@if (isLoading)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Yükleniyor...</span>
+        </div>
+        <p class="mt-3">Hesap bilgileriniz yükleniyor...</p>
+    </div>
+}
+else if (!isAuthenticated)
+{
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center">
+                <div class="card">
+                    <div class="card-body py-5">
+                        <i class="bi bi-person-x display-1 text-warning mb-4"></i>
+                        <h3>Giriş Yapın</h3>
+                        <p class="text-muted mb-4">
+                            Hesap bilgilerinizi görüntülemek için giriş yapmanız gerekiyor.
+                        </p>
+                        <a href="/login" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            Giriş Yap
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Hesabım</li>
+            </ol>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-lg-3 col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <div class="profile-avatar">
+                                <i class="bi bi-person-circle display-1 text-primary"></i>
+                            </div>
+                            <h5 class="mt-3">@(userProfile?.FirstName) @(userProfile?.LastName)</h5>
+                            <p class="text-muted small">@userProfile?.Email</p>
+                        </div>
+                        
+                        <nav class="nav flex-column">
+                            <a class="nav-link @(activeTab == "profile" ? "active" : "")" @onclick="@(() => SetActiveTab("profile"))">
+                                <i class="bi bi-person"></i> Profil Bilgileri
+                            </a>
+                            <a class="nav-link @(activeTab == "orders" ? "active" : "")" @onclick="@(() => SetActiveTab("orders"))">
+                                <i class="bi bi-bag"></i> Siparişlerim
+                            </a>
+                            <a class="nav-link @(activeTab == "addresses" ? "active" : "")" @onclick="@(() => SetActiveTab("addresses"))">
+                                <i class="bi bi-geo-alt"></i> Adreslerim
+                            </a>
+                            <a class="nav-link @(activeTab == "security" ? "active" : "")" @onclick="@(() => SetActiveTab("security"))">
+                                <i class="bi bi-shield-lock"></i> Güvenlik
+                            </a>
+                            <a class="nav-link" @onclick="HandleLogout">
+                                <i class="bi bi-box-arrow-right"></i> Çıkış Yap
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9 col-md-8">
+                @if (activeTab == "profile")
+                {
+                    <!-- Profile Information -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-person"></i>
+                                Profil Bilgileri
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (isEditingProfile)
+                            {
+                                <EditForm Model="profileUpdateRequest" OnValidSubmit="UpdateProfile">
+                                    <DataAnnotationsValidator />
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Ad</label>
+                                            <InputText class="form-control" @bind-Value="profileUpdateRequest.FirstName" />
+                                            <ValidationMessage For="@(() => profileUpdateRequest.FirstName)" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Soyad</label>
+                                            <InputText class="form-control" @bind-Value="profileUpdateRequest.LastName" />
+                                            <ValidationMessage For="@(() => profileUpdateRequest.LastName)" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Telefon</label>
+                                            <InputText class="form-control" @bind-Value="profileUpdateRequest.Phone" />
+                                            <ValidationMessage For="@(() => profileUpdateRequest.Phone)" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Doğum Tarihi</label>
+                                            <InputDate class="form-control" @bind-Value="profileUpdateRequest.BirthDate" />
+                                            <ValidationMessage For="@(() => profileUpdateRequest.BirthDate)" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Cinsiyet</label>
+                                            <InputSelect class="form-control" @bind-Value="profileUpdateRequest.Gender">
+                                                <option value="">Seçiniz</option>
+                                                <option value="Male">Erkek</option>
+                                                <option value="Female">Kadın</option>
+                                                <option value="Other">Diğer</option>
+                                            </InputSelect>
+                                            <ValidationMessage For="@(() => profileUpdateRequest.Gender)" />
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary" disabled="@isUpdatingProfile">
+                                            @if (isUpdatingProfile)
+                                            {
+                                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            }
+                                            Kaydet
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" @onclick="CancelEditProfile">
+                                            İptal
+                                        </button>
+                                    </div>
+                                </EditForm>
+                            }
+                            else
+                            {
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Ad</label>
+                                        <p class="form-control-plaintext">@userProfile?.FirstName</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Soyad</label>
+                                        <p class="form-control-plaintext">@userProfile?.LastName</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">E-posta</label>
+                                        <p class="form-control-plaintext">@userProfile?.Email</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Telefon</label>
+                                        <p class="form-control-plaintext">@userProfile?.Phone</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Doğum Tarihi</label>
+                                        <p class="form-control-plaintext">@userProfile?.BirthDate.ToString("dd.MM.yyyy")</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Cinsiyet</label>
+                                        <p class="form-control-plaintext">@userProfile?.Gender</p>
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary" @onclick="StartEditProfile">
+                                    <i class="bi bi-pencil"></i>
+                                    Düzenle
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+                else if (activeTab == "orders")
+                {
+                    <!-- Orders -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-bag"></i>
+                                Siparişlerim
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (isLoadingOrders)
+                            {
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Yükleniyor...</span>
+                                    </div>
+                                    <p class="mt-3">Siparişler yükleniyor...</p>
+                                </div>
+                            }
+                            else if (orders?.Any() == true)
+                            {
+                                @foreach (var order in orders)
+                                {
+                                    <div class="order-item mb-4">
+                                        <div class="card">
+                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-0">Sipariş #@order.OrderNumber</h6>
+                                                    <small class="text-muted">@order.OrderDate.ToString("dd.MM.yyyy HH:mm")</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <span class="badge @GetOrderStatusBadgeClass(order.Status)">@order.Status</span>
+                                                    <div class="fw-bold">₺@order.TotalAmount.ToString("F2")</div>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-8">
+                                                        <h6>@order.Merchant.Name</h6>
+                                                        <div class="order-items">
+                                                            @foreach (var item in order.Items.Take(3))
+                                                            {
+                                                                <div class="d-flex align-items-center mb-2">
+                                                                    <img src="@(string.IsNullOrEmpty(item.ProductImageUrl) ? "https://via.placeholder.com/50x50/007bff/ffffff?text=" + Uri.EscapeDataString(item.ProductName) : item.ProductImageUrl)" 
+                                                                         class="me-3" width="50" height="50" alt="@item.ProductName" />
+                                                                    <div>
+                                                                        <div class="fw-bold">@item.ProductName</div>
+                                                                        <small class="text-muted">@item.Quantity adet - ₺@item.UnitPrice.ToString("F2")</small>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                            @if (order.Items.Count > 3)
+                                                            {
+                                                                <small class="text-muted">+@(order.Items.Count - 3) ürün daha</small>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4 text-end">
+                                                        <div class="order-actions">
+                                                            <button class="btn btn-outline-primary btn-sm mb-2" @onclick="@(() => ViewOrderDetails(order.Id))">
+                                                                <i class="bi bi-eye"></i> Detayları Gör
+                                                            </button>
+                                                            @if (order.Status == "Pending" || order.Status == "Confirmed")
+                                                            {
+                                                                <button class="btn btn-outline-danger btn-sm mb-2" @onclick="@(() => CancelOrder(order.Id))">
+                                                                    <i class="bi bi-x-circle"></i> İptal Et
+                                                                </button>
+                                                            }
+                                                            <button class="btn btn-outline-success btn-sm" @onclick="@(() => RepeatOrder(order.Id))">
+                                                                <i class="bi bi-arrow-repeat"></i> Tekrarla
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-center py-5">
+                                    <i class="bi bi-bag display-1 text-muted mb-4"></i>
+                                    <h4>Henüz siparişiniz yok</h4>
+                                    <p class="text-muted mb-4">İlk siparişinizi vermek için alışverişe başlayın!</p>
+                                    <a href="/merchants" class="btn btn-primary">
+                                        <i class="bi bi-shop"></i>
+                                        Mağazaları Gör
+                                    </a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+                else if (activeTab == "addresses")
+                {
+                    <!-- Addresses -->
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-geo-alt"></i>
+                                Adreslerim
+                            </h5>
+                            <button class="btn btn-primary btn-sm" @onclick="ShowAddAddressModal">
+                                <i class="bi bi-plus"></i>
+                                Yeni Adres
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            @if (addresses?.Any() == true)
+                            {
+                                <div class="row">
+                                    @foreach (var address in addresses)
+                                    {
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card @(address.IsDefault ? "border-primary" : "")">
+                                                <div class="card-body">
+                                                    <div class="d-flex justify-content-between align-items-start">
+                                                        <div>
+                                                            <h6 class="card-title">
+                                                                @address.Title
+                                                                @if (address.IsDefault)
+                                                                {
+                                                                    <span class="badge bg-primary ms-2">Varsayılan</span>
+                                                                }
+                                                            </h6>
+                                                            <p class="card-text">
+                                                                @address.AddressLine1<br>
+                                                                @if (!string.IsNullOrEmpty(address.AddressLine2))
+                                                                {
+                                                                    @address.AddressLine2<br>
+                                                                }
+                                                                @address.District, @address.City<br>
+                                                                @address.PostalCode
+                                                            </p>
+                                                        </div>
+                                                        <div class="dropdown">
+                                                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown">
+                                                                <i class="bi bi-three-dots"></i>
+                                                            </button>
+                                                            <ul class="dropdown-menu">
+                                                                <li><a class="dropdown-item" @onclick="@(() => EditAddress(address))">
+                                                                    <i class="bi bi-pencil"></i> Düzenle
+                                                                </a></li>
+                                                                <li><a class="dropdown-item" @onclick="@(() => SetDefaultAddress(address.Id))">
+                                                                    <i class="bi bi-star"></i> Varsayılan Yap
+                                                                </a></li>
+                                                                <li><hr class="dropdown-divider"></li>
+                                                                <li><a class="dropdown-item text-danger" @onclick="@(() => DeleteAddress(address.Id))">
+                                                                    <i class="bi bi-trash"></i> Sil
+                                                                </a></li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-5">
+                                    <i class="bi bi-geo-alt display-1 text-muted mb-4"></i>
+                                    <h4>Henüz adresiniz yok</h4>
+                                    <p class="text-muted mb-4">İlk adresinizi ekleyerek sipariş vermeye başlayın!</p>
+                                    <button class="btn btn-primary" @onclick="ShowAddAddressModal">
+                                        <i class="bi bi-plus"></i>
+                                        Adres Ekle
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+                else if (activeTab == "security")
+                {
+                    <!-- Security -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-shield-lock"></i>
+                                Güvenlik
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <EditForm Model="changePasswordRequest" OnValidSubmit="ChangePassword">
+                                <DataAnnotationsValidator />
+                                <h6>Şifre Değiştir</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Mevcut Şifre</label>
+                                        <InputText type="password" class="form-control" @bind-Value="changePasswordRequest.CurrentPassword" />
+                                        <ValidationMessage For="@(() => changePasswordRequest.CurrentPassword)" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Yeni Şifre</label>
+                                        <InputText type="password" class="form-control" @bind-Value="changePasswordRequest.NewPassword" />
+                                        <ValidationMessage For="@(() => changePasswordRequest.NewPassword)" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Yeni Şifre Tekrar</label>
+                                        <InputText type="password" class="form-control" @bind-Value="changePasswordRequest.ConfirmPassword" />
+                                        <ValidationMessage For="@(() => changePasswordRequest.ConfirmPassword)" />
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary" disabled="@isChangingPassword">
+                                    @if (isChangingPassword)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    }
+                                    Şifreyi Değiştir
+                                </button>
+                            </EditForm>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isAuthenticated = false;
+    private bool isLoading = true;
+    private bool isEditingProfile = false;
+    private bool isUpdatingProfile = false;
+    private bool isChangingPassword = false;
+    private bool isLoadingOrders = true;
+    
+    private string activeTab = "profile";
+    private UserProfileResponse? userProfile;
+    private List<OrderResponse>? orders;
+    private List<AddressResponse>? addresses;
+    
+    private UpdateUserProfileRequest profileUpdateRequest = new();
+    private ChangePasswordRequest changePasswordRequest = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        Console.WriteLine($"Account.razor - isAuthenticated: {isAuthenticated}");
+        
+        AuthService.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        
+        if (isAuthenticated)
+        {
+            await LoadUserData();
+        }
+        
+        isLoading = false;
+    }
+
+    private async void OnAuthenticationStateChanged()
+    {
+        isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        if (isAuthenticated)
+        {
+            await LoadUserData();
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AuthService.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
+
+    private async Task LoadUserData()
+    {
+        try
+        {
+            // Load user profile
+            userProfile = await UserService.GetUserProfileAsync();
+            
+            // Load addresses
+            addresses = await UserService.GetUserAddressesAsync();
+            
+            // Load orders
+            await LoadOrders();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading user data: {ex.Message}");
+        }
+    }
+
+    private async Task LoadOrders()
+    {
+        try
+        {
+            isLoadingOrders = true;
+            orders = await OrderService.GetUserOrdersAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading orders: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingOrders = false;
+        }
+    }
+
+    private void SetActiveTab(string tab)
+    {
+        activeTab = tab;
+    }
+
+    private void StartEditProfile()
+    {
+        isEditingProfile = true;
+        profileUpdateRequest = new UpdateUserProfileRequest
+        {
+            FirstName = userProfile?.FirstName ?? "",
+            LastName = userProfile?.LastName ?? "",
+            Phone = userProfile?.Phone ?? "",
+            BirthDate = userProfile?.BirthDate ?? DateTime.Now.AddYears(-25),
+            Gender = userProfile?.Gender ?? ""
+        };
+    }
+
+    private void CancelEditProfile()
+    {
+        isEditingProfile = false;
+    }
+
+    private async Task UpdateProfile()
+    {
+        try
+        {
+            isUpdatingProfile = true;
+            var success = await UserService.UpdateUserProfileAsync(profileUpdateRequest);
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", "Profil bilgileri başarıyla güncellendi!");
+                await LoadUserData();
+                isEditingProfile = false;
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Profil güncellenirken bir hata oluştu.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+        finally
+        {
+            isUpdatingProfile = false;
+        }
+    }
+
+    private async Task ChangePassword()
+    {
+        try
+        {
+            isChangingPassword = true;
+            var success = await UserService.ChangePasswordAsync(changePasswordRequest);
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", "Şifre başarıyla değiştirildi!");
+                changePasswordRequest = new ChangePasswordRequest();
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Şifre değiştirilirken bir hata oluştu.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+        finally
+        {
+            isChangingPassword = false;
+        }
+    }
+
+    private void ViewOrderDetails(Guid orderId)
+    {
+        Navigation.NavigateTo($"/order/{orderId}");
+    }
+
+    private async Task CancelOrder(Guid orderId)
+    {
+        try
+        {
+            var success = await OrderService.CancelOrderAsync(orderId);
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", "Sipariş iptal edildi!");
+                await LoadOrders();
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Sipariş iptal edilirken bir hata oluştu.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+    }
+
+    private async Task RepeatOrder(Guid orderId)
+    {
+        try
+        {
+            var success = await OrderService.RepeatOrderAsync(orderId);
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", "Sipariş tekrarlandı! Sepetinize eklendi.");
+                Navigation.NavigateTo("/cart");
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Sipariş tekrarlanırken bir hata oluştu.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+    }
+
+    private void ShowAddAddressModal()
+    {
+        // TODO: Implement add address modal
+        JSRuntime.InvokeVoidAsync("showInfo", "Adres ekleme özelliği yakında!");
+    }
+
+    private void EditAddress(AddressResponse address)
+    {
+        // TODO: Implement edit address modal
+        JSRuntime.InvokeVoidAsync("showInfo", "Adres düzenleme özelliği yakında!");
+    }
+
+    private async Task SetDefaultAddress(Guid addressId)
+    {
+        // TODO: Implement set default address
+        await JSRuntime.InvokeVoidAsync("showInfo", "Varsayılan adres özelliği yakında!");
+    }
+
+    private async Task DeleteAddress(Guid addressId)
+    {
+        try
+        {
+            var success = await UserService.DeleteAddressAsync(addressId);
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", "Adres silindi!");
+                await LoadUserData();
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Adres silinirken bir hata oluştu.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.LogoutAsync();
+        isAuthenticated = false;
+        Navigation.NavigateTo("/");
+    }
+
+    private string GetOrderStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Pending" => "bg-warning",
+            "Confirmed" => "bg-info",
+            "Preparing" => "bg-primary",
+            "OnTheWay" => "bg-success",
+            "Delivered" => "bg-success",
+            "Cancelled" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

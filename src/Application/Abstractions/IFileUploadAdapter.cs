@@ -1,18 +1,17 @@
 namespace Getir.Application.Abstractions;
 
 /// <summary>
-/// Adapter interface for converting framework-specific file upload types
-/// to framework-agnostic IUploadedFile
+/// Framework-specific dosya yükleme tiplerini framework-agnostic IUploadedFile'a dönüştürme için adapter interface'i
 /// </summary>
 public interface IFileUploadAdapter
 {
     /// <summary>
-    /// Converts a framework-specific file upload object to IUploadedFile
+    /// Framework-specific dosya yükleme objesini IUploadedFile'a dönüştür
     /// </summary>
     IUploadedFile Adapt(object frameworkFile);
     
     /// <summary>
-    /// Converts multiple framework-specific file upload objects to IUploadedFile array
+    /// Framework-specific dosya yükleme objelerini IUploadedFile dizisine dönüştür
     /// </summary>
     IUploadedFile[] AdaptMultiple(object[] frameworkFiles);
 }

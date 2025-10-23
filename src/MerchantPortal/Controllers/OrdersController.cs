@@ -11,12 +11,23 @@ public class OrdersController : Controller
     private readonly IOrderService _orderService;
     private readonly ILogger<OrdersController> _logger;
 
+    /// <summary>
+    /// OrdersController constructor
+    /// </summary>
+    /// <param name="orderService">Sipariş servisi</param>
+    /// <param name="logger">Logger instance</param>
     public OrdersController(IOrderService orderService, ILogger<OrdersController> logger)
     {
         _orderService = orderService;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Sipariş listesini göster
+    /// </summary>
+    /// <param name="page">Sayfa numarası</param>
+    /// <param name="status">Sipariş durumu</param>
+    /// <returns>Sipariş listesi sayfası</returns>
     public async Task<IActionResult> Index(int page = 1, string? status = null)
     {
         try
@@ -56,6 +67,11 @@ public class OrdersController : Controller
         }
     }
 
+    /// <summary>
+    /// Bekleyen siparişleri göster
+    /// </summary>
+    /// <param name="page">Sayfa numarası</param>
+    /// <returns>Bekleyen siparişler sayfası</returns>
     public async Task<IActionResult> Pending(int page = 1)
     {
         var orders = await _orderService.GetPendingOrdersAsync(page, 20);
@@ -65,6 +81,11 @@ public class OrdersController : Controller
         return View(orderList);
     }
 
+    /// <summary>
+    /// Sipariş detaylarını göster
+    /// </summary>
+    /// <param name="id">Sipariş ID</param>
+    /// <returns>Sipariş detay sayfası veya 404</returns>
     [HttpGet]
     public async Task<IActionResult> Details(Guid id)
     {
@@ -78,6 +99,13 @@ public class OrdersController : Controller
         return View(order);
     }
 
+    /// <summary>
+    /// Sipariş durumunu güncelle
+    /// </summary>
+    /// <param name="id">Sipariş ID</param>
+    /// <param name="status">Yeni durum</param>
+    /// <param name="notes">Notlar</param>
+    /// <returns>Sipariş detay sayfasına yönlendirme</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateStatus(Guid id, string status, string? notes = null)

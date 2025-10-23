@@ -11,6 +11,11 @@ public class MerchantReviewsController : Controller
     private readonly IReviewService _reviewService;
     private readonly ILogger<MerchantReviewsController> _logger;
 
+    /// <summary>
+    /// MerchantReviewsController constructor
+    /// </summary>
+    /// <param name="reviewService">Review servisi</param>
+    /// <param name="logger">Logger instance</param>
     public MerchantReviewsController(IReviewService reviewService, ILogger<MerchantReviewsController> logger)
     {
         _reviewService = reviewService;
@@ -18,8 +23,10 @@ public class MerchantReviewsController : Controller
     }
 
     /// <summary>
-    /// Merchant'ın aldığı değerlendirmeleri göster
+    /// Merchant değerlendirmelerini göster
     /// </summary>
+    /// <param name="filter">Filtre parametreleri</param>
+    /// <returns>Değerlendirmeler sayfası veya giriş sayfasına yönlendirme</returns>
     public async Task<IActionResult> Index(ReviewFilterModel? filter = null)
     {
         var merchantIdStr = HttpContext.Session.GetString("MerchantId");
@@ -42,8 +49,10 @@ public class MerchantReviewsController : Controller
     }
 
     /// <summary>
-    /// Merchant'ın kuryelerini değerlendirmeleri göster
+    /// Kurye değerlendirmelerini göster
     /// </summary>
+    /// <param name="filter">Filtre parametreleri</param>
+    /// <returns>Kurye değerlendirmeleri sayfası veya giriş sayfasına yönlendirme</returns>
     public async Task<IActionResult> CourierReviews(ReviewFilterModel? filter = null)
     {
         var merchantIdStr = HttpContext.Session.GetString("MerchantId");
@@ -66,8 +75,9 @@ public class MerchantReviewsController : Controller
     }
 
     /// <summary>
-    /// Genel review dashboard
+    /// Review dashboard'unu göster
     /// </summary>
+    /// <returns>Review dashboard sayfası veya giriş sayfasına yönlendirme</returns>
     public async Task<IActionResult> Dashboard()
     {
         var merchantIdStr = HttpContext.Session.GetString("MerchantId");
@@ -84,6 +94,9 @@ public class MerchantReviewsController : Controller
     /// <summary>
     /// Review'a yanıt ver
     /// </summary>
+    /// <param name="reviewId">Review ID</param>
+    /// <param name="request">Yanıt bilgileri</param>
+    /// <returns>JSON sonuç</returns>
     [HttpPost]
     public async Task<IActionResult> RespondToReview(Guid reviewId, ReviewResponseRequest request)
     {
@@ -100,6 +113,9 @@ public class MerchantReviewsController : Controller
     /// <summary>
     /// Review'ı beğen/beğenme
     /// </summary>
+    /// <param name="reviewId">Review ID</param>
+    /// <param name="isLiked">Beğeni durumu</param>
+    /// <returns>JSON sonuç</returns>
     [HttpPost]
     public async Task<IActionResult> ToggleLike(Guid reviewId, bool isLiked)
     {
@@ -111,6 +127,9 @@ public class MerchantReviewsController : Controller
     /// <summary>
     /// Review'ı rapor et
     /// </summary>
+    /// <param name="reviewId">Review ID</param>
+    /// <param name="request">Rapor bilgileri</param>
+    /// <returns>JSON sonuç</returns>
     [HttpPost]
     public async Task<IActionResult> ReportReview(Guid reviewId, ReviewReportRequest request)
     {

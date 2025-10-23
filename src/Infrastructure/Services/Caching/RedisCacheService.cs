@@ -66,6 +66,12 @@ public class RedisCacheService : ICacheService
 
     #region ICacheService Implementation
 
+    /// <summary>
+    /// Cache'den değer getir
+    /// </summary>
+    /// <param name="key">Cache key</param>
+    /// <param name="cancellationToken">İptal token</param>
+    /// <returns>Cache değeri veya null</returns>
     public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default) where T : class
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
@@ -107,6 +113,14 @@ public class RedisCacheService : ICacheService
         }
     }
 
+    /// <summary>
+    /// Cache'e değer set
+    /// </summary>
+    /// <param name="key">Cache key</param>
+    /// <param name="value">Cache değeri</param>
+    /// <param name="expiration">Cache süresi</param>
+    /// <param name="cancellationToken">İptal token</param>
+    /// <returns>İşlem başarı durumu</returns>
     public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
@@ -144,6 +158,12 @@ public class RedisCacheService : ICacheService
         }
     }
 
+    /// <summary>
+    /// Cache'den değer sil
+    /// </summary>
+    /// <param name="key">Cache key</param>
+    /// <param name="cancellationToken">İptal token</param>
+    /// <returns>İşlem başarı durumu</returns>
     public async Task RemoveAsync(string key, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
@@ -174,6 +194,12 @@ public class RedisCacheService : ICacheService
         }
     }
 
+    /// <summary>
+    /// Cache'den pattern'e göre değerleri sil
+    /// </summary>
+    /// <param name="pattern">Cache pattern</param>
+    /// <param name="cancellationToken">İptal token</param>
+    /// <returns>İşlem başarı durumu</returns>
     public async Task RemoveByPatternAsync(string pattern, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(pattern);
@@ -227,6 +253,12 @@ public class RedisCacheService : ICacheService
         }
     }
 
+    /// <summary>
+    /// Cache'de değer var mı kontrol et
+    /// </summary>
+    /// <param name="key">Cache key</param>
+    /// <param name="cancellationToken">İptal token</param>
+    /// <returns>Cache değeri var mı</returns>
     public async Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
@@ -256,6 +288,11 @@ public class RedisCacheService : ICacheService
         }
     }
 
+    /// <summary>
+    /// Cache'i temizle
+    /// </summary>
+    /// <param name="cancellationToken">İptal token</param>
+    /// <returns>İşlem başarı durumu</returns>
     public async Task ClearAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -304,6 +341,7 @@ public class RedisCacheService : ICacheService
     /// Checks if Redis is available with circuit breaker pattern
     /// Prevents continuous connection attempts when Redis is down
     /// </summary>
+    /// <returns>Redis bağlantısı var mı</returns>
     private async Task<bool> IsRedisAvailableAsync()
     {
         // If Redis was never initialized, return false
@@ -371,6 +409,9 @@ public class RedisCacheService : ICacheService
     /// <summary>
     /// Gets multiple keys at once (pipeline optimization)
     /// </summary>
+    /// <param name="keys">Cache key listesi</param>
+    /// <param name="cancellationToken">İptal token</param>
+    /// <returns>Cache değerleri</returns>
     public async Task<Dictionary<string, T?>> GetManyAsync<T>(IEnumerable<string> keys, CancellationToken cancellationToken = default) where T : class
     {
         var result = new Dictionary<string, T?>();
@@ -416,6 +457,10 @@ public class RedisCacheService : ICacheService
     /// <summary>
     /// Increments a counter (useful for rate limiting, analytics)
     /// </summary>
+    /// <param name="key">Cache key</param>
+    /// <param name="value">Artırılacak değer</param>
+    /// <param name="expiration">Cache süresi</param>
+    /// <returns>Artırılmış değer</returns>
     public async Task<long> IncrementAsync(string key, long value = 1, TimeSpan? expiration = null)
     {
         try

@@ -31,6 +31,12 @@ public class SmsService : ISmsService
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "Getir-SMS-Service/1.0");
     }
 
+    /// <summary>
+    /// SMS gönder
+    /// </summary>
+    /// <param name="request">SMS isteği</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>SMS gönderim sonucu</returns>
     public async Task<Result> SendSmsAsync(SmsRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -73,6 +79,12 @@ public class SmsService : ISmsService
         }
     }
 
+    /// <summary>
+    /// Birden fazla SMS gönder
+    /// </summary>
+    /// <param name="requests">SMS istekleri</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Birden fazla SMS gönderim sonucu</returns>
     public async Task<Result> SendBulkSmsAsync(IEnumerable<SmsRequest> requests, CancellationToken cancellationToken = default)
     {
         try
@@ -120,6 +132,12 @@ public class SmsService : ISmsService
         }
     }
 
+    /// <summary>
+    /// Template ile SMS gönder
+    /// </summary>
+    /// <param name="request">Template ile SMS isteği</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Template ile SMS gönderim sonucu</returns>
     public async Task<Result> SendTemplateSmsAsync(SmsTemplateRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -152,6 +170,12 @@ public class SmsService : ISmsService
         }
     }
 
+    /// <summary>
+    /// Telefon numarasını doğrula
+    /// </summary>
+    /// <param name="phoneNumber">Telefon numarası</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Telefon numarasını doğrulama sonucu</returns>
     public Task<Result<bool>> ValidatePhoneNumberAsync(string phoneNumber, CancellationToken cancellationToken = default)
     {
         try
@@ -183,6 +207,12 @@ public class SmsService : ISmsService
         }
     }
 
+    /// <summary>
+    /// SMS teslimat durumunu getir
+    /// </summary>
+    /// <param name="messageId">Mesaj ID</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>SMS teslimat durumunu</returns>
     public async Task<Result<SmsDeliveryStatus>> GetDeliveryStatusAsync(string messageId, CancellationToken cancellationToken = default)
     {
         try
@@ -204,6 +234,11 @@ public class SmsService : ISmsService
         }
     }
 
+    /// <summary>
+    /// SMS bakiyeyi getir
+    /// </summary>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>SMS bakiyeyi</returns>
     public async Task<Result<SmsBalance>> GetBalanceAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -225,6 +260,13 @@ public class SmsService : ISmsService
         }
     }
 
+    /// <summary>
+    /// OTP SMS gönder
+    /// </summary>
+    /// <param name="phoneNumber">Telefon numarası</param>
+    /// <param name="otpCode">OTP kodu</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>OTP SMS gönderim sonucu</returns>
     public async Task<Result> SendOtpSmsAsync(string phoneNumber, string otpCode, CancellationToken cancellationToken = default)
     {
         try
@@ -250,6 +292,13 @@ public class SmsService : ISmsService
 
     #region Provider-Specific Implementations
 
+    /// <summary>
+    /// Netgsm üzerinden SMS gönder
+    /// </summary>
+    /// <param name="request">SMS isteği</param>
+    /// <param name="formattedPhone">Formatlanmış telefon numarası</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Netgsm üzerinden SMS gönderim sonucu</returns>
     private async Task<Result> SendViaNetgsmAsync(SmsRequest request, string formattedPhone, CancellationToken cancellationToken)
     {
         try
@@ -282,6 +331,13 @@ public class SmsService : ISmsService
         }
     }
 
+    /// <summary>
+    /// Iletimerkezi üzerinden SMS gönder
+    /// </summary>
+    /// <param name="request">SMS isteği</param>
+    /// <param name="formattedPhone">Formatlanmış telefon numarası</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Iletimerkezi üzerinden SMS gönderim sonucu</returns>
     private async Task<Result> SendViaIletimerkeziAsync(SmsRequest request, string formattedPhone, CancellationToken cancellationToken)
     {
         try
@@ -322,6 +378,13 @@ public class SmsService : ISmsService
         }
     }
 
+    /// <summary>
+    /// Mock SMS gönder
+    /// </summary>
+    /// <param name="request">SMS isteği</param>
+    /// <param name="formattedPhone">Formatlanmış telefon numarası</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Mock SMS gönderim sonucu</returns>
     private async Task<Result> SendViaMockAsync(SmsRequest request, string formattedPhone, CancellationToken cancellationToken)
     {
         // Mock implementation for development/testing
@@ -337,6 +400,11 @@ public class SmsService : ISmsService
 
     #region Helper Methods
 
+    /// <summary>
+    /// Telefon numarasını formatla
+    /// </summary>
+    /// <param name="phoneNumber">Telefon numarası</param>
+    /// <returns>Formatlanmış telefon numarası</returns>
     private string FormatPhoneNumber(string phoneNumber)
     {
         var cleaned = phoneNumber.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "");
@@ -359,6 +427,11 @@ public class SmsService : ISmsService
         return "+90" + cleaned;
     }
 
+    /// <summary>
+    /// Telefon numarasını maskele
+    /// </summary>
+    /// <param name="phoneNumber">Telefon numarası</param>
+    /// <returns>Maskeleli telefon numarası</returns>
     private string MaskPhoneNumber(string phoneNumber)
     {
         if (string.IsNullOrEmpty(phoneNumber) || phoneNumber.Length < 4)
@@ -367,6 +440,12 @@ public class SmsService : ISmsService
         return phoneNumber.Substring(0, 3) + "***" + phoneNumber.Substring(phoneNumber.Length - 2);
     }
 
+    /// <summary>
+    /// Template değişkenlerini değiştir
+    /// </summary>
+    /// <param name="template">Template</param>
+    /// <param name="variables">Değişkenler</param>
+    /// <returns>Template değişkenlerini değiştirilmiş template</returns>
     private string ReplaceTemplateVariables(string template, Dictionary<string, string> variables)
     {
         var result = template;
@@ -377,6 +456,12 @@ public class SmsService : ISmsService
         return result;
     }
 
+    /// <summary>
+    /// SMS template'i getir
+    /// </summary>
+    /// <param name="templateName">Template adı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>SMS template'i</returns>
     private Task<Result<SmsTemplate>> GetSmsTemplateAsync(string templateName, CancellationToken cancellationToken)
     {
         // In a real implementation, this would fetch from database or configuration
@@ -401,36 +486,69 @@ public class SmsService : ISmsService
 
     #region Delivery Status and Balance Methods (Mock implementations)
 
+    /// <summary>
+    /// Netgsm üzerinden SMS teslimat durumunu getir
+    /// </summary>
+    /// <param name="messageId">Mesaj ID</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Netgsm üzerinden SMS teslimat durumunu</returns>
     private Task<Result<SmsDeliveryStatus>> GetNetgsmDeliveryStatusAsync(string messageId, CancellationToken cancellationToken)
     {
         // Mock implementation
         return Task.FromResult(Result.Ok(new SmsDeliveryStatus(messageId, SmsStatus.Delivered, DateTime.UtcNow, null, null, 0)));
     }
 
+    /// <summary>
+    /// Iletimerkezi üzerinden SMS teslimat durumunu getir
+    /// </summary>
+    /// <param name="messageId">Mesaj ID</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Iletimerkezi üzerinden SMS teslimat durumunu</returns>
     private Task<Result<SmsDeliveryStatus>> GetIletimerkeziDeliveryStatusAsync(string messageId, CancellationToken cancellationToken)
     {
         // Mock implementation
         return Task.FromResult(Result.Ok(new SmsDeliveryStatus(messageId, SmsStatus.Delivered, DateTime.UtcNow, null, null, 0)));
     }
 
+    /// <summary>
+    /// Mock üzerinden SMS teslimat durumunu getir
+    /// </summary>
+    /// <param name="messageId">Mesaj ID</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Mock üzerinden SMS teslimat durumunu</returns>
     private Task<Result<SmsDeliveryStatus>> GetMockDeliveryStatusAsync(string messageId, CancellationToken cancellationToken)
     {
         // Mock implementation
         return Task.FromResult(Result.Ok(new SmsDeliveryStatus(messageId, SmsStatus.Delivered, DateTime.UtcNow, null, null, 0)));
     }
 
+    /// <summary>
+    /// Netgsm üzerinden SMS bakiyeyi getir
+    /// </summary>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Netgsm üzerinden SMS bakiyeyi</returns>
     private Task<Result<SmsBalance>> GetNetgsmBalanceAsync(CancellationToken cancellationToken)
     {
         // Mock implementation
         return Task.FromResult(Result.Ok(new SmsBalance(1000, 500, 1000, DateTime.UtcNow)));
     }
 
+    /// <summary>
+    /// Iletimerkezi üzerinden SMS bakiyeyi getir
+    /// </summary>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Iletimerkezi üzerinden SMS bakiyeyi</returns>
     private Task<Result<SmsBalance>> GetIletimerkeziBalanceAsync(CancellationToken cancellationToken)
     {
         // Mock implementation
         return Task.FromResult(Result.Ok(new SmsBalance(1000, 500, 1000, DateTime.UtcNow)));
     }
 
+    /// <summary>
+    /// Mock üzerinden SMS bakiyeyi getir
+    /// </summary>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Mock üzerinden SMS bakiyeyi</returns>
     private Task<Result<SmsBalance>> GetMockBalanceAsync(CancellationToken cancellationToken)
     {
         // Mock implementation

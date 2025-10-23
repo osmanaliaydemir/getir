@@ -5,37 +5,64 @@ namespace Getir.MerchantPortal.Services;
 public interface IReportService
 {
     /// <summary>
-    /// Sales dashboard verilerini getirir
+    /// Satış dashboard verilerini getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Satış dashboard verileri</returns>
     Task<SalesDashboardModel> GetSalesDashboardAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null);
 
     /// <summary>
-    /// Revenue analytics verilerini getirir
+    /// Gelir analizlerini getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Gelir analizleri</returns>
     Task<RevenueAnalyticsModel> GetRevenueAnalyticsAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null);
 
     /// <summary>
-    /// Customer analytics verilerini getirir
+    /// Müşteri analizlerini getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Müşteri analizleri</returns>
     Task<CustomerAnalyticsModel> GetCustomerAnalyticsAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null);
 
     /// <summary>
-    /// Product performance verilerini getirir
+    /// Ürün performans verilerini getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Ürün performans verileri</returns>
     Task<ProductPerformanceModel> GetProductPerformanceAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null);
 
     /// <summary>
-    /// Chart verilerini getirir
+    /// Grafik verilerini getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="chartType">Grafik tipi</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Grafik verileri</returns>
     Task<ChartDataModel> GetChartDataAsync(Guid merchantId, string chartType, DateTime? startDate = null, DateTime? endDate = null);
 
     /// <summary>
-    /// Raporu PDF olarak export eder
+    /// Raporu PDF'e aktar
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="request">Aktarım isteği</param>
+    /// <returns>PDF dosyası</returns>
     Task<byte[]> ExportReportToPdfAsync(Guid merchantId, ReportExportRequest request);
 
     /// <summary>
-    /// Raporu Excel olarak export eder
+    /// Raporu Excel'e aktar
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="request">Aktarım isteği</param>
+    /// <returns>Excel dosyası</returns>
     Task<byte[]> ExportReportToExcelAsync(Guid merchantId, ReportExportRequest request);
 }

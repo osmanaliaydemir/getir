@@ -11,6 +11,11 @@ public class PaymentsController : Controller
     private readonly IPaymentService _paymentService;
     private readonly ILogger<PaymentsController> _logger;
 
+    /// <summary>
+    /// PaymentsController constructor
+    /// </summary>
+    /// <param name="paymentService">Ödeme servisi</param>
+    /// <param name="logger">Logger instance</param>
     public PaymentsController(
         IPaymentService paymentService,
         ILogger<PaymentsController> logger)
@@ -20,8 +25,9 @@ public class PaymentsController : Controller
     }
 
     /// <summary>
-    /// Payment history page
+    /// Ödeme geçmişi sayfasını göster
     /// </summary>
+    /// <returns>Ödeme geçmişi sayfası</returns>
     public IActionResult Index()
     {
         ViewData["Title"] = "PaymentHistory";
@@ -29,8 +35,9 @@ public class PaymentsController : Controller
     }
 
     /// <summary>
-    /// Reports page
+    /// Raporlar sayfasını göster
     /// </summary>
+    /// <returns>Raporlar sayfası</returns>
     public IActionResult Reports()
     {
         ViewData["Title"] = "PaymentReports";
@@ -38,8 +45,9 @@ public class PaymentsController : Controller
     }
 
     /// <summary>
-    /// Settlements page
+    /// Mutabakat sayfasını göster
     /// </summary>
+    /// <returns>Mutabakat sayfası</returns>
     public IActionResult Settlements()
     {
         ViewData["Title"] = "SettlementReports";
@@ -47,8 +55,10 @@ public class PaymentsController : Controller
     }
 
     /// <summary>
-    /// Get payment history data (for DataTables)
+    /// Ödeme geçmişi verilerini getir
     /// </summary>
+    /// <param name="filter">Filtre parametreleri</param>
+    /// <returns>JSON ödeme verileri</returns>
     [HttpPost]
     public async Task<IActionResult> GetPaymentHistoryData([FromBody] PaymentFilterModel filter)
     {
@@ -78,8 +88,11 @@ public class PaymentsController : Controller
     }
 
     /// <summary>
-    /// Get payment method breakdown (for charts)
+    /// Ödeme yöntemi dağılımını getir
     /// </summary>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>JSON chart verileri</returns>
     [HttpGet]
     public async Task<IActionResult> GetPaymentMethodBreakdown(DateTime? startDate = null, DateTime? endDate = null)
     {
@@ -121,8 +134,9 @@ public class PaymentsController : Controller
     }
 
     /// <summary>
-    /// Get revenue analytics
+    /// Gelir analitiklerini getir
     /// </summary>
+    /// <returns>JSON analitik verileri</returns>
     [HttpGet]
     public async Task<IActionResult> GetRevenueAnalytics()
     {
@@ -146,8 +160,11 @@ public class PaymentsController : Controller
     }
 
     /// <summary>
-    /// Get settlement report
+    /// Mutabakat raporunu getir
     /// </summary>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>JSON mutabakat raporu</returns>
     [HttpGet]
     public async Task<IActionResult> GetSettlementReport(DateTime? startDate = null, DateTime? endDate = null)
     {
@@ -174,8 +191,10 @@ public class PaymentsController : Controller
     }
 
     /// <summary>
-    /// Export payments to Excel
+    /// Ödemeleri Excel'e aktar
     /// </summary>
+    /// <param name="request">Aktarım parametreleri</param>
+    /// <returns>Excel dosyası</returns>
     [HttpPost]
     public async Task<IActionResult> ExportToExcel([FromBody] PaymentExportRequest request)
     {
@@ -200,8 +219,10 @@ public class PaymentsController : Controller
     }
 
     /// <summary>
-    /// Export payments to PDF
+    /// Ödemeleri PDF'e aktar
     /// </summary>
+    /// <param name="request">Aktarım parametreleri</param>
+    /// <returns>PDF dosyası</returns>
     [HttpPost]
     public async Task<IActionResult> ExportToPdf([FromBody] PaymentExportRequest request)
     {

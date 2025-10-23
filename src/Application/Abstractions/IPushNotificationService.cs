@@ -4,33 +4,33 @@ using Getir.Application.DTO;
 namespace Getir.Application.Abstractions;
 
 /// <summary>
-/// Push notification service interface
+/// Push bildirim servisi interface
 /// </summary>
 public interface IPushNotificationService
 {
     /// <summary>
-    /// Send push notification to device
+    /// Push bildirimi cihaza gönder
     /// </summary>
     Task<Result> SendPushNotificationAsync(
         PushNotificationRequest request, 
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Send push notification to multiple devices
+    /// Push bildirimi birden fazla cihaza gönder
     /// </summary>
     Task<Result> SendBulkPushNotificationAsync(
         IEnumerable<PushNotificationRequest> requests, 
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Send push notification to topic
+    /// Push bildirimi konuya gönder
     /// </summary>
     Task<Result> SendPushToTopicAsync(
         PushTopicRequest request, 
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Send push notification to user
+    /// Push bildirimi kullanıcıya gönder
     /// </summary>
     Task<Result> SendPushToUserAsync(
         Guid userId,
@@ -38,21 +38,21 @@ public interface IPushNotificationService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Register device token
+    /// Cihaz tokeni kaydet
     /// </summary>
     Task<Result> RegisterDeviceTokenAsync(
         DeviceTokenRequest request, 
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Unregister device token
+    /// Cihaz tokeni sil
     /// </summary>
     Task<Result> UnregisterDeviceTokenAsync(
         string deviceToken, 
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get push notification status
+    /// Push bildirimi durumunu al
     /// </summary>
     Task<Result<PushNotificationStatus>> GetNotificationStatusAsync(
         string messageId, 

@@ -15,6 +15,11 @@ public class SimpleFileStorageService : IFileStorageService
     private readonly FileUploadSettings _uploadSettings;
     private readonly string _uploadPath;
 
+    /// <summary>
+    /// SimpleFileStorageService constructor
+    /// </summary>
+    /// <param name="loggingService">Logging servisi</param>
+    /// <param name="uploadSettings">Dosya yükleme ayarları</param>
     public SimpleFileStorageService(
         ILoggingService loggingService,
         IOptions<FileUploadSettings> uploadSettings)
@@ -27,6 +32,12 @@ public class SimpleFileStorageService : IFileStorageService
         Directory.CreateDirectory(_uploadPath);
     }
 
+    /// <summary>
+    /// Dosya yükle
+    /// </summary>
+    /// <param name="request">Yükleme isteği</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Yükleme sonucu</returns>
     public async Task<Result<FileUploadResponse>> UploadFileAsync(
         FileUploadRequest request, 
         CancellationToken cancellationToken = default)
@@ -83,6 +94,12 @@ public class SimpleFileStorageService : IFileStorageService
         }
     }
 
+    /// <summary>
+    /// Birden fazla dosya yükle
+    /// </summary>
+    /// <param name="requests">Yükleme istekleri</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Yükleme sonuçları</returns>
     public async Task<Result<IEnumerable<FileUploadResponse>>> UploadMultipleFilesAsync(
         IEnumerable<FileUploadRequest> requests, 
         CancellationToken cancellationToken = default)
@@ -116,6 +133,13 @@ public class SimpleFileStorageService : IFileStorageService
         return Result.Ok(results.AsEnumerable());
     }
 
+    /// <summary>
+    /// Dosya sil
+    /// </summary>
+    /// <param name="fileName">Dosya adı</param>
+    /// <param name="containerName">Container adı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>İşlem sonucu</returns>
     public Task<Result> DeleteFileAsync(
         string fileName, 
         string containerName,
@@ -144,6 +168,13 @@ public class SimpleFileStorageService : IFileStorageService
         }
     }
 
+    /// <summary>
+    /// Birden fazla dosya sil
+    /// </summary>
+    /// <param name="fileNames">Dosya adları</param>
+    /// <param name="containerName">Container adı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>İşlem sonucu</returns>
     public async Task<Result> DeleteMultipleFilesAsync(
         IEnumerable<string> fileNames, 
         string containerName,
@@ -166,6 +197,13 @@ public class SimpleFileStorageService : IFileStorageService
         return Result.Ok();
     }
 
+    /// <summary>
+    /// Dosya URL'ini getir
+    /// </summary>
+    /// <param name="fileName">Dosya adı</param>
+    /// <param name="containerName">Container adı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Dosya URL'i</returns>
     public Task<Result<string>> GetFileUrlAsync(
         string fileName, 
         string containerName,
@@ -190,6 +228,13 @@ public class SimpleFileStorageService : IFileStorageService
         }
     }
 
+    /// <summary>
+    /// Dosya var mı kontrol et
+    /// </summary>
+    /// <param name="fileName">Dosya adı</param>
+    /// <param name="containerName">Container adı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Dosya var mı</returns>
     public Task<Result<bool>> FileExistsAsync(
         string fileName, 
         string containerName,
@@ -208,6 +253,13 @@ public class SimpleFileStorageService : IFileStorageService
         }
     }
 
+    /// <summary>
+    /// Dosya metadata'sını getir
+    /// </summary>
+    /// <param name="fileName">Dosya adı</param>
+    /// <param name="containerName">Container adı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Dosya metadata'sı</returns>
     public Task<Result<FileMetadata>> GetFileMetadataAsync(
         string fileName, 
         string containerName,
@@ -241,6 +293,14 @@ public class SimpleFileStorageService : IFileStorageService
         }
     }
 
+    /// <summary>
+    /// Thumbnail oluştur
+    /// </summary>
+    /// <param name="request">Yükleme isteği</param>
+    /// <param name="thumbnailWidth">Thumbnail genişliği</param>
+    /// <param name="thumbnailHeight">Thumbnail yüksekliği</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Thumbnail sonucu</returns>
     public Task<Result<FileUploadResponse>> GenerateThumbnailAsync(
         FileUploadRequest request,
         int thumbnailWidth = 300,
@@ -251,6 +311,13 @@ public class SimpleFileStorageService : IFileStorageService
         return Task.FromResult(Result.Fail<FileUploadResponse>("Thumbnail generation not implemented", "NOT_IMPLEMENTED"));
     }
 
+    /// <summary>
+    /// Resmi sıkıştır
+    /// </summary>
+    /// <param name="request">Yükleme isteği</param>
+    /// <param name="qualityPercentage">Kalite yüzdesi</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Sıkıştırma sonucu</returns>
     public Task<Result<FileUploadResponse>> CompressImageAsync(
         FileUploadRequest request,
         int qualityPercentage = 80,
@@ -260,6 +327,12 @@ public class SimpleFileStorageService : IFileStorageService
         return Task.FromResult(Result.Fail<FileUploadResponse>("Image compression not implemented", "NOT_IMPLEMENTED"));
     }
 
+    /// <summary>
+    /// Dosyayı doğrula
+    /// </summary>
+    /// <param name="request">Yükleme isteği</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Doğrulama sonucu</returns>
     public Task<Result> ValidateFileAsync(
         FileUploadRequest request, 
         CancellationToken cancellationToken = default)
@@ -296,6 +369,11 @@ public class SimpleFileStorageService : IFileStorageService
 
     #region Helper Methods
 
+    /// <summary>
+    /// Benzersiz dosya adı oluştur
+    /// </summary>
+    /// <param name="originalFileName">Orijinal dosya adı</param>
+    /// <returns>Benzersiz dosya adı</returns>
     private static string GenerateUniqueFileName(string originalFileName)
     {
         var extension = Path.GetExtension(originalFileName);
@@ -306,6 +384,11 @@ public class SimpleFileStorageService : IFileStorageService
         return $"{fileNameWithoutExtension}_{timestamp}_{guid}{extension}";
     }
 
+    /// <summary>
+    /// Dosya uzantısından içerik tipini belirle
+    /// </summary>
+    /// <param name="fileName">Dosya adı</param>
+    /// <returns>İçerik tipi</returns>
     private static string GetContentType(string fileName)
     {
         var extension = Path.GetExtension(fileName).ToLowerInvariant();

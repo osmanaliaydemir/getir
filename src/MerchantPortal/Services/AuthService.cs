@@ -8,6 +8,12 @@ public class AuthService : IAuthService
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<AuthService> _logger;
 
+    /// <summary>
+    /// AuthService constructor
+    /// </summary>
+    /// <param name="apiClient">API client</param>
+    /// <param name="httpContextAccessor">HTTP context erişimi</param>
+    /// <param name="logger">Logger instance</param>
     public AuthService(
         IApiClient apiClient,
         IHttpContextAccessor httpContextAccessor,
@@ -18,6 +24,12 @@ public class AuthService : IAuthService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Kullanıcı girişi yap
+    /// </summary>
+    /// <param name="request">Giriş bilgileri</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Giriş yanıtı</returns>
     public async Task<LoginResponse?> LoginAsync(LoginRequest request, CancellationToken ct = default)
     {
         try
@@ -43,12 +55,23 @@ public class AuthService : IAuthService
         }
     }
 
+    /// <summary>
+    /// Kullanıcı çıkışı yap
+    /// </summary>
+    /// <returns>Task</returns>
     public Task LogoutAsync()
     {
         _apiClient.ClearAuthToken();
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Şifre değiştir
+    /// </summary>
+    /// <param name="currentPassword">Mevcut şifre</param>
+    /// <param name="newPassword">Yeni şifre</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>İşlem başarı durumu</returns>
     public async Task<bool> ChangePasswordAsync(string currentPassword, string newPassword, CancellationToken ct = default)
     {
         try

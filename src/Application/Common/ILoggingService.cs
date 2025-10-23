@@ -7,10 +7,44 @@ namespace Getir.Application.Common;
 /// </summary>
 public interface ILoggingService
 {
+    /// <summary>
+    /// İş mantığı olayını logla
+    /// </summary>
+    /// <param name="eventName">Olay adı</param>
+    /// <param name="data">Olay verisi</param>
+    /// <param name="level">Log seviyesi</param>
     void LogBusinessEvent(string eventName, object? data = null, LogLevel level = LogLevel.Information);
+    
+    /// <summary>
+    /// Kullanıcı eylemini logla
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="action">Eylem</param>
+    /// <param name="data">Eylem verisi</param>
     void LogUserAction(string userId, string action, object? data = null);
+    
+    /// <summary>
+    /// Performans bilgisini logla
+    /// </summary>
+    /// <param name="operation">İşlem adı</param>
+    /// <param name="duration">Süre</param>
+    /// <param name="metadata">Metadata</param>
     void LogPerformance(string operation, TimeSpan duration, object? metadata = null);
+    
+    /// <summary>
+    /// Güvenlik olayını logla
+    /// </summary>
+    /// <param name="eventName">Olay adı</param>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="data">Olay verisi</param>
     void LogSecurityEvent(string eventName, string? userId = null, object? data = null);
+    
+    /// <summary>
+    /// Hata bilgisini logla
+    /// </summary>
+    /// <param name="message">Hata mesajı</param>
+    /// <param name="exception">Exception</param>
+    /// <param name="data">Hata verisi</param>
     void LogError(string message, Exception? exception = null, object? data = null);
 }
 
@@ -21,11 +55,21 @@ public class LoggingService : ILoggingService
 {
     private readonly ILogger<LoggingService> _logger;
 
+    /// <summary>
+    /// LoggingService constructor
+    /// </summary>
+    /// <param name="logger">Logger instance</param>
     public LoggingService(ILogger<LoggingService> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// İş mantığı olayını logla
+    /// </summary>
+    /// <param name="eventName">Olay adı</param>
+    /// <param name="data">Olay verisi</param>
+    /// <param name="level">Log seviyesi</param>
     public void LogBusinessEvent(string eventName, object? data = null, LogLevel level = LogLevel.Information)
     {
         var logData = new
@@ -39,6 +83,12 @@ public class LoggingService : ILoggingService
         _logger.Log(level, "Business Event: {EventName} - Data: {@Data}", eventName, logData);
     }
 
+    /// <summary>
+    /// Kullanıcı eylemini logla
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="action">Eylem</param>
+    /// <param name="data">Eylem verisi</param>
     public void LogUserAction(string userId, string action, object? data = null)
     {
         var logData = new
@@ -53,6 +103,12 @@ public class LoggingService : ILoggingService
         _logger.LogInformation("User Action: {UserId} performed {Action} - Data: {@Data}", userId, action, logData);
     }
 
+    /// <summary>
+    /// Performans bilgisini logla
+    /// </summary>
+    /// <param name="operation">İşlem adı</param>
+    /// <param name="duration">Süre</param>
+    /// <param name="metadata">Metadata</param>
     public void LogPerformance(string operation, TimeSpan duration, object? metadata = null)
     {
         var logData = new
@@ -69,6 +125,12 @@ public class LoggingService : ILoggingService
             operation, duration.TotalMilliseconds, metadata);
     }
 
+    /// <summary>
+    /// Güvenlik olayını logla
+    /// </summary>
+    /// <param name="eventName">Olay adı</param>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="data">Olay verisi</param>
     public void LogSecurityEvent(string eventName, string? userId = null, object? data = null)
     {
         var logData = new
@@ -84,6 +146,12 @@ public class LoggingService : ILoggingService
             eventName, userId, logData);
     }
 
+    /// <summary>
+    /// Hata bilgisini logla
+    /// </summary>
+    /// <param name="message">Hata mesajı</param>
+    /// <param name="exception">Exception</param>
+    /// <param name="data">Hata verisi</param>
     public void LogError(string message, Exception? exception = null, object? data = null)
     {
         var logData = new

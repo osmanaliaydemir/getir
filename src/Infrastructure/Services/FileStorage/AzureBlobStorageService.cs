@@ -12,6 +12,12 @@ public class AzureBlobStorageService : IFileStorageService
     private readonly ILoggingService _loggingService;
     private readonly FileUploadSettings _uploadSettings;
 
+    /// <summary>
+    /// AzureBlobStorageService constructor
+    /// </summary>
+    /// <param name="blobServiceClient">Azure Blob Service client</param>
+    /// <param name="loggingService">Logging servisi</param>
+    /// <param name="uploadSettings">Dosya yükleme ayarları</param>
     public AzureBlobStorageService(
         BlobServiceClient blobServiceClient,
         ILoggingService loggingService,
@@ -22,6 +28,12 @@ public class AzureBlobStorageService : IFileStorageService
         _uploadSettings = uploadSettings;
     }
 
+    /// <summary>
+    /// Dosya yükle
+    /// </summary>
+    /// <param name="request">Yükleme isteği</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Yükleme sonucu</returns>
     public async Task<Result<FileUploadResponse>> UploadFileAsync(
         FileUploadRequest request, 
         CancellationToken cancellationToken = default)
@@ -107,6 +119,12 @@ public class AzureBlobStorageService : IFileStorageService
         }
     }
 
+    /// <summary>
+    /// Birden fazla dosya yükle
+    /// </summary>
+    /// <param name="requests">Yükleme istekleri</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Yükleme sonuçları</returns>
     public async Task<Result<IEnumerable<FileUploadResponse>>> UploadMultipleFilesAsync(
         IEnumerable<FileUploadRequest> requests, 
         CancellationToken cancellationToken = default)
@@ -140,6 +158,13 @@ public class AzureBlobStorageService : IFileStorageService
         return Result.Ok(results.AsEnumerable());
     }
 
+    /// <summary>
+    /// Dosya sil
+    /// </summary>
+    /// <param name="fileName">Dosya adı</param>
+    /// <param name="containerName">Container adı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>İşlem sonucu</returns>
     public async Task<Result> DeleteFileAsync(
         string fileName, 
         string containerName,
@@ -167,6 +192,13 @@ public class AzureBlobStorageService : IFileStorageService
         }
     }
 
+    /// <summary>
+    /// Birden fazla dosya sil
+    /// </summary>
+    /// <param name="fileNames">Dosya adları</param>
+    /// <param name="containerName">Container adı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>İşlem sonucu</returns>
     public async Task<Result> DeleteMultipleFilesAsync(
         IEnumerable<string> fileNames, 
         string containerName,
@@ -189,6 +221,13 @@ public class AzureBlobStorageService : IFileStorageService
         return Result.Ok();
     }
 
+    /// <summary>
+    /// Dosya URL'ini getir
+    /// </summary>
+    /// <param name="fileName">Dosya adı</param>
+    /// <param name="containerName">Container adı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Dosya URL'i</returns>
     public async Task<Result<string>> GetFileUrlAsync(
         string fileName, 
         string containerName,
@@ -215,6 +254,13 @@ public class AzureBlobStorageService : IFileStorageService
         }
     }
 
+    /// <summary>
+    /// Dosya var mı kontrol et
+    /// </summary>
+    /// <param name="fileName">Dosya adı</param>
+    /// <param name="containerName">Container adı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Dosya var mı</returns>
     public async Task<Result<bool>> FileExistsAsync(
         string fileName, 
         string containerName,
@@ -235,6 +281,13 @@ public class AzureBlobStorageService : IFileStorageService
         }
     }
 
+    /// <summary>
+    /// Dosya metadata'sını getir
+    /// </summary>
+    /// <param name="fileName">Dosya adı</param>
+    /// <param name="containerName">Container adı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Dosya metadata'sı</returns>
     public async Task<Result<FileMetadata>> GetFileMetadataAsync(
         string fileName, 
         string containerName,
@@ -265,6 +318,14 @@ public class AzureBlobStorageService : IFileStorageService
         }
     }
 
+    /// <summary>
+    /// Thumbnail oluştur
+    /// </summary>
+    /// <param name="request">Yükleme isteği</param>
+    /// <param name="thumbnailWidth">Thumbnail genişliği</param>
+    /// <param name="thumbnailHeight">Thumbnail yüksekliği</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Thumbnail sonucu</returns>
     public Task<Result<FileUploadResponse>> GenerateThumbnailAsync(
         FileUploadRequest request,
         int thumbnailWidth = 300,
@@ -275,6 +336,13 @@ public class AzureBlobStorageService : IFileStorageService
         return Task.FromResult(Result.Fail<FileUploadResponse>("Thumbnail generation not implemented yet", "NOT_IMPLEMENTED"));
     }
 
+    /// <summary>
+    /// Resmi sıkıştır
+    /// </summary>
+    /// <param name="request">Yükleme isteği</param>
+    /// <param name="qualityPercentage">Kalite yüzdesi</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Sıkıştırma sonucu</returns>
     public Task<Result<FileUploadResponse>> CompressImageAsync(
         FileUploadRequest request,
         int qualityPercentage = 80,
@@ -284,6 +352,12 @@ public class AzureBlobStorageService : IFileStorageService
         return Task.FromResult(Result.Fail<FileUploadResponse>("Image compression not implemented yet", "NOT_IMPLEMENTED"));
     }
 
+    /// <summary>
+    /// Dosyayı doğrula
+    /// </summary>
+    /// <param name="request">Yükleme isteği</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Doğrulama sonucu</returns>
     public Task<Result> ValidateFileAsync(
         FileUploadRequest request, 
         CancellationToken cancellationToken = default)
@@ -322,6 +396,12 @@ public class AzureBlobStorageService : IFileStorageService
 
     #region Helper Methods
 
+    /// <summary>
+    /// Container client'ı al
+    /// </summary>
+    /// <param name="containerName">Container adı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Container client</returns>
     private async Task<BlobContainerClient> GetContainerClientAsync(string containerName, CancellationToken cancellationToken)
     {
         var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
@@ -329,6 +409,11 @@ public class AzureBlobStorageService : IFileStorageService
         return containerClient;
     }
 
+    /// <summary>
+    /// Benzersiz dosya adı oluştur
+    /// </summary>
+    /// <param name="originalFileName">Orijinal dosya adı</param>
+    /// <returns>Benzersiz dosya adı</returns>
     private static string GenerateUniqueFileName(string originalFileName)
     {
         var extension = Path.GetExtension(originalFileName);
@@ -339,6 +424,11 @@ public class AzureBlobStorageService : IFileStorageService
         return $"{fileNameWithoutExtension}_{timestamp}_{guid}{extension}";
     }
 
+    /// <summary>
+    /// Resim dosyası mı kontrol et
+    /// </summary>
+    /// <param name="contentType">İçerik tipi</param>
+    /// <returns>Resim dosyası mı</returns>
     private static bool IsImageFile(string contentType)
     {
         return contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase);

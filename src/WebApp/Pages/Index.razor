@@ -1,0 +1,365 @@
+﻿@page "/"
+@inject ProductService ProductService
+@inject AuthService AuthService
+@inject CartService CartService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Getir - Hızlı Teslimat</PageTitle>
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-background">
+        <div class="container-fluid">
+            <div class="row align-items-center min-vh-75">
+                <div class="col-lg-6">
+                    <div class="hero-content">
+                        <h1 class="hero-title">
+                            <span class="text-primary">Dakikalar İçinde</span><br>
+                            <span class="text-warning">Kapınızda!</span>
+                        </h1>
+                        <p class="hero-description">
+                            Market, restoran, eczane ve daha fazlası... İhtiyacınız olan her şeyi dakikalar içinde kapınıza getiriyoruz.
+                        </p>
+                        <div class="hero-buttons">
+                            <a href="/merchants" class="btn btn-primary btn-lg me-3">
+                                <i class="bi bi-cart-plus"></i>
+                                Sipariş Ver
+                            </a>
+                            <a href="#how-it-works" class="btn btn-outline-light btn-lg">
+                                <i class="bi bi-question-circle"></i>
+                                Nasıl Çalışır?
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="hero-visual">
+                        <div class="delivery-animation">
+                            <div class="delivery-truck">
+                                <i class="bi bi-truck"></i>
+                            </div>
+                            <div class="delivery-path"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Stats -->
+<section class="quick-stats py-4">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 col-6 mb-3">
+                <div class="stat-item">
+                    <h3 class="stat-number text-primary">15</h3>
+                    <p class="stat-label">Dakika</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="stat-item">
+                    <h3 class="stat-number text-success">1000+</h3>
+                    <p class="stat-label">Mağaza</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="stat-item">
+                    <h3 class="stat-number text-warning">50K+</h3>
+                    <p class="stat-label">Ürün</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="stat-item">
+                    <h3 class="stat-number text-info">1M+</h3>
+                    <p class="stat-label">Müşteri</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="categories-section py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="section-title text-center mb-5">
+                    <span class="title-text">Kategoriler</span>
+                    <span class="title-line"></span>
+                </h2>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="category-card modern-card" @onclick="@(() => GoToCategory("market"))">
+                    <div class="category-icon">
+                        <i class="bi bi-shop"></i>
+                    </div>
+                    <div class="category-content">
+                        <h5>Market</h5>
+                        <p>Günlük ihtiyaçlarınız</p>
+                        <span class="category-count">500+ ürün</span>
+                    </div>
+                    <div class="category-arrow">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="category-card modern-card" @onclick="@(() => GoToCategory("pharmacy"))">
+                    <div class="category-icon">
+                        <i class="bi bi-heart-pulse"></i>
+                    </div>
+                    <div class="category-content">
+                        <h5>Eczane</h5>
+                        <p>Sağlık ürünleri</p>
+                        <span class="category-count">200+ ürün</span>
+                    </div>
+                    <div class="category-arrow">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="category-card modern-card" @onclick="@(() => GoToCategory("restaurant"))">
+                    <div class="category-icon">
+                        <i class="bi bi-egg-fried"></i>
+                    </div>
+                    <div class="category-content">
+                        <h5>Restoran</h5>
+                        <p>Lezzetli yemekler</p>
+                        <span class="category-count">300+ ürün</span>
+                    </div>
+                    <div class="category-arrow">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="category-card modern-card" @onclick="@(() => GoToCategory("other"))">
+                    <div class="category-icon">
+                        <i class="bi bi-grid-3x3"></i>
+                    </div>
+                    <div class="category-content">
+                        <h5>Diğer</h5>
+                        <p>Çeşitli ürünler</p>
+                        <span class="category-count">150+ ürün</span>
+                    </div>
+                    <div class="category-arrow">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products Section -->
+<section class="featured-products-section py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="section-title text-center mb-5">
+                    <span class="title-text">Öne Çıkan Ürünler</span>
+                    <span class="title-line"></span>
+                </h2>
+            </div>
+        </div>
+        <div class="row g-4">
+            @if (featuredProducts?.Any() == true)
+            {
+                @foreach (var product in featuredProducts.Take(8))
+                {
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="product-card modern-card">
+                            <div class="product-image">
+                                <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? "https://via.placeholder.com/200x200/007bff/ffffff?text=" + Uri.EscapeDataString(product.Name) : product.ImageUrl)" 
+                                     alt="@product.Name" />
+                                @if (product.DiscountPercentage > 0)
+                                {
+                                    <div class="product-badge">
+                                        <span class="badge bg-danger">%@product.DiscountPercentage</span>
+                                    </div>
+                                }
+                                <div class="product-overlay">
+                                    <button class="btn btn-primary btn-sm" @onclick="@(() => AddToCart(product.Id))">
+                                        <i class="bi bi-cart-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="product-info">
+                                <h6 class="product-name">@product.Name</h6>
+                                <p class="product-merchant">@product.MerchantName</p>
+                                <div class="product-price">
+                                    @if (product.DiscountPercentage > 0)
+                                    {
+                                        <span class="original-price">₺@product.Price.ToString("F2")</span>
+                                        <span class="discounted-price">₺@product.DiscountedPrice?.ToString("F2")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="current-price">₺@product.Price.ToString("F2")</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center">
+                    <div class="empty-state">
+                        <i class="bi bi-box display-1 text-muted mb-3"></i>
+                        <h4>Henüz ürün bulunmuyor</h4>
+                        <p class="text-muted">Yakında harika ürünlerle burada olacağız!</p>
+                        <a href="/merchants" class="btn btn-primary">
+                            <i class="bi bi-shop"></i>
+                            Mağazaları Keşfet
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="how-it-works-section py-5" id="how-it-works">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="section-title text-center mb-5">
+                    <span class="title-text">Nasıl Çalışır?</span>
+                    <span class="title-line"></span>
+                </h2>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4 text-center">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-icon">
+                        <i class="bi bi-search"></i>
+                    </div>
+                    <h5>Ürün Seç</h5>
+                    <p>İhtiyacın olan ürünleri seç ve sepete ekle</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-icon">
+                        <i class="bi bi-credit-card"></i>
+                    </div>
+                    <h5>Ödeme Yap</h5>
+                    <p>Güvenli ödeme yöntemlerinden birini seç</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-icon">
+                        <i class="bi bi-truck"></i>
+                    </div>
+                    <h5>Teslimat Al</h5>
+                    <p>15 dakikada kapında teslimat</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section py-5 bg-primary text-white">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4 text-center">
+                <div class="feature-item">
+                    <i class="bi bi-lightning-charge display-4 mb-3"></i>
+                    <h5>Hızlı Teslimat</h5>
+                    <p>Ortalama 15 dakikada kapınızda</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="feature-item">
+                    <i class="bi bi-shield-check display-4 mb-3"></i>
+                    <h5>Güvenli Ödeme</h5>
+                    <p>Güvenli ve kolay ödeme seçenekleri</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="feature-item">
+                    <i class="bi bi-star-fill display-4 mb-3"></i>
+                    <h5>Kaliteli Hizmet</h5>
+                    <p>Binlerce memnun müşteri</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    private List<ProductResponse>? featuredProducts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFeaturedProducts();
+    }
+
+    private async Task LoadFeaturedProducts()
+    {
+        try
+        {
+            featuredProducts = await ProductService.GetPopularProductsAsync(8);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading products: {ex.Message}");
+        }
+    }
+
+    private void GoToCategory(string category)
+    {
+        Navigation.NavigateTo($"/merchants?category={category}");
+    }
+
+    private async Task AddToCart(Guid productId)
+    {
+        try
+        {
+            var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+            if (!isAuthenticated)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            var product = featuredProducts?.FirstOrDefault(p => p.Id == productId);
+            if (product == null) return;
+
+            var request = new AddToCartRequest
+            {
+                MerchantId = product.MerchantId,
+                ProductId = product.Id,
+                Quantity = 1
+            };
+
+            var success = await CartService.AddToCartAsync(request);
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Ürün sepete eklendi!");
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Ürün sepete eklenirken bir hata oluştu.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Bir hata oluştu: " + ex.Message);
+        }
+    }
+}

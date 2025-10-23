@@ -23,8 +23,9 @@ public class DashboardController : Controller
     }
 
     /// <summary>
-    /// Dashboard sayfasını gösterir.
+    /// Dashboard sayfasını göster
     /// </summary>
+    /// <returns>Dashboard sayfası veya giriş sayfasına yönlendirme</returns>
     public async Task<IActionResult> Index()
     {
         var merchantIdStr = HttpContext.Session.GetString("MerchantId");
@@ -47,8 +48,9 @@ public class DashboardController : Controller
     }
 
     /// <summary>
-    /// Stok uyarılarını getirir.
+    /// Stok uyarılarını getir
     /// </summary>
+    /// <returns>JSON stok uyarıları</returns>
     [HttpGet]
     public async Task<IActionResult> GetStockAlerts()
     {
@@ -65,8 +67,10 @@ public class DashboardController : Controller
     }
 
     /// <summary>
-    /// Satış trendi verilerini getirir (Chart.js için) - GERÇEK DATA
+    /// Satış trendi verilerini getir
     /// </summary>
+    /// <param name="days">Gün sayısı</param>
+    /// <returns>JSON chart verileri</returns>
     [HttpGet]
     public async Task<IActionResult> GetSalesChartData(int days = 30)
     {
@@ -142,8 +146,9 @@ public class DashboardController : Controller
     }
 
     /// <summary>
-    /// Sipariş durumu dağılımını getirir (Chart.js için) - GERÇEK DATA
+    /// Sipariş durumu dağılımını getir
     /// </summary>
+    /// <returns>JSON chart verileri</returns>
     [HttpGet]
     public async Task<IActionResult> GetOrdersChartData()
     {
@@ -206,8 +211,9 @@ public class DashboardController : Controller
     }
 
     /// <summary>
-    /// Kategori dağılımını getirir (Chart.js için) - GERÇEK DATA
+    /// Kategori dağılımını getir
     /// </summary>
+    /// <returns>JSON chart verileri</returns>
     [HttpGet]
     public async Task<IActionResult> GetCategoryChartData()
     {

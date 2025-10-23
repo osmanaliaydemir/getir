@@ -1,0 +1,377 @@
+@page "/merchant/{MerchantId:guid}"
+@inject MerchantService MerchantService
+@inject ProductService ProductService
+@inject CartService CartService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>@(merchant?.Name ?? "Mağaza") - Getir</PageTitle>
+
+@if (isLoading)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Yükleniyor...</span>
+        </div>
+        <p class="mt-3">Mağaza bilgileri yükleniyor...</p>
+    </div>
+}
+else if (merchant == null)
+{
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center">
+                <div class="card">
+                    <div class="card-body py-5">
+                        <i class="bi bi-exclamation-triangle display-1 text-warning mb-4"></i>
+                        <h3>Mağaza Bulunamadı</h3>
+                        <p class="text-muted mb-4">
+                            Aradığınız mağaza bulunamadı veya artık mevcut değil.
+                        </p>
+                        <a href="/merchants" class="btn btn-primary btn-lg">
+                            <i class="bi bi-arrow-left"></i>
+                            Mağazalara Dön
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
+                <li class="breadcrumb-item"><a href="/merchants">Mağazalar</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@merchant.Name</li>
+            </ol>
+        </div>
+    </nav>
+
+    <!-- Merchant Header -->
+    <section class="merchant-header mb-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <div class="merchant-logo">
+                        <img src="@(string.IsNullOrEmpty(merchant.ImageUrl) ? "https://via.placeholder.com/200x200/007bff/ffffff?text=" + Uri.EscapeDataString(merchant.Name) : merchant.ImageUrl)" 
+                             class="img-fluid rounded-circle merchant-logo-image" 
+                             alt="@merchant.Name" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="merchant-info">
+                        <h1 class="merchant-title">@merchant.Name</h1>
+                        <p class="merchant-description">@merchant.Description</p>
+                        
+                        <div class="merchant-stats">
+                            <div class="row">
+                                <div class="col-4 text-center">
+                                    <div class="stat-item">
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                        <div class="stat-value">@merchant.Rating.ToString("F1")</div>
+                                        <div class="stat-label">@merchant.ReviewCount değerlendirme</div>
+                                    </div>
+                                </div>
+                                <div class="col-4 text-center">
+                                    <div class="stat-item">
+                                        <i class="bi bi-clock text-primary"></i>
+                                        <div class="stat-value">@merchant.DeliveryTime.TotalMinutes dk</div>
+                                        <div class="stat-label">Teslimat süresi</div>
+                                    </div>
+                                </div>
+                                <div class="col-4 text-center">
+                                    <div class="stat-item">
+                                        <i class="bi bi-truck text-primary"></i>
+                                        <div class="stat-value">₺@merchant.DeliveryFee.ToString("F2")</div>
+                                        <div class="stat-label">Teslimat ücreti</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="merchant-actions">
+                        <div class="merchant-status mb-3">
+                            @if (merchant.IsActive)
+                            {
+                                <span class="badge bg-success fs-6">
+                                    <i class="bi bi-check-circle"></i>
+                                    Açık
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger fs-6">
+                                    <i class="bi bi-x-circle"></i>
+                                    Kapalı
+                                </span>
+                            }
+                        </div>
+                        
+                        <div class="merchant-details">
+                            <div class="detail-item">
+                                <i class="bi bi-geo-alt text-primary"></i>
+                                <span>@merchant.Address</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="bi bi-telephone text-primary"></i>
+                                <span>@merchant.Phone</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="bi bi-envelope text-primary"></i>
+                                <span>@merchant.Email</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="merchant-products">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>
+                            <i class="bi bi-grid-3x3-gap"></i>
+                            Ürünler
+                        </h2>
+                        
+                        <!-- Filter and Sort -->
+                        <div class="d-flex gap-2">
+                            <select class="form-select" @bind="selectedSort" @bind:after="SortProducts">
+                                <option value="name">İsme Göre</option>
+                                <option value="price-low">Fiyat (Düşük-Yüksek)</option>
+                                <option value="price-high">Fiyat (Yüksek-Düşük)</option>
+                                <option value="rating">Değerlendirme</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    @if (isLoadingProducts)
+                    {
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Yükleniyor...</span>
+                            </div>
+                            <p class="mt-3">Ürünler yükleniyor...</p>
+                        </div>
+                    }
+                    else if (products?.Any() == true)
+                    {
+                        <div class="row">
+                            @foreach (var product in products)
+                            {
+                                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                                    <div class="card product-card h-100" @onclick="() => GoToProduct(product.Id)">
+                                        <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? "https://via.placeholder.com/300x200/007bff/ffffff?text=" + Uri.EscapeDataString(product.Name) : product.ImageUrl)" 
+                                             class="card-img-top product-image" 
+                                             alt="@product.Name" />
+                                        <div class="card-body">
+                                            <h6 class="card-title product-name">@product.Name</h6>
+                                            <div class="d-flex align-items-center mb-2">
+                                                <span class="fw-bold text-primary">₺@product.Price.ToString("F2")</span>
+                                                @if (product.DiscountedPrice.HasValue && product.DiscountedPrice < product.Price)
+                                                {
+                                                    <span class="text-muted text-decoration-line-through ms-2">₺@product.Price.ToString("F2")</span>
+                                                }
+                                            </div>
+                                            @if (product.Rating.HasValue)
+                                            {
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="bi bi-star-fill text-warning"></i>
+                                                    <small class="ms-1">@product.Rating.Value.ToString("F1") (@product.ReviewCount)</small>
+                                                </div>
+                                            }
+                                            <div class="d-grid gap-2">
+                                                <a href="/product/@product.Id" class="btn btn-outline-primary btn-sm" @onclick:stopPropagation="true">
+                                                    <i class="bi bi-eye"></i> Detay
+                                                </a>
+                                                <button class="btn btn-primary btn-sm" @onclick="() => AddToCart(product)" @onclick:stopPropagation="true">
+                                                    <i class="bi bi-cart-plus"></i> Sepete Ekle
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        
+                        <!-- Load More Products -->
+                        @if (hasMoreProducts)
+                        {
+                            <div class="text-center mt-4">
+                                <button class="btn btn-outline-primary btn-lg" @onclick="LoadMoreProducts" disabled="@isLoadingMoreProducts">
+                                    @if (isLoadingMoreProducts)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    }
+                                    Daha Fazla Ürün Yükle
+                                </button>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="bi bi-box display-1 text-muted mb-4"></i>
+                                <h3>Ürün Bulunamadı</h3>
+                                <p class="text-muted mb-4">
+                                    Bu mağazada henüz ürün bulunmuyor.
+                                </p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid MerchantId { get; set; }
+
+    private MerchantResponse? merchant;
+    private List<ProductResponse>? products;
+    private bool isLoading = true;
+    private bool isLoadingProducts = true;
+    private bool isLoadingMoreProducts = false;
+    private bool hasMoreProducts = true;
+    private int currentProductPage = 1;
+    private string selectedSort = "name";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMerchant();
+        await LoadProducts();
+    }
+
+    private async Task LoadMerchant()
+    {
+        try
+        {
+            isLoading = true;
+            merchant = await MerchantService.GetMerchantByIdAsync(MerchantId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading merchant: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadProducts(bool loadMore = false)
+    {
+        try
+        {
+            if (loadMore)
+            {
+                isLoadingMoreProducts = true;
+                currentProductPage++;
+            }
+            else
+            {
+                isLoadingProducts = true;
+                currentProductPage = 1;
+                products = new List<ProductResponse>();
+            }
+
+            var newProducts = await MerchantService.GetMerchantProductsAsync(MerchantId, currentProductPage, 12);
+            
+            if (loadMore && products != null)
+            {
+                products.AddRange(newProducts);
+            }
+            else
+            {
+                products = newProducts;
+            }
+
+            hasMoreProducts = newProducts.Count == 12;
+            
+            // Apply sorting
+            SortProducts();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading products: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingProducts = false;
+            isLoadingMoreProducts = false;
+        }
+    }
+
+    private async Task LoadMoreProducts()
+    {
+        await LoadProducts(true);
+    }
+
+    private void SortProducts()
+    {
+        if (products == null) return;
+
+        products = selectedSort switch
+        {
+            "name" => products.OrderBy(p => p.Name).ToList(),
+            "price-low" => products.OrderBy(p => p.Price).ToList(),
+            "price-high" => products.OrderByDescending(p => p.Price).ToList(),
+            "rating" => products.OrderByDescending(p => p.Rating ?? 0).ToList(),
+            _ => products.OrderBy(p => p.Name).ToList()
+        };
+    }
+
+    private void GoToProduct(Guid productId)
+    {
+        Navigation.NavigateTo($"/product/{productId}");
+    }
+
+    private async Task AddToCart(ProductResponse product)
+    {
+        try
+        {
+            var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+            if (!isAuthenticated)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            var request = new AddToCartRequest
+            {
+                MerchantId = product.MerchantId,
+                ProductId = product.Id,
+                Quantity = 1
+            };
+
+            var success = await CartService.AddToCartAsync(request);
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Ürün sepete eklendi!");
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Ürün sepete eklenirken bir hata oluştu.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Bir hata oluştu: " + ex.Message);
+        }
+    }
+}
+

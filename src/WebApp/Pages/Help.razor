@@ -1,0 +1,459 @@
+@page "/help"
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Yardım - Getir</PageTitle>
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <div class="container">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Yardım</li>
+        </ol>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Arama -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="mb-3">
+                        <i class="bi bi-search"></i>
+                        Yardım Arama
+                    </h4>
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Sorunuzu yazın..." @bind="searchQuery" @onkeypress="@(async (e) => { if (e.Key == "Enter") await SearchHelp(); })">
+                        <button class="btn btn-primary" @onclick="SearchHelp">
+                            <i class="bi bi-search"></i>
+                            Ara
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kategoriler -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-list-ul"></i>
+                        Yardım Kategorileri
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var category in helpCategories)
+                        {
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100 help-category-card" @onclick="@(() => SelectCategory(category.Id))">
+                                    <div class="card-body text-center">
+                                        <i class="@category.Icon display-4 text-primary mb-3"></i>
+                                        <h6 class="card-title">@category.Title</h6>
+                                        <p class="card-text text-muted small">@category.Description</p>
+                                        <small class="text-primary">@category.ArticleCount makale</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seçili Kategori Makaleleri -->
+            @if (selectedCategory != null)
+            {
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="@selectedCategory.Icon"></i>
+                            @selectedCategory.Title
+                        </h4>
+                        <button class="btn btn-outline-secondary btn-sm" @onclick="@(() => selectedCategory = null)">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            @foreach (var article in selectedCategory.Articles)
+                            {
+                                <div class="list-group-item list-group-item-action" @onclick="@(() => SelectArticle(article))">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">@article.Title</h6>
+                                        <small class="text-muted">@article.ViewCount görüntüleme</small>
+                                    </div>
+                                    <p class="mb-1 text-muted">@article.Summary</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Seçili Makale -->
+            @if (selectedArticle != null)
+            {
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">@selectedArticle.Title</h4>
+                        <button class="btn btn-outline-secondary btn-sm" @onclick="@(() => selectedArticle = null)">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="article-content">
+                            @((MarkupString)selectedArticle.Content)
+                        </div>
+                        <div class="mt-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="bi bi-eye"></i>
+                                    @selectedArticle.ViewCount görüntüleme
+                                </small>
+                                <div>
+                                    <button class="btn btn-outline-primary btn-sm me-2" @onclick="@(() => RateArticle(selectedArticle.Id, true))">
+                                        <i class="bi bi-hand-thumbs-up"></i>
+                                        Yararlı (@selectedArticle.HelpfulCount)
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" @onclick="@(() => RateArticle(selectedArticle.Id, false))">
+                                        <i class="bi bi-hand-thumbs-down"></i>
+                                        Yararsız (@selectedArticle.NotHelpfulCount)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- SSS -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-question-circle"></i>
+                        Sık Sorulan Sorular
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="faqAccordion">
+                        @for (int i = 0; i < faqs.Count; i++)
+                        {
+                            var faq = faqs[i];
+                            var collapseId = $"faq{i}";
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button @(i == 0 ? "" : "collapsed")" type="button" 
+                                            data-bs-toggle="collapse" data-bs-target="#@collapseId">
+                                        @faq.Question
+                                    </button>
+                                </h2>
+                                <div id="@collapseId" class="accordion-collapse collapse @(i == 0 ? "show" : "")" 
+                                     data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body">
+                                        @faq.Answer
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Yan Panel -->
+        <div class="col-lg-4">
+            <!-- Hızlı Erişim -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightning"></i>
+                        Hızlı Erişim
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="/contact" class="btn btn-outline-primary">
+                            <i class="bi bi-telephone"></i>
+                            İletişime Geç
+                        </a>
+                        <button class="btn btn-outline-primary" @onclick="StartLiveChat">
+                            <i class="bi bi-chat-dots"></i>
+                            Canlı Destek
+                        </button>
+                        <button class="btn btn-outline-primary" @onclick="ReportProblem">
+                            <i class="bi bi-bug"></i>
+                            Sorun Bildir
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Popüler Makaleler -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-fire"></i>
+                        Popüler Makaleler
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        @foreach (var article in popularArticles)
+                        {
+                            <div class="list-group-item border-0 px-0">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1 small">@article.Title</h6>
+                                    <small class="text-muted">@article.ViewCount</small>
+                                </div>
+                                <small class="text-muted">@article.Category</small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- İletişim Bilgileri -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle"></i>
+                        İletişim Bilgileri
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="contact-info">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-telephone text-primary me-3"></i>
+                            <div>
+                                <div class="fw-bold">Telefon</div>
+                                <small class="text-muted">0850 222 0 222</small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-envelope text-primary me-3"></i>
+                            <div>
+                                <div class="fw-bold">E-posta</div>
+                                <small class="text-muted">destek@getir.com</small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-clock text-primary me-3"></i>
+                            <div>
+                                <div class="fw-bold">Çalışma Saatleri</div>
+                                <small class="text-muted">7/24 Destek</small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-geo-alt text-primary me-3"></i>
+                            <div>
+                                <div class="fw-bold">Adres</div>
+                                <small class="text-muted">İstanbul, Türkiye</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string searchQuery = string.Empty;
+    private HelpCategory? selectedCategory = null;
+    private HelpArticle? selectedArticle = null;
+    private List<HelpCategory> helpCategories = new();
+    private List<HelpArticle> popularArticles = new();
+    private List<FAQ> faqs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadHelpData();
+    }
+
+    private async Task LoadHelpData()
+    {
+        // Yardım kategorileri
+        helpCategories = new List<HelpCategory>
+        {
+            new HelpCategory
+            {
+                Id = 1,
+                Title = "Sipariş İşlemleri",
+                Description = "Sipariş verme, iptal etme ve takip etme",
+                Icon = "bi-bag",
+                ArticleCount = 12,
+                Articles = new List<HelpArticle>
+                {
+                    new HelpArticle
+                    {
+                        Id = 1,
+                        Title = "Nasıl sipariş veririm?",
+                        Summary = "Getir'den sipariş verme adımları",
+                        Content = "<p>Getir'den sipariş vermek çok kolay:</p><ol><li>Mağazaları inceleyin</li><li>Ürünleri sepete ekleyin</li><li>Adresinizi seçin</li><li>Ödeme yapın</li></ol>",
+                        ViewCount = 1250,
+                        HelpfulCount = 45,
+                        NotHelpfulCount = 2
+                    }
+                }
+            },
+            new HelpCategory
+            {
+                Id = 2,
+                Title = "Ödeme ve Faturalandırma",
+                Description = "Ödeme yöntemleri ve fatura işlemleri",
+                Icon = "bi-credit-card",
+                ArticleCount = 8,
+                Articles = new List<HelpArticle>()
+            },
+            new HelpCategory
+            {
+                Id = 3,
+                Title = "Teslimat",
+                Description = "Teslimat süreleri ve adres yönetimi",
+                Icon = "bi-truck",
+                ArticleCount = 15,
+                Articles = new List<HelpArticle>()
+            },
+            new HelpCategory
+            {
+                Id = 4,
+                Title = "Hesap Yönetimi",
+                Description = "Profil, şifre ve güvenlik ayarları",
+                Icon = "bi-person",
+                ArticleCount = 10,
+                Articles = new List<HelpArticle>()
+            },
+            new HelpCategory
+            {
+                Id = 5,
+                Title = "Teknik Destek",
+                Description = "Uygulama sorunları ve çözümleri",
+                Icon = "bi-gear",
+                ArticleCount = 20,
+                Articles = new List<HelpArticle>()
+            },
+            new HelpCategory
+            {
+                Id = 6,
+                Title = "Kampanya ve İndirimler",
+                Description = "Promosyon kodları ve özel teklifler",
+                Icon = "bi-percent",
+                ArticleCount = 6,
+                Articles = new List<HelpArticle>()
+            }
+        };
+
+        // Popüler makaleler
+        popularArticles = new List<HelpArticle>
+        {
+            new HelpArticle { Title = "Sipariş nasıl iptal edilir?", ViewCount = 2500, Category = "Sipariş" },
+            new HelpArticle { Title = "Teslimat süresi ne kadar?", ViewCount = 1800, Category = "Teslimat" },
+            new HelpArticle { Title = "Hangi ödeme yöntemleri kabul ediliyor?", ViewCount = 1200, Category = "Ödeme" },
+            new HelpArticle { Title = "Şifremi nasıl değiştiririm?", ViewCount = 900, Category = "Hesap" },
+            new HelpArticle { Title = "Uygulama çöküyor, ne yapmalıyım?", ViewCount = 750, Category = "Teknik" }
+        };
+
+        // SSS
+        faqs = new List<FAQ>
+        {
+            new FAQ
+            {
+                Question = "Getir'den nasıl sipariş verebilirim?",
+                Answer = "Getir uygulamasını indirip kayıt olduktan sonra, istediğiniz mağazayı seçerek ürünleri sepete ekleyebilir ve sipariş verebilirsiniz."
+            },
+            new FAQ
+            {
+                Question = "Teslimat süresi ne kadar?",
+                Answer = "Genellikle 10-30 dakika arasında teslimat yapılmaktadır. Yoğunluk durumuna göre bu süre değişebilir."
+            },
+            new FAQ
+            {
+                Question = "Hangi ödeme yöntemleri kabul ediliyor?",
+                Answer = "Nakit ödeme, kredi kartı, banka kartı ve dijital cüzdanlar kabul edilmektedir."
+            },
+            new FAQ
+            {
+                Question = "Siparişimi nasıl iptal edebilirim?",
+                Answer = "Siparişiniz hazırlanmaya başlamadan önce 'Siparişlerim' bölümünden iptal edebilirsiniz."
+            },
+            new FAQ
+            {
+                Question = "Ücretsiz teslimat var mı?",
+                Answer = "Evet, belirli tutarın üzerindeki siparişlerde ücretsiz teslimat hizmeti sunulmaktadır."
+            }
+        };
+    }
+
+    private async Task SearchHelp()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            await JSRuntime.InvokeVoidAsync("showWarning", "Lütfen arama terimi girin.");
+            return;
+        }
+
+        // TODO: API'de arama yap
+        await JSRuntime.InvokeVoidAsync("showInfo", $"'{searchQuery}' için arama yapılıyor...");
+    }
+
+    private void SelectCategory(int categoryId)
+    {
+        selectedCategory = helpCategories.FirstOrDefault(c => c.Id == categoryId);
+        selectedArticle = null;
+    }
+
+    private void SelectArticle(HelpArticle article)
+    {
+        selectedArticle = article;
+        article.ViewCount++; // Mock increment
+    }
+
+    private async Task RateArticle(int articleId, bool isHelpful)
+    {
+        // TODO: API'ye değerlendirme gönder
+        await JSRuntime.InvokeVoidAsync("showSuccess", 
+            isHelpful ? "Makaleyi yararlı bulduğunuz için teşekkürler!" : "Geri bildiriminiz için teşekkürler!");
+    }
+
+    private async Task StartLiveChat()
+    {
+        await JSRuntime.InvokeVoidAsync("showInfo", "Canlı destek yakında aktif olacak!");
+    }
+
+    private async Task ReportProblem()
+    {
+        Navigation.NavigateTo("/contact");
+    }
+}
+
+@* Models *@
+@code {
+    public class HelpCategory
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Icon { get; set; } = string.Empty;
+        public int ArticleCount { get; set; }
+        public List<HelpArticle> Articles { get; set; } = new();
+    }
+
+    public class HelpArticle
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Summary { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
+        public int ViewCount { get; set; }
+        public int HelpfulCount { get; set; }
+        public int NotHelpfulCount { get; set; }
+        public string Category { get; set; } = string.Empty;
+    }
+
+    public class FAQ
+    {
+        public string Question { get; set; } = string.Empty;
+        public string Answer { get; set; } = string.Empty;
+    }
+}

@@ -8,12 +8,24 @@ public class ReportService : IReportService
     private readonly IApiClient _apiClient;
     private readonly ILogger<ReportService> _logger;
 
+    /// <summary>
+    /// ReportService constructor
+    /// </summary>
+    /// <param name="apiClient">API client</param>
+    /// <param name="logger">Logger instance</param>
     public ReportService(IApiClient apiClient, ILogger<ReportService> logger)
     {
         _apiClient = apiClient;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Satış dashboard verilerini getir
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Satış dashboard verileri</returns>
     public async Task<SalesDashboardModel> GetSalesDashboardAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null)
     {
         try
@@ -60,6 +72,13 @@ public class ReportService : IReportService
         }
     }
 
+    /// <summary>
+    /// Gelir analizlerini getir
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Gelir analizleri</returns>
     public async Task<RevenueAnalyticsModel> GetRevenueAnalyticsAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null)
     {
         try
@@ -95,6 +114,13 @@ public class ReportService : IReportService
         }
     }
 
+    /// <summary>
+    /// Müşteri analizlerini getir
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Müşteri analizleri</returns>
     public async Task<CustomerAnalyticsModel> GetCustomerAnalyticsAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null)
     {
         try
@@ -128,6 +154,13 @@ public class ReportService : IReportService
         }
     }
 
+    /// <summary>
+    /// Ürün performans verilerini getir
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Ürün performans verileri</returns>
     public async Task<ProductPerformanceModel> GetProductPerformanceAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null)
     {
         try
@@ -160,6 +193,14 @@ public class ReportService : IReportService
         }
     }
 
+    /// <summary>
+    /// Grafik verilerini getir
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="chartType">Grafik tipi</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Grafik verileri</returns>
     public async Task<ChartDataModel> GetChartDataAsync(Guid merchantId, string chartType, DateTime? startDate = null, DateTime? endDate = null)
     {
         try
@@ -185,6 +226,12 @@ public class ReportService : IReportService
         }
     }
 
+    /// <summary>
+    /// Raporu PDF'e aktar
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="request">Aktarım isteği</param>
+    /// <returns>PDF dosyası</returns>
     public async Task<byte[]> ExportReportToPdfAsync(Guid merchantId, ReportExportRequest request)
     {
         try
@@ -200,6 +247,12 @@ public class ReportService : IReportService
         }
     }
 
+    /// <summary>
+    /// Raporu Excel'e aktar
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="request">Aktarım isteği</param>
+    /// <returns>Excel dosyası</returns>
     public async Task<byte[]> ExportReportToExcelAsync(Guid merchantId, ReportExportRequest request)
     {
         try
@@ -225,6 +278,12 @@ public class ReportService : IReportService
 
     #region Helper Methods
 
+    /// <summary>
+    /// Boş satış dashboard oluştur
+    /// </summary>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Boş satış dashboard</returns>
     private SalesDashboardModel CreateEmptySalesDashboard(DateTime? startDate, DateTime? endDate)
     {
         return new SalesDashboardModel
@@ -245,6 +304,12 @@ public class ReportService : IReportService
         };
     }
 
+    /// <summary>
+    /// Boş gelir analizleri oluştur
+    /// </summary>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Boş gelir analizleri</returns>
     private RevenueAnalyticsModel CreateEmptyRevenueAnalytics(DateTime? startDate, DateTime? endDate)
     {
         return new RevenueAnalyticsModel
@@ -262,6 +327,12 @@ public class ReportService : IReportService
         };
     }
 
+    /// <summary>
+    /// Boş müşteri analizleri oluştur
+    /// </summary>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Boş müşteri analizleri</returns>
     private CustomerAnalyticsModel CreateEmptyCustomerAnalytics(DateTime? startDate, DateTime? endDate)
     {
         return new CustomerAnalyticsModel
@@ -279,6 +350,12 @@ public class ReportService : IReportService
         };
     }
 
+    /// <summary>
+    /// Boş ürün performans verileri oluştur
+    /// </summary>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Boş ürün performans verileri</returns>
     private ProductPerformanceModel CreateEmptyProductPerformance(DateTime? startDate, DateTime? endDate)
     {
         return new ProductPerformanceModel
@@ -296,48 +373,97 @@ public class ReportService : IReportService
     }
 
     // Additional helper methods would be implemented here...
+    /// <summary>
+    /// Büyüme oranını hesapla
+    /// </summary>
+    /// <param name="payments">Ödeme listesi</param>
+    /// <param name="start">Başlangıç tarihi</param>
+    /// <param name="end">Bitiş tarihi</param>
+    /// <returns>Büyüme oranı</returns>
     private decimal CalculateGrowthRate(List<PaymentResponse> payments, DateTime start, DateTime end)
     {
         // Implementation for growth rate calculation
         return 0;
     }
 
+    /// <summary>
+    /// Sipariş büyümesini hesapla
+    /// </summary>
+    /// <param name="orders">Sipariş listesi</param>
+    /// <param name="start">Başlangıç tarihi</param>
+    /// <param name="end">Bitiş tarihi</param>
+    /// <returns>Sipariş büyümesi</returns>
     private decimal CalculateOrderGrowth(List<OrderResponse> orders, DateTime start, DateTime end)
     {
         // Implementation for order growth calculation
         return 0;
     }
 
+    /// <summary>
+    /// En çok satan ürünleri getir
+    /// </summary>
+    /// <param name="orders">Sipariş listesi</param>
+    /// <returns>En çok satan ürünler</returns>
     private List<ProductPerformanceItem> GetTopProducts(List<OrderResponse> orders)
     {
         // Implementation for top products
         return new List<ProductPerformanceItem>();
     }
 
+    /// <summary>
+    /// Günlük gelir verilerini getir
+    /// </summary>
+    /// <param name="payments">Ödeme listesi</param>
+    /// <param name="start">Başlangıç tarihi</param>
+    /// <param name="end">Bitiş tarihi</param>
+    /// <returns>Günlük gelir verileri</returns>
     private List<DailyData> GetRevenueByDay(List<PaymentResponse> payments, DateTime start, DateTime end)
     {
         // Implementation for revenue by day
         return new List<DailyData>();
     }
 
+    /// <summary>
+    /// Günlük sipariş verilerini getir
+    /// </summary>
+    /// <param name="orders">Sipariş listesi</param>
+    /// <param name="start">Başlangıç tarihi</param>
+    /// <param name="end">Bitiş tarihi</param>
+    /// <returns>Günlük sipariş verileri</returns>
     private List<DailyData> GetOrdersByDay(List<OrderResponse> orders, DateTime start, DateTime end)
     {
         // Implementation for orders by day
         return new List<DailyData>();
     }
 
+    /// <summary>
+    /// Ödeme yöntemi dağılımını getir
+    /// </summary>
+    /// <param name="payments">Ödeme listesi</param>
+    /// <returns>Ödeme yöntemi dağılımı</returns>
     private List<BreakdownItem> GetPaymentMethodBreakdown(List<PaymentResponse> payments)
     {
         // Implementation for payment method breakdown
         return new List<BreakdownItem>();
     }
 
+    /// <summary>
+    /// Kategori dağılımını getir
+    /// </summary>
+    /// <param name="orders">Sipariş listesi</param>
+    /// <returns>Kategori dağılımı</returns>
     private List<BreakdownItem> GetCategoryBreakdown(List<OrderResponse> orders)
     {
         // Implementation for category breakdown
         return new List<BreakdownItem>();
     }
 
+    /// <summary>
+    /// Rapor verilerini getir
+    /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="request">Rapor isteği</param>
+    /// <returns>Rapor verileri</returns>
     private async Task<List<ReportDataItem>> GetReportData(Guid merchantId, ReportExportRequest request)
     {
         // Implementation for report data

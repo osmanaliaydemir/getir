@@ -11,6 +11,11 @@ public class ProductsController : Controller
     private readonly IProductService _productService;
     private readonly ILogger<ProductsController> _logger;
 
+    /// <summary>
+    /// ProductsController constructor
+    /// </summary>
+    /// <param name="productService">Ürün servisi</param>
+    /// <param name="logger">Logger instance</param>
     public ProductsController(IProductService productService, ILogger<ProductsController> logger)
     {
         _productService = productService;
@@ -18,8 +23,10 @@ public class ProductsController : Controller
     }
 
     /// <summary>
-    /// Ürün listesini gösterir.
+    /// Ürün listesini göster
     /// </summary>
+    /// <param name="page">Sayfa numarası</param>
+    /// <returns>Ürün listesi sayfası</returns>
     public async Task<IActionResult> Index(int page = 1)
     {
         var products = await _productService.GetProductsAsync(page, 20);
@@ -31,8 +38,9 @@ public class ProductsController : Controller
     }
 
     /// <summary>
-    /// Yeni ürün oluşturmak için gösterilecek sayfa.
+    /// Yeni ürün oluşturma sayfasını göster
     /// </summary>
+    /// <returns>Ürün oluşturma sayfası</returns>
     [HttpGet]
     public async Task<IActionResult> Create()
     {
@@ -43,9 +51,10 @@ public class ProductsController : Controller
     }
 
     /// <summary>
-    /// Yeni ürün oluşturmak için gönderilen isteği işler.
+    /// Yeni ürün oluştur
     /// </summary>
-    /// <param name="model">Ürün oluşturmak için gerekli bilgiler</param>
+    /// <param name="model">Ürün bilgileri</param>
+    /// <returns>Ürün oluşturma sayfası veya listeye yönlendirme</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateProductRequest model)
@@ -72,9 +81,10 @@ public class ProductsController : Controller
     }
 
     /// <summary>
-    /// Mevcut ürünü düzenlemek için gösterilecek sayfa.
+    /// Ürün düzenleme sayfasını göster
     /// </summary>
-    /// <param name="id">Düzenlenecek ürün ID'si</param>
+    /// <param name="id">Ürün ID</param>
+    /// <returns>Ürün düzenleme sayfası veya 404</returns>
     [HttpGet]
     public async Task<IActionResult> Edit(Guid id)
     {
@@ -107,10 +117,11 @@ public class ProductsController : Controller
     }
 
     /// <summary>
-    /// Mevcut ürünü düzenlemek için gönderilen isteği işler.
+    /// Ürünü güncelle
     /// </summary>
-    /// <param name="id">Düzenlenecek ürün ID'si</param>
-    /// <param name="model">Ürün düzenleme bilgileri</param>
+    /// <param name="id">Ürün ID</param>
+    /// <param name="model">Güncellenecek bilgiler</param>
+    /// <returns>Ürün düzenleme sayfası veya listeye yönlendirme</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, UpdateProductRequest model)
@@ -137,9 +148,10 @@ public class ProductsController : Controller
     }
 
     /// <summary>
-    /// Mevcut ürünü silmek için gönderilen isteği işler.
+    /// Ürünü sil
     /// </summary>
-    /// <param name="id">Silinecek ürün ID'si</param>
+    /// <param name="id">Ürün ID</param>
+    /// <returns>Ürün listesine yönlendirme</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(Guid id)

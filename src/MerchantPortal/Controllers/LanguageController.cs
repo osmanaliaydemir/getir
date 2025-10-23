@@ -4,16 +4,16 @@ using Microsoft.AspNetCore.Mvc;
 namespace Getir.MerchantPortal.Controllers;
 
 /// <summary>
-/// Language/Culture Controller
-/// Handles language switching and culture preferences
+/// Dil ve kültür yönetimi controller'ı
 /// </summary>
 public class LanguageController : Controller
 {
     /// <summary>
-    /// Set user's preferred culture (supports both GET and POST)
+    /// Kullanıcı dil tercihini ayarla
     /// </summary>
-    /// <param name="culture">Culture code (tr-TR, en-US, ar-SA)</param>
-    /// <param name="returnUrl">URL to return after language change</param>
+    /// <param name="culture">Kültür kodu</param>
+    /// <param name="returnUrl">Dönüş URL'i</param>
+    /// <returns>Belirtilen sayfaya yönlendirme</returns>
     [HttpGet]
     public IActionResult SetLanguage(string culture, string? returnUrl = null)
     {
@@ -48,8 +48,9 @@ public class LanguageController : Controller
     }
 
     /// <summary>
-    /// Get current culture (for AJAX requests)
+    /// Mevcut kültür bilgisini getir
     /// </summary>
+    /// <returns>JSON kültür bilgileri</returns>
     [HttpGet]
     public IActionResult GetCurrentCulture()
     {

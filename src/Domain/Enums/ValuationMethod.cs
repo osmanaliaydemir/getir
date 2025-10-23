@@ -1,32 +1,32 @@
 namespace Getir.Domain.Enums;
 
 /// <summary>
-/// Inventory valuation methods
+/// Envanter değerleme yöntemleri
 /// </summary>
 public enum ValuationMethod
 {
     /// <summary>
-    /// First In, First Out
+    /// İlk Giren, İlk Çıkar
     /// </summary>
     FIFO = 0,
     
     /// <summary>
-    /// Last In, First Out
+    /// Son Giren, İlk Çıkar
     /// </summary>
     LIFO = 1,
     
     /// <summary>
-    /// Weighted Average Cost
+    /// Ağırlıklı Ortalama Maliyet
     /// </summary>
     WeightedAverage = 2,
     
     /// <summary>
-    /// Current Market Price
+    /// Güncel Piyasa Fiyatı
     /// </summary>
     MarketPrice = 3,
     
     /// <summary>
-    /// Standard Cost
+    /// Standart Maliyet
     /// </summary>
     StandardCost = 4
 }

@@ -1,38 +1,37 @@
 namespace Getir.Application.Abstractions;
 
 /// <summary>
-/// Framework-agnostic file upload abstraction
-/// Replaces IFormFile to keep Application layer independent of ASP.NET Core
+/// Dosya yükleme abstraction
 /// </summary>
 public interface IUploadedFile
 {
     /// <summary>
-    /// Gets the file name from the Content-Disposition header
+    /// Dosya adını al
     /// </summary>
     string FileName { get; }
     
     /// <summary>
-    /// Gets the MIME content type from the Content-Type header
+    /// MIME içerik tipini al
     /// </summary>
     string ContentType { get; }
     
     /// <summary>
-    /// Gets the file length in bytes
+    /// Dosya boyutunu al
     /// </summary>
     long Length { get; }
     
     /// <summary>
-    /// Opens the request stream for reading the uploaded file
+    /// Dosyayı okumak için istek akışını aç
     /// </summary>
     Stream OpenReadStream();
     
     /// <summary>
-    /// Copies the file contents to a target stream
+    /// Dosyayı hedef akışa kopyala
     /// </summary>
     Task CopyToAsync(Stream target, CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Reads the file contents as a byte array
+    /// Dosyayı byte array olarak oku
     /// </summary>
     Task<byte[]> ReadAsBytesAsync(CancellationToken cancellationToken = default);
 }

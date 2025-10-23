@@ -11,6 +11,11 @@ public class ReviewsController : Controller
     private readonly IProductReviewService _reviewService;
     private readonly ILogger<ReviewsController> _logger;
 
+    /// <summary>
+    /// ReviewsController constructor
+    /// </summary>
+    /// <param name="reviewService">Ürün yorumu servisi</param>
+    /// <param name="logger">Logger instance</param>
     public ReviewsController(
         IProductReviewService reviewService,
         ILogger<ReviewsController> logger)
@@ -20,8 +25,12 @@ public class ReviewsController : Controller
     }
 
     /// <summary>
-    /// Reviews ana sayfası - Merchant'ın tüm ürün yorumlarını gösterir
+    /// Ürün yorumları sayfasını göster
     /// </summary>
+    /// <param name="page">Sayfa numarası</param>
+    /// <param name="rating">Puan filtresi</param>
+    /// <param name="approved">Onay durumu filtresi</param>
+    /// <returns>Yorumlar sayfası veya giriş sayfasına yönlendirme</returns>
     public async Task<IActionResult> Index(int page = 1, int? rating = null, bool? approved = null)
     {
         var merchantIdStr = HttpContext.Session.GetString("MerchantId");
@@ -52,8 +61,10 @@ public class ReviewsController : Controller
     }
 
     /// <summary>
-    /// Review details modal için data
+    /// Review detaylarını getir
     /// </summary>
+    /// <param name="reviewId">Review ID</param>
+    /// <returns>JSON review detayları</returns>
     [HttpGet]
     public async Task<IActionResult> GetReviewDetails(Guid reviewId)
     {
@@ -78,6 +89,9 @@ public class ReviewsController : Controller
     /// <summary>
     /// Review'a yanıt ver
     /// </summary>
+    /// <param name="reviewId">Review ID</param>
+    /// <param name="response">Yanıt metni</param>
+    /// <returns>JSON sonuç</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RespondToReview(Guid reviewId, string response)
@@ -108,6 +122,8 @@ public class ReviewsController : Controller
     /// <summary>
     /// Review'ı onayla
     /// </summary>
+    /// <param name="reviewId">Review ID</param>
+    /// <returns>JSON sonuç</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ApproveReview(Guid reviewId)
@@ -133,6 +149,9 @@ public class ReviewsController : Controller
     /// <summary>
     /// Review'ı reddet
     /// </summary>
+    /// <param name="reviewId">Review ID</param>
+    /// <param name="reason">Red nedeni</param>
+    /// <returns>JSON sonuç</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RejectReview(Guid reviewId, string reason)
@@ -161,8 +180,11 @@ public class ReviewsController : Controller
     }
 
     /// <summary>
-    /// Belirli bir ürünün yorumlarını getir
+    /// Ürün yorumlarını getir
     /// </summary>
+    /// <param name="productId">Ürün ID</param>
+    /// <param name="page">Sayfa numarası</param>
+    /// <returns>JSON ürün yorumları</returns>
     [HttpGet]
     public async Task<IActionResult> GetProductReviews(Guid productId, int page = 1)
     {

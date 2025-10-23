@@ -12,6 +12,12 @@ public class MerchantController : Controller
     private readonly IWorkingHoursService _workingHoursService;
     private readonly ILogger<MerchantController> _logger;
 
+    /// <summary>
+    /// MerchantController constructor
+    /// </summary>
+    /// <param name="merchantService">Merchant servisi</param>
+    /// <param name="workingHoursService">Çalışma saatleri servisi</param>
+    /// <param name="logger">Logger instance</param>
     public MerchantController(IMerchantService merchantService, IWorkingHoursService workingHoursService, ILogger<MerchantController> logger)
     {
         _merchantService = merchantService;
@@ -19,6 +25,10 @@ public class MerchantController : Controller
         _logger = logger;
     }
 
+    /// <summary>
+    /// Merchant profil sayfasını göster
+    /// </summary>
+    /// <returns>Profil düzenleme sayfasına yönlendirme</returns>
     public IActionResult Profile()
     {
         var merchantIdStr = HttpContext.Session.GetString("MerchantId");
@@ -33,6 +43,11 @@ public class MerchantController : Controller
         return RedirectToAction(nameof(Edit), new { id = merchantId });
     }
 
+    /// <summary>
+    /// Merchant düzenleme sayfasını göster
+    /// </summary>
+    /// <param name="id">Merchant ID</param>
+    /// <returns>Merchant düzenleme sayfası veya yönlendirme</returns>
     [HttpGet]
     public async Task<IActionResult> Edit(Guid id)
     {
@@ -81,6 +96,12 @@ public class MerchantController : Controller
         return View(model);
     }
 
+    /// <summary>
+    /// Merchant bilgilerini güncelle
+    /// </summary>
+    /// <param name="id">Merchant ID</param>
+    /// <param name="model">Güncellenecek bilgiler</param>
+    /// <returns>Merchant düzenleme sayfası veya yönlendirme</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, UpdateMerchantRequest model)
@@ -104,6 +125,10 @@ public class MerchantController : Controller
         return RedirectToAction(nameof(Edit), new { id });
     }
 
+    /// <summary>
+    /// Çalışma saatleri sayfasını göster
+    /// </summary>
+    /// <returns>Çalışma saatleri sayfası veya giriş sayfasına yönlendirme</returns>
     [HttpGet]
     public async Task<IActionResult> WorkingHours()
     {
@@ -135,6 +160,11 @@ public class MerchantController : Controller
         return View(workingHours);
     }
 
+    /// <summary>
+    /// Çalışma saatlerini güncelle
+    /// </summary>
+    /// <param name="workingHours">Çalışma saatleri listesi</param>
+    /// <returns>Çalışma saatleri sayfasına yönlendirme</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateWorkingHours(List<UpdateWorkingHoursRequest> workingHours)
@@ -160,6 +190,10 @@ public class MerchantController : Controller
         return RedirectToAction(nameof(WorkingHours));
     }
 
+    /// <summary>
+    /// Ayarlar sayfasını göster
+    /// </summary>
+    /// <returns>Ayarlar sayfası veya giriş sayfasına yönlendirme</returns>
     [HttpGet]
     public IActionResult Settings()
     {

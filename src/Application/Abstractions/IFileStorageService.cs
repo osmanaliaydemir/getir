@@ -4,26 +4,26 @@ using Getir.Application.DTO;
 namespace Getir.Application.Abstractions;
 
 /// <summary>
-/// File storage service interface for Azure Blob Storage operations
+/// Azure Blob Storage işlemleri için dosya storage servisi interface'i
 /// </summary>
 public interface IFileStorageService
 {
     /// <summary>
-    /// Upload a file to blob storage
+    /// Blob storage'a bir dosya yükle
     /// </summary>
     Task<Result<FileUploadResponse>> UploadFileAsync(
         FileUploadRequest request, 
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Upload multiple files to blob storage
+    /// Blob storage'a birden fazla dosya yükle
     /// </summary>
     Task<Result<IEnumerable<FileUploadResponse>>> UploadMultipleFilesAsync(
         IEnumerable<FileUploadRequest> requests, 
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Delete a file from blob storage
+    /// Blob storage'dan bir dosya sil
     /// </summary>
     Task<Result> DeleteFileAsync(
         string fileName, 
@@ -31,7 +31,7 @@ public interface IFileStorageService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Delete multiple files from blob storage
+    /// Blob storage'dan birden fazla dosya sil
     /// </summary>
     Task<Result> DeleteMultipleFilesAsync(
         IEnumerable<string> fileNames, 
@@ -39,7 +39,7 @@ public interface IFileStorageService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get file download URL
+    /// Dosya indirme URL'i al
     /// </summary>
     Task<Result<string>> GetFileUrlAsync(
         string fileName, 
@@ -47,7 +47,7 @@ public interface IFileStorageService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Check if file exists in blob storage
+    /// Blob storage'da dosya olup olmadığını kontrol et
     /// </summary>
     Task<Result<bool>> FileExistsAsync(
         string fileName, 
@@ -55,7 +55,7 @@ public interface IFileStorageService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get file metadata
+    /// Dosya meta verilerini al
     /// </summary>
     Task<Result<FileMetadata>> GetFileMetadataAsync(
         string fileName, 
@@ -63,7 +63,7 @@ public interface IFileStorageService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Generate thumbnail for image
+    /// Resim için thumbnail oluştur
     /// </summary>
     Task<Result<FileUploadResponse>> GenerateThumbnailAsync(
         FileUploadRequest request,
@@ -72,7 +72,7 @@ public interface IFileStorageService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Compress image file
+    /// Resim dosyasını sıkıştır
     /// </summary>
     Task<Result<FileUploadResponse>> CompressImageAsync(
         FileUploadRequest request,
@@ -80,7 +80,7 @@ public interface IFileStorageService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Validate file before upload
+    /// Yüklemeden önce dosya doğrulama
     /// </summary>
     Task<Result> ValidateFileAsync(
         FileUploadRequest request, 

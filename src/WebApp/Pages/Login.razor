@@ -1,0 +1,161 @@
+@page "/login"
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Giriş Yap - Getir</PageTitle>
+
+<div class="auth-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <h2 class="auth-title">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            Giriş Yap
+                        </h2>
+                        <p class="auth-subtitle">Hesabınıza giriş yapın</p>
+                    </div>
+
+                    <div class="auth-body">
+                        <form @onsubmit="HandleLogin">
+                            <div class="form-group mb-3">
+                                <label class="form-label">E-posta</label>
+                                <input type="email" 
+                                       class="@GetInputClass(isEmailInvalid)" 
+                                       @bind="loginRequest.Email" 
+                                       @onblur="ValidateEmail"
+                                       placeholder="ornek@email.com" />
+                                @if (isEmailInvalid)
+                                {
+                                    <div class="invalid-feedback">Geçerli bir e-posta adresi girin</div>
+                                }
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">Şifre</label>
+                                <div class="password-input">
+                                    <input type="@(showPassword ? "text" : "password")" 
+                                           class="@GetInputClass(isPasswordInvalid)" 
+                                           @bind="loginRequest.Password" 
+                                           @onblur="ValidatePassword"
+                                           placeholder="Şifrenizi girin" />
+                                    <button type="button" class="password-toggle" @onclick="TogglePassword">
+                                        <i class="bi @(showPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                                    </button>
+                                </div>
+                                @if (isPasswordInvalid)
+                                {
+                                    <div class="invalid-feedback">Şifre en az 6 karakter olmalıdır</div>
+                                }
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" @bind="rememberMe" class="form-check-input" />
+                                    <label class="form-check-label">Beni hatırla</label>
+                                </div>
+                            </div>
+
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-primary btn-lg" disabled="@isLoading">
+                                    @if (isLoading)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        <text>Giriş yapılıyor...</text>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-box-arrow-in-right"></i>
+                                        <text>Giriş Yap</text>
+                                    }
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="auth-divider">
+                            <span>veya</span>
+                        </div>
+
+                        <div class="auth-links">
+                            <a href="/register" class="btn btn-outline-primary">
+                                <i class="bi bi-person-plus"></i>
+                                Hesap Oluştur
+                            </a>
+                            <a href="/forgot-password" class="btn btn-link">
+                                <i class="bi bi-key"></i>
+                                Şifremi Unuttum
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginRequest loginRequest = new();
+    private bool isLoading = false;
+    private bool showPassword = false;
+    private bool rememberMe = false;
+    private bool isEmailInvalid = false;
+    private bool isPasswordInvalid = false;
+
+    private string GetInputClass(bool isInvalid)
+    {
+        return $"form-control {(isInvalid ? "is-invalid" : "")}";
+    }
+
+    private void ValidateEmail()
+    {
+        isEmailInvalid = string.IsNullOrEmpty(loginRequest.Email) || !loginRequest.Email.Contains("@");
+    }
+
+    private void ValidatePassword()
+    {
+        isPasswordInvalid = string.IsNullOrEmpty(loginRequest.Password) || loginRequest.Password.Length < 6;
+    }
+
+    private void TogglePassword()
+    {
+        showPassword = !showPassword;
+    }
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            isLoading = true;
+            ValidateEmail();
+            ValidatePassword();
+
+            if (isEmailInvalid || isPasswordInvalid)
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Lütfen tüm alanları doğru şekilde doldurun.");
+                return;
+            }
+
+            var result = await AuthService.LoginAsync(loginRequest);
+            
+            if (result != null && result.IsSuccess)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", "Giriş başarılı! Hoş geldiniz.");
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", result?.Error ?? "Giriş yapılırken bir hata oluştu.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

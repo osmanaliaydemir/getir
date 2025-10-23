@@ -1,27 +1,27 @@
 namespace Getir.Domain.Enums;
 
 /// <summary>
-/// Stock synchronization types
+/// Stok senkronizasyon türleri
 /// </summary>
 public enum StockSyncType
 {
     /// <summary>
-    /// Manual synchronization
+    /// Manuel senkronizasyon
     /// </summary>
     Manual = 0,
     
     /// <summary>
-    /// Automatic synchronization
+    /// Otomatik senkronizasyon
     /// </summary>
     Automatic = 1,
     
     /// <summary>
-    /// Scheduled synchronization
+    /// Planlanmış senkronizasyon
     /// </summary>
     Scheduled = 2,
     
     /// <summary>
-    /// Real-time synchronization
+    /// Gerçek zamanlı senkronizasyon
     /// </summary>
     Realtime = 3
 }

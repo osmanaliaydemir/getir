@@ -12,6 +12,12 @@ public class StockController : Controller
     private readonly IProductService _productService;
     private readonly ILogger<StockController> _logger;
 
+    /// <summary>
+    /// StockController constructor
+    /// </summary>
+    /// <param name="stockService">Stok servisi</param>
+    /// <param name="productService">Ürün servisi</param>
+    /// <param name="logger">Logger instance</param>
     public StockController(IStockService stockService, IProductService productService, ILogger<StockController> logger)
     {
         _stockService = stockService;
@@ -20,8 +26,9 @@ public class StockController : Controller
     }
 
     /// <summary>
-    /// Stock index page - main stock management
+    /// Stok yönetimi sayfasını göster
     /// </summary>
+    /// <returns>Stok yönetimi sayfası veya ana sayfaya yönlendirme</returns>
     public async Task<IActionResult> Index()
     {
         var merchantIdStr = HttpContext.Session.GetString("MerchantId");
@@ -40,8 +47,9 @@ public class StockController : Controller
     }
 
     /// <summary>
-    /// Stock alerts page
+    /// Stok uyarıları sayfasını göster
     /// </summary>
+    /// <returns>Stok uyarıları sayfası</returns>
     public async Task<IActionResult> Alerts()
     {
         var alerts = await _stockService.GetStockAlertsAsync();
@@ -49,8 +57,12 @@ public class StockController : Controller
     }
 
     /// <summary>
-    /// Stock history page for a product
+    /// Ürün stok geçmişi sayfasını göster
     /// </summary>
+    /// <param name="productId">Ürün ID</param>
+    /// <param name="fromDate">Başlangıç tarihi</param>
+    /// <param name="toDate">Bitiş tarihi</param>
+    /// <returns>Stok geçmişi sayfası veya ürünler sayfasına yönlendirme</returns>
     public async Task<IActionResult> History(Guid productId, DateTime? fromDate = null, DateTime? toDate = null)
     {
         var product = await _productService.GetProductByIdAsync(productId);
@@ -70,8 +82,10 @@ public class StockController : Controller
     }
 
     /// <summary>
-    /// Bulk update stock - POST endpoint
+    /// Toplu stok güncelleme
     /// </summary>
+    /// <param name="request">Toplu güncelleme verileri</param>
+    /// <returns>JSON sonuç</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> BulkUpdate([FromBody] BulkUpdateStockRequest request)
@@ -100,8 +114,10 @@ public class StockController : Controller
     }
 
     /// <summary>
-    /// Update single product stock - POST endpoint
+    /// Tek ürün stok güncelleme
     /// </summary>
+    /// <param name="request">Stok güncelleme verileri</param>
+    /// <returns>JSON sonuç</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateStock([FromBody] UpdateStockRequest request)
@@ -130,8 +146,11 @@ public class StockController : Controller
     }
 
     /// <summary>
-    /// Resolve stock alert - POST endpoint
+    /// Stok uyarısını çöz
     /// </summary>
+    /// <param name="alertId">Uyarı ID</param>
+    /// <param name="resolutionNotes">Çözüm notları</param>
+    /// <returns>Uyarılar sayfasına yönlendirme</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ResolveAlert(Guid alertId, string resolutionNotes)
@@ -158,8 +177,9 @@ public class StockController : Controller
     }
 
     /// <summary>
-    /// Manually check stock levels - POST endpoint
+    /// Stok seviyelerini kontrol et
     /// </summary>
+    /// <returns>JSON sonuç</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CheckLevels()
@@ -183,8 +203,9 @@ public class StockController : Controller
     }
 
     /// <summary>
-    /// Export stock to CSV
+    /// Stok verilerini CSV'ye aktar
     /// </summary>
+    /// <returns>CSV dosyası</returns>
     [HttpGet]
     public async Task<IActionResult> ExportToCSV()
     {
@@ -209,8 +230,10 @@ public class StockController : Controller
     }
 
     /// <summary>
-    /// Import stock from CSV
+    /// CSV'den stok verilerini içe aktar
     /// </summary>
+    /// <param name="file">CSV dosyası</param>
+    /// <returns>JSON sonuç</returns>
     [HttpPost]
     public async Task<IActionResult> ImportFromCSV(IFormFile file)
     {
@@ -248,8 +271,10 @@ public class StockController : Controller
     }
 
     /// <summary>
-    /// Get low stock products
+    /// Düşük stoklu ürünleri getir
     /// </summary>
+    /// <param name="threshold">Eşik değeri</param>
+    /// <returns>JSON düşük stoklu ürünler</returns>
     [HttpGet]
     public async Task<IActionResult> GetLowStockProducts(int threshold = 10)
     {

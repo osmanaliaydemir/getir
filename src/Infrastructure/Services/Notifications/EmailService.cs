@@ -30,6 +30,12 @@ public class EmailService : IEmailService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Email gönder
+    /// </summary>
+    /// <param name="request">Email isteği</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Email gönderim sonucu</returns>
     public async Task<Result> SendEmailAsync(
         EmailRequest request, 
         CancellationToken cancellationToken = default)
@@ -67,6 +73,12 @@ public class EmailService : IEmailService
         }
     }
 
+    /// <summary>
+    /// Birden fazla email gönder
+    /// </summary>
+    /// <param name="requests">Email istekleri</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Birden fazla email gönderim sonucu</returns>
     public async Task<Result> SendBulkEmailsAsync(
         IEnumerable<EmailRequest> requests, 
         CancellationToken cancellationToken = default)
@@ -116,6 +128,15 @@ public class EmailService : IEmailService
         }
     }
 
+    /// <summary>
+    /// HTML içeriği ile email gönder
+    /// </summary>
+    /// <param name="to">Alıcı email adresi</param>
+    /// <param name="subject">Email konusu</param>
+    /// <param name="htmlContent">HTML içeriği</param>
+    /// <param name="from">Gönderen email adresi</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>HTML içeriği ile email gönderim sonucu</returns>
     public async Task<Result> SendHtmlEmailAsync(
         string to, 
         string subject, 
@@ -134,6 +155,15 @@ public class EmailService : IEmailService
         return await SendEmailAsync(request, cancellationToken);
     }
 
+    /// <summary>
+    /// Metin içeriği ile email gönder
+    /// </summary>
+    /// <param name="to">Alıcı email adresi</param>
+    /// <param name="subject">Email konusu</param>
+    /// <param name="textContent">Metin içeriği</param>
+    /// <param name="from">Gönderen email adresi</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Metin içeriği ile email gönderim sonucu</returns>
     public async Task<Result> SendTextEmailAsync(
         string to, 
         string subject, 
@@ -152,6 +182,13 @@ public class EmailService : IEmailService
         return await SendEmailAsync(request, cancellationToken);
     }
 
+    /// <summary>
+    /// Ekler ile email gönder
+    /// </summary>
+    /// <param name="request">Email isteği</param>
+    /// <param name="attachments">Ekler</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Ekler ile email gönderim sonucu</returns>
     public async Task<Result> SendEmailWithAttachmentsAsync(
         EmailRequest request,
         IEnumerable<EmailAttachment> attachments,
@@ -198,6 +235,12 @@ public class EmailService : IEmailService
         }
     }
 
+    /// <summary>
+    /// Email adresi doğrula
+    /// </summary>
+    /// <param name="emailAddress">Email adresi</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Email adresi doğrulama sonucu</returns>
     public Task<Result<bool>> ValidateEmailAsync(
         string emailAddress, 
         CancellationToken cancellationToken = default)
@@ -222,6 +265,12 @@ public class EmailService : IEmailService
         }
     }
 
+    /// <summary>
+    /// Email teslimat durumunu getir
+    /// </summary>
+    /// <param name="messageId">Mesaj ID</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Email teslimat durumunu</returns>
     public Task<Result<EmailDeliveryStatus>> GetDeliveryStatusAsync(
         string messageId, 
         CancellationToken cancellationToken = default)
@@ -248,6 +297,10 @@ public class EmailService : IEmailService
 
     #region Helper Methods
 
+    /// <summary>
+    /// SMTP client oluştur
+    /// </summary>
+    /// <returns>SMTP client</returns>
     private SmtpClient CreateSmtpClient()
     {
         var smtpClient = new SmtpClient(_emailConfig.SmtpServer, _emailConfig.SmtpPort)
@@ -260,6 +313,11 @@ public class EmailService : IEmailService
         return smtpClient;
     }
 
+    /// <summary>
+    /// Mail mesajı oluştur
+    /// </summary>
+    /// <param name="request">Email isteği</param>
+    /// <returns>Mail mesajı</returns>
     private MailMessage CreateMailMessage(EmailRequest request)
     {
         var mailMessage = new MailMessage
@@ -291,6 +349,11 @@ public class EmailService : IEmailService
         return mailMessage;
     }
 
+    /// <summary>
+    /// Email adresini maskele
+    /// </summary>
+    /// <param name="emailAddress">Email adresi</param>
+    /// <returns>Maskeleli email adresi</returns>
     private string MaskEmailAddress(string emailAddress)
     {
         if (string.IsNullOrEmpty(emailAddress) || !emailAddress.Contains('@'))

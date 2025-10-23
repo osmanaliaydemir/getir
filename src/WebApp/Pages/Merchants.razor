@@ -1,0 +1,300 @@
+@page "/merchants"
+@inject MerchantService MerchantService
+@inject NavigationManager Navigation
+
+<PageTitle>Mağazalar - Getir</PageTitle>
+
+<!-- Header Section -->
+<section class="merchants-header mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-4 fw-bold text-primary mb-3">
+                    <i class="bi bi-shop"></i>
+                    Mağazalar
+                </h1>
+                <p class="lead text-muted">
+                    Yakınınızdaki en iyi mağazaları keşfedin. Hızlı teslimat ve kaliteli ürünler için doğru seçim!
+                </p>
+            </div>
+            <div class="col-md-4">
+                <div class="search-box">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Mağaza ara..." @bind="searchQuery" @onkeypress="OnSearchKeyPress" />
+                        <button class="btn btn-primary" @onclick="SearchMerchants">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Filter -->
+<section class="categories-filter mb-4">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn @(selectedCategory == "" ? "btn-primary" : "btn-outline-primary")" @onclick="@(() => FilterByCategory(""))">
+                        Tümü
+                    </button>
+                    <button class="btn @(selectedCategory == "market" ? "btn-primary" : "btn-outline-primary")" @onclick="@(() => FilterByCategory("market"))">
+                        <i class="bi bi-basket"></i> Market
+                    </button>
+                    <button class="btn @(selectedCategory == "pharmacy" ? "btn-primary" : "btn-outline-primary")" @onclick="@(() => FilterByCategory("pharmacy"))">
+                        <i class="bi bi-heart"></i> Eczane
+                    </button>
+                    <button class="btn @(selectedCategory == "restaurant" ? "btn-primary" : "btn-outline-primary")" @onclick="@(() => FilterByCategory("restaurant"))">
+                        <i class="bi bi-people"></i> Restoran
+                    </button>
+                    <button class="btn @(selectedCategory == "cafe" ? "btn-primary" : "btn-outline-primary")" @onclick="@(() => FilterByCategory("cafe"))">
+                        <i class="bi bi-cup"></i> Kafe
+                    </button>
+                    <button class="btn @(selectedCategory == "bakery" ? "btn-primary" : "btn-outline-primary")" @onclick="@(() => FilterByCategory("bakery"))">
+                        <i class="bi bi-cake"></i> Fırın
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Merchants Grid -->
+<section class="merchants-grid">
+    <div class="container">
+        @if (isLoading)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Yükleniyor...</span>
+                </div>
+                <p class="mt-3">Mağazalar yükleniyor...</p>
+            </div>
+        }
+        else if (merchants?.Any() == true)
+        {
+            <div class="row">
+                @foreach (var merchant in merchants)
+                {
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card merchant-card h-100" @onclick="() => GoToMerchant(merchant.Id)">
+                            <div class="merchant-image-container">
+                                <img src="@(string.IsNullOrEmpty(merchant.ImageUrl) ? "https://via.placeholder.com/400x200/007bff/ffffff?text=" + Uri.EscapeDataString(merchant.Name) : merchant.ImageUrl)" 
+                                     class="card-img-top merchant-image" 
+                                     alt="@merchant.Name" />
+                                <div class="merchant-badge">
+                                    <span class="badge bg-primary">@merchant.Category</span>
+                                </div>
+                                @if (merchant.Rating > 0)
+                                {
+                                    <div class="merchant-rating">
+                                        <i class="bi bi-star-fill"></i>
+                                        <span>@merchant.Rating.ToString("F1")</span>
+                                    </div>
+                                }
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title merchant-name">@merchant.Name</h5>
+                                <p class="card-text text-muted small">@merchant.Description</p>
+                                
+                                <div class="merchant-info">
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div class="info-item">
+                                                <i class="bi bi-clock text-primary"></i>
+                                                <small class="d-block">@merchant.DeliveryTime.TotalMinutes dakika</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="info-item">
+                                                <i class="bi bi-truck text-primary"></i>
+                                                <small class="d-block">₺@merchant.DeliveryFee.ToString("F2")</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="info-item">
+                                                <i class="bi bi-cart text-primary"></i>
+                                                <small class="d-block">₺@merchant.MinOrderAmount.ToString("F2") min</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="merchant-footer mt-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="merchant-status">
+                                            @if (merchant.IsActive)
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle"></i>
+                                                    Açık
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-x-circle"></i>
+                                                    Kapalı
+                                                </span>
+                                            }
+                                        </div>
+                                        <button class="btn btn-outline-primary btn-sm" @onclick="() => GoToMerchant(merchant.Id)" @onclick:stopPropagation="true">
+                                            <i class="bi bi-eye"></i>
+                                            Detay
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            
+            <!-- Load More Button -->
+            @if (hasMoreMerchants)
+            {
+                <div class="text-center mt-4">
+                    <button class="btn btn-outline-primary btn-lg" @onclick="LoadMoreMerchants" disabled="@isLoadingMore">
+                        @if (isLoadingMore)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        }
+                        Daha Fazla Yükle
+                    </button>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <div class="empty-state">
+                    <i class="bi bi-shop display-1 text-muted mb-4"></i>
+                    <h3>Mağaza Bulunamadı</h3>
+                    <p class="text-muted mb-4">
+                        @if (!string.IsNullOrEmpty(searchQuery))
+                        {
+                            <text>"@searchQuery" araması için mağaza bulunamadı.</text>
+                        }
+                        else
+                        {
+                            <text>Şu anda mağaza bulunmuyor. Lütfen daha sonra tekrar deneyin.</text>
+                        }
+                    </p>
+                    @if (!string.IsNullOrEmpty(searchQuery))
+                    {
+                        <button class="btn btn-primary" @onclick="ClearSearch">
+                            <i class="bi bi-arrow-left"></i>
+                            Aramayı Temizle
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private List<MerchantResponse>? merchants;
+    private bool isLoading = true;
+    private bool isLoadingMore = false;
+    private bool hasMoreMerchants = true;
+    private int currentPage = 1;
+    private string selectedCategory = "";
+    private string searchQuery = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMerchants();
+    }
+
+    private async Task LoadMerchants(bool loadMore = false)
+    {
+        try
+        {
+            if (loadMore)
+            {
+                isLoadingMore = true;
+                currentPage++;
+            }
+            else
+            {
+                isLoading = true;
+                currentPage = 1;
+                merchants = new List<MerchantResponse>();
+            }
+
+            List<MerchantResponse> newMerchants;
+            
+            if (!string.IsNullOrEmpty(searchQuery))
+            {
+                newMerchants = await MerchantService.SearchMerchantsAsync(searchQuery, 20);
+            }
+            else if (!string.IsNullOrEmpty(selectedCategory))
+            {
+                newMerchants = await MerchantService.GetMerchantsByCategoryAsync(selectedCategory, 20);
+            }
+            else
+            {
+                newMerchants = await MerchantService.GetMerchantsAsync(currentPage, 20);
+            }
+
+            if (loadMore && merchants != null)
+            {
+                merchants.AddRange(newMerchants);
+            }
+            else
+            {
+                merchants = newMerchants;
+            }
+
+            hasMoreMerchants = newMerchants.Count == 20;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading merchants: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            isLoadingMore = false;
+        }
+    }
+
+    private async Task LoadMoreMerchants()
+    {
+        await LoadMerchants(true);
+    }
+
+    private async Task FilterByCategory(string category)
+    {
+        selectedCategory = category;
+        await LoadMerchants();
+    }
+
+    private async Task SearchMerchants()
+    {
+        await LoadMerchants();
+    }
+
+    private async Task OnSearchKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SearchMerchants();
+        }
+    }
+
+    private async Task ClearSearch()
+    {
+        searchQuery = "";
+        await LoadMerchants();
+    }
+
+    private void GoToMerchant(Guid merchantId)
+    {
+        Navigation.NavigateTo($"/merchant/{merchantId}");
+    }
+}
+

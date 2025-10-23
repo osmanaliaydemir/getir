@@ -8,42 +8,71 @@ namespace Getir.MerchantPortal.Services;
 public interface IReviewService
 {
     /// <summary>
-    /// Merchant'ın aldığı değerlendirmeleri getir
+    /// Merchant değerlendirmelerini getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="filter">Filtre parametreleri</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Değerlendirme listesi</returns>
     Task<List<ReviewResponse>> GetMerchantReviewsAsync(Guid merchantId, ReviewFilterModel filter, CancellationToken ct = default);
     
     /// <summary>
-    /// Merchant'ın kuryelerini değerlendirmeleri getir
+    /// Kurye değerlendirmelerini getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="filter">Filtre parametreleri</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Değerlendirme listesi</returns>
     Task<List<ReviewResponse>> GetCourierReviewsAsync(Guid merchantId, ReviewFilterModel filter, CancellationToken ct = default);
     
     /// <summary>
-    /// Merchant review istatistiklerini getir
+    /// Merchant değerlendirme istatistiklerini getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Değerlendirme istatistikleri</returns>
     Task<ReviewStatsResponse?> GetMerchantReviewStatsAsync(Guid merchantId, CancellationToken ct = default);
     
     /// <summary>
-    /// Courier review istatistiklerini getir
+    /// Kurye değerlendirme istatistiklerini getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Değerlendirme istatistikleri</returns>
     Task<ReviewStatsResponse?> GetCourierReviewStatsAsync(Guid merchantId, CancellationToken ct = default);
     
     /// <summary>
-    /// Review'a yanıt ver
+    /// Değerlendirmeye yanıt ver
     /// </summary>
+    /// <param name="reviewId">Değerlendirme ID</param>
+    /// <param name="response">Yanıt metni</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>İşlem başarı durumu</returns>
     Task<bool> RespondToReviewAsync(Guid reviewId, string response, CancellationToken ct = default);
     
     /// <summary>
-    /// Review'ı beğen/beğenme
+    /// Değerlendirmeyi beğen/beğenme
     /// </summary>
+    /// <param name="reviewId">Değerlendirme ID</param>
+    /// <param name="isLiked">Beğenilme durumu</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>İşlem başarı durumu</returns>
     Task<bool> LikeReviewAsync(Guid reviewId, bool isLiked, CancellationToken ct = default);
     
     /// <summary>
-    /// Review'ı rapor et
+    /// Değerlendirmeyi rapor et
     /// </summary>
+    /// <param name="reviewId">Değerlendirme ID</param>
+    /// <param name="reason">Rapor nedeni</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>İşlem başarı durumu</returns>
     Task<bool> ReportReviewAsync(Guid reviewId, string reason, CancellationToken ct = default);
     
     /// <summary>
-    /// Genel review dashboard verilerini getir
+    /// Değerlendirme dashboard verilerini getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Dashboard verileri</returns>
     Task<ReviewDashboardModel> GetReviewDashboardAsync(Guid merchantId, CancellationToken ct = default);
 }

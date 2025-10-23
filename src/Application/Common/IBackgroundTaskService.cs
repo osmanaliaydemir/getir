@@ -40,9 +40,21 @@ public enum TaskPriority
 /// </summary>
 public class BackgroundTaskData<T> where T : class
 {
+    /// <summary>
+    /// Task data
+    /// </summary>
     public T Data { get; set; } = default!;
+    /// <summary>
+    /// Task priority
+    /// </summary>
     public TaskPriority Priority { get; set; } = TaskPriority.Normal;
+    /// <summary>
+    /// Task created at
+    /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    /// <summary>
+    /// Task correlation id
+    /// </summary>
     public string? CorrelationId { get; set; }
 }
 
@@ -57,6 +69,11 @@ public class BackgroundTaskService : IBackgroundTaskService, IDisposable
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly Task _processingTask;
 
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    /// <param name="serviceProvider">Service provider</param>
+    /// <param name="logger">Logger</param>
     public BackgroundTaskService(IServiceProvider serviceProvider, ILogger<BackgroundTaskService> logger)
     {
         _serviceProvider = serviceProvider;
@@ -76,11 +93,26 @@ public class BackgroundTaskService : IBackgroundTaskService, IDisposable
         _processingTask = Task.Run(ProcessTasksAsync);
     }
 
+    /// <summary>
+    /// Background task'ı kuyruğa ekler
+    /// </summary>
+    /// <typeparam name="T">Task data type</typeparam>
+    /// <param name="taskData">Task data</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Task</returns>
     public async Task EnqueueTaskAsync<T>(T taskData, CancellationToken cancellationToken = default) where T : class
     {
         await EnqueueTaskAsync(taskData, TaskPriority.Normal, cancellationToken);
     }
 
+    /// <summary>
+    /// Background task'ı kuyruğa ekler (priority ile)
+    /// </summary>
+    /// <typeparam name="T">Task data type</typeparam>
+    /// <param name="taskData">Task data</param>
+    /// <param name="priority">Task priority</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Task</returns>
     public async Task EnqueueTaskAsync<T>(T taskData, TaskPriority priority, CancellationToken cancellationToken = default) where T : class
     {
         var backgroundTask = new BackgroundTaskData<object>
@@ -94,6 +126,13 @@ public class BackgroundTaskService : IBackgroundTaskService, IDisposable
         _logger.LogDebug("Background task enqueued: {Type} with priority {Priority}", typeof(T).Name, priority);
     }
 
+    /// <summary>
+    /// Background task'ı hemen çalıştırır
+    /// </summary>
+    /// <typeparam name="T">Task data type</typeparam>
+    /// <param name="taskData">Task data</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Task</returns>
     public async Task ExecuteTaskAsync<T>(T taskData, CancellationToken cancellationToken = default) where T : class
     {
         try
@@ -110,6 +149,10 @@ public class BackgroundTaskService : IBackgroundTaskService, IDisposable
         }
     }
 
+    /// <summary>
+    /// Background task'ları işler
+    /// </summary>
+    /// <returns>Task</returns>
     private async Task ProcessTasksAsync()
     {
         await foreach (var taskData in _taskChannel.Reader.ReadAllAsync(_cancellationTokenSource.Token))
@@ -128,6 +171,13 @@ public class BackgroundTaskService : IBackgroundTaskService, IDisposable
         }
     }
 
+    /// <summary>
+    /// Background task'ı işler
+    /// </summary>
+    /// <typeparam name="T">Task data type</typeparam>
+    /// <param name="taskData">Task data</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Task</returns>
     private async Task ProcessTaskDataAsync<T>(T taskData, CancellationToken cancellationToken) where T : class
     {
         // Bu method'da task type'ına göre uygun handler'ı bulup çalıştırmak gerekir
@@ -139,6 +189,9 @@ public class BackgroundTaskService : IBackgroundTaskService, IDisposable
         await Task.Delay(100, cancellationToken); // Simulated work
     }
 
+    /// <summary>
+    /// Dispose
+    /// </summary>
     public void Dispose()
     {
         _cancellationTokenSource.Cancel();

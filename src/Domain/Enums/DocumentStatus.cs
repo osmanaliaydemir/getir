@@ -1,37 +1,37 @@
 namespace Getir.Domain.Enums;
 
 /// <summary>
-/// Merchant document verification status
+/// İşletme dokümanı doğrulama durumları
 /// </summary>
 public enum DocumentStatus
 {
     /// <summary>
-    /// Document uploaded, waiting for verification
+    /// Doküman yüklendi, doğrulama bekleniyor
     /// </summary>
     Pending = 0,
     
     /// <summary>
-    /// Document is under review by admin
+    /// Doküman admin tarafından inceleniyor
     /// </summary>
     UnderReview = 1,
     
     /// <summary>
-    /// Document approved by admin
+    /// Doküman admin tarafından onaylandı
     /// </summary>
     Approved = 2,
     
     /// <summary>
-    /// Document rejected by admin
+    /// Doküman admin tarafından reddedildi
     /// </summary>
     Rejected = 3,
     
     /// <summary>
-    /// Document expired and needs renewal
+    /// Doküman süresi doldu ve yenileme gerekiyor
     /// </summary>
     Expired = 4,
     
     /// <summary>
-    /// Document is no longer valid
+    /// Doküman geçersiz hale geldi
     /// </summary>
     Invalid = 5
 }

@@ -1,0 +1,301 @@
+@page "/favorites"
+@inject ProductService ProductService
+@inject CartService CartService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<PageTitle>Favori Ürünler - Getir</PageTitle>
+
+@if (!isAuthenticated)
+{
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center">
+                <div class="card">
+                    <div class="card-body py-5">
+                        <i class="bi bi-person-x display-1 text-warning mb-4"></i>
+                        <h3>Giriş Yapın</h3>
+                        <p class="text-muted mb-4">
+                            Favori ürünlerinizi görüntülemek için giriş yapmanız gerekiyor.
+                        </p>
+                        <a href="/login" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            Giriş Yap
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else if (isLoading)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Yükleniyor...</span>
+        </div>
+        <p class="mt-3">Favori ürünleriniz yükleniyor...</p>
+    </div>
+}
+else
+{
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Favori Ürünler</li>
+            </ol>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="bi bi-heart-fill text-danger"></i>
+                            Favori Ürünlerim
+                        </h4>
+                        <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm" @bind="selectedCategory" @bind:after="FilterFavorites">
+                                <option value="">Tüm Kategoriler</option>
+                                <option value="market">Market</option>
+                                <option value="restaurant">Restoran</option>
+                                <option value="pharmacy">Eczane</option>
+                                <option value="electronics">Elektronik</option>
+                            </select>
+                            <button class="btn btn-outline-primary btn-sm" @onclick="RefreshFavorites">
+                                <i class="bi bi-arrow-clockwise"></i>
+                                Yenile
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @if (favoriteProducts?.Any() == true)
+                        {
+                            <div class="row">
+                                @foreach (var product in filteredProducts)
+                                {
+                                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                                        <div class="card product-card h-100">
+                                            <div class="position-relative">
+                                                <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? "https://via.placeholder.com/200x200/007bff/ffffff?text=" + Uri.EscapeDataString(product.Name) : product.ImageUrl)" 
+                                                     class="card-img-top" alt="@product.Name" style="height: 200px; object-fit: cover;">
+                                                <button class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" 
+                                                        @onclick="@(() => RemoveFromFavorites(product.Id))"
+                                                        title="Favorilerden Çıkar">
+                                                    <i class="bi bi-heart-fill"></i>
+                                                </button>
+                                                @if (product.DiscountPercentage > 0)
+                                                {
+                                                    <span class="badge bg-danger position-absolute top-0 start-0 m-2">
+                                                        %@product.DiscountPercentage İndirim
+                                                    </span>
+                                                }
+                                            </div>
+                                            <div class="card-body d-flex flex-column">
+                                                <h6 class="card-title">@product.Name</h6>
+                                                <p class="card-text text-muted small flex-grow-1">@product.Description</p>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        @if (product.DiscountPercentage > 0)
+                                                        {
+                                                            <span class="text-decoration-line-through text-muted small">₺@product.Price.ToString("F2")</span>
+                                                            <br>
+                                                            <span class="fw-bold text-danger">₺@product.DiscountedPrice?.ToString("F2")</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="fw-bold text-primary">₺@product.Price.ToString("F2")</span>
+                                                        }
+                                                    </div>
+                                                    <button class="btn btn-primary btn-sm" @onclick="@(() => AddToCart(product.Id))">
+                                                        <i class="bi bi-cart-plus"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="mt-2">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-shop"></i> @product.MerchantName
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-5">
+                                <i class="bi bi-heart display-1 text-muted mb-4"></i>
+                                <h4>Henüz favori ürününüz yok</h4>
+                                <p class="text-muted mb-4">Beğendiğiniz ürünleri favorilere ekleyerek kolayca erişebilirsiniz!</p>
+                                <a href="/merchants" class="btn btn-primary">
+                                    <i class="bi bi-shop"></i>
+                                    Mağazaları Gör
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isAuthenticated = false;
+    private bool isLoading = true;
+    private List<ProductResponse>? favoriteProducts;
+    private List<ProductResponse> filteredProducts = new();
+    private string selectedCategory = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        if (isAuthenticated)
+        {
+            await LoadFavorites();
+        }
+        isLoading = false;
+        AuthService.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    }
+
+    private async void OnAuthenticationStateChanged()
+    {
+        isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        if (isAuthenticated)
+        {
+            await LoadFavorites();
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AuthService.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
+
+    private async Task LoadFavorites()
+    {
+        try
+        {
+            isLoading = true;
+            // TODO: API'den favori ürünleri çek
+            // favoriteProducts = await ProductService.GetFavoriteProductsAsync();
+            
+            // Şimdilik mock data
+            favoriteProducts = new List<ProductResponse>
+            {
+                new ProductResponse
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Süt 1L",
+                    Description = "Taze süt",
+                    Price = 15.50m,
+                    DiscountedPrice = 13.95m,
+                    DiscountPercentage = 10,
+                    ImageUrl = "https://via.placeholder.com/200x200/007bff/ffffff?text=Süt",
+                    MerchantName = "A101",
+                    Category = "market"
+                },
+                new ProductResponse
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Ekmek",
+                    Description = "Taze ekmek",
+                    Price = 8.00m,
+                    DiscountedPrice = null,
+                    DiscountPercentage = 0,
+                    ImageUrl = "https://via.placeholder.com/200x200/28a745/ffffff?text=Ekmek",
+                    MerchantName = "Migros",
+                    Category = "market"
+                }
+            };
+            
+            FilterFavorites();
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Favori ürünler yüklenirken bir hata oluştu: " + ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void FilterFavorites()
+    {
+        if (favoriteProducts == null)
+        {
+            filteredProducts = new();
+            return;
+        }
+
+        if (string.IsNullOrEmpty(selectedCategory))
+        {
+            filteredProducts = favoriteProducts.ToList();
+        }
+        else
+        {
+            filteredProducts = favoriteProducts.Where(p => p.Category == selectedCategory).ToList();
+        }
+    }
+
+    private async Task RefreshFavorites()
+    {
+        await LoadFavorites();
+        await JSRuntime.InvokeVoidAsync("showSuccess", "Favori ürünler yenilendi!");
+    }
+
+    private async Task RemoveFromFavorites(Guid productId)
+    {
+        try
+        {
+            // TODO: API'den favori ürünü çıkar
+            // var success = await ProductService.RemoveFromFavoritesAsync(productId);
+            
+            // Şimdilik mock işlem
+            var success = true;
+            
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", "Ürün favorilerden çıkarıldı!");
+                await LoadFavorites();
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Ürün favorilerden çıkarılırken bir hata oluştu.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+    }
+
+    private async Task AddToCart(Guid productId)
+    {
+        try
+        {
+            var success = await CartService.AddToCartAsync(productId, 1);
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", "Ürün sepete eklendi!");
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Ürün sepete eklenirken bir hata oluştu.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+    }
+}

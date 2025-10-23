@@ -1,27 +1,27 @@
 namespace Getir.Domain.Enums;
 
 /// <summary>
-/// Stock synchronization detail status
+/// Stok senkronizasyon detay durumları
 /// </summary>
 public enum StockSyncDetailStatus
 {
     /// <summary>
-    /// Item synchronized successfully
+    /// Öğe başarıyla senkronize edildi
     /// </summary>
     Success = 0,
     
     /// <summary>
-    /// Item synchronization failed
+    /// Öğe senkronizasyonu başarısız oldu
     /// </summary>
     Failed = 1,
     
     /// <summary>
-    /// Item was skipped
+    /// Öğe atlandı
     /// </summary>
     Skipped = 2,
     
     /// <summary>
-    /// Item is pending synchronization
+    /// Öğe senkronizasyonu bekleniyor
     /// </summary>
     Pending = 3
 }

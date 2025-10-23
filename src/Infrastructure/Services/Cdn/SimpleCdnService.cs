@@ -13,13 +13,23 @@ public class SimpleCdnService : ICdnService
     private readonly ILoggingService _loggingService;
     private readonly string _cdnBaseUrl;
 
-    public SimpleCdnService(
-        ILoggingService loggingService)
+    /// <summary>
+    /// SimpleCdnService constructor
+    /// </summary>
+    /// <param name="loggingService">Logging servisi</param>
+    public SimpleCdnService(ILoggingService loggingService)
     {
         _loggingService = loggingService;
         _cdnBaseUrl = "https://cdn.getir.local"; // Development CDN URL
     }
 
+    /// <summary>
+    /// CDN URL oluştur
+    /// </summary>
+    /// <param name="originalUrl">Orijinal URL</param>
+    /// <param name="containerName">Container adı</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>CDN URL sonucu</returns>
     public Task<Result<string>> GetCdnUrlAsync(string originalUrl, string containerName,CancellationToken cancellationToken = default)
     {
         try
@@ -47,6 +57,12 @@ public class SimpleCdnService : ICdnService
         }
     }
 
+    /// <summary>
+    /// CDN cache'i geçersiz kıl
+    /// </summary>
+    /// <param name="fileUrl">Dosya URL'i</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>İşlem sonucu</returns>
     public Task<Result> InvalidateCacheAsync(string fileUrl, CancellationToken cancellationToken = default)
     {
         try
@@ -65,6 +81,16 @@ public class SimpleCdnService : ICdnService
         }
     }
 
+    /// <summary>
+    /// Optimize edilmiş resim URL'i oluştur
+    /// </summary>
+    /// <param name="originalUrl">Orijinal URL</param>
+    /// <param name="width">Genişlik</param>
+    /// <param name="height">Yükseklik</param>
+    /// <param name="quality">Kalite</param>
+    /// <param name="format">Format</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Optimize edilmiş URL sonucu</returns>
     public Task<Result<string>> GetOptimizedImageUrlAsync(string originalUrl, int? width = null, int? height = null,
         int? quality = null, string? format = null, CancellationToken cancellationToken = default)
     {
@@ -118,6 +144,12 @@ public class SimpleCdnService : ICdnService
         }
     }
 
+    /// <summary>
+    /// CDN'e dosya yükle
+    /// </summary>
+    /// <param name="request">Yükleme isteği</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Yükleme sonucu</returns>
     public Task<Result<CdnUploadResponse>> UploadToCdnAsync(
         CdnUploadRequest request, 
         CancellationToken cancellationToken = default)
@@ -156,6 +188,12 @@ public class SimpleCdnService : ICdnService
         }
     }
 
+    /// <summary>
+    /// CDN'den dosya sil
+    /// </summary>
+    /// <param name="cdnUrl">CDN URL'i</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>İşlem sonucu</returns>
     public Task<Result> DeleteFromCdnAsync(
         string cdnUrl, 
         CancellationToken cancellationToken = default)
@@ -176,6 +214,11 @@ public class SimpleCdnService : ICdnService
         }
     }
 
+    /// <summary>
+    /// CDN istatistiklerini getir
+    /// </summary>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>CDN istatistikleri</returns>
     public Task<Result<CdnStats>> GetCdnStatsAsync(
         CancellationToken cancellationToken = default)
     {
@@ -199,6 +242,12 @@ public class SimpleCdnService : ICdnService
 
     #region Helper Methods
 
+    /// <summary>
+    /// Orijinal URL'i CDN URL'ine dönüştür
+    /// </summary>
+    /// <param name="originalUrl">Orijinal URL</param>
+    /// <param name="containerName">Container adı</param>
+    /// <returns>CDN URL'i</returns>
     private string ConvertToCdnUrl(string originalUrl, string containerName)
     {
         // Convert local file URL to CDN URL

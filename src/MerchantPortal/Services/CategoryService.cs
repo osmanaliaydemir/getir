@@ -8,6 +8,12 @@ public class CategoryService : ICategoryService
     private readonly ILogger<CategoryService> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
+    /// <summary>
+    /// CategoryService constructor
+    /// </summary>
+    /// <param name="apiClient">API client</param>
+    /// <param name="logger">Logger instance</param>
+    /// <param name="httpContextAccessor">HTTP context erişimi</param>
     public CategoryService(
         IApiClient apiClient, 
         ILogger<CategoryService> logger,
@@ -19,8 +25,9 @@ public class CategoryService : ICategoryService
     }
 
     /// <summary>
-    /// Get merchant ID from session
+    /// Session'dan merchant ID'yi al
     /// </summary>
+    /// <returns>Merchant ID</returns>
     private Guid GetMerchantIdFromContext()
     {
         var merchantIdStr = _httpContextAccessor.HttpContext?.Session.GetString("MerchantId");
@@ -36,10 +43,10 @@ public class CategoryService : ICategoryService
         return merchantId;
     }
     /// <summary>
-    /// Kategorileri getirir.
+    /// Kategorileri getir
     /// </summary>
-    /// <param name="ct">CancellationToken</param>
-    /// <returns>Kategoriler</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Kategori listesi</returns>
 
     public async Task<List<ProductCategoryResponse>?> GetCategoriesAsync(CancellationToken ct = default)
     {
@@ -57,9 +64,9 @@ public class CategoryService : ICategoryService
     }
 
     /// <summary>
-    /// Mağaza kategorilerini getirir.
+    /// Mağaza kategorilerini getir
     /// </summary>
-    /// <param name="ct">CancellationToken</param>
+    /// <param name="ct">İptal token'ı</param>
     /// <returns>Mağaza kategorileri</returns>
     public async Task<List<ProductCategoryResponse>?> GetMyCategoriesAsync(CancellationToken ct = default)
     {
@@ -81,9 +88,9 @@ public class CategoryService : ICategoryService
     }
 
     /// <summary>
-    /// Standart kategorileri getirir (ServiceCategory bazlı).
+    /// Standart kategorileri getir
     /// </summary>
-    /// <param name="ct">CancellationToken</param>
+    /// <param name="ct">İptal token'ı</param>
     /// <returns>Standart kategoriler</returns>
     public async Task<List<ProductCategoryResponse>?> GetStandardCategoriesAsync(CancellationToken ct = default)
     {
@@ -101,10 +108,10 @@ public class CategoryService : ICategoryService
     }
 
     /// <summary>
-    /// Kategori detaylarını getirir.
+    /// Kategori detaylarını getir
     /// </summary>
     /// <param name="categoryId">Kategori ID</param>
-    /// <param name="ct">CancellationToken</param>
+    /// <param name="ct">İptal token'ı</param>
     /// <returns>Kategori detayları</returns>
     public async Task<ProductCategoryResponse?> GetCategoryByIdAsync(Guid categoryId, CancellationToken ct = default)
     {
@@ -122,11 +129,11 @@ public class CategoryService : ICategoryService
     }
 
     /// <summary>
-    /// Kategori oluşturur.
+    /// Kategori oluştur
     /// </summary>
     /// <param name="request">Kategori oluşturma isteği</param>
-    /// <param name="ct">CancellationToken</param>
-    /// <returns>Kategori</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Oluşturulan kategori</returns>
     public async Task<ProductCategoryResponse?> CreateCategoryAsync(CreateCategoryRequest request, CancellationToken ct = default)
     {
         try
@@ -147,12 +154,12 @@ public class CategoryService : ICategoryService
     }
 
     /// <summary>
-    /// Kategori günceller.
+    /// Kategoriyi güncelle
     /// </summary>
     /// <param name="categoryId">Kategori ID</param>
     /// <param name="request">Kategori güncelleme isteği</param>
-    /// <param name="ct">CancellationToken</param>
-    /// <returns>Kategori</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Güncellenen kategori</returns>
     public async Task<ProductCategoryResponse?> UpdateCategoryAsync(Guid categoryId, UpdateCategoryRequest request, CancellationToken ct = default)
     {
         try
@@ -169,11 +176,11 @@ public class CategoryService : ICategoryService
     }
 
     /// <summary>
-    /// Kategori siler.
+    /// Kategoriyi sil
     /// </summary>
     /// <param name="categoryId">Kategori ID</param>
-    /// <param name="ct">CancellationToken</param>
-    /// <returns>Başarılı olup olmadığı</returns>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>İşlem başarı durumu</returns>
     public async Task<bool> DeleteCategoryAsync(Guid categoryId, CancellationToken ct = default)
     {
         try
@@ -188,9 +195,9 @@ public class CategoryService : ICategoryService
     }
 
     /// <summary>
-    /// Kategori ağacını getirir.
+    /// Kategori ağacını getir
     /// </summary>
-    /// <param name="ct">CancellationToken</param>
+    /// <param name="ct">İptal token'ı</param>
     /// <returns>Kategori ağacı</returns>
     public async Task<List<CategoryTreeNode>?> GetCategoryTreeAsync(CancellationToken ct = default)
     {
@@ -209,9 +216,9 @@ public class CategoryService : ICategoryService
     }
 
     /// <summary>
-    /// Kategori ağacını oluşturur.
+    /// Kategori ağacını oluştur
     /// </summary>
-    /// <param name="categories">Kategoriler</param>
+    /// <param name="categories">Kategori listesi</param>
     /// <returns>Kategori ağacı</returns>
     private List<CategoryTreeNode> BuildCategoryTree(List<ProductCategoryResponse> categories)
     {

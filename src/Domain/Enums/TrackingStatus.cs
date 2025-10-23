@@ -1,5 +1,8 @@
 namespace Getir.Domain.Enums;
 
+/// <summary>
+/// Tracking statusları
+/// </summary>
 public enum TrackingStatus
 {
     OrderPlaced = 1,
@@ -14,6 +17,9 @@ public enum TrackingStatus
     Cancelled = 10
 }
 
+/// <summary>
+/// Konum güncelleme türleri
+/// </summary>
 public enum LocationUpdateType
 {
     Manual = 1,
@@ -22,6 +28,9 @@ public enum LocationUpdateType
     Estimated = 4
 }
 
+/// <summary>
+/// Notification türleri
+/// </summary>
 public enum NotificationType
 {
     OrderUpdate = 0,
@@ -41,6 +50,9 @@ public enum NotificationType
     CompletionAlert = 14
 }
 
+/// <summary>
+/// Tracking status uzantıları
+/// </summary>
 public static class TrackingStatusExtensions
 {
     public static string GetDisplayName(this TrackingStatus status)
@@ -106,6 +118,9 @@ public static class TrackingStatusExtensions
     }
 }
 
+/// <summary>
+/// Konum güncelleme türleri uzantıları
+/// </summary>
 public static class LocationUpdateTypeExtensions
 {
     public static string GetDisplayName(this LocationUpdateType type)
@@ -133,8 +148,16 @@ public static class LocationUpdateTypeExtensions
     }
 }
 
+/// <summary>
+/// Notification türleri uzantıları
+/// </summary>
 public static class NotificationTypeExtensions
 {
+    /// <summary>
+    /// Notification türünün görünen adını döndürür
+    /// </summary>
+    /// <param name="type">Notification türü</param>
+    /// <returns>Notification türünün görünen adı</returns>
     public static string GetDisplayName(this NotificationType type)
     {
         return type switch
@@ -148,7 +171,11 @@ public static class NotificationTypeExtensions
             _ => "Bilinmiyor"
         };
     }
-
+    /// <summary>
+    /// Notification türünün acil olup olmadığını döndürür
+    /// </summary>
+    /// <param name="type">Notification türü</param>
+    /// <returns>Notification türünün acil olup olmadığı</returns>
     public static bool IsUrgent(this NotificationType type)
     {
         return type switch

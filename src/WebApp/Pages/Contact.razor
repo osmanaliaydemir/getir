@@ -1,0 +1,350 @@
+@page "/contact"
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>İletişim - Getir</PageTitle>
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <div class="container">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
+            <li class="breadcrumb-item active" aria-current="page">İletişim</li>
+        </ol>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- İletişim Formu -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-envelope"></i>
+                        Bize Ulaşın
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form @onsubmit="SubmitContactForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Ad Soyad *</label>
+                                <input type="text" class="form-control" @bind="contactForm.FullName" required />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">E-posta *</label>
+                                <input type="email" class="form-control" @bind="contactForm.Email" required />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Telefon</label>
+                                <input type="tel" class="form-control" @bind="contactForm.Phone" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Konu *</label>
+                                <select class="form-select" @bind="contactForm.Subject" required>
+                                    <option value="">Konu Seçin</option>
+                                    <option value="siparis">Sipariş Sorunu</option>
+                                    <option value="teslimat">Teslimat Sorunu</option>
+                                    <option value="odeme">Ödeme Sorunu</option>
+                                    <option value="hesap">Hesap Sorunu</option>
+                                    <option value="teknik">Teknik Sorun</option>
+                                    <option value="sikayet">Şikayet</option>
+                                    <option value="oneri">Öneri</option>
+                                    <option value="diger">Diğer</option>
+                                </select>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label">Mesaj *</label>
+                                <textarea class="form-control" @bind="contactForm.Message" rows="5" required 
+                                          placeholder="Sorunuzu veya mesajınızı detaylı bir şekilde yazın..."></textarea>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" @bind="contactForm.AgreeTerms" required />
+                                    <label class="form-check-label">
+                                        <a href="/privacy" target="_blank">Gizlilik Politikası</a>'nı okudum ve kabul ediyorum.
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                }
+                                <i class="bi bi-send"></i>
+                                Mesaj Gönder
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sık Sorulan Sorular -->
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-question-circle"></i>
+                        Sık Sorulan Sorular
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="contactFaqAccordion">
+                        @for (int i = 0; i < contactFaqs.Count; i++)
+                        {
+                            var faq = contactFaqs[i];
+                            var collapseId = $"contactFaq{i}";
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button @(i == 0 ? "" : "collapsed")" type="button" 
+                                            data-bs-toggle="collapse" data-bs-target="#@collapseId">
+                                        @faq.Question
+                                    </button>
+                                </h2>
+                                <div id="@collapseId" class="accordion-collapse collapse @(i == 0 ? "show" : "")" 
+                                     data-bs-parent="#contactFaqAccordion">
+                                    <div class="accordion-body">
+                                        @faq.Answer
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Yan Panel -->
+        <div class="col-lg-4">
+            <!-- İletişim Bilgileri -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-telephone"></i>
+                        İletişim Bilgileri
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="contact-method mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="contact-icon me-3">
+                                <i class="bi bi-telephone-fill text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">Telefon</h6>
+                                <p class="mb-0 text-muted">0850 222 0 222</p>
+                                <small class="text-success">7/24 Destek</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-method mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="contact-icon me-3">
+                                <i class="bi bi-envelope-fill text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">E-posta</h6>
+                                <p class="mb-0 text-muted">destek@getir.com</p>
+                                <small class="text-success">24 saat içinde yanıt</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-method mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="contact-icon me-3">
+                                <i class="bi bi-chat-dots-fill text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">Canlı Destek</h6>
+                                <p class="mb-0 text-muted">Uygulama içi chat</p>
+                                <small class="text-success">Anında yanıt</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-method">
+                        <div class="d-flex align-items-center">
+                            <div class="contact-icon me-3">
+                                <i class="bi bi-geo-alt-fill text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">Adres</h6>
+                                <p class="mb-0 text-muted">Maslak Mahallesi<br>Büyükdere Caddesi No:123<br>34485 Sarıyer/İstanbul</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sosyal Medya -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-share"></i>
+                        Sosyal Medya
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="social-links">
+                        <a href="#" class="btn btn-outline-primary btn-sm me-2 mb-2">
+                            <i class="bi bi-facebook"></i>
+                            Facebook
+                        </a>
+                        <a href="#" class="btn btn-outline-info btn-sm me-2 mb-2">
+                            <i class="bi bi-twitter"></i>
+                            Twitter
+                        </a>
+                        <a href="#" class="btn btn-outline-danger btn-sm me-2 mb-2">
+                            <i class="bi bi-instagram"></i>
+                            Instagram
+                        </a>
+                        <a href="#" class="btn btn-outline-primary btn-sm me-2 mb-2">
+                            <i class="bi bi-linkedin"></i>
+                            LinkedIn
+                        </a>
+                        <a href="#" class="btn btn-outline-success btn-sm me-2 mb-2">
+                            <i class="bi bi-whatsapp"></i>
+                            WhatsApp
+                        </a>
+                        <a href="#" class="btn btn-outline-dark btn-sm mb-2">
+                            <i class="bi bi-youtube"></i>
+                            YouTube
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Çalışma Saatleri -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock"></i>
+                        Çalışma Saatleri
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="working-hours">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Pazartesi - Cuma</span>
+                            <span class="fw-bold">09:00 - 18:00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Cumartesi</span>
+                            <span class="fw-bold">09:00 - 16:00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Pazar</span>
+                            <span class="fw-bold">Kapalı</span>
+                        </div>
+                        <hr>
+                        <div class="text-center">
+                            <small class="text-success">
+                                <i class="bi bi-lightning"></i>
+                                Acil durumlar için 7/24 destek
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool isSubmitting = false;
+    private ContactForm contactForm = new();
+    private List<FAQ> contactFaqs = new();
+
+    protected override void OnInitialized()
+    {
+        LoadContactFaqs();
+    }
+
+    private void LoadContactFaqs()
+    {
+        contactFaqs = new List<FAQ>
+        {
+            new FAQ
+            {
+                Question = "Ne kadar sürede yanıt alırım?",
+                Answer = "E-posta ile gönderilen mesajlarınıza 24 saat içinde yanıt verilir. Telefon desteği 7/24 aktif olup, canlı destek anında yanıt verir."
+            },
+            new FAQ
+            {
+                Question = "Hangi konularda destek alabilirim?",
+                Answer = "Sipariş, teslimat, ödeme, hesap yönetimi, teknik sorunlar ve genel sorularınız için destek alabilirsiniz."
+            },
+            new FAQ
+            {
+                Question = "Şikayetimi nasıl iletebilirim?",
+                Answer = "Bu sayfadaki iletişim formunu kullanarak şikayetinizi detaylı bir şekilde iletebilirsiniz. En kısa sürede incelenip yanıtlanacaktır."
+            },
+            new FAQ
+            {
+                Question = "İş başvurusu için nereye başvurmalıyım?",
+                Answer = "İş başvuruları için kariyer@getir.com adresine CV'nizi gönderebilir veya kariyer sayfamızı ziyaret edebilirsiniz."
+            },
+            new FAQ
+            {
+                Question = "Basın ve medya iletişimi için kiminle görüşmeliyim?",
+                Answer = "Basın ve medya iletişimi için press@getir.com adresine ulaşabilirsiniz."
+            }
+        };
+    }
+
+    private async Task SubmitContactForm()
+    {
+        try
+        {
+            isSubmitting = true;
+            
+            // TODO: API'ye iletişim formu gönder
+            // var success = await ContactService.SubmitContactFormAsync(contactForm);
+            
+            // Şimdilik mock işlem
+            await Task.Delay(2000); // Simulate API call
+            var success = true;
+            
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", "Mesajınız başarıyla gönderildi! En kısa sürede size dönüş yapacağız.");
+                contactForm = new ContactForm(); // Reset form
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Mesaj gönderilirken bir hata oluştu. Lütfen tekrar deneyin.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}
+
+@* Models *@
+@code {
+    public class ContactForm
+    {
+        public string FullName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public string Subject { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public bool AgreeTerms { get; set; }
+    }
+
+    public class FAQ
+    {
+        public string Question { get; set; } = string.Empty;
+        public string Answer { get; set; } = string.Empty;
+    }
+}

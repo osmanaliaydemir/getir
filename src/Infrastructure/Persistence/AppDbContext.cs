@@ -4,127 +4,399 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Getir.Infrastructure.Persistence;
 
+/// <summary>
+/// Entity Framework Core context sınıfı
+/// </summary>
 public class AppDbContext : DbContext
 {
+    /// <summary>
+    /// AppDbContext constructor
+    /// </summary>
+    /// <param name="options">Entity Framework Core options</param>
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
 
+    /// <summary>
+    /// Users tablosu
+    /// </summary>
     public DbSet<User> Users { get; set; }
+    /// <summary>
+    /// RefreshTokens tablosu
+    /// </summary>
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    /// <summary>
+    /// ServiceCategories tablosu
+    /// </summary>
     public DbSet<ServiceCategory> ServiceCategories { get; set; }
+    /// <summary>
+    /// ProductCategories tablosu
+    /// </summary>
     public DbSet<ProductCategory> ProductCategories { get; set; }
+    /// <summary>
+    /// Merchants tablosu
+    /// </summary>
     public DbSet<Merchant> Merchants { get; set; }
+    /// <summary>
+    /// Products tablosu
+    /// </summary>
     public DbSet<Product> Products { get; set; }
+    /// <summary>
+    /// Orders tablosu
+    /// </summary>
     public DbSet<Order> Orders { get; set; }
+    /// <summary>
+    /// OrderLines tablosu
+    /// </summary>
     public DbSet<OrderLine> OrderLines { get; set; }
+    /// <summary>
+    /// OrderStatusTransitionLogs tablosu
+    /// </summary>
     public DbSet<OrderStatusTransitionLog> OrderStatusTransitionLogs { get; set; }
+    /// <summary>
+    /// StockHistories tablosu
+    /// </summary>
     public DbSet<StockHistory> StockHistories { get; set; }
+    /// <summary>
+    /// StockAlerts tablosu
+    /// </summary>
     public DbSet<StockAlert> StockAlerts { get; set; }
+    /// <summary>
+    /// StockSettings tablosu
+    /// </summary>
     public DbSet<StockSettings> StockSettings { get; set; }
+    /// <summary>
+    /// UserAddresses tablosu
+    /// </summary>
     public DbSet<UserAddress> UserAddresses { get; set; }
+    /// <summary>
+    /// CartItems tablosu
+    /// </summary>
     public DbSet<CartItem> CartItems { get; set; }
+    /// <summary>
+    /// Coupons tablosu
+    /// </summary>
     public DbSet<Coupon> Coupons { get; set; }
+    /// <summary>
+    /// CouponUsages tablosu
+    /// </summary>
     public DbSet<CouponUsage> CouponUsages { get; set; }
+    /// <summary>
+    /// Campaigns tablosu
+    /// </summary>
     public DbSet<Campaign> Campaigns { get; set; }
+    /// <summary>
+    /// Notifications tablosu
+    /// </summary>
     public DbSet<Notification> Notifications { get; set; }
+    /// <summary>
+    /// Couriers tablosu
+    /// </summary>
     public DbSet<Courier> Couriers { get; set; }
+    /// <summary>
+    /// UserLoyaltyPoints tablosu
+    /// </summary>
     public DbSet<UserLoyaltyPoint> UserLoyaltyPoints { get; set; }
+    /// <summary>
+    /// LoyaltyPointTransactions tablosu
+    /// </summary>
     public DbSet<LoyaltyPointTransaction> LoyaltyPointTransactions { get; set; }
+    /// <summary>
+    /// WorkingHours tablosu
+    /// </summary>
     public DbSet<WorkingHours> WorkingHours { get; set; }
+    /// <summary>
+    /// SpecialHolidays tablosu
+    /// </summary>
     public DbSet<SpecialHoliday> SpecialHolidays { get; set; }
+    /// <summary>
+    /// DeliveryZones tablosu
+    /// </summary>
     public DbSet<DeliveryZone> DeliveryZones { get; set; }
+    /// <summary>
+    /// ProductOptionGroups tablosu
+    /// </summary>
     public DbSet<ProductOptionGroup> ProductOptionGroups { get; set; }
+    /// <summary>
+    /// ProductOptions tablosu
+    /// </summary>
     public DbSet<ProductOption> ProductOptions { get; set; }
+    /// <summary>
+    /// OrderLineOptions tablosu
+    /// </summary>
     public DbSet<OrderLineOption> OrderLineOptions { get; set; }
+    /// <summary>
+    /// Reviews tablosu
+    /// </summary>
     public DbSet<Review> Reviews { get; set; }
+    /// <summary>
+    /// ReviewTags tablosu
+    /// </summary>
     public DbSet<ReviewTag> ReviewTags { get; set; }
+    /// <summary>
+    /// ReviewHelpfuls tablosu
+    /// </summary>
     public DbSet<ReviewHelpful> ReviewHelpfuls { get; set; }
+    /// <summary>
+    /// ReviewModerationLogs tablosu
+    /// </summary>
     public DbSet<ReviewModerationLog> ReviewModerationLogs { get; set; }
+    /// <summary>
+    /// ReviewReports tablosu
+    /// </summary>
     public DbSet<ReviewReport> ReviewReports { get; set; }
+    /// <summary>
+    /// ReviewLikes tablosu
+    /// </summary>
     public DbSet<ReviewLike> ReviewLikes { get; set; }
+    /// <summary>
+    /// ReviewBookmarks tablosu
+    /// </summary>
     public DbSet<ReviewBookmark> ReviewBookmarks { get; set; }
+    /// <summary>
+    /// Ratings tablosu
+    /// </summary>
     public DbSet<Rating> Ratings { get; set; }
+    /// <summary>
+    /// RatingHistories tablosu
+    /// </summary>
     public DbSet<RatingHistory> RatingHistories { get; set; }
+    /// <summary>
+    /// ProductReviews tablosu
+    /// </summary>
     public DbSet<ProductReview> ProductReviews { get; set; }
+    /// <summary>
+    /// ProductReviewHelpfuls tablosu
+    /// </summary>
     public DbSet<ProductReviewHelpful> ProductReviewHelpfuls { get; set; }
+    /// <summary>
+    /// DeliveryZonePoints tablosu
+    /// </summary>
     public DbSet<DeliveryZonePoint> DeliveryZonePoints { get; set; }
+    /// <summary>
+    /// MerchantOnboardings tablosu
+    /// </summary>
     public DbSet<MerchantOnboarding> MerchantOnboardings { get; set; }
+    /// <summary>
+    /// AuditLogs tablosu
+    /// </summary>
     public DbSet<AuditLog> AuditLogs { get; set; }
+    /// <summary>
+    /// SystemNotifications tablosu
+    /// </summary>
     public DbSet<SystemNotification> SystemNotifications { get; set; }
     
     // Realtime Tracking entities
+    /// <summary>
+    /// OrderTrackings tablosu
+    /// </summary>
     public DbSet<OrderTracking> OrderTrackings { get; set; }
+    /// <summary>
+    /// LocationHistories tablosu
+    /// </summary>
     public DbSet<LocationHistory> LocationHistories { get; set; }
+    /// <summary>
+    /// TrackingNotifications tablosu
+    /// </summary>
     public DbSet<TrackingNotification> TrackingNotifications { get; set; }
+    /// <summary>
+    /// ETAEstimations tablosu
+    /// </summary>
     public DbSet<ETAEstimation> ETAEstimations { get; set; }
+    /// <summary>
+    /// TrackingSettings tablosu
+    /// </summary>
     public DbSet<TrackingSettings> TrackingSettings { get; set; }
     
     // Audit Logging entities
+    /// <summary>
+    /// UserActivityLogs tablosu
+    /// </summary>
     public DbSet<UserActivityLog> UserActivityLogs { get; set; }
+    /// <summary>
+    /// SystemChangeLogs tablosu
+    /// </summary>
     public DbSet<SystemChangeLog> SystemChangeLogs { get; set; }
+    /// <summary>
+    /// SecurityEventLogs tablosu
+    /// </summary>
     public DbSet<SecurityEventLog> SecurityEventLogs { get; set; }
+    /// <summary>
+    /// LogAnalysisReports tablosu
+    /// </summary>
     public DbSet<LogAnalysisReport> LogAnalysisReports { get; set; }
 
     // Internationalization entities
+    /// <summary>
+    /// Languages tablosu
+    /// </summary>
     public DbSet<Language> Languages { get; set; }
+    /// <summary>
+    /// Translations tablosu
+    /// </summary>
     public DbSet<Translation> Translations { get; set; }
     public DbSet<UserLanguagePreference> UserLanguagePreferences { get; set; }
+    /// <summary>
+    /// UserNotificationPreferences tablosu
+    /// </summary>
     public DbSet<UserNotificationPreferences> UserNotificationPreferences { get; set; }
     
     // Rate Limiting entities
+    /// <summary>
+    /// RateLimitRules tablosu
+    /// </summary>
     public DbSet<RateLimitRule> RateLimitRules { get; set; }
+    /// <summary>
+    /// RateLimitLogs tablosu
+    /// </summary>
     public DbSet<RateLimitLog> RateLimitLogs { get; set; }
+    /// <summary>
+    /// RateLimitViolations tablosu
+    /// </summary>
     public DbSet<RateLimitViolation> RateLimitViolations { get; set; }
+    /// <summary>
+    /// RateLimitConfigurations tablosu
+    /// </summary>
     public DbSet<RateLimitConfiguration> RateLimitConfigurations { get; set; }
     
     // Payment entities
+    /// <summary>
+    /// Payments tablosu
+    /// </summary>
     public DbSet<Payment> Payments { get; set; }
+    /// <summary>
+    /// CourierCashCollections tablosu
+    /// </summary>
     public DbSet<CourierCashCollection> CourierCashCollections { get; set; }
+    /// <summary>
+    /// CashSettlements tablosu
+    /// </summary>
     public DbSet<CashSettlement> CashSettlements { get; set; }
+    /// <summary>
+    /// CashPaymentSecurity tablosu
+    /// </summary>
     public DbSet<CashPaymentSecurity> CashPaymentSecurities { get; set; }
+    /// <summary>
+    /// CashPaymentEvidences tablosu
+    /// </summary>
     public DbSet<CashPaymentEvidence> CashPaymentEvidences { get; set; }
+    /// <summary>
+    /// CashPaymentAuditLogs tablosu
+    /// </summary>
     public DbSet<CashPaymentAuditLog> CashPaymentAuditLogs { get; set; }
     
     // Delivery optimization entities
+    /// <summary>
+    /// DeliveryCapacity tablosu
+    /// </summary>
     public DbSet<DeliveryCapacity> DeliveryCapacities { get; set; }
+    /// <summary>
+    /// DeliveryRoute tablosu
+    /// </summary>
     public DbSet<DeliveryRoute> DeliveryRoutes { get; set; }
+    /// <summary>
+    /// CourierLocation tablosu
+    /// </summary>
     public DbSet<CourierLocation> CourierLocations { get; set; }
     
     // Favorites
+    /// <summary>
+    /// FavoriteProducts tablosu
+    /// </summary>
     public DbSet<FavoriteProduct> FavoriteProducts { get; set; }
     
     // Device & Notification entities
+    /// <summary>
+    /// DeviceTokens tablosu
+    /// </summary>
     public DbSet<DeviceToken> DeviceTokens { get; set; }
+    /// <summary>
+    /// NotificationLogs tablosu
+    /// </summary>
     public DbSet<NotificationLog> NotificationLogs { get; set; }
+    /// <summary>
+    /// NotificationHistories tablosu
+    /// </summary>
     public DbSet<NotificationHistory> NotificationHistories { get; set; }
+    /// <summary>
+    /// NotificationTemplates tablosu
+    /// </summary>
     public DbSet<NotificationTemplate> NotificationTemplates { get; set; }
     
     // Merchant documents
+    /// <summary>
+    /// MerchantDocuments tablosu
+    /// </summary>
     public DbSet<MerchantDocument> MerchantDocuments { get; set; }
     
     // Market entities
+    /// <summary>
+    /// Markets tablosu
+    /// </summary>
     public DbSet<Market> Markets { get; set; }
+    /// <summary>
+    /// MarketCategories tablosu
+    /// </summary>
     public DbSet<MarketCategory> MarketCategories { get; set; }
+    /// <summary>
+    /// MarketProducts tablosu
+    /// </summary>
     public DbSet<MarketProduct> MarketProducts { get; set; }
+    /// <summary>
+    /// MarketProductVariants tablosu
+    /// </summary>
     public DbSet<MarketProductVariant> MarketProductVariants { get; set; }
     
     // Restaurant entities
+    /// <summary>
+    /// Restaurants tablosu
+    /// </summary>
     public DbSet<Restaurant> Restaurants { get; set; }
+    /// <summary>
+    /// RestaurantMenuCategories tablosu
+    /// </summary>
     public DbSet<RestaurantMenuCategory> RestaurantMenuCategories { get; set; }
+    /// <summary>
+    /// RestaurantProducts tablosu
+    /// </summary>
     public DbSet<RestaurantProduct> RestaurantProducts { get; set; }
+    /// <summary>
+    /// RestaurantProductOptions tablosu
+    /// </summary>
     public DbSet<RestaurantProductOption> RestaurantProductOptions { get; set; }
+    /// <summary>
+    /// RestaurantProductOptionGroups tablosu
+    /// </summary>
     public DbSet<RestaurantProductOptionGroup> RestaurantProductOptionGroups { get; set; }
     
     // Inventory entities
+    /// <summary>
+    /// InventoryCountSessions tablosu
+    /// </summary>
     public DbSet<InventoryCountSession> InventoryCountSessions { get; set; }
+    /// <summary>
+    /// InventoryCountItems tablosu
+    /// </summary>
     public DbSet<InventoryCountItem> InventoryCountItems { get; set; }
+    /// <summary>
+    /// InventoryDiscrepancies tablosu
+    /// </summary>
     public DbSet<InventoryDiscrepancy> InventoryDiscrepancies { get; set; }
     
     // Stock sync entities
+    /// <summary>
+    /// StockSyncSessions tablosu
+    /// </summary>
     public DbSet<StockSyncSession> StockSyncSessions { get; set; }
+    /// <summary>
+    /// StockSyncDetails tablosu
+    /// </summary>
     public DbSet<StockSyncDetail> StockSyncDetails { get; set; }
 
+    /// <summary>
+    /// OnModelCreating method
+    /// </summary>
+    /// <param name="modelBuilder">ModelBuilder</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

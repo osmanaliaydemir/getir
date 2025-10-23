@@ -4,26 +4,26 @@ using Getir.Application.DTO;
 namespace Getir.Application.Abstractions;
 
 /// <summary>
-/// Email service interface for sending emails
+/// Email gönderme servisi interface'i
 /// </summary>
 public interface IEmailService
 {
     /// <summary>
-    /// Send email using template
+    /// Template kullanarak email gönder
     /// </summary>
     Task<Result> SendEmailAsync(
         EmailRequest request, 
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Send bulk emails using template
+    /// Template kullanarak çoklu email gönder
     /// </summary>
     Task<Result> SendBulkEmailsAsync(
         IEnumerable<EmailRequest> requests, 
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Send email with HTML content
+    /// HTML içeriği ile email gönder
     /// </summary>
     Task<Result> SendHtmlEmailAsync(
         string to, 
@@ -33,7 +33,7 @@ public interface IEmailService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Send email with plain text content
+    /// Metin içeriği ile email gönder
     /// </summary>
     Task<Result> SendTextEmailAsync(
         string to, 
@@ -43,7 +43,7 @@ public interface IEmailService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Send email with attachments
+    /// Ekler ile email gönder
     /// </summary>
     Task<Result> SendEmailWithAttachmentsAsync(
         EmailRequest request,
@@ -51,14 +51,14 @@ public interface IEmailService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Validate email address
+    /// Email adresi doğrulama
     /// </summary>
     Task<Result<bool>> ValidateEmailAsync(
         string emailAddress, 
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get email delivery status
+    /// Email gönderim durumu al
     /// </summary>
     Task<Result<EmailDeliveryStatus>> GetDeliveryStatusAsync(
         string messageId, 

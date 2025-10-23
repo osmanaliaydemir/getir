@@ -1,32 +1,32 @@
 namespace Getir.Domain.Enums;
 
 /// <summary>
-/// Courier availability status for real-time tracking
+/// Kurye mevcutluk durumları - Gerçek zamanlı takip için
 /// </summary>
 public enum CourierAvailabilityStatus
 {
     /// <summary>
-    /// Courier is available for new deliveries
+    /// Kurye yeni teslimatlar için mevcut
     /// </summary>
     Available = 0,
 
     /// <summary>
-    /// Courier is currently on a delivery
+    /// Kurye şu anda bir teslimatta
     /// </summary>
     Busy = 1,
 
     /// <summary>
-    /// Courier is offline/not working
+    /// Kurye çevrimdışı/çalışmıyor
     /// </summary>
     Offline = 2,
 
     /// <summary>
-    /// Courier is on break
+    /// Kurye mola veriyor
     /// </summary>
     OnBreak = 3,
 
     /// <summary>
-    /// Courier is unavailable (temporary)
+    /// Kurye mevcut değil (geçici)
     /// </summary>
     Unavailable = 4
 }

@@ -75,8 +75,9 @@ public class RedisSettings
     public int DefaultDatabase { get; set; } = 0;
 
     /// <summary>
-    /// Builds the complete Redis connection string
+    /// Redis bağlantı string'ini oluştur
     /// </summary>
+    /// <returns>Tam Redis bağlantı string'i</returns>
     public string GetConnectionString()
     {
         var parts = new List<string> { Configuration };

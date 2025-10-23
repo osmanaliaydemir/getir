@@ -5,42 +5,69 @@ namespace Getir.MerchantPortal.Services;
 public interface IPaymentService
 {
     /// <summary>
-    /// Gets payment history with filtering
+    /// Ödeme geçmişini getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="filter">Filtre parametreleri</param>
+    /// <returns>Ödeme geçmişi listesi</returns>
     Task<List<PaymentListItemModel>> GetPaymentHistoryAsync(Guid merchantId, PaymentFilterModel filter);
 
     /// <summary>
-    /// Gets payment details by ID
+    /// Ödeme detaylarını getir
     /// </summary>
+    /// <param name="paymentId">Ödeme ID</param>
+    /// <returns>Ödeme detayları</returns>
     Task<PaymentResponse?> GetPaymentByIdAsync(Guid paymentId);
 
     /// <summary>
-    /// Gets settlement report for date range
+    /// Mutabakat raporunu getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Mutabakat raporu</returns>
     Task<SettlementReportModel> GetSettlementReportAsync(Guid merchantId, DateTime startDate, DateTime endDate);
 
     /// <summary>
-    /// Gets revenue analytics
+    /// Gelir analizlerini getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Gelir analizleri</returns>
     Task<RevenueAnalyticsModel> GetRevenueAnalyticsAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null);
 
     /// <summary>
-    /// Gets payment method breakdown
+    /// Ödeme yöntemi dağılımını getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="startDate">Başlangıç tarihi</param>
+    /// <param name="endDate">Bitiş tarihi</param>
+    /// <returns>Ödeme yöntemi dağılımı</returns>
     Task<List<PaymentMethodBreakdownModel>> GetPaymentMethodBreakdownAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null);
 
     /// <summary>
-    /// Exports payments to Excel
+    /// Ödemeleri Excel'e aktar
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="request">Aktarım isteği</param>
+    /// <returns>Excel dosyası</returns>
     Task<byte[]> ExportToExcelAsync(Guid merchantId, PaymentExportRequest request);
 
     /// <summary>
-    /// Exports payments to PDF
+    /// Ödemeleri PDF'e aktar
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="request">Aktarım isteği</param>
+    /// <returns>PDF dosyası</returns>
     Task<byte[]> ExportToPdfAsync(Guid merchantId, PaymentExportRequest request);
 
     /// <summary>
-    /// Gets merchant settlements from API
+    /// Merchant mutabakatlarını getir
     /// </summary>
+    /// <param name="merchantId">Merchant ID</param>
+    /// <param name="page">Sayfa numarası</param>
+    /// <param name="pageSize">Sayfa boyutu</param>
+    /// <returns>Mutabakat listesi</returns>
     Task<List<SettlementResponse>> GetMerchantSettlementsAsync(Guid merchantId, int page = 1, int pageSize = 50);
 }

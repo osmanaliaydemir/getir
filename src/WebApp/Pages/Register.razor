@@ -1,0 +1,268 @@
+@page "/register"
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Kayıt Ol - Getir</PageTitle>
+
+<div class="auth-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <h2 class="auth-title">
+                            <i class="bi bi-person-plus"></i>
+                            Kayıt Ol
+                        </h2>
+                        <p class="auth-subtitle">Yeni hesap oluşturun</p>
+                    </div>
+
+                    <div class="auth-body">
+                        <form @onsubmit="HandleRegister">
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label">Ad</label>
+                                        <input type="text" 
+                                               class="@GetInputClass(isFirstNameInvalid)" 
+                                               @bind="registerRequest.FirstName" 
+                                               @onblur="ValidateFirstName"
+                                               placeholder="Adınız" />
+                                        @if (isFirstNameInvalid)
+                                        {
+                                            <div class="invalid-feedback">Ad en az 2 karakter olmalıdır</div>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label">Soyad</label>
+                                        <input type="text" 
+                                               class="@GetInputClass(isLastNameInvalid)" 
+                                               @bind="registerRequest.LastName" 
+                                               @onblur="ValidateLastName"
+                                               placeholder="Soyadınız" />
+                                        @if (isLastNameInvalid)
+                                        {
+                                            <div class="invalid-feedback">Soyad en az 2 karakter olmalıdır</div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">E-posta</label>
+                                <input type="email" 
+                                       class="@GetInputClass(isEmailInvalid)" 
+                                       @bind="registerRequest.Email" 
+                                       @onblur="ValidateEmail"
+                                       placeholder="ornek@email.com" />
+                                @if (isEmailInvalid)
+                                {
+                                    <div class="invalid-feedback">Geçerli bir e-posta adresi girin</div>
+                                }
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">Telefon</label>
+                                <input type="tel" 
+                                       class="@GetInputClass(isPhoneInvalid)" 
+                                       @bind="registerRequest.PhoneNumber" 
+                                       @onblur="ValidatePhone"
+                                       placeholder="+90 5XX XXX XX XX" />
+                                @if (isPhoneInvalid)
+                                {
+                                    <div class="invalid-feedback">Geçerli bir telefon numarası girin</div>
+                                }
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">Şifre</label>
+                                <div class="password-input">
+                                    <input type="@(showPassword ? "text" : "password")" 
+                                           class="@GetInputClass(isPasswordInvalid)" 
+                                           @bind="registerRequest.Password" 
+                                           @onblur="ValidatePassword"
+                                           placeholder="En az 6 karakter" />
+                                    <button type="button" class="password-toggle" @onclick="TogglePassword">
+                                        <i class="bi @(showPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                                    </button>
+                                </div>
+                                @if (isPasswordInvalid)
+                                {
+                                    <div class="invalid-feedback">Şifre en az 6 karakter olmalıdır</div>
+                                }
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">Şifre Tekrar</label>
+                                <div class="password-input">
+                                    <input type="@(showConfirmPassword ? "text" : "password")" 
+                                           class="@GetInputClass(isConfirmPasswordInvalid)" 
+                                           @bind="confirmPassword" 
+                                           @onblur="ValidateConfirmPassword"
+                                           placeholder="Şifrenizi tekrar girin" />
+                                    <button type="button" class="password-toggle" @onclick="ToggleConfirmPassword">
+                                        <i class="bi @(showConfirmPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                                    </button>
+                                </div>
+                                @if (isConfirmPasswordInvalid)
+                                {
+                                    <div class="invalid-feedback">Şifreler eşleşmiyor</div>
+                                }
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" @bind="acceptTerms" class="form-check-input" />
+                                    <label class="form-check-label">
+                                        <a href="/terms" target="_blank">Kullanım Şartları</a> ve 
+                                        <a href="/privacy" target="_blank">Gizlilik Politikası</a>'nı kabul ediyorum
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-primary btn-lg" disabled="@isLoading">
+                                    @if (isLoading)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        <text>Kayıt oluşturuluyor...</text>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-person-plus"></i>
+                                        <text>Kayıt Ol</text>
+                                    }
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="auth-divider">
+                            <span>veya</span>
+                        </div>
+
+                        <div class="auth-links">
+                            <a href="/login" class="btn btn-outline-primary">
+                                <i class="bi bi-box-arrow-in-right"></i>
+                                Giriş Yap
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegisterRequest registerRequest = new();
+    private string confirmPassword = string.Empty;
+    private bool isLoading = false;
+    private bool showPassword = false;
+    private bool showConfirmPassword = false;
+    private bool acceptTerms = false;
+    
+    private bool isFirstNameInvalid = false;
+    private bool isLastNameInvalid = false;
+    private bool isEmailInvalid = false;
+    private bool isPhoneInvalid = false;
+    private bool isPasswordInvalid = false;
+    private bool isConfirmPasswordInvalid = false;
+
+    private string GetInputClass(bool isInvalid)
+    {
+        return $"form-control {(isInvalid ? "is-invalid" : "")}";
+    }
+
+    private void ValidateFirstName()
+    {
+        isFirstNameInvalid = string.IsNullOrEmpty(registerRequest.FirstName) || registerRequest.FirstName.Length < 2;
+    }
+
+    private void ValidateLastName()
+    {
+        isLastNameInvalid = string.IsNullOrEmpty(registerRequest.LastName) || registerRequest.LastName.Length < 2;
+    }
+
+    private void ValidateEmail()
+    {
+        isEmailInvalid = string.IsNullOrEmpty(registerRequest.Email) || !registerRequest.Email.Contains("@");
+    }
+
+    private void ValidatePhone()
+    {
+        isPhoneInvalid = string.IsNullOrEmpty(registerRequest.PhoneNumber) || registerRequest.PhoneNumber.Length < 10;
+    }
+
+    private void ValidatePassword()
+    {
+        isPasswordInvalid = string.IsNullOrEmpty(registerRequest.Password) || registerRequest.Password.Length < 6;
+    }
+
+    private void ValidateConfirmPassword()
+    {
+        isConfirmPasswordInvalid = string.IsNullOrEmpty(confirmPassword) || confirmPassword != registerRequest.Password;
+    }
+
+    private void TogglePassword()
+    {
+        showPassword = !showPassword;
+    }
+
+    private void ToggleConfirmPassword()
+    {
+        showConfirmPassword = !showConfirmPassword;
+    }
+
+    private async Task HandleRegister()
+    {
+        try
+        {
+            isLoading = true;
+            
+            // Validate all fields
+            ValidateFirstName();
+            ValidateLastName();
+            ValidateEmail();
+            ValidatePhone();
+            ValidatePassword();
+            ValidateConfirmPassword();
+
+            if (isFirstNameInvalid || isLastNameInvalid || isEmailInvalid || 
+                isPhoneInvalid || isPasswordInvalid || isConfirmPasswordInvalid)
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Lütfen tüm alanları doğru şekilde doldurun.");
+                return;
+            }
+
+            if (!acceptTerms)
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Kullanım şartlarını kabul etmelisiniz.");
+                return;
+            }
+
+            var result = await AuthService.RegisterAsync(registerRequest);
+            
+            if (result != null && result.IsSuccess)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", "Kayıt başarılı! Giriş yapabilirsiniz.");
+                Navigation.NavigateTo("/login");
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", result?.Error ?? "Kayıt oluşturulurken bir hata oluştu.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

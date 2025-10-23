@@ -9,32 +9,36 @@ public class HomeController : Controller
     private readonly ILogger<HomeController> _logger;
 
     /// <summary>
-    /// Ana sayfayı gösterir.
+    /// HomeController constructor
     /// </summary>
+    /// <param name="logger">Logger instance</param>
     public HomeController(ILogger<HomeController> logger)
     {
         _logger = logger;
     }
 
     /// <summary>
-    /// Ana sayfayı gösterir.
+    /// Ana sayfayı göster
     /// </summary>
+    /// <returns>Ana sayfa</returns>
     public IActionResult Index()
     {
         return View();
     }
 
     /// <summary>
-    /// Gizlilik politikasını gösterir.
+    /// Gizlilik politikası sayfasını göster
     /// </summary>
+    /// <returns>Gizlilik politikası sayfası</returns>
     public IActionResult Privacy()
     {
         return View();
     }
 
     /// <summary>
-    /// Hata sayfasını gösterir.
+    /// Hata sayfasını göster
     /// </summary>
+    /// <returns>Hata sayfası</returns>
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {

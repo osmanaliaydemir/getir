@@ -12,11 +12,22 @@ public class JwtTokenService : IJwtTokenService
 {
     private readonly JwtOptions _jwtOptions;
 
+    /// <summary>
+    /// JwtTokenService constructor
+    /// </summary>
+    /// <param name="jwtOptions">JWT konfigürasyon seçenekleri</param>
     public JwtTokenService(IOptions<JwtOptions> jwtOptions)
     {
         _jwtOptions = jwtOptions.Value;
     }
 
+    /// <summary>
+    /// Access token oluştur
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID</param>
+    /// <param name="email">Kullanıcı email</param>
+    /// <param name="additionalClaims">Ek claim'ler</param>
+    /// <returns>JWT access token</returns>
     public string CreateAccessToken(Guid userId, string email, IEnumerable<Claim>? additionalClaims = null)
     {
         var claims = new List<Claim>
@@ -47,6 +58,10 @@ public class JwtTokenService : IJwtTokenService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
+    /// <summary>
+    /// Refresh token oluştur
+    /// </summary>
+    /// <returns>Base64 encoded refresh token</returns>
     public string CreateRefreshToken()
     {
         var randomNumber = new byte[64];
@@ -55,6 +70,11 @@ public class JwtTokenService : IJwtTokenService
         return Convert.ToBase64String(randomNumber);
     }
 
+    /// <summary>
+    /// JWT token doğrula
+    /// </summary>
+    /// <param name="token">Doğrulanacak token</param>
+    /// <returns>Claims principal veya null</returns>
     public ClaimsPrincipal? ValidateToken(string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();

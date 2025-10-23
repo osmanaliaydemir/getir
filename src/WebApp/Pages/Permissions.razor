@@ -1,0 +1,415 @@
+@page "/permissions"
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<PageTitle>İzinler - Getir</PageTitle>
+
+@if (!isAuthenticated)
+{
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center">
+                <div class="card">
+                    <div class="card-body py-5">
+                        <i class="bi bi-person-x display-1 text-warning mb-4"></i>
+                        <h3>Giriş Yapın</h3>
+                        <p class="text-muted mb-4">
+                            İzinlerinizi görüntülemek için giriş yapmanız gerekiyor.
+                        </p>
+                        <a href="/login" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            Giriş Yap
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
+                <li class="breadcrumb-item active" aria-current="page">İzinler</li>
+            </ol>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">
+                            <i class="bi bi-key"></i>
+                            Uygulama İzinleri
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">
+                            Getir uygulamasının hangi verilerinize erişebileceğini ve nasıl kullanabileceğini yönetin.
+                        </p>
+
+                        <!-- Konum İzni -->
+                        <div class="permission-item mb-4">
+                            <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-geo-alt text-primary me-3 fs-4"></i>
+                                    <div>
+                                        <h6 class="mb-1">Konum Erişimi</h6>
+                                        <small class="text-muted">En yakın mağazaları bulmak ve teslimat adresinizi otomatik doldurmak için</small>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" @bind="permissions.LocationAccess" @bind:after="UpdatePermission">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kamera İzni -->
+                        <div class="permission-item mb-4">
+                            <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-camera text-success me-3 fs-4"></i>
+                                    <div>
+                                        <h6 class="mb-1">Kamera Erişimi</h6>
+                                        <small class="text-muted">QR kod okumak ve profil fotoğrafı çekmek için</small>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" @bind="permissions.CameraAccess" @bind:after="UpdatePermission">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bildirim İzni -->
+                        <div class="permission-item mb-4">
+                            <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-bell text-warning me-3 fs-4"></i>
+                                    <div>
+                                        <h6 class="mb-1">Bildirim İzni</h6>
+                                        <small class="text-muted">Sipariş durumu ve kampanyalar hakkında bildirim almak için</small>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" @bind="permissions.NotificationAccess" @bind:after="UpdatePermission">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Depolama İzni -->
+                        <div class="permission-item mb-4">
+                            <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-hdd text-info me-3 fs-4"></i>
+                                    <div>
+                                        <h6 class="mb-1">Depolama Erişimi</h6>
+                                        <small class="text-muted">Resimleri kaydetmek ve uygulama verilerini saklamak için</small>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" @bind="permissions.StorageAccess" @bind:after="UpdatePermission">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mikrofon İzni -->
+                        <div class="permission-item mb-4">
+                            <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-mic text-danger me-3 fs-4"></i>
+                                    <div>
+                                        <h6 class="mb-1">Mikrofon Erişimi</h6>
+                                        <small class="text-muted">Sesli arama ve ses komutları için</small>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" @bind="permissions.MicrophoneAccess" @bind:after="UpdatePermission">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kişiler İzni -->
+                        <div class="permission-item mb-4">
+                            <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-people text-secondary me-3 fs-4"></i>
+                                    <div>
+                                        <h6 class="mb-1">Kişiler Erişimi</h6>
+                                        <small class="text-muted">Arkadaşlarınızı davet etmek ve grup siparişleri için</small>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" @bind="permissions.ContactsAccess" @bind:after="UpdatePermission">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Veri Kullanımı -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">
+                            <i class="bi bi-database"></i>
+                            Veri Kullanımı
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">
+                            Hangi verilerinizin nasıl kullanıldığını ve paylaşıldığını kontrol edin.
+                        </p>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" @bind="permissions.AnalyticsData" @bind:after="UpdatePermission">
+                                    <label class="form-check-label">Analitik Verileri</label>
+                                </div>
+                                <small class="text-muted">Uygulama kullanım istatistikleri</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" @bind="permissions.MarketingData" @bind:after="UpdatePermission">
+                                    <label class="form-check-label">Pazarlama Verileri</label>
+                                </div>
+                                <small class="text-muted">Kişiselleştirilmiş kampanyalar</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" @bind="permissions.ThirdPartySharing" @bind:after="UpdatePermission">
+                                    <label class="form-check-label">Üçüncü Taraf Paylaşımı</label>
+                                </div>
+                                <small class="text-muted">Partner şirketlerle veri paylaşımı</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" @bind="permissions.CookieTracking" @bind:after="UpdatePermission">
+                                    <label class="form-check-label">Çerez Takibi</label>
+                                </div>
+                                <small class="text-muted">Web sitesi deneyimi için çerezler</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Yan Panel -->
+            <div class="col-lg-4">
+                <!-- İzin Durumu -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-shield-check"></i>
+                            İzin Durumu
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="permission-summary mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Aktif İzinler</span>
+                                <span class="fw-bold text-primary">@GetActivePermissionCount()/@GetTotalPermissionCount()</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-primary" 
+                                     style="width: @(GetActivePermissionCount() * 100 / GetTotalPermissionCount())%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="permission-breakdown">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small>Gerekli İzinler</small>
+                                <small class="text-success">@GetRequiredPermissionCount()</small>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <small>Opsiyonel İzinler</small>
+                                <small class="text-info">@GetOptionalPermissionCount()</small>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <small>Devre Dışı</small>
+                                <small class="text-muted">@GetDisabledPermissionCount()</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Güvenlik Bilgileri -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-info-circle"></i>
+                            Güvenlik Bilgileri
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-shield-check me-2"></i>
+                            <small>
+                                Verileriniz güvenli şekilde şifrelenir ve sadece belirtilen amaçlar için kullanılır.
+                            </small>
+                        </div>
+                        <ul class="list-unstyled small">
+                            <li class="mb-2">
+                                <i class="bi bi-check text-success me-2"></i>
+                                SSL şifreleme
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check text-success me-2"></i>
+                                GDPR uyumlu
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check text-success me-2"></i>
+                                KVKK uyumlu
+                            </li>
+                            <li>
+                                <i class="bi bi-check text-success me-2"></i>
+                                Üçüncü taraf denetimi
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Yardım -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-question-circle"></i>
+                            Yardım
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="small text-muted mb-3">
+                            İzinler hakkında daha fazla bilgi almak için:
+                        </p>
+                        <div class="d-grid gap-2">
+                            <a href="/help" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-book"></i>
+                                Yardım Merkezi
+                            </a>
+                            <a href="/contact" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-telephone"></i>
+                                İletişim
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isAuthenticated = false;
+    private UserPermissions permissions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        if (isAuthenticated)
+        {
+            LoadPermissions();
+        }
+        AuthService.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    }
+
+    private async void OnAuthenticationStateChanged()
+    {
+        isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        if (isAuthenticated)
+        {
+            LoadPermissions();
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AuthService.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
+
+    private void LoadPermissions()
+    {
+        // Şimdilik mock data
+        permissions = new UserPermissions
+        {
+            LocationAccess = true,
+            CameraAccess = false,
+            NotificationAccess = true,
+            StorageAccess = true,
+            MicrophoneAccess = false,
+            ContactsAccess = false,
+            AnalyticsData = true,
+            MarketingData = false,
+            ThirdPartySharing = false,
+            CookieTracking = true
+        };
+    }
+
+    private async Task UpdatePermission()
+    {
+        try
+        {
+            // TODO: API'ye izin güncellemesi gönder
+            await JSRuntime.InvokeVoidAsync("showSuccess", "İzin ayarları güncellendi!");
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+    }
+
+    private int GetActivePermissionCount()
+    {
+        return permissions.GetType().GetProperties()
+            .Where(p => p.PropertyType == typeof(bool))
+            .Count(p => (bool)p.GetValue(permissions)!);
+    }
+
+    private int GetTotalPermissionCount()
+    {
+        return permissions.GetType().GetProperties()
+            .Where(p => p.PropertyType == typeof(bool))
+            .Count();
+    }
+
+    private int GetRequiredPermissionCount()
+    {
+        // Gerekli izinler: Konum, Bildirim, Depolama
+        return (permissions.LocationAccess ? 1 : 0) + 
+               (permissions.NotificationAccess ? 1 : 0) + 
+               (permissions.StorageAccess ? 1 : 0);
+    }
+
+    private int GetOptionalPermissionCount()
+    {
+        return GetActivePermissionCount() - GetRequiredPermissionCount();
+    }
+
+    private int GetDisabledPermissionCount()
+    {
+        return GetTotalPermissionCount() - GetActivePermissionCount();
+    }
+}
+
+@* Models *@
+@code {
+    public class UserPermissions
+    {
+        public bool LocationAccess { get; set; }
+        public bool CameraAccess { get; set; }
+        public bool NotificationAccess { get; set; }
+        public bool StorageAccess { get; set; }
+        public bool MicrophoneAccess { get; set; }
+        public bool ContactsAccess { get; set; }
+        public bool AnalyticsData { get; set; }
+        public bool MarketingData { get; set; }
+        public bool ThirdPartySharing { get; set; }
+        public bool CookieTracking { get; set; }
+    }
+}

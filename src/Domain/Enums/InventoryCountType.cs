@@ -1,32 +1,32 @@
 namespace Getir.Domain.Enums;
 
 /// <summary>
-/// Inventory count types
+/// Envanter sayım türleri
 /// </summary>
 public enum InventoryCountType
 {
     /// <summary>
-    /// Full inventory count
+    /// Tam envanter sayımı
     /// </summary>
     Full = 0,
     
     /// <summary>
-    /// Partial inventory count
+    /// Kısmi envanter sayımı
     /// </summary>
     Partial = 1,
     
     /// <summary>
-    /// Cycle count
+    /// Döngü sayımı
     /// </summary>
     Cycle = 2,
     
     /// <summary>
-    /// Spot check
+    /// Nokta kontrolü
     /// </summary>
     SpotCheck = 3,
     
     /// <summary>
-    /// Annual count
+    /// Yıllık sayımı
     /// </summary>
     Annual = 4
 }
