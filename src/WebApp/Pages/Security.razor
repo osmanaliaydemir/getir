@@ -3,9 +3,10 @@
 @inject AuthService AuthService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
+@inject LocalizationService LocalizationService
 @implements IDisposable
 
-<PageTitle>Güvenlik - Getir</PageTitle>
+<PageTitle>@GetLocalizedText("security.title") - Getir</PageTitle>
 
 @if (!isAuthenticated)
 {
@@ -15,13 +16,13 @@
                 <div class="card">
                     <div class="card-body py-5">
                         <i class="bi bi-person-x display-1 text-warning mb-4"></i>
-                        <h3>Giriş Yapın</h3>
+                        <h3>@GetLocalizedText("common.login")</h3>
                         <p class="text-muted mb-4">
-                            Güvenlik ayarlarınızı görüntülemek için giriş yapmanız gerekiyor.
+                            @GetLocalizedText("security.login_required")
                         </p>
                         <a href="/login" class="btn btn-primary btn-lg">
                             <i class="bi bi-box-arrow-in-right"></i>
-                            Giriş Yap
+                            @GetLocalizedText("common.login")
                         </a>
                     </div>
                 </div>
@@ -33,9 +34,9 @@ else if (isLoading)
 {
     <div class="text-center py-5">
         <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Yükleniyor...</span>
+            <span class="visually-hidden">@GetLocalizedText("common.loading")</span>
         </div>
-        <p class="mt-3">Güvenlik bilgileriniz yükleniyor...</p>
+        <p class="mt-3">@GetLocalizedText("security.loading_security_info")</p>
     </div>
 }
 else
@@ -44,8 +45,8 @@ else
     <nav aria-label="breadcrumb" class="mb-4">
         <div class="container">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Güvenlik</li>
+                <li class="breadcrumb-item"><a href="/">@GetLocalizedText("common.home")</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@GetLocalizedText("security.title")</li>
             </ol>
         </div>
     </nav>
@@ -58,23 +59,23 @@ else
                     <div class="card-header">
                         <h4 class="mb-0">
                             <i class="bi bi-key"></i>
-                            Şifre Değiştir
+                            @GetLocalizedText("security.change_password")
                         </h4>
                     </div>
                     <div class="card-body">
                         <form @onsubmit="ChangePassword">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Mevcut Şifre *</label>
+                                    <label class="form-label">@GetLocalizedText("security.current_password") *</label>
                                     <input type="password" class="form-control" @bind="changePasswordRequest.CurrentPassword" required />
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Yeni Şifre *</label>
+                                    <label class="form-label">@GetLocalizedText("security.new_password") *</label>
                                     <input type="password" class="form-control" @bind="changePasswordRequest.NewPassword" required />
-                                    <small class="text-muted">En az 8 karakter, büyük harf, küçük harf ve rakam içermeli.</small>
+                                    <small class="text-muted">@GetLocalizedText("security.password_requirements")</small>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Yeni Şifre Tekrar *</label>
+                                    <label class="form-label">@GetLocalizedText("security.confirm_password") *</label>
                                     <input type="password" class="form-control" @bind="changePasswordRequest.ConfirmPassword" required />
                                 </div>
                             </div>
@@ -85,7 +86,7 @@ else
                                         <span class="spinner-border spinner-border-sm me-2" role="status"></span>
                                     }
                                     <i class="bi bi-check"></i>
-                                    Şifreyi Değiştir
+                                    @GetLocalizedText("security.change_password")
                                 </button>
                             </div>
                         </form>
@@ -97,22 +98,22 @@ else
                     <div class="card-header">
                         <h4 class="mb-0">
                             <i class="bi bi-envelope"></i>
-                            E-posta Adresi Değiştir
+                            @GetLocalizedText("security.change_email")
                         </h4>
                     </div>
                     <div class="card-body">
                         <form @onsubmit="ChangeEmail">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Mevcut E-posta</label>
+                                    <label class="form-label">@GetLocalizedText("security.current_email")</label>
                                     <input type="email" class="form-control" value="@currentEmail" readonly />
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Yeni E-posta *</label>
+                                    <label class="form-label">@GetLocalizedText("security.new_email") *</label>
                                     <input type="email" class="form-control" @bind="newEmail" required />
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Şifre *</label>
+                                    <label class="form-label">@GetLocalizedText("security.password") *</label>
                                     <input type="password" class="form-control" @bind="emailChangePassword" required />
                                 </div>
                             </div>
@@ -123,7 +124,7 @@ else
                                         <span class="spinner-border spinner-border-sm me-2" role="status"></span>
                                     }
                                     <i class="bi bi-check"></i>
-                                    E-posta Değiştir
+                                    @GetLocalizedText("security.change_email")
                                 </button>
                             </div>
                         </form>
@@ -135,22 +136,22 @@ else
                     <div class="card-header">
                         <h4 class="mb-0">
                             <i class="bi bi-telephone"></i>
-                            Telefon Numarası Değiştir
+                            @GetLocalizedText("security.change_phone")
                         </h4>
                     </div>
                     <div class="card-body">
                         <form @onsubmit="ChangePhone">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Mevcut Telefon</label>
+                                    <label class="form-label">@GetLocalizedText("security.current_phone")</label>
                                     <input type="tel" class="form-control" value="@currentPhone" readonly />
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Yeni Telefon *</label>
+                                    <label class="form-label">@GetLocalizedText("security.new_phone") *</label>
                                     <input type="tel" class="form-control" @bind="newPhone" required />
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Şifre *</label>
+                                    <label class="form-label">@GetLocalizedText("security.password") *</label>
                                     <input type="password" class="form-control" @bind="phoneChangePassword" required />
                                 </div>
                             </div>
@@ -161,7 +162,7 @@ else
                                         <span class="spinner-border spinner-border-sm me-2" role="status"></span>
                                     }
                                     <i class="bi bi-check"></i>
-                                    Telefon Değiştir
+                                    @GetLocalizedText("security.change_phone")
                                 </button>
                             </div>
                         </form>
@@ -173,22 +174,22 @@ else
                     <div class="card-header">
                         <h4 class="mb-0">
                             <i class="bi bi-shield-check"></i>
-                            İki Faktörlü Doğrulama (2FA)
+                            @GetLocalizedText("security.two_factor_auth")
                         </h4>
                     </div>
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-md-8">
-                                <h6>Güvenliğinizi artırın</h6>
+                                <h6>@GetLocalizedText("security.enhance_security")</h6>
                                 <p class="text-muted mb-0">
-                                    İki faktörlü doğrulama ile hesabınızı ekstra güvenlik katmanı ile koruyun.
+                                    @GetLocalizedText("security.two_factor_description")
                                 </p>
                             </div>
                             <div class="col-md-4 text-end">
                                 <div class="form-check form-switch">
                                     <input type="checkbox" class="form-check-input" @bind="twoFactorEnabled" @bind:after="ToggleTwoFactor">
                                     <label class="form-check-label">
-                                        @(twoFactorEnabled ? "Aktif" : "Pasif")
+                                        @(twoFactorEnabled ? GetLocalizedText("security.active") : GetLocalizedText("security.inactive"))
                                     </label>
                                 </div>
                             </div>
@@ -198,7 +199,7 @@ else
                             <div class="mt-3 p-3 bg-success bg-opacity-10 rounded">
                                 <div class="d-flex align-items-center">
                                     <i class="bi bi-check-circle text-success me-2"></i>
-                                    <span class="text-success">İki faktörlü doğrulama aktif</span>
+                                    <span class="text-success">@GetLocalizedText("security.two_factor_enabled")</span>
                                 </div>
                             </div>
                         }
@@ -210,11 +211,11 @@ else
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="mb-0">
                             <i class="bi bi-laptop"></i>
-                            Aktif Oturumlar
+                            @GetLocalizedText("security.active_sessions")
                         </h4>
                         <button class="btn btn-outline-danger btn-sm" @onclick="LogoutAllDevices">
                             <i class="bi bi-x-circle"></i>
-                            Tüm Oturumları Sonlandır
+                            @GetLocalizedText("security.logout_all_devices")
                         </button>
                     </div>
                     <div class="card-body">
@@ -233,7 +234,7 @@ else
                                     <div class="d-flex align-items-center">
                                         @if (session.IsCurrent)
                                         {
-                                            <span class="badge bg-primary me-2">Mevcut Oturum</span>
+                                            <span class="badge bg-primary me-2">@GetLocalizedText("security.current_session")</span>
                                         }
                                         @if (!session.IsCurrent)
                                         {
@@ -249,7 +250,7 @@ else
                         {
                             <div class="text-center py-3">
                                 <i class="bi bi-laptop display-4 text-muted mb-3"></i>
-                                <p class="text-muted">Aktif oturum bulunamadı</p>
+                                <p class="text-muted">@GetLocalizedText("security.no_active_sessions")</p>
                             </div>
                         }
                     </div>
@@ -263,13 +264,13 @@ else
                     <div class="card-header">
                         <h5 class="mb-0">
                             <i class="bi bi-shield-check"></i>
-                            Güvenlik Durumu
+                            @GetLocalizedText("security.security_status")
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="security-score mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>Güvenlik Skoru</span>
+                                <span>@GetLocalizedText("security.security_score")</span>
                                 <span class="fw-bold @GetSecurityScoreClass(securityScore)">@securityScore/100</span>
                             </div>
                             <div class="progress">
@@ -281,19 +282,19 @@ else
                         <div class="security-checklist">
                             <div class="d-flex align-items-center mb-2">
                                 <i class="bi @(hasStrongPassword ? "bi-check-circle text-success" : "bi-x-circle text-danger") me-2"></i>
-                                <small>Güçlü Şifre</small>
+                                <small>@GetLocalizedText("security.strong_password")</small>
                             </div>
                             <div class="d-flex align-items-center mb-2">
                                 <i class="bi @(twoFactorEnabled ? "bi-check-circle text-success" : "bi-x-circle text-danger") me-2"></i>
-                                <small>İki Faktörlü Doğrulama</small>
+                                <small>@GetLocalizedText("security.two_factor_auth")</small>
                             </div>
                             <div class="d-flex align-items-center mb-2">
                                 <i class="bi @(hasVerifiedEmail ? "bi-check-circle text-success" : "bi-x-circle text-danger") me-2"></i>
-                                <small>Doğrulanmış E-posta</small>
+                                <small>@GetLocalizedText("security.verified_email")</small>
                             </div>
                             <div class="d-flex align-items-center mb-2">
                                 <i class="bi @(hasVerifiedPhone ? "bi-check-circle text-success" : "bi-x-circle text-danger") me-2"></i>
-                                <small>Doğrulanmış Telefon</small>
+                                <small>@GetLocalizedText("security.verified_phone")</small>
                             </div>
                         </div>
                     </div>
@@ -304,26 +305,26 @@ else
                     <div class="card-header">
                         <h5 class="mb-0">
                             <i class="bi bi-lightbulb"></i>
-                            Güvenlik İpuçları
+                            @GetLocalizedText("security.security_tips")
                         </h5>
                     </div>
                     <div class="card-body">
                         <ul class="list-unstyled">
                             <li class="mb-2">
                                 <i class="bi bi-check text-success me-2"></i>
-                                <small>Güçlü ve benzersiz şifreler kullanın</small>
+                                <small>@GetLocalizedText("security.tip_strong_password")</small>
                             </li>
                             <li class="mb-2">
                                 <i class="bi bi-check text-success me-2"></i>
-                                <small>İki faktörlü doğrulamayı aktifleştirin</small>
+                                <small>@GetLocalizedText("security.tip_two_factor")</small>
                             </li>
                             <li class="mb-2">
                                 <i class="bi bi-check text-success me-2"></i>
-                                <small>Şüpheli aktiviteleri takip edin</small>
+                                <small>@GetLocalizedText("security.tip_monitor_activity")</small>
                             </li>
                             <li class="mb-2">
                                 <i class="bi bi-check text-success me-2"></i>
-                                <small>Güvenilir cihazlardan giriş yapın</small>
+                                <small>@GetLocalizedText("security.tip_trusted_devices")</small>
                             </li>
                         </ul>
                     </div>
@@ -412,7 +413,7 @@ else
         }
         catch (Exception ex)
         {
-            await JSRuntime.InvokeVoidAsync("showError", "Güvenlik bilgileri yüklenirken bir hata oluştu: " + ex.Message);
+            await JSRuntime.InvokeVoidAsync("showError", GetLocalizedText("security.loading_error") + ": " + ex.Message);
         }
         finally
         {
@@ -553,6 +554,11 @@ else
             >= 60 => "bg-warning",
             _ => "bg-danger"
         };
+    }
+
+    private string GetLocalizedText(string key)
+    {
+        return LocalizationService.GetString(key);
     }
 }
 
