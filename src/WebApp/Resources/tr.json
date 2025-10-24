@@ -395,7 +395,7 @@
     "tip_two_factor": "İki faktörlü doğrulamayı aktifleştirin",
     "tip_monitor_activity": "Şüpheli aktiviteleri takip edin",
     "tip_trusted_devices": "Güvenilir cihazlardan giriş yapın",
-    "loading_error": "Güvenlik bilgileri yüklenirken bir hata oluştu",
+    "loading_error": "Güvenlik bilgileri yüklenirken bir hata oluştu"
   },
   "errors": {
     "GenericError": "Bir hata oluştu. Lütfen tekrar deneyin.",
