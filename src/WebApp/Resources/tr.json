@@ -38,7 +38,11 @@
     "Reset": "Sıfırla",
     "Confirm": "Onayla",
     "Retry": "Tekrar Dene",
-    "Refresh": "Yenile"
+    "Refresh": "Yenile",
+    "FastDelivery": "Hızlı Teslimat",
+    "SearchPlaceholder": "Ürün veya mağaza ara...",
+    "MyAccount": "Hesabım",
+    "InstallApp": "Uygulamayı Yükle"
   },
   "Navigation": {
     "Home": "Ana Sayfa",
@@ -47,11 +51,21 @@
     "Orders": "Siparişlerim",
     "Account": "Hesabım",
     "Settings": "Ayarlar",
+    "Profile": "Profil",
+    "Favorites": "Favoriler",
+    "Addresses": "Adresler",
+    "Notifications": "Bildirimler",
     "Help": "Yardım",
     "Contact": "İletişim",
     "Login": "Giriş Yap",
     "Register": "Kayıt Ol",
-    "Logout": "Çıkış Yap"
+    "Logout": "Çıkış Yap",
+    "ProfileInfo": "Profil Bilgileri",
+    "MyOrders": "Siparişlerim",
+    "FavoriteProducts": "Favori Ürünler",
+    "MyAddresses": "Adreslerim",
+    "Security": "Güvenlik",
+    "Permissions": "İzinler"
   },
   "Auth": {
     "LoginTitle": "Giriş Yap",
@@ -284,6 +298,27 @@
     "TurkishLira": "Türk Lirası",
     "USDollar": "Amerikan Doları",
     "Euro": "Euro"
+  },
+  "Footer": {
+    "AboutUs": "Hakkımızda",
+    "Careers": "Kariyer",
+    "Press": "Basın",
+    "Contact": "İletişim",
+    "Services": "Hizmetler",
+    "Merchants": "Mağazalar",
+    "Delivery": "Teslimat",
+    "Support": "Destek",
+    "Faq": "SSS",
+    "Legal": "Yasal",
+    "PrivacyPolicy": "Gizlilik Politikası",
+    "TermsOfUse": "Kullanım Şartları",
+    "CookiePolicy": "Çerez Politikası",
+    "RefundPolicy": "İade Politikası",
+    "Location": "İstanbul, Türkiye",
+    "AllRightsReserved": "Tüm hakları saklıdır."
+  },
+  "PWA": {
+    "InstallApp": "Uygulamayı Yükle"
   },
   "Errors": {
     "GenericError": "Bir hata oluştu. Lütfen tekrar deneyin.",

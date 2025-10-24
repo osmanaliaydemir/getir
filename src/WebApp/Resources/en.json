@@ -38,7 +38,11 @@
     "Arabic": "Arabic",
     "Turkish Lira": "Turkish Lira",
     "US Dollar": "US Dollar",
-    "Euro": "Euro"
+    "Euro": "Euro",
+    "FastDelivery": "Fast Delivery",
+    "SearchPlaceholder": "Search products or stores...",
+    "MyAccount": "My Account",
+    "InstallApp": "Install App"
   },
   "Navigation": {
     "Home": "Home",
@@ -47,11 +51,21 @@
     "Orders": "My Orders",
     "Account": "My Account",
     "Settings": "Settings",
+    "Profile": "Profile",
+    "Favorites": "Favorites",
+    "Addresses": "Addresses",
+    "Notifications": "Notifications",
     "Help": "Help",
     "Contact": "Contact",
     "Login": "Login",
     "Register": "Register",
-    "Logout": "Logout"
+    "Logout": "Logout",
+    "ProfileInfo": "Profile Information",
+    "MyOrders": "My Orders",
+    "FavoriteProducts": "Favorite Products",
+    "MyAddresses": "My Addresses",
+    "Security": "Security",
+    "Permissions": "Permissions"
   },
   "Auth": {
     "LoginTitle": "Login",
@@ -284,6 +298,27 @@
     "TurkishLira": "Turkish Lira",
     "USDollar": "US Dollar",
     "Euro": "Euro"
+  },
+  "Footer": {
+    "AboutUs": "About Us",
+    "Careers": "Careers",
+    "Press": "Press",
+    "Contact": "Contact",
+    "Services": "Services",
+    "Merchants": "Merchants",
+    "Delivery": "Delivery",
+    "Support": "Support",
+    "Faq": "FAQ",
+    "Legal": "Legal",
+    "PrivacyPolicy": "Privacy Policy",
+    "TermsOfUse": "Terms of Use",
+    "CookiePolicy": "Cookie Policy",
+    "RefundPolicy": "Refund Policy",
+    "Location": "Istanbul, Turkey",
+    "AllRightsReserved": "All rights reserved."
+  },
+  "PWA": {
+    "InstallApp": "Install App"
   },
   "Errors": {
     "GenericError": "An error occurred. Please try again.",

@@ -38,7 +38,11 @@
     "Arabic": "العربية",
     "Turkish Lira": "الليرة التركية",
     "US Dollar": "الدولار الأمريكي",
-    "Euro": "اليورو"
+    "Euro": "اليورو",
+    "FastDelivery": "التوصيل السريع",
+    "SearchPlaceholder": "البحث عن المنتجات أو المتاجر...",
+    "MyAccount": "حسابي",
+    "InstallApp": "تثبيت التطبيق"
   },
   "Navigation": {
     "Home": "الرئيسية",
@@ -47,11 +51,21 @@
     "Orders": "طلباتي",
     "Account": "حسابي",
     "Settings": "الإعدادات",
+    "Profile": "الملف الشخصي",
+    "Favorites": "المفضلة",
+    "Addresses": "العناوين",
+    "Notifications": "الإشعارات",
     "Help": "المساعدة",
     "Contact": "اتصل بنا",
     "Login": "تسجيل الدخول",
     "Register": "إنشاء حساب",
-    "Logout": "تسجيل الخروج"
+    "Logout": "تسجيل الخروج",
+    "ProfileInfo": "معلومات الملف الشخصي",
+    "MyOrders": "طلباتي",
+    "FavoriteProducts": "المنتجات المفضلة",
+    "MyAddresses": "عناويني",
+    "Security": "الأمان",
+    "Permissions": "الصلاحيات"
   },
   "Auth": {
     "LoginTitle": "تسجيل الدخول",
@@ -284,6 +298,27 @@
     "TurkishLira": "الليرة التركية",
     "USDollar": "الدولار الأمريكي",
     "Euro": "اليورو"
+  },
+  "Footer": {
+    "AboutUs": "من نحن",
+    "Careers": "الوظائف",
+    "Press": "الصحافة",
+    "Contact": "اتصل بنا",
+    "Services": "الخدمات",
+    "Merchants": "المتاجر",
+    "Delivery": "التوصيل",
+    "Support": "الدعم",
+    "Faq": "الأسئلة الشائعة",
+    "Legal": "قانوني",
+    "PrivacyPolicy": "سياسة الخصوصية",
+    "TermsOfUse": "شروط الاستخدام",
+    "CookiePolicy": "سياسة ملفات تعريف الارتباط",
+    "RefundPolicy": "سياسة الاسترداد",
+    "Location": "إسطنبول، تركيا",
+    "AllRightsReserved": "جميع الحقوق محفوظة."
+  },
+  "PWA": {
+    "InstallApp": "تثبيت التطبيق"
   },
   "Errors": {
     "GenericError": "حدث خطأ. يرجى المحاولة مرة أخرى.",
