@@ -238,7 +238,42 @@
     "SettingsSaved": "Settings saved successfully!",
     "SettingsSaveError": "An error occurred while saving settings.",
     "LoadingSettings": "Loading your settings...",
-    "LoginRequired": "You need to login to view your settings."
+    "LoginRequired": "You need to login to view your settings.",
+    "QuickAccess": "Quick Access",
+    "SecuritySettings": "Security Settings",
+    "AddressManagement": "Address Management",
+    "Notifications": "Notifications",
+    "Permissions": "Permissions",
+    "AccountStatistics": "Account Statistics"
+  },
+  "Profile": {
+    "FirstName": "First Name",
+    "LastName": "Last Name",
+    "Email": "Email",
+    "Phone": "Phone",
+    "EmailChangeNote": "Use the security page to change your email address."
+  },
+  "Notifications": {
+    "EmailNotifications": "Email Notifications",
+    "EmailNotificationsDesc": "Receive emails about order status and campaigns.",
+    "SmsNotifications": "SMS Notifications",
+    "SmsNotificationsDesc": "Receive SMS for important updates.",
+    "PushNotifications": "Push Notifications",
+    "PushNotificationsDesc": "Receive browser notifications.",
+    "MarketingEmails": "Marketing Emails",
+    "MarketingEmailsDesc": "Receive information about campaigns and special offers."
+  },
+  "Privacy": {
+    "ProfileVisibility": "Profile Visibility",
+    "ProfileVisibilityDesc": "Show your profile to other users.",
+    "DataSharing": "Data Sharing",
+    "DataSharingDesc": "Share your anonymous data for analysis."
+  },
+  "Statistics": {
+    "TotalOrders": "Total Orders",
+    "TotalSpent": "Total Spent",
+    "FavoriteProducts": "Favorite Products",
+    "SavedAddresses": "Saved Addresses"
   },
   "Languages": {
     "Turkish": "Turkish",

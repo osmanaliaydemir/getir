@@ -16,13 +16,13 @@
                 <div class="card">
                     <div class="card-body py-5">
                         <i class="bi bi-person-x display-1 text-warning mb-4"></i>
-                        <h3>Giriş Yapın</h3>
+                        <h3>@GetLocalizedText("common.login")</h3>
                         <p class="text-muted mb-4">
-                            Ayarlarınızı görüntülemek için giriş yapmanız gerekiyor.
+                            @GetLocalizedText("settings.login_required")
                         </p>
                         <a href="/login" class="btn btn-primary btn-lg">
                             <i class="bi bi-box-arrow-in-right"></i>
-                            Giriş Yap
+                            @GetLocalizedText("common.login")
                         </a>
                     </div>
                 </div>
@@ -34,9 +34,9 @@ else if (isLoading)
 {
     <div class="text-center py-5">
         <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Yükleniyor...</span>
+            <span class="visually-hidden">@GetLocalizedText("common.loading")</span>
         </div>
-        <p class="mt-3">Ayarlarınız yükleniyor...</p>
+        <p class="mt-3">@GetLocalizedText("settings.loading_settings")</p>
     </div>
 }
 else
@@ -67,24 +67,24 @@ else
                             <div class="settings-section mb-4">
                                 <h5 class="mb-3">
                                     <i class="bi bi-person"></i>
-                                    Profil Bilgileri
+                                    @GetLocalizedText("settings.profile_settings")
                                 </h5>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">Ad</label>
+                                        <label class="form-label">@GetLocalizedText("profile.first_name")</label>
                                         <input type="text" class="form-control" @bind="settings.FirstName" />
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">Soyad</label>
+                                        <label class="form-label">@GetLocalizedText("profile.last_name")</label>
                                         <input type="text" class="form-control" @bind="settings.LastName" />
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">E-posta</label>
+                                        <label class="form-label">@GetLocalizedText("profile.email")</label>
                                         <input type="email" class="form-control" @bind="settings.Email" readonly />
-                                        <small class="text-muted">E-posta adresinizi değiştirmek için güvenlik sayfasını kullanın.</small>
+                                        <small class="text-muted">@GetLocalizedText("profile.email_change_note")</small>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">Telefon</label>
+                                        <label class="form-label">@GetLocalizedText("profile.phone")</label>
                                         <input type="tel" class="form-control" @bind="settings.Phone" />
                                     </div>
                                 </div>
@@ -94,36 +94,36 @@ else
                             <div class="settings-section mb-4">
                                 <h5 class="mb-3">
                                     <i class="bi bi-bell"></i>
-                                    Bildirim Ayarları
+                                    @GetLocalizedText("settings.notification_settings")
                                 </h5>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <div class="form-check form-switch">
                                             <input type="checkbox" class="form-check-input" @bind="settings.EmailNotifications">
-                                            <label class="form-check-label">E-posta Bildirimleri</label>
+                                            <label class="form-check-label">@GetLocalizedText("notifications.email_notifications")</label>
                                         </div>
-                                        <small class="text-muted">Sipariş durumu ve kampanyalar hakkında e-posta alın.</small>
+                                        <small class="text-muted">@GetLocalizedText("notifications.email_notifications_desc")</small>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <div class="form-check form-switch">
                                             <input type="checkbox" class="form-check-input" @bind="settings.SmsNotifications">
-                                            <label class="form-check-label">SMS Bildirimleri</label>
+                                            <label class="form-check-label">@GetLocalizedText("notifications.sms_notifications")</label>
                                         </div>
-                                        <small class="text-muted">Önemli güncellemeler için SMS alın.</small>
+                                        <small class="text-muted">@GetLocalizedText("notifications.sms_notifications_desc")</small>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <div class="form-check form-switch">
                                             <input type="checkbox" class="form-check-input" @bind="settings.PushNotifications">
-                                            <label class="form-check-label">Push Bildirimleri</label>
+                                            <label class="form-check-label">@GetLocalizedText("notifications.push_notifications")</label>
                                         </div>
-                                        <small class="text-muted">Tarayıcı bildirimleri alın.</small>
+                                        <small class="text-muted">@GetLocalizedText("notifications.push_notifications_desc")</small>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <div class="form-check form-switch">
                                             <input type="checkbox" class="form-check-input" @bind="settings.MarketingEmails">
-                                            <label class="form-check-label">Pazarlama E-postaları</label>
+                                            <label class="form-check-label">@GetLocalizedText("notifications.marketing_emails")</label>
                                         </div>
-                                        <small class="text-muted">Kampanya ve özel teklifler hakkında bilgi alın.</small>
+                                        <small class="text-muted">@GetLocalizedText("notifications.marketing_emails_desc")</small>
                                     </div>
                                 </div>
                             </div>
@@ -158,22 +158,22 @@ else
                             <div class="settings-section mb-4">
                                 <h5 class="mb-3">
                                     <i class="bi bi-shield-lock"></i>
-                                    Gizlilik Ayarları
+                                    @GetLocalizedText("settings.privacy_settings")
                                 </h5>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <div class="form-check form-switch">
                                             <input type="checkbox" class="form-check-input" @bind="settings.ProfileVisibility">
-                                            <label class="form-check-label">Profil Görünürlüğü</label>
+                                            <label class="form-check-label">@GetLocalizedText("privacy.profile_visibility")</label>
                                         </div>
-                                        <small class="text-muted">Profilinizi diğer kullanıcılara gösterin.</small>
+                                        <small class="text-muted">@GetLocalizedText("privacy.profile_visibility_desc")</small>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <div class="form-check form-switch">
                                             <input type="checkbox" class="form-check-input" @bind="settings.DataSharing">
-                                            <label class="form-check-label">Veri Paylaşımı</label>
+                                            <label class="form-check-label">@GetLocalizedText("privacy.data_sharing")</label>
                                         </div>
-                                        <small class="text-muted">Anonim verilerinizi analiz için paylaşın.</small>
+                                        <small class="text-muted">@GetLocalizedText("privacy.data_sharing_desc")</small>
                                     </div>
                                 </div>
                             </div>
@@ -201,26 +201,26 @@ else
                     <div class="card-header">
                         <h5 class="mb-0">
                             <i class="bi bi-lightning"></i>
-                            Hızlı Erişim
+                            @GetLocalizedText("settings.quick_access")
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="d-grid gap-2">
                             <a href="/security" class="btn btn-outline-primary">
                                 <i class="bi bi-shield-lock"></i>
-                                Güvenlik Ayarları
+                                @GetLocalizedText("settings.security_settings")
                             </a>
                             <a href="/addresses" class="btn btn-outline-primary">
                                 <i class="bi bi-geo-alt"></i>
-                                Adres Yönetimi
+                                @GetLocalizedText("settings.address_management")
                             </a>
                             <a href="/notifications" class="btn btn-outline-primary">
                                 <i class="bi bi-bell"></i>
-                                Bildirimler
+                                @GetLocalizedText("settings.notifications")
                             </a>
                             <a href="/permissions" class="btn btn-outline-primary">
                                 <i class="bi bi-key"></i>
-                                İzinler
+                                @GetLocalizedText("settings.permissions")
                             </a>
                         </div>
                     </div>
@@ -231,7 +231,7 @@ else
                     <div class="card-header">
                         <h5 class="mb-0">
                             <i class="bi bi-graph-up"></i>
-                            Hesap İstatistikleri
+                            @GetLocalizedText("settings.account_statistics")
                         </h5>
                     </div>
                     <div class="card-body">
@@ -239,25 +239,25 @@ else
                             <div class="col-6 mb-3">
                                 <div class="stat-item">
                                     <h4 class="text-primary">@totalOrders</h4>
-                                    <small class="text-muted">Toplam Sipariş</small>
+                                    <small class="text-muted">@GetLocalizedText("statistics.total_orders")</small>
                                 </div>
                             </div>
                             <div class="col-6 mb-3">
                                 <div class="stat-item">
                                     <h4 class="text-success">@totalSpent.ToString("C0")</h4>
-                                    <small class="text-muted">Toplam Harcama</small>
+                                    <small class="text-muted">@GetLocalizedText("statistics.total_spent")</small>
                                 </div>
                             </div>
                             <div class="col-6 mb-3">
                                 <div class="stat-item">
                                     <h4 class="text-info">@favoriteCount</h4>
-                                    <small class="text-muted">Favori Ürün</small>
+                                    <small class="text-muted">@GetLocalizedText("statistics.favorite_products")</small>
                                 </div>
                             </div>
                             <div class="col-6 mb-3">
                                 <div class="stat-item">
                                     <h4 class="text-warning">@addressCount</h4>
-                                    <small class="text-muted">Kayıtlı Adres</small>
+                                    <small class="text-muted">@GetLocalizedText("statistics.saved_addresses")</small>
                                 </div>
                             </div>
                         </div>

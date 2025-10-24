@@ -23,7 +23,22 @@
     "Reset": "إعادة تعيين",
     "Confirm": "تأكيد",
     "Retry": "إعادة المحاولة",
-    "Refresh": "تحديث"
+    "Refresh": "تحديث",
+    "Home": "الرئيسية",
+    "Settings": "الإعدادات",
+    "Profile": "الملف الشخصي",
+    "Account": "الحساب",
+    "Logout": "تسجيل الخروج",
+    "Login": "تسجيل الدخول",
+    "Register": "التسجيل",
+    "Language": "اللغة",
+    "Currency": "العملة",
+    "Turkish": "التركية",
+    "English": "الإنجليزية",
+    "Arabic": "العربية",
+    "Turkish Lira": "الليرة التركية",
+    "US Dollar": "الدولار الأمريكي",
+    "Euro": "اليورو"
   },
   "Navigation": {
     "Home": "الرئيسية",
@@ -208,6 +223,67 @@
     "PaymentFailed": "فشل الدفع!",
     "SelectAddress": "يرجى اختيار عنوان التوصيل.",
     "SelectPaymentMethod": "يرجى اختيار طريقة الدفع."
+  },
+  "Settings": {
+    "Title": "الإعدادات",
+    "AccountSettings": "إعدادات الحساب",
+    "LanguageRegion": "اللغة والمنطقة",
+    "Language": "اللغة",
+    "Currency": "العملة",
+    "ProfileSettings": "إعدادات الملف الشخصي",
+    "NotificationSettings": "إعدادات الإشعارات",
+    "PrivacySettings": "إعدادات الخصوصية",
+    "SecuritySettings": "إعدادات الأمان",
+    "SaveSettings": "حفظ الإعدادات",
+    "SettingsSaved": "تم حفظ الإعدادات بنجاح!",
+    "SettingsSaveError": "حدث خطأ أثناء حفظ الإعدادات.",
+    "LoadingSettings": "جاري تحميل إعداداتك...",
+    "LoginRequired": "تحتاج إلى تسجيل الدخول لعرض إعداداتك.",
+    "QuickAccess": "الوصول السريع",
+    "SecuritySettings": "إعدادات الأمان",
+    "AddressManagement": "إدارة العناوين",
+    "Notifications": "الإشعارات",
+    "Permissions": "الصلاحيات",
+    "AccountStatistics": "إحصائيات الحساب"
+  },
+  "Profile": {
+    "FirstName": "الاسم الأول",
+    "LastName": "اسم العائلة",
+    "Email": "البريد الإلكتروني",
+    "Phone": "الهاتف",
+    "EmailChangeNote": "استخدم صفحة الأمان لتغيير عنوان بريدك الإلكتروني."
+  },
+  "Notifications": {
+    "EmailNotifications": "إشعارات البريد الإلكتروني",
+    "EmailNotificationsDesc": "تلقي رسائل بريد إلكتروني حول حالة الطلب والحملات.",
+    "SmsNotifications": "إشعارات الرسائل النصية",
+    "SmsNotificationsDesc": "تلقي رسائل نصية للتحديثات المهمة.",
+    "PushNotifications": "إشعارات الدفع",
+    "PushNotificationsDesc": "تلقي إشعارات المتصفح.",
+    "MarketingEmails": "رسائل التسويق",
+    "MarketingEmailsDesc": "تلقي معلومات حول الحملات والعروض الخاصة."
+  },
+  "Privacy": {
+    "ProfileVisibility": "رؤية الملف الشخصي",
+    "ProfileVisibilityDesc": "إظهار ملفك الشخصي للمستخدمين الآخرين.",
+    "DataSharing": "مشاركة البيانات",
+    "DataSharingDesc": "مشاركة بياناتك المجهولة للتحليل."
+  },
+  "Statistics": {
+    "TotalOrders": "إجمالي الطلبات",
+    "TotalSpent": "إجمالي الإنفاق",
+    "FavoriteProducts": "المنتجات المفضلة",
+    "SavedAddresses": "العناوين المحفوظة"
+  },
+  "Languages": {
+    "Turkish": "التركية",
+    "English": "الإنجليزية",
+    "Arabic": "العربية"
+  },
+  "Currencies": {
+    "TurkishLira": "الليرة التركية",
+    "USDollar": "الدولار الأمريكي",
+    "Euro": "اليورو"
   },
   "Errors": {
     "GenericError": "حدث خطأ. يرجى المحاولة مرة أخرى.",

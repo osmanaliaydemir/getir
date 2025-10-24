@@ -238,7 +238,42 @@
     "SettingsSaved": "Ayarlar başarıyla kaydedildi!",
     "SettingsSaveError": "Ayarlar kaydedilirken bir hata oluştu.",
     "LoadingSettings": "Ayarlarınız yükleniyor...",
-    "LoginRequired": "Ayarlarınızı görüntülemek için giriş yapmanız gerekiyor."
+    "LoginRequired": "Ayarlarınızı görüntülemek için giriş yapmanız gerekiyor.",
+    "QuickAccess": "Hızlı Erişim",
+    "SecuritySettings": "Güvenlik Ayarları",
+    "AddressManagement": "Adres Yönetimi",
+    "Notifications": "Bildirimler",
+    "Permissions": "İzinler",
+    "AccountStatistics": "Hesap İstatistikleri"
+  },
+  "Profile": {
+    "FirstName": "Ad",
+    "LastName": "Soyad",
+    "Email": "E-posta",
+    "Phone": "Telefon",
+    "EmailChangeNote": "E-posta adresinizi değiştirmek için güvenlik sayfasını kullanın."
+  },
+  "Notifications": {
+    "EmailNotifications": "E-posta Bildirimleri",
+    "EmailNotificationsDesc": "Sipariş durumu ve kampanyalar hakkında e-posta alın.",
+    "SmsNotifications": "SMS Bildirimleri",
+    "SmsNotificationsDesc": "Önemli güncellemeler için SMS alın.",
+    "PushNotifications": "Push Bildirimleri",
+    "PushNotificationsDesc": "Tarayıcı bildirimleri alın.",
+    "MarketingEmails": "Pazarlama E-postaları",
+    "MarketingEmailsDesc": "Kampanya ve özel teklifler hakkında bilgi alın."
+  },
+  "Privacy": {
+    "ProfileVisibility": "Profil Görünürlüğü",
+    "ProfileVisibilityDesc": "Profilinizi diğer kullanıcılara gösterin.",
+    "DataSharing": "Veri Paylaşımı",
+    "DataSharingDesc": "Anonim verilerinizi analiz için paylaşın."
+  },
+  "Statistics": {
+    "TotalOrders": "Toplam Sipariş",
+    "TotalSpent": "Toplam Harcama",
+    "FavoriteProducts": "Favori Ürün",
+    "SavedAddresses": "Kayıtlı Adres"
   },
   "Languages": {
     "Turkish": "Türkçe",
