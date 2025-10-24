@@ -3,9 +3,10 @@
 @inject AuthService AuthService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
+@inject LocalizationService LocalizationService
 @implements IDisposable
 
-<PageTitle>Ayarlar - Getir</PageTitle>
+<PageTitle>@GetLocalizedText("settings.title") - Getir</PageTitle>
 
 @if (!isAuthenticated)
 {
@@ -44,8 +45,8 @@ else
     <nav aria-label="breadcrumb" class="mb-4">
         <div class="container">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Ayarlar</li>
+                <li class="breadcrumb-item"><a href="/">@GetLocalizedText("common.home")</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@GetLocalizedText("settings.title")</li>
             </ol>
         </div>
     </nav>
@@ -57,7 +58,7 @@ else
                     <div class="card-header">
                         <h4 class="mb-0">
                             <i class="bi bi-gear"></i>
-                            Hesap Ayarları
+                            @GetLocalizedText("settings.account_settings")
                         </h4>
                     </div>
                     <div class="card-body">
@@ -131,23 +132,23 @@ else
                             <div class="settings-section mb-4">
                                 <h5 class="mb-3">
                                     <i class="bi bi-globe"></i>
-                                    Dil ve Bölge
+                                    @GetLocalizedText("settings.language_region")
                                 </h5>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">Dil</label>
+                                        <label class="form-label">@GetLocalizedText("settings.language")</label>
                                         <select class="form-select" @bind="settings.Language">
-                                            <option value="tr">Türkçe</option>
-                                            <option value="en">English</option>
-                                            <option value="ar">العربية</option>
+                                            <option value="tr">@GetLocalizedText("languages.turkish")</option>
+                                            <option value="en">@GetLocalizedText("languages.english")</option>
+                                            <option value="ar">@GetLocalizedText("languages.arabic")</option>
                                         </select>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">Para Birimi</label>
+                                        <label class="form-label">@GetLocalizedText("settings.currency")</label>
                                         <select class="form-select" @bind="settings.Currency">
-                                            <option value="TRY">₺ Türk Lirası</option>
-                                            <option value="USD">$ Amerikan Doları</option>
-                                            <option value="EUR">€ Euro</option>
+                                            <option value="TRY">₺ @GetLocalizedText("currencies.turkish_lira")</option>
+                                            <option value="USD">$ @GetLocalizedText("currencies.us_dollar")</option>
+                                            <option value="EUR">€ @GetLocalizedText("currencies.euro")</option>
                                         </select>
                                     </div>
                                 </div>
@@ -185,7 +186,7 @@ else
                                         <span class="spinner-border spinner-border-sm me-2" role="status"></span>
                                     }
                                     <i class="bi bi-check"></i>
-                                    Ayarları Kaydet
+                                    @GetLocalizedText("common.save")
                                 </button>
                             </div>
                         </form>
@@ -303,6 +304,11 @@ else
         AuthService.AuthenticationStateChanged -= OnAuthenticationStateChanged;
     }
 
+    private string GetLocalizedText(string key)
+    {
+        return LocalizationService.GetString(key);
+    }
+
     private async Task LoadSettings()
     {
         try
@@ -367,6 +373,18 @@ else
         try
         {
             isSaving = true;
+            
+            // Dil değişikliğini LocalizationService'e bildir
+            if (!string.IsNullOrEmpty(settings.Language))
+            {
+                LocalizationService.SetCulture(settings.Language);
+                
+                // HTML lang ve dir attribute'larını güncelle
+                await JSRuntime.InvokeVoidAsync("updateLanguageAttributes", settings.Language);
+                
+                Console.WriteLine($"Settings - Language changed to: {settings.Language}");
+            }
+            
             // TODO: API'ye ayarları kaydet
             // var success = await UserService.UpdateUserSettingsAsync(settings);
             
@@ -376,6 +394,10 @@ else
             if (success)
             {
                 await JSRuntime.InvokeVoidAsync("showSuccess", "Ayarlar başarıyla kaydedildi!");
+                
+                // Sayfayı yenile ki yeni dil aktif olsun
+                await Task.Delay(1000); // Kullanıcı mesajı görebilsin
+                Navigation.NavigateTo("/settings", forceLoad: true);
             }
             else
             {

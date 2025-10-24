@@ -23,7 +23,22 @@
     "Reset": "Reset",
     "Confirm": "Confirm",
     "Retry": "Retry",
-    "Refresh": "Refresh"
+    "Refresh": "Refresh",
+    "Home": "Home",
+    "Settings": "Settings",
+    "Profile": "Profile",
+    "Account": "Account",
+    "Logout": "Logout",
+    "Login": "Login",
+    "Register": "Register",
+    "Language": "Language",
+    "Currency": "Currency",
+    "Turkish": "Turkish",
+    "English": "English",
+    "Arabic": "Arabic",
+    "Turkish Lira": "Turkish Lira",
+    "US Dollar": "US Dollar",
+    "Euro": "Euro"
   },
   "Navigation": {
     "Home": "Home",
@@ -208,6 +223,32 @@
     "PaymentFailed": "Payment failed!",
     "SelectAddress": "Please select a delivery address.",
     "SelectPaymentMethod": "Please select a payment method."
+  },
+  "Settings": {
+    "Title": "Settings",
+    "AccountSettings": "Account Settings",
+    "LanguageRegion": "Language & Region",
+    "Language": "Language",
+    "Currency": "Currency",
+    "ProfileSettings": "Profile Settings",
+    "NotificationSettings": "Notification Settings",
+    "PrivacySettings": "Privacy Settings",
+    "SecuritySettings": "Security Settings",
+    "SaveSettings": "Save Settings",
+    "SettingsSaved": "Settings saved successfully!",
+    "SettingsSaveError": "An error occurred while saving settings.",
+    "LoadingSettings": "Loading your settings...",
+    "LoginRequired": "You need to login to view your settings."
+  },
+  "Languages": {
+    "Turkish": "Turkish",
+    "English": "English",
+    "Arabic": "Arabic"
+  },
+  "Currencies": {
+    "TurkishLira": "Turkish Lira",
+    "USDollar": "US Dollar",
+    "Euro": "Euro"
   },
   "Errors": {
     "GenericError": "An error occurred. Please try again.",
