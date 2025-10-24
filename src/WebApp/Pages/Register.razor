@@ -2,8 +2,9 @@
 @inject AuthService AuthService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
+@inject LocalizationService LocalizationService
 
-<PageTitle>Kayıt Ol - Getir</PageTitle>
+<PageTitle>@GetLocalizedText("auth.register") - Getir</PageTitle>
 
 <div class="auth-container">
     <div class="container">
@@ -13,9 +14,9 @@
                     <div class="auth-header">
                         <h2 class="auth-title">
                             <i class="bi bi-person-plus"></i>
-                            Kayıt Ol
+                            @GetLocalizedText("auth.register")
                         </h2>
-                        <p class="auth-subtitle">Yeni hesap oluşturun</p>
+                        <p class="auth-subtitle">@GetLocalizedText("auth.create_new_account")</p>
                     </div>
 
                     <div class="auth-body">
@@ -24,93 +25,93 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
-                                        <label class="form-label">Ad</label>
+                                        <label class="form-label">@GetLocalizedText("auth.first_name")</label>
                                         <input type="text" 
                                                class="@GetInputClass(isFirstNameInvalid)" 
                                                @bind="registerRequest.FirstName" 
                                                @onblur="ValidateFirstName"
-                                               placeholder="Adınız" />
+                                               placeholder="@GetLocalizedText("auth.first_name_placeholder")" />
                                         @if (isFirstNameInvalid)
                                         {
-                                            <div class="invalid-feedback">Ad en az 2 karakter olmalıdır</div>
+                                            <div class="invalid-feedback">@GetLocalizedText("auth.first_name_error")</div>
                                         }
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
-                                        <label class="form-label">Soyad</label>
+                                        <label class="form-label">@GetLocalizedText("auth.last_name")</label>
                                         <input type="text" 
                                                class="@GetInputClass(isLastNameInvalid)" 
                                                @bind="registerRequest.LastName" 
                                                @onblur="ValidateLastName"
-                                               placeholder="Soyadınız" />
+                                               placeholder="@GetLocalizedText("auth.last_name_placeholder")" />
                                         @if (isLastNameInvalid)
                                         {
-                                            <div class="invalid-feedback">Soyad en az 2 karakter olmalıdır</div>
+                                            <div class="invalid-feedback">@GetLocalizedText("auth.last_name_error")</div>
                                         }
                                     </div>
                                 </div>
                             </div>
 
                             <div class="form-group mb-3">
-                                <label class="form-label">E-posta</label>
+                                <label class="form-label">@GetLocalizedText("auth.email")</label>
                                 <input type="email" 
                                        class="@GetInputClass(isEmailInvalid)" 
                                        @bind="registerRequest.Email" 
                                        @onblur="ValidateEmail"
-                                       placeholder="ornek@email.com" />
+                                       placeholder="@GetLocalizedText("auth.email_placeholder")" />
                                 @if (isEmailInvalid)
                                 {
-                                    <div class="invalid-feedback">Geçerli bir e-posta adresi girin</div>
+                                    <div class="invalid-feedback">@GetLocalizedText("auth.email_error")</div>
                                 }
                             </div>
 
                             <div class="form-group mb-3">
-                                <label class="form-label">Telefon</label>
+                                <label class="form-label">@GetLocalizedText("auth.phone")</label>
                                 <input type="tel" 
                                        class="@GetInputClass(isPhoneInvalid)" 
                                        @bind="registerRequest.PhoneNumber" 
                                        @onblur="ValidatePhone"
-                                       placeholder="+90 5XX XXX XX XX" />
+                                       placeholder="@GetLocalizedText("auth.phone_placeholder")" />
                                 @if (isPhoneInvalid)
                                 {
-                                    <div class="invalid-feedback">Geçerli bir telefon numarası girin</div>
+                                    <div class="invalid-feedback">@GetLocalizedText("auth.phone_error")</div>
                                 }
                             </div>
 
                             <div class="form-group mb-3">
-                                <label class="form-label">Şifre</label>
+                                <label class="form-label">@GetLocalizedText("auth.password")</label>
                                 <div class="password-input">
                                     <input type="@(showPassword ? "text" : "password")" 
                                            class="@GetInputClass(isPasswordInvalid)" 
                                            @bind="registerRequest.Password" 
                                            @onblur="ValidatePassword"
-                                           placeholder="En az 6 karakter" />
+                                           placeholder="@GetLocalizedText("auth.password_placeholder")" />
                                     <button type="button" class="password-toggle" @onclick="TogglePassword">
                                         <i class="bi @(showPassword ? "bi-eye-slash" : "bi-eye")"></i>
                                     </button>
                                 </div>
                                 @if (isPasswordInvalid)
                                 {
-                                    <div class="invalid-feedback">Şifre en az 6 karakter olmalıdır</div>
+                                    <div class="invalid-feedback">@GetLocalizedText("auth.password_error")</div>
                                 }
                             </div>
 
                             <div class="form-group mb-3">
-                                <label class="form-label">Şifre Tekrar</label>
+                                <label class="form-label">@GetLocalizedText("auth.confirm_password")</label>
                                 <div class="password-input">
                                     <input type="@(showConfirmPassword ? "text" : "password")" 
                                            class="@GetInputClass(isConfirmPasswordInvalid)" 
                                            @bind="confirmPassword" 
                                            @onblur="ValidateConfirmPassword"
-                                           placeholder="Şifrenizi tekrar girin" />
+                                           placeholder="@GetLocalizedText("auth.confirm_password_placeholder")" />
                                     <button type="button" class="password-toggle" @onclick="ToggleConfirmPassword">
                                         <i class="bi @(showConfirmPassword ? "bi-eye-slash" : "bi-eye")"></i>
                                     </button>
                                 </div>
                                 @if (isConfirmPasswordInvalid)
                                 {
-                                    <div class="invalid-feedback">Şifreler eşleşmiyor</div>
+                                    <div class="invalid-feedback">@GetLocalizedText("auth.confirm_password_error")</div>
                                 }
                             </div>
 
@@ -118,8 +119,8 @@
                                 <div class="form-check">
                                     <input type="checkbox" @bind="acceptTerms" class="form-check-input" />
                                     <label class="form-check-label">
-                                        <a href="/terms" target="_blank">Kullanım Şartları</a> ve 
-                                        <a href="/privacy" target="_blank">Gizlilik Politikası</a>'nı kabul ediyorum
+                                        <a href="/terms" target="_blank">@GetLocalizedText("auth.terms_of_service")</a> @GetLocalizedText("auth.and") 
+                                        <a href="/privacy" target="_blank">@GetLocalizedText("auth.privacy_policy")</a>@GetLocalizedText("auth.accept_terms")
                                     </label>
                                 </div>
                             </div>
@@ -129,25 +130,25 @@
                                     @if (isLoading)
                                     {
                                         <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                        <text>Kayıt oluşturuluyor...</text>
+                                        <text>@GetLocalizedText("auth.creating_account")</text>
                                     }
                                     else
                                     {
                                         <i class="bi bi-person-plus"></i>
-                                        <text>Kayıt Ol</text>
+                                        <text>@GetLocalizedText("auth.register")</text>
                                     }
                                 </button>
                             </div>
                         </form>
 
                         <div class="auth-divider">
-                            <span>veya</span>
+                            <span>@GetLocalizedText("auth.or")</span>
                         </div>
 
                         <div class="auth-links">
                             <a href="/login" class="btn btn-outline-primary">
                                 <i class="bi bi-box-arrow-in-right"></i>
-                                Giriş Yap
+                                @GetLocalizedText("auth.login")
                             </a>
                         </div>
                     </div>
@@ -217,6 +218,11 @@
         showConfirmPassword = !showConfirmPassword;
     }
 
+    private string GetLocalizedText(string key)
+    {
+        return LocalizationService.GetString(key);
+    }
+
     private async Task HandleRegister()
     {
         try
@@ -234,13 +240,13 @@
             if (isFirstNameInvalid || isLastNameInvalid || isEmailInvalid || 
                 isPhoneInvalid || isPasswordInvalid || isConfirmPasswordInvalid)
             {
-                await JSRuntime.InvokeVoidAsync("showError", "Lütfen tüm alanları doğru şekilde doldurun.");
+                await JSRuntime.InvokeVoidAsync("showError", GetLocalizedText("auth.fill_all_fields"));
                 return;
             }
 
             if (!acceptTerms)
             {
-                await JSRuntime.InvokeVoidAsync("showError", "Kullanım şartlarını kabul etmelisiniz.");
+                await JSRuntime.InvokeVoidAsync("showError", GetLocalizedText("auth.accept_terms_required"));
                 return;
             }
 
@@ -248,17 +254,17 @@
             
             if (result != null && result.IsSuccess)
             {
-                await JSRuntime.InvokeVoidAsync("showSuccess", "Kayıt başarılı! Giriş yapabilirsiniz.");
+                await JSRuntime.InvokeVoidAsync("showSuccess", GetLocalizedText("auth.register_success"));
                 Navigation.NavigateTo("/login");
             }
             else
             {
-                await JSRuntime.InvokeVoidAsync("showError", result?.Error ?? "Kayıt oluşturulurken bir hata oluştu.");
+                await JSRuntime.InvokeVoidAsync("showError", result?.Error ?? GetLocalizedText("auth.register_error"));
             }
         }
         catch (Exception ex)
         {
-            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+            await JSRuntime.InvokeVoidAsync("showError", GetLocalizedText("auth.generic_error") + ": " + ex.Message);
         }
         finally
         {
