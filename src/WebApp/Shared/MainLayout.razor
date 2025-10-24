@@ -40,6 +40,14 @@
 						<a href="/cart" class="getir-nav-link">
 							<i class="bi bi-cart"></i> <span class="d-none d-lg-inline">Sepetim</span>
 						</a>
+						
+						<!-- Language Selector -->
+						<LanguageSelector />
+						
+						<!-- PWA Install Button -->
+						<button id="install-button" class="btn getir-nav-link d-none" style="display: none !important;">
+							<i class="bi bi-download"></i> <span class="d-none d-lg-inline">Uygulamayı Yükle</span>
+						</button>
 						@if (isAuthenticated)
 						{
 							<!-- User Dropdown Menu -->
@@ -160,6 +168,17 @@
 									<i class="bi bi-cart d-block"></i>
 									<small>Sepetim</small>
 								</a>
+							</div>
+							<div class="col-6 mb-2">
+								<div class="getir-nav-link d-block text-center p-2">
+									<LanguageSelector />
+								</div>
+							</div>
+							<div class="col-6 mb-2">
+								<button id="install-button-mobile" class="getir-nav-link d-block text-center p-2 w-100 border-0 bg-transparent" style="display: none !important;">
+									<i class="bi bi-download d-block"></i>
+									<small>Uygulamayı Yükle</small>
+								</button>
 							</div>
 							@if (isAuthenticated)
 							{

@@ -187,11 +187,28 @@
             e.preventDefault();
             deferredPrompt = e;
             
-            // Show install button or banner
+            // Show install buttons
             const installButton = document.getElementById('install-button');
+            const installButtonMobile = document.getElementById('install-button-mobile');
+            
             if (installButton) {
-                installButton.style.display = 'block';
+                installButton.style.display = 'inline-block';
+                installButton.classList.remove('d-none');
                 installButton.addEventListener('click', () => {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('User accepted the install prompt');
+                        }
+                        deferredPrompt = null;
+                    });
+                });
+            }
+            
+            if (installButtonMobile) {
+                installButtonMobile.style.display = 'block';
+                installButtonMobile.classList.remove('d-none');
+                installButtonMobile.addEventListener('click', () => {
                     deferredPrompt.prompt();
                     deferredPrompt.userChoice.then((choiceResult) => {
                         if (choiceResult.outcome === 'accepted') {
