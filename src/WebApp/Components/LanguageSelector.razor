@@ -1,0 +1,83 @@
+@using WebApp.Services
+@inject LocalizationService LocalizationService
+@inject IJSRuntime JSRuntime
+
+<div class="language-selector">
+    <div class="dropdown">
+        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-globe"></i>
+            <span id="current-language">TR</span>
+        </button>
+        <ul class="dropdown-menu">
+            <li>
+                <a class="dropdown-item" href="#" @onclick="@(() => ChangeLanguage("tr"))">
+                    <span class="flag-icon flag-icon-tr"></span> Türkçe
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="#" @onclick="@(() => ChangeLanguage("en"))">
+                    <span class="flag-icon flag-icon-gb"></span> English
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="#" @onclick="@(() => ChangeLanguage("ar"))">
+                    <span class="flag-icon flag-icon-sa"></span> العربية
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<style>
+    .language-selector .dropdown-toggle {
+        min-width: 80px;
+    }
+    
+    .flag-icon {
+        margin-right: 8px;
+        width: 16px;
+        height: 12px;
+        display: inline-block;
+        background-size: cover;
+    }
+    
+    .flag-icon-tr { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2"><rect width="3" height="2" fill="%23E30A17"/><circle cx="1.5" cy="1" r="0.4" fill="%23fff"/><path d="M1.5 0.6L1.7 0.8L1.5 1L1.3 0.8Z" fill="%23fff"/></svg>'); }
+    .flag-icon-gb { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2"><rect width="3" height="2" fill="%23012169"/><path d="M0 0h3v0.5H0zM0 1.5h3V2H0z" fill="%23fff"/><path d="M0 0.5h3v0.5H0z" fill="%23C8102E"/><path d="M0 0h1.5v1H0z" fill="%23fff"/><path d="M0 0h1.5v0.5H0z" fill="%23C8102E"/><path d="M0.5 0h1v1H0.5z" fill="%23C8102E"/></svg>'); }
+    .flag-icon-sa { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2"><rect width="3" height="2" fill="%23046A37"/><path d="M0.5 0.5h2v1H0.5z" fill="%23fff"/><path d="M0.5 0.5h2v0.5H0.5z" fill="%23fff"/></svg>'); }
+    
+    [dir="rtl"] .flag-icon {
+        margin-right: 0;
+        margin-left: 8px;
+    }
+</style>
+
+@code {
+    private string currentLanguage = "tr";
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentLanguage = LocalizationService.GetCurrentCulture();
+        await UpdateLanguageDisplay();
+    }
+
+    private async Task ChangeLanguage(string language)
+    {
+        LocalizationService.SetCulture(language);
+        currentLanguage = language;
+        
+        // Update HTML lang and dir attributes
+        await JSRuntime.InvokeVoidAsync("updateLanguageAttributes", language);
+        
+        // Update language display
+        await UpdateLanguageDisplay();
+        
+        // Force component refresh
+        StateHasChanged();
+    }
+
+    private async Task UpdateLanguageDisplay()
+    {
+        var languageCode = currentLanguage.ToUpper();
+        await JSRuntime.InvokeVoidAsync("updateLanguageDisplay", languageCode);
+    }
+}

@@ -7,8 +7,6 @@ public class ApiResponse<T>
     public bool IsSuccess { get; set; }
     public T? Data { get; set; }
     public string? Error { get; set; }
-    public string? ErrorCode { get; set; }
-    public Dictionary<string, object>? Metadata { get; set; }
 }
 
 public class PaginationQuery
@@ -22,13 +20,27 @@ public class PaginationQuery
 
 public class PagedResult<T>
 {
-    public List<T> Items { get; set; } = new();
-    public int TotalCount { get; set; }
+    public List<T> Items { get; set; } = new List<T>();
+    public int Total { get; set; }
     public int Page { get; set; }
     public int PageSize { get; set; }
-    public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
+    public int TotalPages => (int)Math.Ceiling(Total / (double)PageSize);
     public bool HasNextPage => Page < TotalPages;
     public bool HasPreviousPage => Page > 1;
+}
+
+public class MerchantApiResponse
+{
+    public bool IsSuccess { get; set; }
+    public PagedResult<MerchantResponse> Data { get; set; } = new();
+    public string? Error { get; set; }
+}
+
+public class ProductApiResponse
+{
+    public bool IsSuccess { get; set; }
+    public PagedResult<ProductResponse> Data { get; set; } = new();
+    public string? Error { get; set; }
 }
 
 public class BaseEntityResponse
@@ -183,7 +195,7 @@ public class MerchantResponse
     public decimal DeliveryFee { get; set; }
     public decimal MinOrderAmount { get; set; }
     public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }
 
 /// <summary>
@@ -199,7 +211,7 @@ public class UserProfileResponse
     public DateTime BirthDate { get; set; }
     public string Gender { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
     public List<AddressResponse> Addresses { get; set; } = new();
 }
 

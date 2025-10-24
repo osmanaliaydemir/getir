@@ -19,8 +19,12 @@ public class ApiClient
         };
     }
 
-    public async Task<ApiResponse<T>> GetAsync<T>(string endpoint, string? token = null)
+    public async Task<ApiResponse<T>> GetAsync<T>(string endpoint, string? token = null, CancellationToken cancellationToken = default)
     {
+        Console.WriteLine($"🌐 ApiClient.GetAsync çağrıldı - Endpoint: {endpoint}");
+        Console.WriteLine($"🌐 Base URL: {_httpClient.BaseAddress}");
+        Console.WriteLine($"🌐 Full URL: {_httpClient.BaseAddress}{endpoint}");
+        
         try
         {
             var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
@@ -28,28 +32,47 @@ public class ApiClient
             if (!string.IsNullOrEmpty(token))
             {
                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                Console.WriteLine($"🔐 Authorization header eklendi");
             }
 
-            var response = await _httpClient.SendAsync(request);
+            Console.WriteLine($"📤 HTTP Request gönderiliyor...");
+            var response = await _httpClient.SendAsync(request, cancellationToken);
+            Console.WriteLine($"📥 HTTP Response alındı - Status: {response.StatusCode}");
+            
             var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"📄 Response Content Length: {content.Length}");
+            Console.WriteLine($"📄 Response Content Preview: {content.Substring(0, Math.Min(200, content.Length))}...");
 
             if (response.IsSuccessStatusCode)
             {
-                var data = JsonSerializer.Deserialize<T>(content, _jsonOptions);
-                return new ApiResponse<T> { IsSuccess = true, Data = data };
+                // API'den gelen response'u ApiResponse<T> olarak deserialize et
+                var apiResponse = JsonSerializer.Deserialize<ApiResponse<T>>(content, _jsonOptions);
+                if (apiResponse != null)
+                {
+                    Console.WriteLine($"✅ API Response deserialize başarılı - IsSuccess: {apiResponse.IsSuccess}");
+                    return apiResponse;
+                }
+                else
+                {
+                    Console.WriteLine($"❌ API Response deserialize başarısız - null döndü");
+                    return new ApiResponse<T> { IsSuccess = false, Error = "API response deserialize failed" };
+                }
             }
             else
             {
+                Console.WriteLine($"❌ HTTP Error: {response.StatusCode} - {content}");
                 return new ApiResponse<T> { IsSuccess = false, Error = $"HTTP {response.StatusCode}: {content}" };
             }
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"💥 ApiClient Exception: {ex.Message}");
+            Console.WriteLine($"💥 Stack Trace: {ex.StackTrace}");
             return new ApiResponse<T> { IsSuccess = false, Error = ex.Message };
         }
     }
 
-    public async Task<ApiResponse<T>> PostAsync<T>(string endpoint, object? data = null, string? token = null)
+    public async Task<ApiResponse<T>> PostAsync<T>(string endpoint, object? data = null, string? token = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -61,7 +84,7 @@ public class ApiClient
                 _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             }
 
-            var response = await _httpClient.PostAsync(endpoint, content);
+            var response = await _httpClient.PostAsync(endpoint, content, cancellationToken);
             var responseContent = await response.Content.ReadAsStringAsync();
 
             if (response.IsSuccessStatusCode)

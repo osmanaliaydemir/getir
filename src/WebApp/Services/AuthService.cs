@@ -59,8 +59,16 @@ public class AuthService
 
     public async Task LogoutAsync()
     {
-        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", TOKEN_KEY);
-        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", USER_KEY);
+        try
+        {
+            await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", TOKEN_KEY);
+            await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", USER_KEY);
+        }
+        catch
+        {
+            // JavaScript interop hatası durumunda sessizce devam et (prerendering sırasında)
+        }
+        
         AuthenticationStateChanged?.Invoke();
     }
 
@@ -77,7 +85,7 @@ public class AuthService
                 PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
                 PropertyNameCaseInsensitive = true
             };
-            
+
             return System.Text.Json.JsonSerializer.Deserialize<AuthResponse>(userJson, options);
         }
         catch
@@ -92,7 +100,7 @@ public class AuthService
         {
             return await _jsRuntime.InvokeAsync<string?>("localStorage.getItem", TOKEN_KEY);
         }
-        catch
+        catch(Exception ex)
         {
             return null;
         }
@@ -106,10 +114,17 @@ public class AuthService
 
     private async Task SaveAuthDataAsync(AuthResponse authData)
     {
-        // Sadece token'ı auth_token key'ine kaydet
-        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", TOKEN_KEY, authData.AccessToken);
-        
-        // Kullanıcı datasını user_data key'ine kaydet
-        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", USER_KEY, System.Text.Json.JsonSerializer.Serialize(authData));
+        try
+        {
+            // Sadece token'ı auth_token key'ine kaydet
+            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", TOKEN_KEY, authData.AccessToken);
+            
+            // Kullanıcı datasını user_data key'ine kaydet
+            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", USER_KEY, System.Text.Json.JsonSerializer.Serialize(authData));
+        }
+        catch
+        {
+            // JavaScript interop hatası durumunda sessizce devam et (prerendering sırasında)
+        }
     }
 }
