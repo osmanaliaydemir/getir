@@ -38,7 +38,7 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
 
             if (order == null)
             {
-                return Result.Fail("Order not found", "ORDER_NOT_FOUND");
+                throw new Getir.Application.Common.Exceptions.EntityNotFoundException("Order", request.OrderId);
             }
 
             var fromStatus = order.Status;
@@ -49,7 +49,8 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
 
             if (!validationResult.Success)
             {
-                return validationResult;
+                throw new Getir.Application.Common.Exceptions.InvalidStateTransitionException(
+                    "Order", request.OrderId, fromStatus.ToString(), request.NewStatus.ToString(), validationResult.Error);
             }
 
             // 3. Begin transaction
@@ -104,7 +105,7 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error changing order status");
-            return Result.Fail("Failed to change order status", "STATUS_CHANGE_ERROR");
+            throw;
         }
     }
     /// <summary>
@@ -121,7 +122,7 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
 
             if (lastTransition == null)
             {
-                return Result.Fail("No status transition found to rollback", "NO_TRANSITION_TO_ROLLBACK");
+                throw new Getir.Application.Common.Exceptions.EntityNotFoundException("OrderStatusTransitionLog", orderId);
             }
 
             // 2. Get current order
@@ -130,7 +131,7 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
 
             if (order == null)
             {
-                return Result.Fail("Order not found", "ORDER_NOT_FOUND");
+                throw new Getir.Application.Common.Exceptions.EntityNotFoundException("Order", orderId);
             }
 
             // 3. Validate rollback permission
@@ -139,7 +140,7 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
 
             if (!permissionResult.Success)
             {
-                return permissionResult;
+                throw new Getir.Application.Common.Exceptions.ForbiddenException(permissionResult.ErrorCode ?? "PERMISSION_DENIED", permissionResult.Error);
             }
 
             // 4. Begin transaction
@@ -187,7 +188,7 @@ public class OrderStatusTransitionService : BaseService, IOrderStatusTransitionS
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error rolling back order status");
-            return Result.Fail("Failed to rollback order status", "ROLLBACK_ERROR");
+            throw;
         }
     }
     /// <summary>

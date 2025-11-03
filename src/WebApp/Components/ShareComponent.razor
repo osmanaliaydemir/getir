@@ -1,0 +1,226 @@
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@inject ILogger<ShareComponent> Logger
+
+@if (Show)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-share"></i>
+                        Paylaş
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="Close" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="share-options">
+                        <div class="row g-3">
+                            <div class="col-6 col-md-4">
+                                <button class="btn btn-outline-primary w-100 h-100 p-3 d-flex flex-column align-items-center" 
+                                        @onclick="@(() => ShareOnFacebook())">
+                                    <i class="bi bi-facebook fs-3 mb-2"></i>
+                                    <small>Facebook</small>
+                                </button>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <button class="btn btn-outline-info w-100 h-100 p-3 d-flex flex-column align-items-center" 
+                                        @onclick="@(() => ShareOnTwitter())">
+                                    <i class="bi bi-twitter fs-3 mb-2"></i>
+                                    <small>Twitter</small>
+                                </button>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <button class="btn btn-outline-danger w-100 h-100 p-3 d-flex flex-column align-items-center" 
+                                        @onclick="@(() => ShareOnInstagram())">
+                                    <i class="bi bi-instagram fs-3 mb-2"></i>
+                                    <small>Instagram</small>
+                                </button>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <button class="btn btn-outline-success w-100 h-100 p-3 d-flex flex-column align-items-center" 
+                                        @onclick="@(() => ShareOnWhatsApp())">
+                                    <i class="bi bi-whatsapp fs-3 mb-2"></i>
+                                    <small>WhatsApp</small>
+                                </button>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <button class="btn btn-outline-primary w-100 h-100 p-3 d-flex flex-column align-items-center" 
+                                        @onclick="@(() => ShareOnTelegram())">
+                                    <i class="bi bi-telegram fs-3 mb-2"></i>
+                                    <small>Telegram</small>
+                                </button>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <button class="btn btn-outline-secondary w-100 h-100 p-3 d-flex flex-column align-items-center" 
+                                        @onclick="@(() => CopyLink())">
+                                    <i class="bi bi-link-45deg fs-3 mb-2"></i>
+                                    <small>Linki Kopyala</small>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(ShareUrl))
+                    {
+                        <div class="mt-3">
+                            <label class="form-label">Paylaşım Linki</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" readonly value="@ShareUrl" id="shareUrlInput" />
+                                <button class="btn btn-outline-secondary" type="button" @onclick="CopyLinkFromInput">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="Close">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter] public bool Show { get; set; }
+    [Parameter] public EventCallback<bool> ShowChanged { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public string? ImageUrl { get; set; }
+    [Parameter] public string? ShareUrl { get; set; }
+
+    private string GetFullShareUrl()
+    {
+        if (!string.IsNullOrEmpty(ShareUrl))
+        {
+            if (ShareUrl.StartsWith("http"))
+                return ShareUrl;
+            
+            var baseUrl = Navigation.BaseUri.TrimEnd('/');
+            return $"{baseUrl}{ShareUrl}";
+        }
+        return Navigation.Uri;
+    }
+
+    private async Task Close()
+    {
+        Show = false;
+        await ShowChanged.InvokeAsync(Show);
+    }
+
+    private async Task ShareOnFacebook()
+    {
+        try
+        {
+            var url = GetFullShareUrl();
+            var shareUrl = $"https://www.facebook.com/sharer/sharer.php?u={Uri.EscapeDataString(url)}";
+            await JSRuntime.InvokeVoidAsync("open", shareUrl, "_blank");
+            await Close();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error sharing on Facebook");
+            await JSRuntime.InvokeVoidAsync("showError", "Facebook paylaşımında bir hata oluştu.");
+        }
+    }
+
+    private async Task ShareOnTwitter()
+    {
+        try
+        {
+            var url = GetFullShareUrl();
+            var text = Title ?? "Getir'den bak!";
+            var shareUrl = $"https://twitter.com/intent/tweet?url={Uri.EscapeDataString(url)}&text={Uri.EscapeDataString(text)}";
+            await JSRuntime.InvokeVoidAsync("open", shareUrl, "_blank");
+            await Close();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error sharing on Twitter");
+            await JSRuntime.InvokeVoidAsync("showError", "Twitter paylaşımında bir hata oluştu.");
+        }
+    }
+
+    private async Task ShareOnInstagram()
+    {
+        try
+        {
+            // Instagram doesn't support direct URL sharing, so copy link instead
+            await CopyLink();
+            await JSRuntime.InvokeVoidAsync("showInfo", "Instagram'da paylaşmak için linki kopyaladık. Instagram uygulamasına yapıştırabilirsiniz.");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error sharing on Instagram");
+            await JSRuntime.InvokeVoidAsync("showError", "Instagram paylaşımında bir hata oluştu.");
+        }
+    }
+
+    private async Task ShareOnWhatsApp()
+    {
+        try
+        {
+            var url = GetFullShareUrl();
+            var titleText = Title ?? "Getir'den bak!";
+            var text = $"{titleText}\n{url}";
+            var shareUrl = $"https://wa.me/?text={Uri.EscapeDataString(text)}";
+            await JSRuntime.InvokeVoidAsync("open", shareUrl, "_blank");
+            await Close();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error sharing on WhatsApp");
+            await JSRuntime.InvokeVoidAsync("showError", "WhatsApp paylaşımında bir hata oluştu.");
+        }
+    }
+
+    private async Task ShareOnTelegram()
+    {
+        try
+        {
+            var url = GetFullShareUrl();
+            var text = Title ?? "Getir'den bak!";
+            var shareUrl = $"https://t.me/share/url?url={Uri.EscapeDataString(url)}&text={Uri.EscapeDataString(text)}";
+            await JSRuntime.InvokeVoidAsync("open", shareUrl, "_blank");
+            await Close();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error sharing on Telegram");
+            await JSRuntime.InvokeVoidAsync("showError", "Telegram paylaşımında bir hata oluştu.");
+        }
+    }
+
+    private async Task CopyLink()
+    {
+        try
+        {
+            var url = GetFullShareUrl();
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", url);
+            await JSRuntime.InvokeVoidAsync("showSuccess", "Link kopyalandı!");
+            await Close();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error copying link");
+            await JSRuntime.InvokeVoidAsync("showError", "Link kopyalanırken bir hata oluştu.");
+        }
+    }
+
+    private async Task CopyLinkFromInput()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("copyInputValue", "shareUrlInput");
+            await JSRuntime.InvokeVoidAsync("showSuccess", "Link kopyalandı!");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error copying link from input");
+            await JSRuntime.InvokeVoidAsync("showError", "Link kopyalanırken bir hata oluştu.");
+        }
+    }
+}
+

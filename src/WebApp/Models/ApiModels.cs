@@ -344,3 +344,190 @@ public class OrderItemRequest
     public decimal UnitPrice { get; set; }
 }
 
+/// <summary>
+/// Security info response model
+/// </summary>
+public class SecurityInfoResponse
+{
+    public bool TwoFactorEnabled { get; set; }
+    public bool HasVerifiedEmail { get; set; }
+    public bool HasVerifiedPhone { get; set; }
+    public bool HasStrongPassword { get; set; }
+    public int SecurityScore { get; set; }
+    public string CurrentEmail { get; set; } = string.Empty;
+    public string CurrentPhone { get; set; } = string.Empty;
+    public List<ActiveSessionResponse> ActiveSessions { get; set; } = new();
+}
+
+/// <summary>
+/// Active session response model
+/// </summary>
+public class ActiveSessionResponse
+{
+    public Guid Id { get; set; }
+    public string DeviceName { get; set; } = string.Empty;
+    public string DeviceType { get; set; } = string.Empty;
+    public string Location { get; set; } = string.Empty;
+    public DateTime LastActivity { get; set; }
+    public bool IsCurrent { get; set; }
+    public string? IpAddress { get; set; }
+    public string? UserAgent { get; set; }
+}
+
+/// <summary>
+/// Change email request
+/// </summary>
+public class ChangeEmailRequest
+{
+    public string NewEmail { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Change phone request
+/// </summary>
+public class ChangePhoneRequest
+{
+    public string NewPhone { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Toggle two factor request
+/// </summary>
+public class ToggleTwoFactorRequest
+{
+    public bool Enabled { get; set; }
+}
+
+/// <summary>
+/// User settings response model
+/// </summary>
+public class UserSettingsResponse
+{
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public bool EmailNotifications { get; set; } = true;
+    public bool SmsNotifications { get; set; } = true;
+    public bool PushNotifications { get; set; } = true;
+    public bool MarketingEmails { get; set; } = false;
+    public string Language { get; set; } = "tr";
+    public string Currency { get; set; } = "TRY";
+    public bool ProfileVisibility { get; set; } = true;
+    public bool DataSharing { get; set; } = false;
+}
+
+/// <summary>
+/// Update user settings request
+/// </summary>
+public class UpdateUserSettingsRequest
+{
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public bool EmailNotifications { get; set; } = true;
+    public bool SmsNotifications { get; set; } = true;
+    public bool PushNotifications { get; set; } = true;
+    public bool MarketingEmails { get; set; } = false;
+    public string Language { get; set; } = "tr";
+    public string Currency { get; set; } = "TRY";
+    public bool ProfileVisibility { get; set; } = true;
+    public bool DataSharing { get; set; } = false;
+}
+
+/// <summary>
+/// User statistics response model
+/// </summary>
+public class UserStatisticsResponse
+{
+    public int TotalOrders { get; set; }
+    public decimal TotalSpent { get; set; }
+    public int FavoriteCount { get; set; }
+    public int AddressCount { get; set; }
+}
+
+/// <summary>
+/// Notification response model
+/// </summary>
+public class NotificationResponse
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public bool IsRead { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string? ActionUrl { get; set; }
+    public string? ActionText { get; set; }
+}
+
+public class HelpArticleResponse
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Summary { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
+    public int ViewCount { get; set; }
+    public int HelpfulCount { get; set; }
+    public int NotHelpfulCount { get; set; }
+    public string Category { get; set; } = string.Empty;
+    public int CategoryId { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+
+public class HelpCategoryResponse
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Icon { get; set; } = string.Empty;
+    public int ArticleCount { get; set; }
+}
+
+public class RateArticleRequest
+{
+    public int ArticleId { get; set; }
+    public bool IsHelpful { get; set; }
+}
+
+public class ContactFormRequest
+{
+    public string FullName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public string Subject { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public bool AgreeTerms { get; set; }
+}
+
+public class UpdatePermissionsRequest
+{
+    public bool LocationAccess { get; set; }
+    public bool CameraAccess { get; set; }
+    public bool NotificationAccess { get; set; }
+    public bool StorageAccess { get; set; }
+    public bool MicrophoneAccess { get; set; }
+    public bool ContactsAccess { get; set; }
+    public bool AnalyticsData { get; set; }
+    public bool MarketingData { get; set; }
+    public bool ThirdPartySharing { get; set; }
+    public bool CookieTracking { get; set; }
+}
+
+public class UserPermissionsResponse
+{
+    public bool LocationAccess { get; set; }
+    public bool CameraAccess { get; set; }
+    public bool NotificationAccess { get; set; }
+    public bool StorageAccess { get; set; }
+    public bool MicrophoneAccess { get; set; }
+    public bool ContactsAccess { get; set; }
+    public bool AnalyticsData { get; set; }
+    public bool MarketingData { get; set; }
+    public bool ThirdPartySharing { get; set; }
+    public bool CookieTracking { get; set; }
+}
+

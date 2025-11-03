@@ -49,5 +49,19 @@
   "variants": "الخيارات",
   "required": "مطلوب",
   "nutritionalInfo": "القيم الغذائية",
-  "addedToCart": "تمت الإضافة للسلة"
+  "addedToCart": "تمت الإضافة للسلة",
+  
+  "categories": "الفئات",
+  "loadingCategories": "جارٍ تحميل الفئات...",
+  "categoriesLoadError": "فشل تحميل الفئات",
+  "noCategoriesFound": "لا توجد فئات حتى الآن",
+  "loadingMerchants": "جارٍ تحميل المتاجر...",
+  "noMerchantsNearby": "لا يوجد متاجر قريبة",
+  "merchantsLoadError": "فشل تحميل المتاجر",
+  "locationPermissionRequired": "الرجاء منح إذن الموقع",
+  "locationError": "تعذر الحصول على الموقع. يرجى التحقق من أذونات الموقع.",
+  "nearbyMerchants": "المتاجر القريبة",
+  "popularProducts": "المنتجات الشائعة",
+  "selectLocation": "اختر الموقع",
+  "searchHint": "ابحث عن متجر أو منتج..."
 }

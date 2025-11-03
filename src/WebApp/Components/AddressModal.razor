@@ -1,0 +1,177 @@
+@using WebApp.Models
+@inject IUserService UserService
+@inject IJSRuntime JSRuntime
+
+@if (Show)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-geo-alt"></i>
+                        @(IsEditMode ? "Adres Düzenle" : "Yeni Adres Ekle")
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="Close" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="AddressRequest" OnValidSubmit="HandleSubmit">
+                        <DataAnnotationsValidator />
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Adres Başlığı *</label>
+                                <InputText class="form-control" @bind-Value="AddressRequest.Title" placeholder="Örn: Ev, İş, Anneannem" />
+                                <ValidationMessage For="@(() => AddressRequest.Title)" />
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Adres Satırı 1 *</label>
+                                <InputText class="form-control" @bind-Value="AddressRequest.AddressLine1" placeholder="Sokak, Cadde, Bina No" />
+                                <ValidationMessage For="@(() => AddressRequest.AddressLine1)" />
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Adres Satırı 2</label>
+                                <InputText class="form-control" @bind-Value="AddressRequest.AddressLine2" placeholder="Daire, Kat, Blok (Opsiyonel)" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">İl *</label>
+                                <InputText class="form-control" @bind-Value="AddressRequest.City" placeholder="İstanbul" />
+                                <ValidationMessage For="@(() => AddressRequest.City)" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">İlçe *</label>
+                                <InputText class="form-control" @bind-Value="AddressRequest.District" placeholder="Kadıköy" />
+                                <ValidationMessage For="@(() => AddressRequest.District)" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Posta Kodu *</label>
+                                <InputText class="form-control" @bind-Value="AddressRequest.PostalCode" placeholder="34000" />
+                                <ValidationMessage For="@(() => AddressRequest.PostalCode)" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Ülke *</label>
+                                <InputText class="form-control" @bind-Value="AddressRequest.Country" placeholder="Türkiye" />
+                                <ValidationMessage For="@(() => AddressRequest.Country)" />
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Teslimat Notları</label>
+                                <InputTextArea class="form-control" rows="3" @bind-Value="AddressRequest.Instructions" placeholder="Özel talimatlar, kapı kodu vb. (Opsiyonel)" />
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="AddressRequest.IsDefault" />
+                                    <label class="form-check-label">Varsayılan adres olarak ayarla</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="Close" disabled="@isSubmitting">İptal</button>
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                }
+                                <i class="bi bi-check"></i>
+                                @(IsEditMode ? "Güncelle" : "Kaydet")
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter] public bool Show { get; set; }
+    [Parameter] public EventCallback<bool> ShowChanged { get; set; }
+    [Parameter] public AddressResponse? Address { get; set; }
+    [Parameter] public EventCallback OnAddressSaved { get; set; }
+
+    private bool IsEditMode => Address != null;
+    private bool isSubmitting = false;
+    private AddAddressRequest AddressRequest = new();
+
+    protected override void OnParametersSet()
+    {
+        if (IsEditMode && Address != null)
+        {
+            AddressRequest = new AddAddressRequest
+            {
+                Title = Address.Title,
+                AddressLine1 = Address.AddressLine1,
+                AddressLine2 = Address.AddressLine2 ?? string.Empty,
+                City = Address.City,
+                District = Address.District,
+                PostalCode = Address.PostalCode,
+                Country = Address.Country,
+                Instructions = Address.Instructions ?? string.Empty,
+                IsDefault = Address.IsDefault
+            };
+        }
+        else
+        {
+            AddressRequest = new AddAddressRequest
+            {
+                Country = "Türkiye" // Default value
+            };
+        }
+    }
+
+    private async Task Close()
+    {
+        Show = false;
+        await ShowChanged.InvokeAsync(Show);
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+
+            bool success;
+            if (IsEditMode && Address != null)
+            {
+                var updateRequest = new UpdateAddressRequest
+                {
+                    Id = Address.Id,
+                    Title = AddressRequest.Title,
+                    AddressLine1 = AddressRequest.AddressLine1,
+                    AddressLine2 = AddressRequest.AddressLine2,
+                    City = AddressRequest.City,
+                    District = AddressRequest.District,
+                    PostalCode = AddressRequest.PostalCode,
+                    Country = AddressRequest.Country,
+                    Instructions = AddressRequest.Instructions,
+                    IsDefault = AddressRequest.IsDefault
+                };
+                success = await UserService.UpdateAddressAsync(Address.Id, updateRequest);
+            }
+            else
+            {
+                success = await UserService.AddAddressAsync(AddressRequest);
+            }
+
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", IsEditMode ? "Adres başarıyla güncellendi!" : "Adres başarıyla eklendi!");
+                await OnAddressSaved.InvokeAsync();
+                await Close();
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", IsEditMode ? "Adres güncellenirken bir hata oluştu." : "Adres eklenirken bir hata oluştu.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}
+

@@ -1,6 +1,8 @@
 @page "/security"
+@using WebApp.Models
 @inject UserService UserService
 @inject AuthService AuthService
+@inject ISecurityService SecurityService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 @inject LocalizationService LocalizationService
@@ -187,7 +189,7 @@ else
                             </div>
                             <div class="col-md-4 text-end">
                                 <div class="form-check form-switch">
-                                    <input type="checkbox" class="form-check-input" @bind="twoFactorEnabled" @bind:after="ToggleTwoFactor">
+                                    <input type="checkbox" class="form-check-input" checked="@twoFactorEnabled" @onchange="OnTwoFactorCheckboxChanged">
                                     <label class="form-check-label">
                                         @(twoFactorEnabled ? GetLocalizedText("security.active") : GetLocalizedText("security.inactive"))
                                     </label>
@@ -352,7 +354,7 @@ else
     private string emailChangePassword = string.Empty;
     private string phoneChangePassword = string.Empty;
     private ChangePasswordRequest changePasswordRequest = new();
-    private List<ActiveSession>? activeSessions;
+    private List<ActiveSessionResponse>? activeSessions;
 
     protected override async Task OnInitializedAsync()
     {
@@ -385,35 +387,29 @@ else
         try
         {
             isLoading = true;
-            // TODO: API'den güvenlik bilgilerini çek
-            // var securityInfo = await UserService.GetSecurityInfoAsync();
+            var securityInfo = await SecurityService.GetSecurityInfoAsync();
             
-            // Şimdilik mock data
-            activeSessions = new List<ActiveSession>
+            if (securityInfo != null)
             {
-                new ActiveSession
-                {
-                    Id = Guid.NewGuid(),
-                    DeviceName = "Chrome - Windows 10",
-                    DeviceType = "Desktop",
-                    Location = "İstanbul, Türkiye",
-                    LastActivity = DateTime.Now.AddMinutes(-5),
-                    IsCurrent = true
-                },
-                new ActiveSession
-                {
-                    Id = Guid.NewGuid(),
-                    DeviceName = "Safari - iPhone",
-                    DeviceType = "Mobile",
-                    Location = "Ankara, Türkiye",
-                    LastActivity = DateTime.Now.AddHours(-2),
-                    IsCurrent = false
-                }
-            };
+                twoFactorEnabled = securityInfo.TwoFactorEnabled;
+                hasVerifiedEmail = securityInfo.HasVerifiedEmail;
+                hasVerifiedPhone = securityInfo.HasVerifiedPhone;
+                hasStrongPassword = securityInfo.HasStrongPassword;
+                securityScore = securityInfo.SecurityScore;
+                currentEmail = securityInfo.CurrentEmail;
+                currentPhone = securityInfo.CurrentPhone;
+                activeSessions = securityInfo.ActiveSessions;
+            }
+            else
+            {
+                // API'den veri alınamadı, fallback değerleri
+                activeSessions = new List<ActiveSessionResponse>();
+            }
         }
         catch (Exception ex)
         {
             await JSRuntime.InvokeVoidAsync("showError", GetLocalizedText("security.loading_error") + ": " + ex.Message);
+            activeSessions = new List<ActiveSessionResponse>();
         }
         finally
         {
@@ -452,10 +448,38 @@ else
         try
         {
             isChangingEmail = true;
-            // TODO: API'ye e-posta değiştirme isteği gönder
-            await JSRuntime.InvokeVoidAsync("showSuccess", "E-posta değiştirme isteği gönderildi! Yeni e-posta adresinizi kontrol edin.");
-            newEmail = string.Empty;
-            emailChangePassword = string.Empty;
+            
+            if (string.IsNullOrWhiteSpace(newEmail))
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Lütfen yeni e-posta adresini girin.");
+                return;
+            }
+            
+            if (string.IsNullOrWhiteSpace(emailChangePassword))
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Lütfen şifrenizi girin.");
+                return;
+            }
+            
+            var request = new ChangeEmailRequest
+            {
+                NewEmail = newEmail,
+                Password = emailChangePassword
+            };
+            
+            var success = await SecurityService.ChangeEmailAsync(request);
+            
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", "E-posta değiştirme isteği gönderildi! Yeni e-posta adresinizi kontrol edin.");
+                newEmail = string.Empty;
+                emailChangePassword = string.Empty;
+                await LoadSecurityInfo(); // Bilgileri yeniden yükle
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "E-posta değiştirme isteği gönderilirken bir hata oluştu.");
+            }
         }
         catch (Exception ex)
         {
@@ -472,10 +496,38 @@ else
         try
         {
             isChangingPhone = true;
-            // TODO: API'ye telefon değiştirme isteği gönder
-            await JSRuntime.InvokeVoidAsync("showSuccess", "Telefon değiştirme isteği gönderildi! SMS ile doğrulama kodu gönderilecek.");
-            newPhone = string.Empty;
-            phoneChangePassword = string.Empty;
+            
+            if (string.IsNullOrWhiteSpace(newPhone))
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Lütfen yeni telefon numarasını girin.");
+                return;
+            }
+            
+            if (string.IsNullOrWhiteSpace(phoneChangePassword))
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Lütfen şifrenizi girin.");
+                return;
+            }
+            
+            var request = new ChangePhoneRequest
+            {
+                NewPhone = newPhone,
+                Password = phoneChangePassword
+            };
+            
+            var success = await SecurityService.ChangePhoneAsync(request);
+            
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", "Telefon değiştirme isteği gönderildi! SMS ile doğrulama kodu gönderilecek.");
+                newPhone = string.Empty;
+                phoneChangePassword = string.Empty;
+                await LoadSecurityInfo(); // Bilgileri yeniden yükle
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Telefon değiştirme isteği gönderilirken bir hata oluştu.");
+            }
         }
         catch (Exception ex)
         {
@@ -487,16 +539,38 @@ else
         }
     }
 
-    private async Task ToggleTwoFactor()
+    private async Task OnTwoFactorCheckboxChanged(ChangeEventArgs e)
     {
+        var newValue = (bool)(e.Value ?? false);
+        var oldValue = twoFactorEnabled;
+        
+        // Önce UI'ı güncelle
+        twoFactorEnabled = newValue;
+        
         try
         {
-            // TODO: API'de 2FA durumunu değiştir
-            await JSRuntime.InvokeVoidAsync("showSuccess", 
-                twoFactorEnabled ? "İki faktörlü doğrulama aktifleştirildi!" : "İki faktörlü doğrulama devre dışı bırakıldı!");
+            var success = await SecurityService.ToggleTwoFactorAsync(newValue);
+            
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", 
+                    newValue ? "İki faktörlü doğrulama aktifleştirildi!" : "İki faktörlü doğrulama devre dışı bırakıldı!");
+                await LoadSecurityInfo(); // Bilgileri yeniden yükle
+            }
+            else
+            {
+                // Başarısız olursa eski değere geri dön
+                twoFactorEnabled = oldValue;
+                await InvokeAsync(StateHasChanged);
+                await JSRuntime.InvokeVoidAsync("showError", 
+                    "İki faktörlü doğrulama ayarı değiştirilirken bir hata oluştu.");
+            }
         }
         catch (Exception ex)
         {
+            // Hata durumunda eski değere geri dön
+            twoFactorEnabled = oldValue;
+            await InvokeAsync(StateHasChanged);
             await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
         }
     }
@@ -508,9 +582,17 @@ else
             var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Bu cihazdan çıkış yapmak istediğinizden emin misiniz?");
             if (!confirmed) return;
 
-            // TODO: API'de oturumu sonlandır
-            await JSRuntime.InvokeVoidAsync("showSuccess", "Cihazdan çıkış yapıldı!");
-            await LoadSecurityInfo();
+            var success = await SecurityService.LogoutDeviceAsync(sessionId);
+            
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", "Cihazdan çıkış yapıldı!");
+                await LoadSecurityInfo();
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Cihazdan çıkış yapılırken bir hata oluştu.");
+            }
         }
         catch (Exception ex)
         {
@@ -525,9 +607,22 @@ else
             var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Tüm cihazlardan çıkış yapmak istediğinizden emin misiniz?");
             if (!confirmed) return;
 
-            // TODO: API'de tüm oturumları sonlandır
-            await JSRuntime.InvokeVoidAsync("showSuccess", "Tüm cihazlardan çıkış yapıldı!");
-            await LoadSecurityInfo();
+            var success = await SecurityService.LogoutAllDevicesAsync();
+            
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", "Tüm cihazlardan çıkış yapıldı!");
+                
+                // Tüm cihazlardan çıkış yapıldıysa, mevcut oturum da sonlandırılabilir
+                // Kullanıcıyı login sayfasına yönlendir
+                await Task.Delay(1000);
+                await AuthService.LogoutAsync();
+                Navigation.NavigateTo("/login", forceLoad: true);
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Tüm cihazlardan çıkış yapılırken bir hata oluştu.");
+            }
         }
         catch (Exception ex)
         {
@@ -562,15 +657,3 @@ else
     }
 }
 
-@* Models *@
-@code {
-    public class ActiveSession
-    {
-        public Guid Id { get; set; }
-        public string DeviceName { get; set; } = string.Empty;
-        public string DeviceType { get; set; } = string.Empty;
-        public string Location { get; set; } = string.Empty;
-        public DateTime LastActivity { get; set; }
-        public bool IsCurrent { get; set; }
-    }
-}

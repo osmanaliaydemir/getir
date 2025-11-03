@@ -118,34 +118,43 @@ window.showToast = (message, type = 'info', duration = 4000) => {
     // Animate in
     setTimeout(() => {
         toast.style.transform = 'translateX(0)';
-    }, 10);
-
-    // Auto remove
-    const autoRemoveTimer = setTimeout(() => {
-        removeToast(toast);
-    }, duration);
-
-    // Progress bar animation
-    setTimeout(() => {
         progressBar.style.transform = 'scaleX(0)';
     }, 10);
 
-    // Click to dismiss
-    toast.onclick = () => {
-        clearTimeout(autoRemoveTimer);
-        removeToast(toast);
+    const removeToast = (el) => {
+        el.style.transform = 'translateX(100%)';
+        setTimeout(() => el.remove(), 300);
     };
+
+    // Auto dismiss
+    const timer = setTimeout(() => removeToast(toast), duration);
+
+    // Pause on hover
+    toast.addEventListener('mouseenter', () => clearTimeout(timer));
+    toast.addEventListener('mouseleave', () => setTimeout(() => removeToast(toast), duration / 2));
+
+    // Click to dismiss
+    toast.addEventListener('click', () => removeToast(toast));
 };
 
-function removeToast(toast) {
-    toast.style.transform = 'translateX(100%)';
-    toast.style.opacity = '0';
-    setTimeout(() => {
-        if (toast.parentNode) {
-            toast.parentNode.removeChild(toast);
+// Store CSRF token from meta to localStorage for ApiClient
+(function() {
+    const setCsrfFromMeta = () => {
+        try {
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            if (meta && meta.content) {
+                localStorage.setItem('csrf_token', meta.content);
+            }
+        } catch (e) {
+            // no-op
         }
-    }, 300);
-}
+    };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setCsrfFromMeta);
+    } else {
+        setCsrfFromMeta();
+    }
+})();
 
 // Success toast
 window.showSuccess = (message, duration = 4000) => {
@@ -165,4 +174,251 @@ window.showWarning = (message, duration = 4000) => {
 // Info toast
 window.showInfo = (message, duration = 4000) => {
     window.showToast(message, 'info', duration);
+};
+
+// Share product functionality
+window.shareProduct = async (title, text, url) => {
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: title,
+                text: text,
+                url: url
+            });
+            return true;
+        } catch (error) {
+            // User cancelled or error occurred
+            throw error;
+        }
+    } else {
+        // Web Share API not supported
+        throw new Error('Web Share API not supported');
+    }
+};
+
+// Copy to clipboard functionality
+window.copyToClipboard = async (text) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+            await navigator.clipboard.writeText(text);
+            return true;
+        } catch (error) {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                textArea.remove();
+                return true;
+            } catch (err) {
+                textArea.remove();
+                throw err;
+            }
+        }
+    } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            textArea.remove();
+            return true;
+        } catch (err) {
+            textArea.remove();
+            throw err;
+        }
+    }
+};
+
+// ===== Leaflet Map Helpers =====
+window._orderMaps = window._orderMaps || {};
+
+window.initOrderMap = function(orderId, elementId, lat, lng) {
+    try {
+        if (!window.L) return false;
+        const el = document.getElementById(elementId);
+        if (!el) return false;
+
+        const map = L.map(el).setView([lat || 41.0082, lng || 28.9784], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        const markers = {};
+        if (lat && lng) {
+            markers.courier = L.marker([lat, lng], { title: 'Kurye' }).addTo(map);
+        }
+        window._orderMaps[orderId] = { map, markers, follow: true };
+        return true;
+    } catch {
+        return false;
+    }
+};
+
+window.updateCourierMarker = function(orderId, lat, lng) {
+    try {
+        const ctx = window._orderMaps[orderId];
+        if (!ctx || !lat || !lng) return false;
+        if (!ctx.markers.courier) {
+            ctx.markers.courier = L.marker([lat, lng], { title: 'Kurye' }).addTo(ctx.map);
+        } else {
+            ctx.markers.courier.setLatLng([lat, lng]);
+        }
+        if (ctx.follow) {
+            ctx.map.panTo([lat, lng]);
+        }
+        // Append to trail polyline
+        if (!ctx.trail) {
+            ctx.trail = L.polyline([[lat, lng]], { color: '#0d6efd', weight: 4, opacity: 0.7 }).addTo(ctx.map);
+        } else {
+            const latlngs = ctx.trail.getLatLngs();
+            latlngs.push([lat, lng]);
+            ctx.trail.setLatLngs(latlngs);
+        }
+        return true;
+    } catch {
+        return false;
+    }
+};
+
+window.setDestinationMarker = function(orderId, lat, lng) {
+    try {
+        const ctx = window._orderMaps[orderId];
+        if (!ctx || !lat || !lng) return false;
+        if (!ctx.markers.destination) {
+            ctx.markers.destination = L.marker([lat, lng], { title: 'Teslimat', icon: L.icon({
+                iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                iconSize: [25,41], iconAnchor: [12,41] })
+            }).addTo(ctx.map);
+        } else {
+            ctx.markers.destination.setLatLng([lat, lng]);
+        }
+        return true;
+    } catch { return false; }
+};
+
+window.setMerchantMarker = function(orderId, lat, lng) {
+    try {
+        const ctx = window._orderMaps[orderId];
+        if (!ctx || !lat || !lng) return false;
+        if (!ctx.markers.merchant) {
+            ctx.markers.merchant = L.marker([lat, lng], { title: 'Mağaza' }).addTo(ctx.map);
+        } else {
+            ctx.markers.merchant.setLatLng([lat, lng]);
+        }
+        return true;
+    } catch { return false; }
+};
+
+window.drawRoute = function(orderId, fromLat, fromLng, toLat, toLng) {
+    try {
+        const ctx = window._orderMaps[orderId];
+        if (!ctx || !fromLat || !fromLng || !toLat || !toLng) return false;
+        const latlngs = [[fromLat, fromLng], [toLat, toLng]];
+        if (!ctx.route) {
+            ctx.route = L.polyline(latlngs, { color: '#198754', weight: 3, dashArray: '6 6' }).addTo(ctx.map);
+        } else {
+            ctx.route.setLatLngs(latlngs);
+        }
+        ctx.map.fitBounds(L.latLngBounds(latlngs), { padding: [20,20] });
+        return true;
+    } catch { return false; }
+};
+
+// Haversine + ETA
+function haversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371; // km
+    const dLat = (lat2-lat1) * Math.PI/180;
+    const dLon = (lon2-lon1) * Math.PI/180;
+    const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+window.updateRouteAndEta = function(orderId, courierLat, courierLng, destLat, destLng, avgSpeedKmh = 25) {
+    try {
+        const dist = haversineKm(courierLat, courierLng, destLat, destLng);
+        const minutes = Math.max(1, Math.round((dist / avgSpeedKmh) * 60));
+        window.drawRoute(orderId, courierLat, courierLng, destLat, destLng);
+        window.updateEtaBadge(`eta-${orderId}`, `${minutes} dk`);
+        return true;
+    } catch { return false; }
+};
+
+// ===== OSRM Routing (production-grade route and ETA) =====
+window.updateRouteAndEtaOsrm = async function(orderId, courierLat, courierLng, destLat, destLng) {
+    try {
+        const ctx = window._orderMaps[orderId];
+        if (!ctx) return false;
+        const url = `https://router.project-osrm.org/route/v1/driving/${courierLng},${courierLat};${destLng},${destLat}?overview=full&geometries=geojson`;
+        const resp = await fetch(url, { method: 'GET' });
+        if (!resp.ok) return false;
+        const data = await resp.json();
+        if (!data || !data.routes || !data.routes[0]) return false;
+        const route = data.routes[0];
+        const seconds = Math.max(60, Math.round(route.duration));
+        const minutes = Math.max(1, Math.round(seconds / 60));
+        const coords = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+
+        if (!ctx.osrmRoute) {
+            ctx.osrmRoute = L.polyline(coords, { color: '#198754', weight: 4 }).addTo(ctx.map);
+        } else {
+            ctx.osrmRoute.setLatLngs(coords);
+        }
+
+        // Fit bounds softly
+        const bounds = L.latLngBounds(coords);
+        ctx.map.fitBounds(bounds, { padding: [20, 20] });
+
+        // Update ETA badge
+        window.updateEtaBadge(`eta-${orderId}`, `${minutes} dk`);
+        return true;
+    } catch (e) {
+        // fallback is ok, do nothing
+        return false;
+    }
+};
+// UX helpers
+window.toggleFollowCourier = function(orderId, enabled) {
+    try {
+        const ctx = window._orderMaps[orderId];
+        if (!ctx) return false;
+        ctx.follow = !!enabled;
+        return true;
+    } catch { return false; }
+};
+
+window.toggleTrail = function(orderId, enabled) {
+    try {
+        const ctx = window._orderMaps[orderId];
+        if (!ctx) return false;
+        if (enabled === false && ctx.trail) {
+            ctx.map.removeLayer(ctx.trail);
+            ctx.trail = null;
+        }
+        return true;
+    } catch { return false; }
+};
+window.updateEtaBadge = function(elementId, etaText) {
+    try {
+        const el = document.getElementById(elementId);
+        if (!el) return false;
+        el.textContent = etaText || '';
+        return true;
+    } catch {
+        return false;
+    }
 };

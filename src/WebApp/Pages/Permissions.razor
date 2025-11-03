@@ -1,5 +1,6 @@
 @page "/permissions"
 @inject AuthService AuthService
+@inject UserService UserService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 @implements IDisposable
@@ -313,7 +314,7 @@ else
         isAuthenticated = await AuthService.IsAuthenticatedAsync();
         if (isAuthenticated)
         {
-            LoadPermissions();
+            await LoadPermissions();
         }
         AuthService.AuthenticationStateChanged += OnAuthenticationStateChanged;
     }
@@ -323,7 +324,7 @@ else
         isAuthenticated = await AuthService.IsAuthenticatedAsync();
         if (isAuthenticated)
         {
-            LoadPermissions();
+            await LoadPermissions();
         }
         await InvokeAsync(StateHasChanged);
     }
@@ -333,30 +334,92 @@ else
         AuthService.AuthenticationStateChanged -= OnAuthenticationStateChanged;
     }
 
-    private void LoadPermissions()
+    private async Task LoadPermissions()
     {
-        // Şimdilik mock data
-        permissions = new UserPermissions
+        try
         {
-            LocationAccess = true,
-            CameraAccess = false,
-            NotificationAccess = true,
-            StorageAccess = true,
-            MicrophoneAccess = false,
-            ContactsAccess = false,
-            AnalyticsData = true,
-            MarketingData = false,
-            ThirdPartySharing = false,
-            CookieTracking = true
-        };
+            var response = await UserService.GetUserPermissionsAsync();
+            if (response != null)
+            {
+                permissions = new UserPermissions
+                {
+                    LocationAccess = response.LocationAccess,
+                    CameraAccess = response.CameraAccess,
+                    NotificationAccess = response.NotificationAccess,
+                    StorageAccess = response.StorageAccess,
+                    MicrophoneAccess = response.MicrophoneAccess,
+                    ContactsAccess = response.ContactsAccess,
+                    AnalyticsData = response.AnalyticsData,
+                    MarketingData = response.MarketingData,
+                    ThirdPartySharing = response.ThirdPartySharing,
+                    CookieTracking = response.CookieTracking
+                };
+            }
+            else
+            {
+                // Backend'den veri gelmezse varsayılan değerler
+                permissions = new UserPermissions
+                {
+                    LocationAccess = true,
+                    CameraAccess = false,
+                    NotificationAccess = true,
+                    StorageAccess = true,
+                    MicrophoneAccess = false,
+                    ContactsAccess = false,
+                    AnalyticsData = true,
+                    MarketingData = false,
+                    ThirdPartySharing = false,
+                    CookieTracking = true
+                };
+            }
+        }
+        catch
+        {
+            // Hata durumunda varsayılan değerler
+            permissions = new UserPermissions
+            {
+                LocationAccess = true,
+                CameraAccess = false,
+                NotificationAccess = true,
+                StorageAccess = true,
+                MicrophoneAccess = false,
+                ContactsAccess = false,
+                AnalyticsData = true,
+                MarketingData = false,
+                ThirdPartySharing = false,
+                CookieTracking = true
+            };
+        }
     }
 
     private async Task UpdatePermission()
     {
         try
         {
-            // TODO: API'ye izin güncellemesi gönder
-            await JSRuntime.InvokeVoidAsync("showSuccess", "İzin ayarları güncellendi!");
+            var request = new UpdatePermissionsRequest
+            {
+                LocationAccess = permissions.LocationAccess,
+                CameraAccess = permissions.CameraAccess,
+                NotificationAccess = permissions.NotificationAccess,
+                StorageAccess = permissions.StorageAccess,
+                MicrophoneAccess = permissions.MicrophoneAccess,
+                ContactsAccess = permissions.ContactsAccess,
+                AnalyticsData = permissions.AnalyticsData,
+                MarketingData = permissions.MarketingData,
+                ThirdPartySharing = permissions.ThirdPartySharing,
+                CookieTracking = permissions.CookieTracking
+            };
+
+            var success = await UserService.UpdateUserPermissionsAsync(request);
+            
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("showSuccess", "İzin ayarları güncellendi!");
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "İzin ayarları güncellenirken bir hata oluştu.");
+            }
         }
         catch (Exception ex)
         {

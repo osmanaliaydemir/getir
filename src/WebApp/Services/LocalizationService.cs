@@ -3,7 +3,19 @@ using System.Text.Json;
 
 namespace WebApp.Services;
 
-public class LocalizationService
+public interface ILocalizationService
+{
+    string GetString(string key, params object[] args);
+    void SetCulture(string culture);
+    string GetCurrentCulture();
+    List<string> GetSupportedCultures();
+    bool IsRtlLanguage(string culture);
+    string GetDirection(string culture);
+    string GetLanguageName(string culture);
+    string GetLanguageCode(string culture);
+}
+
+public class LocalizationService : ILocalizationService
 {
     private readonly IStringLocalizer<LocalizationService> _localizer;
     private readonly ILogger<LocalizationService> _logger;

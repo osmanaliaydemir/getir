@@ -169,24 +169,28 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 builder.Services.AddValidatorsFromAssemblyContaining<WebApp.Models.Validators.LoginRequestValidator>();
 
 // Register Services
-builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<ProductService>();
-builder.Services.AddScoped<CartService>();
-builder.Services.AddScoped<MerchantService>();
-builder.Services.AddScoped<OrderService>();
-builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IMerchantService, MerchantService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ISecurityService, SecurityService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IHelpService, HelpService>();
+builder.Services.AddScoped<IContactService, ContactService>();
+builder.Services.AddScoped<ISignalRService, SignalRService>();
 builder.Services.AddScoped<SignalRService>();
 builder.Services.AddScoped<GlobalErrorHandler>();
-builder.Services.AddScoped<LocalizationService>();
-builder.Services.AddScoped<SeoService>();
-builder.Services.AddScoped<AdvancedSecurityService>();
-builder.Services.AddScoped<AdvancedMonitoringService>();
-builder.Services.AddScoped<AdvancedPwaService>();
-builder.Services.AddScoped<AdvancedSeoService>();
+builder.Services.AddScoped<ILocalizationService, LocalizationService>();
+builder.Services.AddSingleton<IAdvancedSeoService, AdvancedSeoService>();
+builder.Services.AddScoped<IAdvancedSecurityService, AdvancedSecurityService>();
+builder.Services.AddSingleton<IAdvancedMonitoringService, AdvancedMonitoringService>();
+builder.Services.AddScoped<IAdvancedPwaService, AdvancedPwaService>();
 
 // Register services with dependencies
-builder.Services.AddScoped<PerformanceMonitoringService>();
-builder.Services.AddScoped<AdvancedCacheService>();
+builder.Services.AddSingleton<IPerformanceMonitoringService, PerformanceMonitoringService>();
+builder.Services.AddSingleton<IAdvancedCacheService, AdvancedCacheService>();
 
 // Add WeatherForecastService (keep for compatibility)
 builder.Services.AddSingleton<WeatherForecastService>();

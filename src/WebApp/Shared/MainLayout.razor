@@ -1,8 +1,8 @@
 @inherits LayoutComponentBase
 @implements IDisposable
-@inject AuthService AuthService
+@inject IAuthService AuthService
 @inject NavigationManager Navigation
-@inject LocalizationService LocalizationService
+@inject ILocalizationService LocalizationService
 
 <PageTitle>Getir - @GetLocalizedText("common.fast_delivery")</PageTitle>
 
@@ -299,13 +299,23 @@
 				<p>&copy; 2024 Getir. @GetLocalizedText("footer.all_rights_reserved")</p>
 			</div>
 		</div>
-	</footer>
+</footer>
+
+	<!-- Floating Live Chat Button -->
+	@if (isAuthenticated)
+	{
+		<button class="btn btn-primary rounded-circle shadow position-fixed" style="right: 20px; bottom: 20px; width: 56px; height: 56px; z-index: 1050;" @onclick="ToggleChat">
+			<i class="bi bi-chat-dots"></i>
+		</button>
+		<LiveChatComponent Show="showChat" ShowChanged="OnChatShowChanged" />
+	}
 </div>
 
 @code {
 	private bool isAuthenticated = false;
-	private bool showMobileMenu = false;
-	private bool showMobileSearch = false;
+    private bool showMobileMenu = false;
+    private bool showMobileSearch = false;
+    private bool showChat = false;
 	private AuthResponse? currentUser;
 
 	protected override async Task OnInitializedAsync()
@@ -331,14 +341,12 @@
 
 	private async void OnAuthenticationStateChanged()
 	{
-		Console.WriteLine("MainLayout - Authentication state changed");
+		// Authentication state changed - no logging needed here as it's handled by AuthService
 		isAuthenticated = await AuthService.IsAuthenticatedAsync();
-		Console.WriteLine($"MainLayout - IsAuthenticated: {isAuthenticated}");
 
 		if (isAuthenticated)
 		{
 			currentUser = await AuthService.GetCurrentUserAsync();
-			Console.WriteLine($"MainLayout - CurrentUser: {currentUser?.FirstName} {currentUser?.LastName}");
 		}
 		else
 		{
@@ -370,6 +378,17 @@
 		showMobileSearch = !showMobileSearch;
 		showMobileMenu = false; // Close menu when opening search
 	}
+
+    private void ToggleChat()
+    {
+        showChat = !showChat;
+    }
+
+    private Task OnChatShowChanged(bool value)
+    {
+        showChat = value;
+        return Task.CompletedTask;
+    }
 
 	private string GetLocalizedText(string key)
 	{

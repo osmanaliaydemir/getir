@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 // Core
 import 'core/navigation/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'core/localization/app_localizations.dart';
 import 'core/cubits/network/network_cubit.dart';
 import 'core/cubits/language/language_cubit.dart';
 import 'core/cubits/theme/theme_cubit.dart';
@@ -40,12 +39,35 @@ import 'presentation/bloc/language/language_bloc.dart' as lang_bloc;
 // Localization
 import 'l10n/app_localizations.g.dart';
 
+/// Main entry point for the application
+/// 
+/// By default, uses dev environment.
+/// For other environments, see:
+/// - main_dev.dart for development
+/// - main_staging.dart for staging  
+/// - main_prod.dart for production
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    // 🚀 Initialize app with centralized initialization logic
+    // 🚀 Initialize app with centralized initialization logic (default: dev)
     await AppInitializer.initialize();
+
+    // 🎉 Launch app
+    runApp(const GetirApp());
+  } catch (e, stackTrace) {
+    // Show error screen if initialization fails
+    runApp(_buildErrorScreen(e, stackTrace));
+  }
+}
+
+/// Initialize app with specific environment
+void mainWithEnvironment(String environment) async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    // 🚀 Initialize app for specific environment
+    await AppInitializer.initialize(environment: environment);
 
     // 🎉 Launch app
     runApp(const GetirApp());

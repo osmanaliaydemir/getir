@@ -3,10 +3,23 @@ using Microsoft.JSInterop;
 
 namespace WebApp.Services;
 
-public class SignalRService : IAsyncDisposable
+public interface ISignalRService : IAsyncDisposable
+{
+    event Action<string, object>? NotificationReceived;
+    event Action<string>? ConnectionStatusChanged;
+    bool IsConnected { get; }
+    HubConnectionState ConnectionState { get; }
+    Task StartConnectionAsync();
+    Task StopConnectionAsync();
+    Task SendNotificationAsync(string method, object data);
+    Task JoinGroupAsync(string groupName);
+    Task LeaveGroupAsync(string groupName);
+}
+
+public class SignalRService : ISignalRService
 {
     private HubConnection? _hubConnection;
-    private readonly AuthService _authService;
+    private readonly IAuthService _authService;
     private readonly ILogger<SignalRService> _logger;
     private readonly IConfiguration _configuration;
 
@@ -16,7 +29,7 @@ public class SignalRService : IAsyncDisposable
     public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
     public HubConnectionState ConnectionState => _hubConnection?.State ?? HubConnectionState.Disconnected;
 
-    public SignalRService(AuthService authService, ILogger<SignalRService> logger, IConfiguration configuration)
+    public SignalRService(IAuthService authService, ILogger<SignalRService> logger, IConfiguration configuration)
     {
         _authService = authService;
         _logger = logger;

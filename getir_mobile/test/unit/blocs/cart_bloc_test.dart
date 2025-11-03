@@ -77,6 +77,7 @@ void main() {
     });
 
     group('AddToCart', () {
+      const String testMerchantId = 'merchant-123';
       const String testProductId = 'product-123';
       const int testQuantity = 2;
       const String testProductName = 'Test Product';
@@ -112,6 +113,7 @@ void main() {
         },
         act: (bloc) => bloc.add(
           const AddToCart(
+            merchantId: testMerchantId,
             productId: testProductId,
             quantity: testQuantity,
             productName: testProductName,
@@ -162,7 +164,11 @@ void main() {
           return cartBloc;
         },
         act: (bloc) => bloc.add(
-          const AddToCart(productId: testProductId, quantity: testQuantity),
+          const AddToCart(
+            merchantId: testMerchantId,
+            productId: testProductId,
+            quantity: testQuantity,
+          ),
         ),
         expect: () => [
           CartItemAdded(MockData.testCartItem),
@@ -212,7 +218,11 @@ void main() {
           return cartBloc;
         },
         act: (bloc) => bloc.add(
-          const AddToCart(productId: testProductId, quantity: testQuantity),
+          const AddToCart(
+            merchantId: testMerchantId,
+            productId: testProductId,
+            quantity: testQuantity,
+          ),
         ),
         expect: () => [const CartError('Product not available')],
       );
@@ -239,6 +249,7 @@ void main() {
         },
         act: (bloc) => bloc.add(
           const AddToCart(
+            merchantId: testMerchantId,
             productId: testProductId,
             quantity: testQuantity,
             variantId: 'variant-123',

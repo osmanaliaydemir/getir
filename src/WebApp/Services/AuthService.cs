@@ -3,12 +3,29 @@ using Microsoft.JSInterop;
 
 namespace WebApp.Services;
 
-public class AuthService
+public interface IAuthService
+{
+    event Action? AuthenticationStateChanged;
+    Task<AuthResponse?> LoginAsync(LoginRequest request);
+    Task<AuthResponse?> RegisterAsync(RegisterRequest request);
+    Task<AuthResponse?> ForgotPasswordAsync(ForgotPasswordRequest request);
+    Task LogoutAsync();
+    Task<AuthResponse?> GetCurrentUserAsync();
+    Task<string?> GetTokenAsync();
+    Task<string?> GetRefreshTokenAsync();
+    Task<string?> GetCsrfTokenAsync();
+    Task<bool> RefreshTokenAsync();
+    Task<bool> IsAuthenticatedAsync();
+}
+
+public class AuthService : IAuthService
 {
     private readonly ApiClient _apiClient;
     private readonly IJSRuntime _jsRuntime;
+    private System.Threading.Timer? _refreshTimer;
     private const string TOKEN_KEY = "auth_token";
     private const string USER_KEY = "user_data";
+    private const string CSRF_KEY = "csrf_token";
 
     public event Action? AuthenticationStateChanged;
 
@@ -25,6 +42,7 @@ public class AuthService
         if (response.IsSuccess && response.Data != null && !string.IsNullOrEmpty(response.Data.AccessToken))
         {
             await SaveAuthDataAsync(response.Data);
+            ScheduleProactiveRefresh(response.Data.ExpiresAt);
             AuthenticationStateChanged?.Invoke();
             return response.Data;
         }
@@ -39,6 +57,7 @@ public class AuthService
         if (response.IsSuccess && response.Data != null && !string.IsNullOrEmpty(response.Data.AccessToken))
         {
             await SaveAuthDataAsync(response.Data);
+            ScheduleProactiveRefresh(response.Data.ExpiresAt);
             return response.Data;
         }
         
@@ -61,6 +80,8 @@ public class AuthService
     {
         try
         {
+            _refreshTimer?.Dispose();
+            _refreshTimer = null;
             await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", TOKEN_KEY);
             await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", USER_KEY);
         }
@@ -106,6 +127,55 @@ public class AuthService
         }
     }
 
+    public async Task<string?> GetRefreshTokenAsync()
+    {
+        try
+        {
+            var userJson = await _jsRuntime.InvokeAsync<string?>("localStorage.getItem", USER_KEY);
+            if (string.IsNullOrEmpty(userJson)) return null;
+            var options = new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
+                PropertyNameCaseInsensitive = true
+            };
+            var user = System.Text.Json.JsonSerializer.Deserialize<AuthResponse>(userJson, options);
+            return user?.RefreshToken;
+        }
+        catch { return null; }
+    }
+
+    public async Task<string?> GetCsrfTokenAsync()
+    {
+        try
+        {
+            return await _jsRuntime.InvokeAsync<string?>("localStorage.getItem", CSRF_KEY);
+        }
+        catch { return null; }
+    }
+
+    public async Task<bool> RefreshTokenAsync()
+    {
+        try
+        {
+            var refreshToken = await GetRefreshTokenAsync();
+            if (string.IsNullOrEmpty(refreshToken)) return false;
+
+            var payload = new { refreshToken };
+            var response = await _apiClient.PostAsync<AuthResponse>("api/v1/auth/refresh", payload);
+            if (response.IsSuccess && response.Data != null && !string.IsNullOrEmpty(response.Data.AccessToken))
+            {
+                await SaveAuthDataAsync(response.Data);
+                AuthenticationStateChanged?.Invoke();
+                return true;
+            }
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public async Task<bool> IsAuthenticatedAsync()
     {
         var token = await GetTokenAsync();
@@ -126,5 +196,45 @@ public class AuthService
         {
             // JavaScript interop hatası durumunda sessizce devam et (prerendering sırasında)
         }
+    }
+
+    private void ScheduleProactiveRefresh(DateTime expiresAt)
+    {
+        try
+        {
+            var now = DateTime.UtcNow;
+            var due = expiresAt.ToUniversalTime() - now - TimeSpan.FromSeconds(60);
+            if (due < TimeSpan.FromSeconds(5))
+            {
+                due = TimeSpan.FromSeconds(5);
+            }
+            _refreshTimer?.Dispose();
+            _refreshTimer = new System.Threading.Timer(async _ =>
+            {
+                try
+                {
+                    var ok = await RefreshTokenAsync();
+                    if (!ok)
+                    {
+                        _refreshTimer?.Dispose();
+                        _refreshTimer = null;
+                    }
+                    else
+                    {
+                        var user = await GetCurrentUserAsync();
+                        if (user != null)
+                        {
+                            ScheduleProactiveRefresh(user.ExpiresAt);
+                        }
+                    }
+                }
+                catch
+                {
+                    _refreshTimer?.Dispose();
+                    _refreshTimer = null;
+                }
+            }, null, due, Timeout.InfiniteTimeSpan);
+        }
+        catch { }
     }
 }

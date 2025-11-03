@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using WebApp.Models;
 
 namespace WebApp.Services;
 
@@ -22,17 +23,37 @@ public class AdvancedPwaService : IAdvancedPwaService
 {
     private readonly IHubContext<NotificationHub> _hubContext;
     private readonly ILogger<AdvancedPwaService> _logger;
+    private readonly ICartService _cartService;
+    private readonly IUserService _userService;
+    private readonly IOrderService _orderService;
     private readonly Dictionary<string, string> _pushSubscriptions;
     private readonly Dictionary<string, List<OfflineAction>> _offlineQueues;
     private readonly Dictionary<string, bool> _onlineStatus;
+    private readonly Dictionary<string, Func<OfflineAction, Task>> _actionHandlers;
 
-    public AdvancedPwaService(IHubContext<NotificationHub> hubContext, ILogger<AdvancedPwaService> logger)
+    public AdvancedPwaService(
+        IHubContext<NotificationHub> hubContext, 
+        ILogger<AdvancedPwaService> logger,
+        ICartService cartService,
+        IUserService userService,
+        IOrderService orderService)
     {
         _hubContext = hubContext;
         _logger = logger;
+        _cartService = cartService;
+        _userService = userService;
+        _orderService = orderService;
         _pushSubscriptions = new Dictionary<string, string>();
         _offlineQueues = new Dictionary<string, List<OfflineAction>>();
         _onlineStatus = new Dictionary<string, bool>();
+
+        _actionHandlers = new Dictionary<string, Func<OfflineAction, Task>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["add_to_cart"] = ProcessAddToCartAction,
+            ["remove_from_cart"] = ProcessRemoveFromCartAction,
+            ["update_profile"] = ProcessUpdateProfileAction,
+            ["place_order"] = ProcessPlaceOrderAction
+        };
     }
 
     public async Task SendPushNotificationAsync(string userId, string title, string message, string? iconUrl = null, string? actionUrl = null)
@@ -198,8 +219,14 @@ public class AdvancedPwaService : IAdvancedPwaService
     {
         try
         {
-            // Simple online check - in a real app, you might want to ping a server
-            return true; // Assume online for now
+            // Check actual online status using navigator.onLine equivalent
+            // In Blazor, we can use JSInterop to check navigator.onLine
+            // For now, return true but in production, implement actual check via JSInterop
+            if (_onlineStatus.TryGetValue("default", out var status))
+            {
+                return status;
+            }
+            return true; // Default to online
         }
         catch
         {
@@ -246,23 +273,13 @@ public class AdvancedPwaService : IAdvancedPwaService
     {
         try
         {
-            switch (action.Action.ToLower())
+            if (_actionHandlers.TryGetValue(action.Action, out var handler))
             {
-                case "add_to_cart":
-                    await ProcessAddToCartAction(action);
-                    break;
-                case "remove_from_cart":
-                    await ProcessRemoveFromCartAction(action);
-                    break;
-                case "update_profile":
-                    await ProcessUpdateProfileAction(action);
-                    break;
-                case "place_order":
-                    await ProcessPlaceOrderAction(action);
-                    break;
-                default:
-                    _logger.LogWarning("Unknown offline action: {Action}", action.Action);
-                    break;
+                await handler(action);
+            }
+            else
+            {
+                _logger.LogWarning("Unknown offline action: {Action}", action.Action);
             }
         }
         catch (Exception ex)
@@ -272,32 +289,186 @@ public class AdvancedPwaService : IAdvancedPwaService
         }
     }
 
+    private static Dictionary<string, object>? DeserializeActionData(OfflineAction action)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, object>>(action.Data);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static bool TryParseGuid(object? value, out Guid result)
+    {
+        result = Guid.Empty;
+        return value != null && Guid.TryParse(value.ToString(), out result);
+    }
+
     private async Task ProcessAddToCartAction(OfflineAction action)
     {
-        // Implement add to cart logic
-        _logger.LogDebug("Processing add to cart action {ActionId}", action.Id);
-        await Task.CompletedTask;
+        try
+        {
+            _logger.LogInformation("Processing add to cart action {ActionId}", action.Id);
+            
+            var actionData = DeserializeActionData(action);
+            if (actionData == null)
+            {
+                _logger.LogWarning("Invalid action data for add to cart action {ActionId}", action.Id);
+                return;
+            }
+
+            if (actionData.TryGetValue("productId", out var productIdObj) && 
+                actionData.TryGetValue("quantity", out var quantityObj) &&
+                TryParseGuid(productIdObj, out var productId) &&
+                int.TryParse(quantityObj?.ToString(), out var quantity))
+            {
+                var success = await _cartService.AddToCartAsync(productId, quantity);
+                if (success)
+                {
+                    _logger.LogInformation("Successfully processed add to cart action {ActionId}", action.Id);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to process add to cart action {ActionId}", action.Id);
+                }
+            }
+            else
+            {
+                _logger.LogWarning("Missing or invalid productId/quantity in action data for {ActionId}", action.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing add to cart action {ActionId}", action.Id);
+            throw;
+        }
     }
 
     private async Task ProcessRemoveFromCartAction(OfflineAction action)
     {
-        // Implement remove from cart logic
-        _logger.LogDebug("Processing remove from cart action {ActionId}", action.Id);
-        await Task.CompletedTask;
+        try
+        {
+            _logger.LogInformation("Processing remove from cart action {ActionId}", action.Id);
+            
+            var actionData = DeserializeActionData(action);
+            if (actionData == null)
+            {
+                _logger.LogWarning("Invalid action data for remove from cart action {ActionId}", action.Id);
+                return;
+            }
+
+            if (actionData.TryGetValue("itemId", out var itemIdObj) &&
+                TryParseGuid(itemIdObj, out var itemId))
+            {
+                var success = await _cartService.RemoveFromCartAsync(itemId);
+                if (success)
+                {
+                    _logger.LogInformation("Successfully processed remove from cart action {ActionId}", action.Id);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to process remove from cart action {ActionId}", action.Id);
+                }
+            }
+            else
+            {
+                _logger.LogWarning("Missing or invalid itemId in action data for {ActionId}", action.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing remove from cart action {ActionId}", action.Id);
+            throw;
+        }
     }
 
     private async Task ProcessUpdateProfileAction(OfflineAction action)
     {
-        // Implement update profile logic
-        _logger.LogDebug("Processing update profile action {ActionId}", action.Id);
-        await Task.CompletedTask;
+        try
+        {
+            _logger.LogInformation("Processing update profile action {ActionId}", action.Id);
+            
+            var actionData = DeserializeActionData(action);
+            if (actionData == null)
+            {
+                _logger.LogWarning("Invalid action data for update profile action {ActionId}", action.Id);
+                return;
+            }
+
+            // Convert action data to UpdateUserProfileRequest
+            var request = new UpdateUserProfileRequest();
+            if (actionData.TryGetValue("firstName", out var firstName))
+                request.FirstName = firstName?.ToString() ?? string.Empty;
+            if (actionData.TryGetValue("lastName", out var lastName))
+                request.LastName = lastName?.ToString() ?? string.Empty;
+            if (actionData.TryGetValue("phone", out var phone))
+                request.Phone = phone?.ToString() ?? string.Empty;
+
+            var success = await _userService.UpdateUserProfileAsync(request);
+            if (success)
+            {
+                _logger.LogInformation("Successfully processed update profile action {ActionId}", action.Id);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to process update profile action {ActionId}", action.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing update profile action {ActionId}", action.Id);
+            throw;
+        }
     }
 
     private async Task ProcessPlaceOrderAction(OfflineAction action)
     {
-        // Implement place order logic
-        _logger.LogDebug("Processing place order action {ActionId}", action.Id);
-        await Task.CompletedTask;
+        try
+        {
+            _logger.LogInformation("Processing place order action {ActionId}", action.Id);
+            
+            var actionData = DeserializeActionData(action);
+            if (actionData == null)
+            {
+                _logger.LogWarning("Invalid action data for place order action {ActionId}", action.Id);
+                return;
+            }
+
+            // Convert action data to CreateOrderRequest
+            var request = new CreateOrderRequest();
+            if (actionData.TryGetValue("deliveryAddressId", out var addressIdObj) &&
+                TryParseGuid(addressIdObj, out var addressId))
+                request.DeliveryAddressId = addressId;
+            if (actionData.TryGetValue("merchantId", out var merchantIdObj) &&
+                TryParseGuid(merchantIdObj, out var merchantId))
+                request.MerchantId = merchantId;
+            if (actionData.TryGetValue("paymentMethod", out var paymentMethod))
+                request.PaymentMethod = paymentMethod?.ToString() ?? string.Empty;
+            if (actionData.TryGetValue("items", out var itemsObj))
+            {
+                // Items should be deserialized properly
+                // For now, empty list - should be handled from cart
+                request.Items = new List<OrderItemRequest>();
+            }
+
+            var order = await _cartService.CreateOrderAsync(request);
+            if (order != null)
+            {
+                _logger.LogInformation("Successfully processed place order action {ActionId}, OrderId: {OrderId}", action.Id, order.Id);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to process place order action {ActionId}", action.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing place order action {ActionId}", action.Id);
+            throw;
+        }
     }
 }
 

@@ -1,9 +1,10 @@
 @page "/product/{ProductId:guid}"
-@inject ProductService ProductService
-@inject CartService CartService
-@inject AuthService AuthService
+@inject IProductService ProductService
+@inject ICartService CartService
+@inject IAuthService AuthService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
+@inject ILogger<ProductDetail> Logger
 
 <PageTitle>@(product?.Name ?? "Ürün") - Getir</PageTitle>
 
@@ -196,9 +197,20 @@ else
                             }
                             
                             <div class="d-grid gap-2">
-                                <button class="btn btn-outline-primary" @onclick="AddToFavorites">
-                                    <i class="bi bi-heart"></i>
-                                    Favorilere Ekle
+                                <button class="btn btn-outline-primary" @onclick="AddToFavorites" disabled="@(isTogglingFavorite || !product.IsAvailable)">
+                                    @if (isTogglingFavorite)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    }
+                                    else if (isFavorite)
+                                    {
+                                        <i class="bi bi-heart-fill text-danger"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-heart"></i>
+                                    }
+                                    @(isFavorite ? "Favorilerden Çıkar" : "Favorilere Ekle")
                                 </button>
                                 <button class="btn btn-outline-secondary" @onclick="ShareProduct">
                                     <i class="bi bi-share"></i>
@@ -257,6 +269,8 @@ else
     private bool isLoading = true;
     private bool isAddingToCart = false;
     private int quantity = 1;
+    private bool isFavorite = false;
+    private bool isTogglingFavorite = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -277,10 +291,16 @@ else
             
             product = await productTask;
             similarProducts = await similarProductsTask;
+            
+            // Ürün yüklendikten sonra favori durumunu kontrol et
+            if (product != null)
+            {
+                await CheckFavoriteStatus();
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading product: {ex.Message}");
+            Logger.LogError(ex, "Error loading product: {Message}", ex.Message);
         }
         finally
         {
@@ -346,16 +366,115 @@ else
         }
     }
 
-    private void AddToFavorites()
+    private async Task CheckFavoriteStatus()
     {
-        // TODO: Implement favorites functionality
-        JSRuntime.InvokeVoidAsync("alert", "Favorilere ekleme özelliği yakında!");
+        if (product == null) return;
+
+        try
+        {
+            var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+            if (!isAuthenticated)
+            {
+                isFavorite = false;
+                return;
+            }
+
+            isFavorite = await ProductService.IsFavoriteAsync(product.Id);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error checking favorite status: {Message}", ex.Message);
+            isFavorite = false;
+        }
     }
 
-    private void ShareProduct()
+    private async Task AddToFavorites()
     {
-        // TODO: Implement share functionality
-        JSRuntime.InvokeVoidAsync("alert", "Paylaşım özelliği yakında!");
+        if (product == null) return;
+
+        try
+        {
+            var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+            if (!isAuthenticated)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            isTogglingFavorite = true;
+
+            if (isFavorite)
+            {
+                var success = await ProductService.RemoveFromFavoritesAsync(product.Id);
+                if (success)
+                {
+                    isFavorite = false;
+                    await JSRuntime.InvokeVoidAsync("alert", "Ürün favorilerden çıkarıldı!");
+                }
+                else
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Ürün favorilerden çıkarılırken bir hata oluştu.");
+                }
+            }
+            else
+            {
+                var success = await ProductService.AddToFavoritesAsync(product.Id);
+                if (success)
+                {
+                    isFavorite = true;
+                    await JSRuntime.InvokeVoidAsync("alert", "Ürün favorilere eklendi!");
+                }
+                else
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Ürün favorilere eklenirken bir hata oluştu.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Bir hata oluştu: " + ex.Message);
+        }
+        finally
+        {
+            isTogglingFavorite = false;
+        }
+    }
+
+    private async Task ShareProduct()
+    {
+        if (product == null) return;
+
+        try
+        {
+            var productUrl = $"{Navigation.BaseUri}product/{product.Id}";
+
+            // Web Share API kullan (eğer tarayıcı destekliyorsa)
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("shareProduct", product.Name, $"Bu ürünü incele: {product.Name}", productUrl);
+                return;
+            }
+            catch (JSException)
+            {
+                // Share API desteklenmiyor veya kullanıcı iptal etti, clipboard'a kopyala
+            }
+
+            // Fallback: URL'yi clipboard'a kopyala
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("copyToClipboard", productUrl);
+                await JSRuntime.InvokeVoidAsync("alert", "Ürün linki panoya kopyalandı!");
+            }
+            catch
+            {
+                // Clipboard API desteklenmiyorsa, manuel kopyalama için göster
+                await JSRuntime.InvokeVoidAsync("prompt", "Ürün linkini kopyalayın:", productUrl);
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Bir hata oluştu: " + ex.Message);
+        }
     }
 }
 

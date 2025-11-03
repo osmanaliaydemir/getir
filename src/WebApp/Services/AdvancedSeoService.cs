@@ -34,11 +34,21 @@ public class AdvancedSeoService : IAdvancedSeoService
         _configuration = configuration;
     }
 
+    private string GetBaseUrl()
+    {
+        return _configuration["ApiSettings:BaseUrl"] ?? "https://ajilgo.runasp.net";
+    }
+
+    private static string SerializeIndented(object value)
+    {
+        return JsonSerializer.Serialize(value, new JsonSerializerOptions { WriteIndented = true });
+    }
+
     public async Task<string> GenerateDynamicSitemapAsync()
     {
         try
         {
-            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://ajilgo.runasp.net";
+            var baseUrl = GetBaseUrl();
             var sitemap = new XDocument(
                 new XDeclaration("1.0", "UTF-8", "yes"),
                 new XElement("urlset",
@@ -78,7 +88,7 @@ public class AdvancedSeoService : IAdvancedSeoService
     {
         try
         {
-            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://ajilgo.runasp.net";
+            var baseUrl = GetBaseUrl();
             var robotsTxt = $@"User-agent: *
 Allow: /
 
@@ -154,7 +164,7 @@ Crawl-delay: 1";
     {
         try
         {
-            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://ajilgo.runasp.net";
+            var baseUrl = GetBaseUrl();
             var items = breadcrumbs.Select((item, index) => new
             {
                 position = index + 1,
@@ -169,7 +179,7 @@ Crawl-delay: 1";
                 itemListElement = items
             };
 
-            return JsonSerializer.Serialize(schema, new JsonSerializerOptions { WriteIndented = true });
+            return SerializeIndented(schema);
         }
         catch (Exception ex)
         {
@@ -182,7 +192,7 @@ Crawl-delay: 1";
     {
         try
         {
-            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://ajilgo.runasp.net";
+            var baseUrl = GetBaseUrl();
             var schema = new
             {
                 context = "https://schema.org",
@@ -204,7 +214,7 @@ Crawl-delay: 1";
                 }
             };
 
-            return JsonSerializer.Serialize(schema, new JsonSerializerOptions { WriteIndented = true });
+            return SerializeIndented(schema);
         }
         catch (Exception ex)
         {
@@ -217,7 +227,7 @@ Crawl-delay: 1";
     {
         try
         {
-            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://ajilgo.runasp.net";
+            var baseUrl = GetBaseUrl();
             var schema = new
             {
                 context = "https://schema.org",
@@ -240,7 +250,7 @@ Crawl-delay: 1";
                 }
             };
 
-            return JsonSerializer.Serialize(schema, new JsonSerializerOptions { WriteIndented = true });
+            return SerializeIndented(schema);
         }
         catch (Exception ex)
         {
@@ -253,7 +263,7 @@ Crawl-delay: 1";
     {
         try
         {
-            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://ajilgo.runasp.net";
+            var baseUrl = GetBaseUrl();
             var schema = new
             {
                 context = "https://schema.org",
@@ -268,7 +278,7 @@ Crawl-delay: 1";
                 openingHours = business.OpeningHours
             };
 
-            return JsonSerializer.Serialize(schema, new JsonSerializerOptions { WriteIndented = true });
+            return SerializeIndented(schema);
         }
         catch (Exception ex)
         {
@@ -302,7 +312,7 @@ Crawl-delay: 1";
                 }
             };
 
-            return JsonSerializer.Serialize(schema, new JsonSerializerOptions { WriteIndented = true });
+            return SerializeIndented(schema);
         }
         catch (Exception ex)
         {
@@ -315,7 +325,7 @@ Crawl-delay: 1";
     {
         try
         {
-            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://ajilgo.runasp.net";
+            var baseUrl = GetBaseUrl();
             var schema = new
             {
                 context = "https://schema.org",
@@ -355,7 +365,7 @@ Crawl-delay: 1";
     {
         try
         {
-            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://ajilgo.runasp.net";
+            var baseUrl = GetBaseUrl();
             var metaTags = new Dictionary<string, string>();
 
             switch (pageType.ToLower())
@@ -394,7 +404,7 @@ Crawl-delay: 1";
     {
         try
         {
-            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://ajilgo.runasp.net";
+            var baseUrl = GetBaseUrl();
             var ogTags = new Dictionary<string, string>
             {
                 ["og:type"] = pageType.ToLower() switch
@@ -440,7 +450,7 @@ Crawl-delay: 1";
     {
         try
         {
-            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://ajilgo.runasp.net";
+            var baseUrl = GetBaseUrl();
             var twitterTags = new Dictionary<string, string>
             {
                 ["twitter:card"] = "summary_large_image",
@@ -480,7 +490,7 @@ Crawl-delay: 1";
     {
         try
         {
-            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://ajilgo.runasp.net";
+            var baseUrl = GetBaseUrl();
             return $"{baseUrl}{path}";
         }
         catch (Exception ex)
@@ -494,7 +504,7 @@ Crawl-delay: 1";
     {
         try
         {
-            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://ajilgo.runasp.net";
+            var baseUrl = GetBaseUrl();
             var languages = new[] { "tr", "en", "ar" };
             
             return languages.Select(lang => $"{baseUrl}/{lang}{path}").ToList();

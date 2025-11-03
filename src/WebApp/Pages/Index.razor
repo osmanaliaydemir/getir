@@ -1,9 +1,10 @@
 ﻿@page "/"
-@inject ProductService ProductService
-@inject AuthService AuthService
-@inject CartService CartService
+@inject IProductService ProductService
+@inject IAuthService AuthService
+@inject ICartService CartService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
+@inject ILogger<Index> Logger
 
 <PageTitle>Getir - Hızlı Teslimat</PageTitle>
 
@@ -317,7 +318,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading products: {ex.Message}");
+            Logger.LogError(ex, "Error loading products: {Message}", ex.Message);
         }
     }
 

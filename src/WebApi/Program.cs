@@ -26,6 +26,11 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Host.UseSerilog();
+builder.Host.UseDefaultServiceProvider(options =>
+{
+    options.ValidateScopes = true;
+    options.ValidateOnBuild = true;
+});
 
 // ============= DATABASE =============
 // Skip DbContext registration in Testing environment (handled by test setup)
@@ -119,6 +124,7 @@ builder.Services.AddValidationConfiguration();
 builder.Services.AddSwaggerConfiguration();
 builder.Services.AddRateLimitConfiguration(builder.Configuration);
 builder.Services.AddMetricsConfiguration();
+builder.Services.AddConfigurationValidation(builder.Configuration, builder.Environment);
 
 // FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();

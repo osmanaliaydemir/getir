@@ -32,6 +32,7 @@ public class SecurityAuditMiddleware
             // Log successful requests for security-sensitive endpoints
             if (IsSecuritySensitiveEndpoint(context.Request.Path))
             {
+                var reason = GetSecurityReason(context);
                 await LogSecurityEvent(dbContext, new AuditLog
                 {
                     Id = Guid.NewGuid(),
@@ -40,7 +41,7 @@ public class SecurityAuditMiddleware
                     Action = GetActionFromPath(context.Request.Path, context.Request.Method),
                     EntityType = GetEntityTypeFromPath(context.Request.Path),
                     EntityId = GetEntityIdFromPath(context.Request.Path) ?? "N/A",
-                    Details = $"Request completed successfully. Status: {context.Response.StatusCode}",
+                    Details = reason ?? $"Request completed. Status: {context.Response.StatusCode}",
                     IpAddress = ipAddress,
                     UserAgent = userAgent,
                     SessionId = requestId, // WebAPI is stateless, use RequestId instead of Session
@@ -48,6 +49,17 @@ public class SecurityAuditMiddleware
                     IsSuccess = context.Response.StatusCode < 400,
                     Timestamp = startTime
                 });
+
+                // Emit structured security logs for SIEM
+                if (context.Response.StatusCode == StatusCodes.Status401Unauthorized || context.Response.StatusCode == StatusCodes.Status403Forbidden)
+                {
+                    _logger.LogWarning("SecurityEvent {Event} {Status} {Ip} {User} {Path}",
+                        reason ?? "UNAUTHORIZED",
+                        context.Response.StatusCode,
+                        ipAddress,
+                        userName ?? "anonymous",
+                        context.Request.Path);
+                }
             }
         }
         catch (Exception ex)
@@ -76,6 +88,25 @@ public class SecurityAuditMiddleware
             
             throw;
         }
+    }
+
+    private string? GetSecurityReason(HttpContext context)
+    {
+        var path = context.Request.Path.Value ?? string.Empty;
+        var isAuthPath = path.StartsWith("/api/v1/auth", StringComparison.OrdinalIgnoreCase);
+        var hasBearer = context.Request.Headers.Authorization.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase);
+
+        if (isAuthPath && path.Contains("login", StringComparison.OrdinalIgnoreCase) && context.Response.StatusCode == StatusCodes.Status401Unauthorized)
+        {
+            return "FAILED_LOGIN";
+        }
+
+        if ((context.Response.StatusCode == StatusCodes.Status401Unauthorized || context.Response.StatusCode == StatusCodes.Status403Forbidden) && hasBearer)
+        {
+            return "TOKEN_VIOLATION";
+        }
+
+        return null;
     }
 
     private async Task LogSecurityEvent(AppDbContext dbContext, AuditLog auditLog)

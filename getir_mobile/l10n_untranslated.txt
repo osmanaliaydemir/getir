@@ -1,17 +1,1 @@
-{
-  "ar": [
-    "categories",
-    "loadingCategories",
-    "categoriesLoadError",
-    "noCategoriesFound",
-    "loadingMerchants",
-    "noMerchantsNearby",
-    "merchantsLoadError",
-    "locationPermissionRequired",
-    "locationError",
-    "nearbyMerchants",
-    "popularProducts",
-    "selectLocation",
-    "searchHint"
-  ]
-}
+{}

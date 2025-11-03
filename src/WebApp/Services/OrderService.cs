@@ -2,7 +2,15 @@ using WebApp.Models;
 
 namespace WebApp.Services
 {
-    public class OrderService
+    public interface IOrderService
+    {
+        Task<List<OrderResponse>> GetUserOrdersAsync(int page = 1, int pageSize = 20);
+        Task<OrderResponse?> GetOrderByIdAsync(Guid orderId);
+        Task<bool> CancelOrderAsync(Guid orderId);
+        Task<bool> RepeatOrderAsync(Guid orderId);
+    }
+
+    public class OrderService : IOrderService
     {
         private readonly ApiClient _apiClient;
 

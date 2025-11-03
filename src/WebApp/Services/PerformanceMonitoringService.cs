@@ -4,7 +4,22 @@ using System.Diagnostics;
 
 namespace WebApp.Services;
 
-public class PerformanceMonitoringService
+public interface IPerformanceMonitoringService
+{
+    void TrackPageView(string pageName, string? userId = null, Dictionary<string, string>? properties = null);
+    void TrackEvent(string eventName, Dictionary<string, string>? properties = null, Dictionary<string, double>? metrics = null);
+    void TrackException(Exception exception, Dictionary<string, string>? properties = null);
+    void TrackDependency(string dependencyName, string commandName, DateTime startTime, TimeSpan duration, bool success);
+    void TrackMetric(string metricName, double value, Dictionary<string, string>? properties = null);
+    void StartTimer(string timerName);
+    TimeSpan StopTimer(string timerName, bool trackAsMetric = true);
+    void TrackApiCall(string apiName, string endpoint, TimeSpan duration, bool success, int? statusCode = null);
+    void TrackUserAction(string action, string? userId = null, Dictionary<string, string>? properties = null);
+    void TrackBusinessMetric(string metricName, double value, string? category = null);
+    void Flush();
+}
+
+public class PerformanceMonitoringService : IPerformanceMonitoringService
 {
     private readonly TelemetryClient _telemetryClient;
     private readonly ILogger<PerformanceMonitoringService> _logger;

@@ -2,7 +2,19 @@ using WebApp.Models;
 
 namespace WebApp.Services;
 
-public class CartService
+public interface ICartService
+{
+    Task<CartResponse?> GetCartAsync();
+    Task<bool> AddToCartAsync(AddToCartRequest request);
+    Task<bool> AddToCartAsync(Guid productId, int quantity);
+    Task<List<CartItemResponse>> GetCartItemsAsync();
+    Task<bool> UpdateCartItemAsync(Guid itemId, int quantity);
+    Task<bool> RemoveFromCartAsync(Guid itemId);
+    Task<bool> ClearCartAsync();
+    Task<OrderResponse?> CreateOrderAsync(CreateOrderRequest request);
+}
+
+public class CartService : ICartService
 {
     private readonly ApiClient _apiClient;
     private readonly AuthService _authService;

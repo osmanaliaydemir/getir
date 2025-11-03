@@ -201,7 +201,7 @@ void main() {
 
         // Assert
         expect(result.isSuccess, true);
-        expect(result.data!.couponCode, 'SAVE10');
+        expect(result.data.couponCode, 'SAVE10');
       });
     });
 

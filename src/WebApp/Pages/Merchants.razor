@@ -1,6 +1,7 @@
 @page "/merchants"
-@inject MerchantService MerchantService
+@inject IMerchantService MerchantService
 @inject NavigationManager Navigation
+@inject ILogger<Merchants> Logger
 
 <PageTitle>Mağazalar - Getir</PageTitle>
 
@@ -253,7 +254,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading merchants: {ex.Message}");
+            Logger.LogError(ex, "Error loading merchants: {Message}", ex.Message);
         }
         finally
         {

@@ -24,25 +24,31 @@ public class ValidationMiddleware
         {
             _logger.LogWarning("Validation failed: {Errors}", ex.Errors);
             
+            var grouped = ex.Errors
+                .GroupBy(e => e.PropertyName)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(e => e.ErrorMessage).ToArray()
+                );
+
             var response = new
             {
-                success = false,
-                message = "Validation failed",
-                errors = ex.Errors.Select(e => new
+                isSuccess = false,
+                data = (object?)null,
+                error = "One or more validation errors occurred",
+                errorCode = "VALIDATION_ERROR",
+                metadata = new Dictionary<string, object>
                 {
-                    field = e.PropertyName,
-                    message = e.ErrorMessage,
-                    attemptedValue = e.AttemptedValue
-                }).ToList()
+                    ["validationErrors"] = grouped,
+                    ["traceId"] = context.TraceIdentifier,
+                    ["requestId"] = context.Items["RequestId"]?.ToString() ?? string.Empty
+                }
             };
 
             context.Response.StatusCode = 400;
             context.Response.ContentType = "application/json";
             
-            await context.Response.WriteAsync(JsonSerializer.Serialize(response, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            }));
+            await context.Response.WriteAsync(JsonSerializer.Serialize(response, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
         }
     }
 }

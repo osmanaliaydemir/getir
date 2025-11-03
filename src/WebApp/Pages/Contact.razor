@@ -1,6 +1,7 @@
 @page "/contact"
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
+@inject IContactService ContactService
 
 <PageTitle>İletişim - Getir</PageTitle>
 
@@ -302,12 +303,17 @@
         {
             isSubmitting = true;
             
-            // TODO: API'ye iletişim formu gönder
-            // var success = await ContactService.SubmitContactFormAsync(contactForm);
+            var request = new ContactFormRequest
+            {
+                FullName = contactForm.FullName,
+                Email = contactForm.Email,
+                Phone = contactForm.Phone,
+                Subject = contactForm.Subject,
+                Message = contactForm.Message,
+                AgreeTerms = contactForm.AgreeTerms
+            };
             
-            // Şimdilik mock işlem
-            await Task.Delay(2000); // Simulate API call
-            var success = true;
+            var success = await ContactService.SubmitContactFormAsync(request);
             
             if (success)
             {

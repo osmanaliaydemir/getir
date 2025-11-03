@@ -36,44 +36,44 @@ class GeneratedLocalizationsAr extends GeneratedLocalizations {
   String get ok => 'حسناً';
 
   @override
-  String get categories => 'Categories';
+  String get categories => 'الفئات';
 
   @override
-  String get loadingCategories => 'Loading categories...';
+  String get loadingCategories => 'جارٍ تحميل الفئات...';
 
   @override
-  String get categoriesLoadError => 'Failed to load categories';
+  String get categoriesLoadError => 'فشل تحميل الفئات';
 
   @override
-  String get noCategoriesFound => 'No categories found yet';
+  String get noCategoriesFound => 'لا توجد فئات حتى الآن';
 
   @override
-  String get loadingMerchants => 'Loading merchants...';
+  String get loadingMerchants => 'جارٍ تحميل المتاجر...';
 
   @override
-  String get noMerchantsNearby => 'No merchants found nearby';
+  String get noMerchantsNearby => 'لا يوجد متاجر قريبة';
 
   @override
-  String get merchantsLoadError => 'Failed to load merchants';
+  String get merchantsLoadError => 'فشل تحميل المتاجر';
 
   @override
-  String get locationPermissionRequired => 'Please grant location permission';
+  String get locationPermissionRequired => 'الرجاء منح إذن الموقع';
 
   @override
   String get locationError =>
-      'Unable to get location. Please check location permissions.';
+      'تعذر الحصول على الموقع. يرجى التحقق من أذونات الموقع.';
 
   @override
-  String get nearbyMerchants => 'Nearby Merchants';
+  String get nearbyMerchants => 'المتاجر القريبة';
 
   @override
-  String get popularProducts => 'Popular Products';
+  String get popularProducts => 'المنتجات الشائعة';
 
   @override
-  String get selectLocation => 'Select Location';
+  String get selectLocation => 'اختر الموقع';
 
   @override
-  String get searchHint => 'Search for stores or products...';
+  String get searchHint => 'ابحث عن متجر أو منتج...';
 
   @override
   String get cart => 'السلة';

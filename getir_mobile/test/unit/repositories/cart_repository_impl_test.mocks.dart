@@ -67,20 +67,20 @@ class MockCartDataSource extends _i1.Mock implements _i3.CartDataSource {
 
   @override
   _i4.Future<_i2.CartItem> addToCart({
+    required String? merchantId,
     required String? productId,
     required int? quantity,
-    String? variantId,
-    List<String>? optionIds,
+    String? notes,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
           #addToCart,
           [],
           {
+            #merchantId: merchantId,
             #productId: productId,
             #quantity: quantity,
-            #variantId: variantId,
-            #optionIds: optionIds,
+            #notes: notes,
           },
         ),
         returnValue: _i4.Future<_i2.CartItem>.value(_FakeCartItem_1(
@@ -89,10 +89,10 @@ class MockCartDataSource extends _i1.Mock implements _i3.CartDataSource {
             #addToCart,
             [],
             {
+              #merchantId: merchantId,
               #productId: productId,
               #quantity: quantity,
-              #variantId: variantId,
-              #optionIds: optionIds,
+              #notes: notes,
             },
           ),
         )),

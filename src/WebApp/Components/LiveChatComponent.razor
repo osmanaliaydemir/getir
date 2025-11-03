@@ -1,0 +1,284 @@
+@using WebApp.Models
+@inject ISignalRService SignalRService
+@inject IAuthService AuthService
+@inject IJSRuntime JSRuntime
+@inject ILogger<LiveChatComponent> Logger
+@implements IDisposable
+
+@if (Show)
+{
+    <div class="live-chat-container position-fixed bottom-0 end-0 m-3" style="width: 350px; max-width: 90vw; z-index: 1050;">
+        <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <div class="chat-status-indicator @(isConnected ? "bg-success" : "bg-secondary") rounded-circle me-2" 
+                         style="width: 10px; height: 10px;"></div>
+                    <h6 class="mb-0">
+                        <i class="bi bi-chat-dots"></i>
+                        Canlı Destek
+                    </h6>
+                </div>
+                <button type="button" class="btn-close btn-close-white" @onclick="Close" aria-label="Close"></button>
+            </div>
+            <div class="card-body p-0" style="height: 400px; display: flex; flex-direction: column;">
+                @if (!isAuthenticated)
+                {
+                    <div class="d-flex align-items-center justify-content-center h-100 p-3">
+                        <div class="text-center">
+                            <i class="bi bi-person-x display-4 text-muted mb-3"></i>
+                            <p class="text-muted">Canlı destek için giriş yapmanız gerekiyor.</p>
+                            <a href="/login" class="btn btn-primary btn-sm">Giriş Yap</a>
+                        </div>
+                    </div>
+                }
+                else if (!isConnected)
+                {
+                    <div class="d-flex align-items-center justify-content-center h-100 p-3">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary mb-3" role="status"></div>
+                            <p class="text-muted">Bağlanılıyor...</p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="chat-messages p-3" style="flex: 1; overflow-y: auto;" @ref="messagesContainer">
+                        @foreach (var message in messages)
+                        {
+                            <div class="mb-3 d-flex @(message.IsFromSupport ? "justify-content-start" : "justify-content-end")">
+                                <div class="chat-message @(message.IsFromSupport ? "bg-light" : "bg-primary text-white") rounded p-2" 
+                                     style="max-width: 75%;">
+                                    @if (message.IsFromSupport)
+                                    {
+                                        <small class="text-muted d-block mb-1">
+                                            <i class="bi bi-person-badge"></i> Destek
+                                        </small>
+                                    }
+                                    <div>@message.Content</div>
+                                    <small class="@(message.IsFromSupport ? "text-muted" : "text-white-50") d-block mt-1" style="font-size: 0.75rem;">
+                                        @message.Timestamp.ToString("HH:mm")
+                                    </small>
+                                </div>
+                            </div>
+                        }
+                        @if (messages.Count == 0 && !isLoadingMessages)
+                        {
+                            <div class="text-center text-muted mt-4">
+                                <i class="bi bi-chat-dots display-6 mb-3"></i>
+                                <p>Merhaba! Size nasıl yardımcı olabilirim?</p>
+                            </div>
+                        }
+                    </div>
+                    <div class="chat-input border-top p-2">
+                        <form @onsubmit="SendMessage" @onsubmit:preventDefault="true">
+                            <div class="input-group">
+                                <input type="text" 
+                                       class="form-control" 
+                                       @bind="messageInput" 
+                                       @bind:event="oninput"
+                                       placeholder="Mesajınızı yazın..." 
+                                       disabled="@isSending"
+                                       @ref="messageInputRef" />
+                                <button type="submit" class="btn btn-primary" disabled="@isSending || string.IsNullOrWhiteSpace(messageInput)">
+                                    @if (isSending)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-send"></i>
+                                    }
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Show { get; set; }
+    [Parameter] public EventCallback<bool> ShowChanged { get; set; }
+
+    private bool isAuthenticated = false;
+    private bool isConnected = false;
+    private bool isLoadingMessages = false;
+    private bool isSending = false;
+    private string messageInput = string.Empty;
+    private List<ChatMessage> messages = new();
+    private ElementReference messagesContainer;
+    private ElementReference messageInputRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        AuthService.AuthenticationStateChanged += OnAuthenticationStateChanged;
+
+        if (isAuthenticated && Show)
+        {
+            await InitializeChat();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && Show && isAuthenticated)
+        {
+            await InitializeChat();
+        }
+
+        if (messages.Count > 0)
+        {
+            await ScrollToBottom();
+        }
+    }
+
+    private async void OnAuthenticationStateChanged()
+    {
+        isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        if (isAuthenticated && Show)
+        {
+            await InitializeChat();
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AuthService.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+        SignalRService.NotificationReceived -= OnNotificationReceived;
+        SignalRService.ConnectionStatusChanged -= OnConnectionStatusChanged;
+    }
+
+    private async Task InitializeChat()
+    {
+        try
+        {
+            SignalRService.NotificationReceived += OnNotificationReceived;
+            SignalRService.ConnectionStatusChanged += OnConnectionStatusChanged;
+
+            if (!SignalRService.IsConnected)
+            {
+                await SignalRService.StartConnectionAsync();
+            }
+
+            isConnected = SignalRService.IsConnected;
+            await LoadChatHistory();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error initializing chat");
+            await JSRuntime.InvokeVoidAsync("showError", "Canlı destek başlatılırken bir hata oluştu.");
+        }
+    }
+
+    private void OnConnectionStatusChanged(string status)
+    {
+        isConnected = status == "Connected";
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnNotificationReceived(string type, object data)
+    {
+        try
+        {
+            if (type == "ChatMessage")
+            {
+                var message = System.Text.Json.JsonSerializer.Deserialize<ChatMessage>(data.ToString() ?? "{}");
+                if (message != null)
+                {
+                    messages.Add(message);
+                    InvokeAsync(StateHasChanged);
+                    InvokeAsync(ScrollToBottom);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error processing chat notification");
+        }
+    }
+
+    private async Task LoadChatHistory()
+    {
+        try
+        {
+            isLoadingMessages = true;
+            // TODO: Load chat history from API
+            // For now, show welcome message
+            messages.Clear();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading chat history");
+        }
+        finally
+        {
+            isLoadingMessages = false;
+        }
+    }
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(messageInput) || isSending || !isConnected)
+            return;
+
+        try
+        {
+            isSending = true;
+            var message = new ChatMessage
+            {
+                Content = messageInput,
+                IsFromSupport = false,
+                Timestamp = DateTime.Now
+            };
+
+            messages.Add(message);
+            messageInput = string.Empty;
+
+            await SignalRService.SendNotificationAsync("SendChatMessage", new
+            {
+                Content = message.Content,
+                Timestamp = message.Timestamp
+            });
+
+            await InvokeAsync(StateHasChanged);
+            await ScrollToBottom();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error sending message");
+            await JSRuntime.InvokeVoidAsync("showError", "Mesaj gönderilirken bir hata oluştu.");
+        }
+        finally
+        {
+            isSending = false;
+        }
+    }
+
+    private async Task ScrollToBottom()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("scrollChatToBottom", messagesContainer);
+        }
+        catch { }
+    }
+
+    private async Task Close()
+    {
+        Show = false;
+        await ShowChanged.InvokeAsync(Show);
+    }
+    
+    private class ChatMessage
+    {
+        public string Content { get; set; } = string.Empty;
+        public bool IsFromSupport { get; set; }
+        public DateTime Timestamp { get; set; }
+    }
+}
+

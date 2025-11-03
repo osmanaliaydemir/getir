@@ -1,8 +1,10 @@
 @page "/orders"
-@inject OrderService OrderService
-@inject AuthService AuthService
+@inject IOrderService OrderService
+@inject IAuthService AuthService
+@inject ISignalRService SignalRService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
+@inject ILogger<Orders> Logger
 @implements IDisposable
 
 <PageTitle>Siparişlerim - Getir</PageTitle>
@@ -192,6 +194,7 @@ else
         if (isAuthenticated)
         {
             await LoadOrders();
+            await InitializeSignalR();
         }
         isLoading = false;
         AuthService.AuthenticationStateChanged += OnAuthenticationStateChanged;
@@ -203,6 +206,7 @@ else
         if (isAuthenticated)
         {
             await LoadOrders();
+            await InitializeSignalR();
         }
         await InvokeAsync(StateHasChanged);
     }
@@ -210,6 +214,74 @@ else
     public void Dispose()
     {
         AuthService.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+        SignalRService.NotificationReceived -= OnSignalROrderUpdate;
+    }
+
+    private async Task InitializeSignalR()
+    {
+        try
+        {
+            SignalRService.NotificationReceived += OnSignalROrderUpdate;
+            
+            if (!SignalRService.IsConnected)
+            {
+                await SignalRService.StartConnectionAsync();
+            }
+
+            // Join orders group for real-time updates
+            await SignalRService.JoinGroupAsync($"orders-{await GetCurrentUserId()}");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error initializing SignalR for orders");
+        }
+    }
+
+    private async Task<string?> GetCurrentUserId()
+    {
+        try
+        {
+            var user = await AuthService.GetCurrentUserAsync();
+            return user?.UserId.ToString();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private void OnSignalROrderUpdate(string type, object data)
+    {
+        try
+        {
+            if (type == "OrderUpdate" || type == "ReceiveOrderUpdate")
+            {
+                var orderJson = System.Text.Json.JsonSerializer.Serialize(data);
+                var orderUpdate = System.Text.Json.JsonSerializer.Deserialize<OrderUpdate>(orderJson);
+                
+                if (orderUpdate != null && orders != null)
+                {
+                    var existingOrder = orders.FirstOrDefault(o => o.Id == orderUpdate.OrderId);
+                    if (existingOrder != null)
+                    {
+                        existingOrder.Status = orderUpdate.NewStatus;
+                        FilterOrders();
+                        InvokeAsync(StateHasChanged);
+                        
+                        Logger.LogInformation("Order {OrderId} status updated to {Status}", orderUpdate.OrderId, orderUpdate.NewStatus);
+                    }
+                    else
+                    {
+                        // Order might be new, reload all orders
+                        InvokeAsync(LoadOrders);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error processing SignalR order update");
+        }
     }
 
     private async Task LoadOrders()
@@ -257,6 +329,11 @@ else
     private void ViewOrderDetails(Guid orderId)
     {
         Navigation.NavigateTo($"/order/{orderId}");
+    }
+
+    private void TrackOrder(Guid orderId)
+    {
+        Navigation.NavigateTo($"/order/{orderId}/tracking");
     }
 
     private async Task CancelOrder(Guid orderId)
@@ -341,5 +418,12 @@ else
             "Cancelled" => "İptal Edildi",
             _ => status
         };
+    }
+
+    private class OrderUpdate
+    {
+        public Guid OrderId { get; set; }
+        public string NewStatus { get; set; } = string.Empty;
+        public DateTime UpdatedAt { get; set; }
     }
 }

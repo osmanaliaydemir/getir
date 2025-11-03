@@ -1,9 +1,11 @@
 @page "/settings"
-@inject UserService UserService
-@inject AuthService AuthService
+@using WebApp.Models
+@inject IUserService UserService
+@inject IAuthService AuthService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
-@inject LocalizationService LocalizationService
+@inject ILocalizationService LocalizationService
+@inject ILogger<Settings> Logger
 @implements IDisposable
 
 <PageTitle>@GetLocalizedText("settings.title") - Getir</PageTitle>
@@ -272,7 +274,7 @@ else
     private bool isAuthenticated = false;
     private bool isLoading = true;
     private bool isSaving = false;
-    private UserSettings settings = new();
+    private UserSettingsResponse settings = new();
     private int totalOrders = 0;
     private decimal totalSpent = 0;
     private int favoriteCount = 0;
@@ -314,25 +316,19 @@ else
         try
         {
             isLoading = true;
-            // TODO: API'den kullanıcı ayarlarını çek
-            // settings = await UserService.GetUserSettingsAsync();
             
-            // Şimdilik mock data
-            settings = new UserSettings
+            var settingsResponse = await UserService.GetUserSettingsAsync();
+            
+            if (settingsResponse != null)
             {
-                FirstName = "Osman Ali",
-                LastName = "Aydemir",
-                Email = "osmanali@example.com",
-                Phone = "+90 555 123 45 67",
-                EmailNotifications = true,
-                SmsNotifications = true,
-                PushNotifications = true,
-                MarketingEmails = false,
-                Language = "tr",
-                Currency = "TRY",
-                ProfileVisibility = true,
-                DataSharing = false
-            };
+                settings = settingsResponse;
+            }
+            else
+            {
+                // API'den veri alınamadı, varsayılan değerler
+                settings = new UserSettingsResponse();
+                await JSRuntime.InvokeVoidAsync("showError", "Ayarlar yüklenirken bir sorun oluştu.");
+            }
 
             // İstatistikleri yükle
             await LoadStatistics();
@@ -340,6 +336,7 @@ else
         catch (Exception ex)
         {
             await JSRuntime.InvokeVoidAsync("showError", "Ayarlar yüklenirken bir hata oluştu: " + ex.Message);
+            settings = new UserSettingsResponse(); // Hata durumunda varsayılan değerler
         }
         finally
         {
@@ -347,25 +344,37 @@ else
         }
     }
 
-    private Task LoadStatistics()
+    private async Task LoadStatistics()
     {
         try
         {
-            // TODO: API'den istatistikleri çek
-            // var stats = await UserService.GetUserStatisticsAsync();
+            var stats = await UserService.GetUserStatisticsAsync();
             
-            // Şimdilik mock data
-            totalOrders = 15;
-            totalSpent = 1250.75m;
-            favoriteCount = 8;
-            addressCount = 3;
+            if (stats != null)
+            {
+                totalOrders = stats.TotalOrders;
+                totalSpent = stats.TotalSpent;
+                favoriteCount = stats.FavoriteCount;
+                addressCount = stats.AddressCount;
+            }
+            else
+            {
+                // API'den veri alınamadı, varsayılan değerler
+                totalOrders = 0;
+                totalSpent = 0;
+                favoriteCount = 0;
+                addressCount = 0;
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading statistics: {ex.Message}");
+            // Hata durumunda varsayılan değerler
+            totalOrders = 0;
+            totalSpent = 0;
+            favoriteCount = 0;
+            addressCount = 0;
+            Logger.LogError(ex, "Error loading statistics: {Message}", ex.Message);
         }
-        
-        return Task.CompletedTask;
     }
 
     private async Task SaveSettings()
@@ -374,30 +383,48 @@ else
         {
             isSaving = true;
             
-            // Dil değişikliğini LocalizationService'e bildir
-            if (!string.IsNullOrEmpty(settings.Language))
+            // UpdateUserSettingsRequest oluştur
+            var request = new UpdateUserSettingsRequest
             {
-                LocalizationService.SetCulture(settings.Language);
-                
-                // HTML lang ve dir attribute'larını güncelle
-                await JSRuntime.InvokeVoidAsync("updateLanguageAttributes", settings.Language);
-                
-                Console.WriteLine($"Settings - Language changed to: {settings.Language}");
-            }
+                FirstName = settings.FirstName,
+                LastName = settings.LastName,
+                Phone = settings.Phone,
+                EmailNotifications = settings.EmailNotifications,
+                SmsNotifications = settings.SmsNotifications,
+                PushNotifications = settings.PushNotifications,
+                MarketingEmails = settings.MarketingEmails,
+                Language = settings.Language,
+                Currency = settings.Currency,
+                ProfileVisibility = settings.ProfileVisibility,
+                DataSharing = settings.DataSharing
+            };
             
-            // TODO: API'ye ayarları kaydet
-            // var success = await UserService.UpdateUserSettingsAsync(settings);
-            
-            // Şimdilik mock işlem
-            var success = true;
+            var success = await UserService.UpdateUserSettingsAsync(request);
             
             if (success)
             {
+                // Dil değişikliğini LocalizationService'e bildir
+                if (!string.IsNullOrEmpty(settings.Language))
+                {
+                    LocalizationService.SetCulture(settings.Language);
+                    
+                    // HTML lang ve dir attribute'larını güncelle
+                    await JSRuntime.InvokeVoidAsync("updateLanguageAttributes", settings.Language);
+                    
+                    Logger.LogDebug("Settings - Language changed to: {Language}", settings.Language);
+                }
+                
                 await JSRuntime.InvokeVoidAsync("showSuccess", "Ayarlar başarıyla kaydedildi!");
                 
-                // Sayfayı yenile ki yeni dil aktif olsun
-                await Task.Delay(1000); // Kullanıcı mesajı görebilsin
-                Navigation.NavigateTo("/settings", forceLoad: true);
+                // Ayarları yeniden yükle ki API'den güncel veriler gelsin
+                await LoadSettings();
+                
+                // Sayfayı yenile ki yeni dil aktif olsun (eğer dil değiştiyse)
+                if (!string.IsNullOrEmpty(settings.Language))
+                {
+                    await Task.Delay(1000); // Kullanıcı mesajı görebilsin
+                    Navigation.NavigateTo("/settings", forceLoad: true);
+                }
             }
             else
             {
@@ -415,21 +442,3 @@ else
     }
 }
 
-@* Settings Model *@
-@code {
-    public class UserSettings
-    {
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Phone { get; set; } = string.Empty;
-        public bool EmailNotifications { get; set; } = true;
-        public bool SmsNotifications { get; set; } = true;
-        public bool PushNotifications { get; set; } = true;
-        public bool MarketingEmails { get; set; } = false;
-        public string Language { get; set; } = "tr";
-        public string Currency { get; set; } = "TRY";
-        public bool ProfileVisibility { get; set; } = true;
-        public bool DataSharing { get; set; } = false;
-    }
-}

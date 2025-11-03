@@ -96,7 +96,17 @@ public class PaymentService : BaseService, IPaymentService
 
         if (payment == null)
         {
-            return Result.Fail("Payment not found", "NOT_FOUND_PAYMENT");
+            throw new Getir.Application.Common.Exceptions.EntityNotFoundException("Payment", paymentId);
+        }
+
+        // Early fail for declined scenarios
+        if (request.Status == PaymentStatus.Failed)
+        {
+            var reason = request.FailureReason ?? request.Notes ?? request.ExternalResponse;
+            if (!string.IsNullOrWhiteSpace(reason) && reason.Contains("declined", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new Getir.Application.Common.Exceptions.PaymentDeclinedException("DECLINED", reason);
+            }
         }
 
         // Update payment status

@@ -1,7 +1,9 @@
 @page "/checkout"
-@inject CartService CartService
-@inject UserService UserService
-@inject AuthService AuthService
+@using WebApp.Models
+@inject ICartService CartService
+@inject IUserService UserService
+@inject IAuthService AuthService
+@inject ILogger<Checkout> Logger
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 
@@ -275,6 +277,12 @@ else
     </div>
 }
 
+<!-- Address Modal -->
+<AddressModal Show="@showAddressModal" 
+              ShowChanged="@((bool value) => showAddressModal = value)"
+              Address="@null"
+              OnAddressSaved="@OnAddressSaved" />
+
 @code {
     private bool isAuthenticated = false;
     private bool isLoading = true;
@@ -283,6 +291,7 @@ else
     private CartResponse? cart;
     private List<AddressResponse>? addresses;
     private CreateOrderRequest checkoutRequest = new();
+    private bool showAddressModal = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -320,7 +329,7 @@ else
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading checkout data: {ex.Message}");
+            Logger.LogError(ex, "Error loading checkout data: {Message}", ex.Message);
         }
     }
 
@@ -393,7 +402,29 @@ else
 
     private void ShowAddAddressModal()
     {
-        // TODO: Implement add address modal
-        JSRuntime.InvokeVoidAsync("alert", "Adres ekleme özelliği yakında!");
+        showAddressModal = true;
+    }
+
+    private async Task OnAddressSaved()
+    {
+        // Reload addresses after saving
+        addresses = await UserService.GetUserAddressesAsync();
+        
+        // Set the newly added address as selected if it's the only one
+        if (addresses?.Count == 1)
+        {
+            checkoutRequest.DeliveryAddressId = addresses.First().Id;
+        }
+        // Or set default address if available
+        else if (addresses != null)
+        {
+            var defaultAddress = addresses.FirstOrDefault(a => a.IsDefault);
+            if (defaultAddress != null)
+            {
+                checkoutRequest.DeliveryAddressId = defaultAddress.Id;
+            }
+        }
+        
+        await InvokeAsync(StateHasChanged);
     }
 }

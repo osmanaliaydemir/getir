@@ -428,3 +428,61 @@ public class DataIntegrityException : ApplicationException
         TableName = tableName;
     }
 }
+
+/// <summary>
+/// Ödeme reddedildiğinde fırlatılan exception
+/// </summary>
+public class PaymentDeclinedException : ApplicationException
+{
+    /// <summary>
+    /// Ödeme sağlayıcısı hata kodu
+    /// </summary>
+    public string ProviderCode { get; }
+
+    /// <summary>
+    /// PaymentDeclinedException constructor
+    /// </summary>
+    /// <param name="providerCode">Sağlayıcı kodu</param>
+    /// <param name="customMessage">Özel mesaj</param>
+    /// <param name="details">Detaylar</param>
+    public PaymentDeclinedException(string providerCode, string? customMessage = null, object? details = null)
+        : base(customMessage ?? "Payment was declined by the provider", "PAYMENT_DECLINED", new { ProviderCode = providerCode, Details = details })
+    {
+        ProviderCode = providerCode;
+    }
+}
+
+/// <summary>
+/// Geçersiz durum geçişinde (state machine) fırlatılan exception
+/// </summary>
+public class InvalidStateTransitionException : ApplicationException
+{
+    public string EntityType { get; }
+    public object EntityId { get; }
+    public string FromState { get; }
+    public string ToState { get; }
+
+    public InvalidStateTransitionException(string entityType, object entityId, string fromState, string toState, string? customMessage = null)
+        : base(customMessage ?? $"Invalid state transition from '{fromState}' to '{toState}' for {entityType} '{entityId}'", "INVALID_STATE_TRANSITION",
+            new { EntityType = entityType, EntityId = entityId, From = fromState, To = toState })
+    {
+        EntityType = entityType;
+        EntityId = entityId;
+        FromState = fromState;
+        ToState = toState;
+    }
+}
+
+/// <summary>
+/// Yetki rolü/talebi karşılanmadığında fırlatılan exception (403)
+/// </summary>
+public class ForbiddenException : ApplicationException
+{
+    public string Reason { get; }
+
+    public ForbiddenException(string reason, string? customMessage = null)
+        : base(customMessage ?? "You do not have permission to perform this action", "FORBIDDEN", new { Reason = reason })
+    {
+        Reason = reason;
+    }
+}

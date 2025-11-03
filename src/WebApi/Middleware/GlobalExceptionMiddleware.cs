@@ -113,14 +113,23 @@ public class GlobalExceptionMiddleware
         context.Response.StatusCode = (int)exception.ToHttpStatusCode();
         context.Response.ContentType = "application/json";
 
-        // Use standard ApiResponse format
-        var response = ApiResponse.Fail(exception.Message, exception.ErrorCode);
-        
-        var json = JsonSerializer.Serialize(response, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        var traceId = context.TraceIdentifier;
+        var requestId = context.Items["RequestId"]?.ToString() ?? string.Empty;
 
+        var response = new
+        {
+            isSuccess = false,
+            data = (object?)null,
+            error = exception.Message,
+            errorCode = exception.ErrorCode,
+            metadata = new Dictionary<string, object>
+            {
+                ["traceId"] = traceId,
+                ["requestId"] = requestId
+            }
+        };
+
+        var json = JsonSerializer.Serialize(response, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         await context.Response.WriteAsync(json);
     }
 
@@ -166,14 +175,23 @@ public class GlobalExceptionMiddleware
                 break;
         }
 
-        // Use standard ApiResponse format
-        var response = ApiResponse.Fail(errorMessage, errorCode);
+        var traceId = context.TraceIdentifier;
+        var requestId = context.Items["RequestId"]?.ToString() ?? string.Empty;
 
-        var json = JsonSerializer.Serialize(response, new JsonSerializerOptions
+        var response = new
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+            isSuccess = false,
+            data = (object?)null,
+            error = errorMessage,
+            errorCode,
+            metadata = new Dictionary<string, object>
+            {
+                ["traceId"] = traceId,
+                ["requestId"] = requestId
+            }
+        };
 
+        var json = JsonSerializer.Serialize(response, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         await context.Response.WriteAsync(json);
     }
 }

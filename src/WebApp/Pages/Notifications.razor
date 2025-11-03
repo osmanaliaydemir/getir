@@ -1,7 +1,11 @@
 @page "/notifications"
-@inject AuthService AuthService
+@using WebApp.Models
+@inject IAuthService AuthService
+@inject INotificationService NotificationService
+@inject ISignalRService SignalRService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
+@inject ILogger<Notifications> Logger
 @implements IDisposable
 
 <PageTitle>Bildirimler - Getir</PageTitle>
@@ -149,6 +153,7 @@ else
         if (isAuthenticated)
         {
             await LoadNotifications();
+            await InitializeSignalR();
         }
         isLoading = false;
         AuthService.AuthenticationStateChanged += OnAuthenticationStateChanged;
@@ -160,6 +165,7 @@ else
         if (isAuthenticated)
         {
             await LoadNotifications();
+            await InitializeSignalR();
         }
         await InvokeAsync(StateHasChanged);
     }
@@ -167,6 +173,66 @@ else
     public void Dispose()
     {
         AuthService.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+        SignalRService.NotificationReceived -= OnSignalRNotificationReceived;
+    }
+
+    private async Task InitializeSignalR()
+    {
+        try
+        {
+            SignalRService.NotificationReceived += OnSignalRNotificationReceived;
+            
+            if (!SignalRService.IsConnected)
+            {
+                await SignalRService.StartConnectionAsync();
+            }
+
+            // Join notifications group
+            await SignalRService.JoinGroupAsync($"notifications-{await GetCurrentUserId()}");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error initializing SignalR for notifications");
+        }
+    }
+
+    private async Task<string?> GetCurrentUserId()
+    {
+        try
+        {
+            var user = await AuthService.GetCurrentUserAsync();
+            return user?.UserId.ToString();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private void OnSignalRNotificationReceived(string type, object data)
+    {
+        try
+        {
+            if (type == "Notification" || type == "ReceiveNotification")
+            {
+                var notificationJson = System.Text.Json.JsonSerializer.Serialize(data);
+                var notification = System.Text.Json.JsonSerializer.Deserialize<NotificationResponse>(notificationJson);
+                
+                if (notification != null)
+                {
+                    notifications ??= new List<NotificationResponse>();
+                    notifications.Insert(0, notification);
+                    InvokeAsync(StateHasChanged);
+                    
+                    // Show browser notification if permission granted
+                    JSRuntime.InvokeVoidAsync("showBrowserNotification", notification.Title, notification.Message);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error processing SignalR notification");
+        }
     }
 
     private async Task LoadNotifications()
@@ -174,50 +240,12 @@ else
         try
         {
             isLoading = true;
-            // TODO: API'den bildirimleri çek
-            // notifications = await NotificationService.GetUserNotificationsAsync();
-            
-            // Şimdilik mock data
-            notifications = new List<NotificationResponse>
-            {
-                new NotificationResponse
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Siparişiniz Hazırlanıyor",
-                    Message = "#12345 numaralı siparişiniz hazırlanmaya başlandı. Yakında teslim edilecek.",
-                    Type = "Order",
-                    IsRead = false,
-                    CreatedAt = DateTime.Now.AddMinutes(-30),
-                    ActionUrl = "/orders",
-                    ActionText = "Siparişi Gör"
-                },
-                new NotificationResponse
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Yeni Kampanya!",
-                    Message = "Market ürünlerinde %20 indirim fırsatı! Hemen alışverişe başla.",
-                    Type = "Promotion",
-                    IsRead = true,
-                    CreatedAt = DateTime.Now.AddHours(-2),
-                    ActionUrl = "/merchants",
-                    ActionText = "Alışverişe Başla"
-                },
-                new NotificationResponse
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Teslimat Tamamlandı",
-                    Message = "#12345 numaralı siparişiniz başarıyla teslim edildi. Teşekkürler!",
-                    Type = "Delivery",
-                    IsRead = true,
-                    CreatedAt = DateTime.Now.AddDays(-1),
-                    ActionUrl = "/orders",
-                    ActionText = "Siparişi Gör"
-                }
-            };
+            notifications = await NotificationService.GetUserNotificationsAsync();
         }
         catch (Exception ex)
         {
             await JSRuntime.InvokeVoidAsync("showError", "Bildirimler yüklenirken bir hata oluştu: " + ex.Message);
+            notifications = new List<NotificationResponse>();
         }
         finally
         {
@@ -229,15 +257,22 @@ else
     {
         try
         {
-            // TODO: API'de bildirimi okundu olarak işaretle
-            // var success = await NotificationService.MarkAsReadAsync(notificationId);
+            var success = await NotificationService.MarkAsReadAsync(notificationId);
             
-            // Şimdilik mock işlem
-            var notification = notifications?.FirstOrDefault(n => n.Id == notificationId);
-            if (notification != null)
+            if (success)
             {
-                notification.IsRead = true;
+                // UI'ı güncelle
+                var notification = notifications?.FirstOrDefault(n => n.Id == notificationId);
+                if (notification != null)
+                {
+                    notification.IsRead = true;
+                    await InvokeAsync(StateHasChanged);
+                }
                 await JSRuntime.InvokeVoidAsync("showSuccess", "Bildirim okundu olarak işaretlendi!");
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Bildirim işaretlenirken bir hata oluştu.");
             }
         }
         catch (Exception ex)
@@ -250,17 +285,24 @@ else
     {
         try
         {
-            // TODO: API'de tüm bildirimleri okundu olarak işaretle
-            // var success = await NotificationService.MarkAllAsReadAsync();
+            var success = await NotificationService.MarkAllAsReadAsync();
             
-            // Şimdilik mock işlem
-            if (notifications != null)
+            if (success)
             {
-                foreach (var notification in notifications)
+                // UI'ı güncelle
+                if (notifications != null)
                 {
-                    notification.IsRead = true;
+                    foreach (var notification in notifications)
+                    {
+                        notification.IsRead = true;
+                    }
+                    await InvokeAsync(StateHasChanged);
                 }
                 await JSRuntime.InvokeVoidAsync("showSuccess", "Tüm bildirimler okundu olarak işaretlendi!");
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Bildirimler işaretlenirken bir hata oluştu.");
             }
         }
         catch (Exception ex)
@@ -276,12 +318,19 @@ else
             var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Bu bildirimi silmek istediğinizden emin misiniz?");
             if (!confirmed) return;
 
-            // TODO: API'den bildirimi sil
-            // var success = await NotificationService.DeleteNotificationAsync(notificationId);
+            var success = await NotificationService.DeleteNotificationAsync(notificationId);
             
-            // Şimdilik mock işlem
-            notifications?.RemoveAll(n => n.Id == notificationId);
-            await JSRuntime.InvokeVoidAsync("showSuccess", "Bildirim silindi!");
+            if (success)
+            {
+                // UI'dan kaldır
+                notifications?.RemoveAll(n => n.Id == notificationId);
+                await InvokeAsync(StateHasChanged);
+                await JSRuntime.InvokeVoidAsync("showSuccess", "Bildirim silindi!");
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Bildirim silinirken bir hata oluştu.");
+            }
         }
         catch (Exception ex)
         {
@@ -296,12 +345,19 @@ else
             var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Tüm bildirimleri silmek istediğinizden emin misiniz?");
             if (!confirmed) return;
 
-            // TODO: API'den tüm bildirimleri sil
-            // var success = await NotificationService.ClearAllNotificationsAsync();
+            var success = await NotificationService.ClearAllNotificationsAsync();
             
-            // Şimdilik mock işlem
-            notifications?.Clear();
-            await JSRuntime.InvokeVoidAsync("showSuccess", "Tüm bildirimler temizlendi!");
+            if (success)
+            {
+                // UI'dan temizle
+                notifications?.Clear();
+                await InvokeAsync(StateHasChanged);
+                await JSRuntime.InvokeVoidAsync("showSuccess", "Tüm bildirimler temizlendi!");
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showError", "Bildirimler temizlenirken bir hata oluştu.");
+            }
         }
         catch (Exception ex)
         {
@@ -336,17 +392,3 @@ else
     }
 }
 
-@* Notification Model *@
-@code {
-    public class NotificationResponse
-    {
-        public Guid Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string Message { get; set; } = string.Empty;
-        public string Type { get; set; } = string.Empty;
-        public bool IsRead { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public string? ActionUrl { get; set; }
-        public string? ActionText { get; set; }
-    }
-}

@@ -157,7 +157,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               child: IconButton(
                 icon: const Icon(Icons.favorite_border, color: Colors.white),
                 onPressed: () {
-                  // TODO: Add to favorites
+                  // TODO: Implement add to favorites functionality
+                  // Requires FavoritesBloc integration
                 },
               ),
             ),

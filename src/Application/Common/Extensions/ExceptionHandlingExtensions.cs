@@ -18,6 +18,7 @@ public static class ExceptionHandlingExtensions
         {
             EntityNotFoundException => HttpStatusCode.NotFound,
             UnauthorizedException => HttpStatusCode.Unauthorized,
+            ForbiddenException => HttpStatusCode.Forbidden,
             ValidationException => HttpStatusCode.BadRequest,
             BusinessRuleViolationException => HttpStatusCode.BadRequest,
             DuplicateResourceException => HttpStatusCode.Conflict,
@@ -25,6 +26,7 @@ public static class ExceptionHandlingExtensions
             ResourceUnavailableException => HttpStatusCode.ServiceUnavailable,
             RateLimitExceededException => HttpStatusCode.TooManyRequests,
             ExternalServiceException => HttpStatusCode.BadGateway,
+            PaymentDeclinedException => (HttpStatusCode)402,
             ConfigurationException => HttpStatusCode.InternalServerError,
             DataIntegrityException => HttpStatusCode.BadRequest,
             _ => HttpStatusCode.InternalServerError
@@ -42,9 +44,11 @@ public static class ExceptionHandlingExtensions
             BusinessRuleViolationException => false, // Business rule violations are expected
             EntityNotFoundException => false, // Not found is expected
             UnauthorizedException => false, // Unauthorized is expected
+            ForbiddenException => false,
             DuplicateResourceException => false, // Duplicate is expected
             ConcurrencyConflictException => false, // Concurrency conflicts are expected
             RateLimitExceededException => false, // Rate limiting is expected
+            PaymentDeclinedException => false,
             _ => true // All other exceptions should be logged as errors
         };
     }
@@ -72,6 +76,7 @@ public static class ExceptionHandlingExtensions
         {
             EntityNotFoundException ex => $"The requested {ex.EntityType.ToLower()} was not found.",
             UnauthorizedException => "You are not authorized to perform this action.",
+            ForbiddenException => "You don't have permission to perform this action.",
             ValidationException => "The provided data is invalid. Please check your input and try again.",
             BusinessRuleViolationException ex => ex.Message,
             DuplicateResourceException ex => $"A {ex.ResourceType.ToLower()} with this {ex.FieldName.ToLower()} already exists.",
@@ -80,6 +85,7 @@ public static class ExceptionHandlingExtensions
             RateLimitExceededException ex => $"Too many requests. Please try again in {ex.ResetTime.TotalSeconds} seconds.",
             System.TimeoutException => $"The operation timed out. Please try again.",
             ExternalServiceException ex => $"External service '{ex.ServiceName}' is temporarily unavailable. Please try again later.",
+            PaymentDeclinedException => "Payment was declined. Please try another method or contact support.",
             ConfigurationException => "A configuration error occurred. Please contact support.",
             DataIntegrityException => "A data integrity error occurred. Please contact support.",
             _ => "An unexpected error occurred. Please try again or contact support if the problem persists."

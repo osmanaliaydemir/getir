@@ -1,6 +1,7 @@
 @page "/help"
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
+@inject IHelpService HelpService
 
 <PageTitle>Yardım - Getir</PageTitle>
 
@@ -25,9 +26,16 @@
                         Yardım Arama
                     </h4>
                     <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Sorunuzu yazın..." @bind="searchQuery" @onkeypress="@(async (e) => { if (e.Key == "Enter") await SearchHelp(); })">
-                        <button class="btn btn-primary" @onclick="SearchHelp">
-                            <i class="bi bi-search"></i>
+                        <input type="text" class="form-control" placeholder="Sorunuzu yazın..." @bind="searchQuery" @onkeypress="@(async (e) => { if (e.Key == "Enter") await SearchHelp(); })" disabled="@isSearching">
+                        <button class="btn btn-primary" @onclick="SearchHelp" disabled="@isSearching">
+                            @if (isSearching)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-search"></i>
+                            }
                             Ara
                         </button>
                     </div>
@@ -60,6 +68,36 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Arama Sonuçları -->
+            @if (searchResults.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="bi bi-search"></i>
+                            Arama Sonuçları: "@searchQuery"
+                        </h4>
+                        <button class="btn btn-outline-secondary btn-sm" @onclick="@(() => { searchResults = new List<HelpArticle>(); searchQuery = string.Empty; })">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            @foreach (var article in searchResults)
+                            {
+                                <div class="list-group-item list-group-item-action" @onclick="@(() => SelectArticle(article))">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">@article.Title</h6>
+                                        <small class="text-muted">@article.ViewCount görüntüleme</small>
+                                    </div>
+                                    <p class="mb-1 text-muted">@article.Summary</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
 
             <!-- Seçili Kategori Makaleleri -->
             @if (selectedCategory != null)
@@ -112,12 +150,26 @@
                                     @selectedArticle.ViewCount görüntüleme
                                 </small>
                                 <div>
-                                    <button class="btn btn-outline-primary btn-sm me-2" @onclick="@(() => RateArticle(selectedArticle.Id, true))">
-                                        <i class="bi bi-hand-thumbs-up"></i>
+                                    <button class="btn btn-outline-primary btn-sm me-2" @onclick="@(() => RateArticle(selectedArticle.Id, true))" disabled="@isRatingArticle">
+                                        @if (isRatingArticle)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-hand-thumbs-up"></i>
+                                        }
                                         Yararlı (@selectedArticle.HelpfulCount)
                                     </button>
-                                    <button class="btn btn-outline-secondary btn-sm" @onclick="@(() => RateArticle(selectedArticle.Id, false))">
-                                        <i class="bi bi-hand-thumbs-down"></i>
+                                    <button class="btn btn-outline-secondary btn-sm" @onclick="@(() => RateArticle(selectedArticle.Id, false))" disabled="@isRatingArticle">
+                                        @if (isRatingArticle)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-hand-thumbs-down"></i>
+                                        }
                                         Yararsız (@selectedArticle.NotHelpfulCount)
                                     </button>
                                 </div>
@@ -265,6 +317,9 @@
     private List<HelpCategory> helpCategories = new();
     private List<HelpArticle> popularArticles = new();
     private List<FAQ> faqs = new();
+    private List<HelpArticle> searchResults = new();
+    private bool isSearching = false;
+    private bool isRatingArticle = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -393,8 +448,45 @@
             return;
         }
 
-        // TODO: API'de arama yap
-        await JSRuntime.InvokeVoidAsync("showInfo", $"'{searchQuery}' için arama yapılıyor...");
+        try
+        {
+            isSearching = true;
+            var results = await HelpService.SearchHelpArticlesAsync(searchQuery, 1, 10);
+            
+            if (results.Items?.Any() == true)
+            {
+                searchResults = results.Items.Select(a => new HelpArticle
+                {
+                    Id = a.Id,
+                    Title = a.Title,
+                    Summary = a.Summary,
+                    Content = a.Content,
+                    ViewCount = a.ViewCount,
+                    HelpfulCount = a.HelpfulCount,
+                    NotHelpfulCount = a.NotHelpfulCount,
+                    Category = a.Category
+                }).ToList();
+                
+                selectedCategory = null;
+                selectedArticle = null;
+                
+                await JSRuntime.InvokeVoidAsync("showSuccess", $"{results.Total} sonuç bulundu.");
+            }
+            else
+            {
+                searchResults = new List<HelpArticle>();
+                await JSRuntime.InvokeVoidAsync("showInfo", "Arama sonucu bulunamadı. Lütfen farklı bir terim deneyin.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Arama yapılırken bir hata oluştu: " + ex.Message);
+            searchResults = new List<HelpArticle>();
+        }
+        finally
+        {
+            isSearching = false;
+        }
     }
 
     private void SelectCategory(int categoryId)
@@ -411,9 +503,41 @@
 
     private async Task RateArticle(int articleId, bool isHelpful)
     {
-        // TODO: API'ye değerlendirme gönder
-        await JSRuntime.InvokeVoidAsync("showSuccess", 
-            isHelpful ? "Makaleyi yararlı bulduğunuz için teşekkürler!" : "Geri bildiriminiz için teşekkürler!");
+        if (selectedArticle == null) return;
+
+        try
+        {
+            isRatingArticle = true;
+            var success = await HelpService.RateArticleAsync(articleId, isHelpful);
+            
+            if (success)
+            {
+                // UI'ı güncelle
+                if (isHelpful)
+                {
+                    selectedArticle.HelpfulCount++;
+                }
+                else
+                {
+                    selectedArticle.NotHelpfulCount++;
+                }
+                
+                await JSRuntime.InvokeVoidAsync("showSuccess", 
+                    isHelpful ? "Makaleyi yararlı bulduğunuz için teşekkürler!" : "Geri bildiriminiz için teşekkürler!");
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showWarning", "Değerlendirme gönderilirken bir hata oluştu.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("showError", "Bir hata oluştu: " + ex.Message);
+        }
+        finally
+        {
+            isRatingArticle = false;
+        }
     }
 
     private async Task StartLiveChat()

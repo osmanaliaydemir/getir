@@ -34,7 +34,8 @@ void main() {
         when(
           mockAuthService.login(any, any),
         ).thenAnswer((_) async => Result.success(MockData.testUser));
-        when(mockAnalytics.logLogin()).thenAnswer((_) async => {});
+        when(mockAnalytics.logLogin(method: anyNamed('method'))).thenAnswer((_) async {});
+        when(mockAnalytics.setUserId(any)).thenAnswer((_) async {});
         return bloc;
       },
       act: (bloc) => bloc.add(
@@ -52,6 +53,7 @@ void main() {
         when(mockAuthService.login(any, any)).thenAnswer(
           (_) async => Result.failure(const UnauthorizedException()),
         );
+        when(mockAnalytics.logError(error: any, reason: anyNamed('reason'))).thenAnswer((_) async {});
         return bloc;
       },
       act: (bloc) => bloc.add(
@@ -75,7 +77,8 @@ void main() {
             phoneNumber: anyNamed('phoneNumber'),
           ),
         ).thenAnswer((_) async => Result.success(MockData.testUser));
-        when(mockAnalytics.logSignUp()).thenAnswer((_) async => {});
+        when(mockAnalytics.logSignUp(method: anyNamed('method'))).thenAnswer((_) async {});
+        when(mockAnalytics.setUserId(any)).thenAnswer((_) async {});
         return bloc;
       },
       act: (bloc) => bloc.add(
@@ -92,9 +95,9 @@ void main() {
     blocTest<AuthBloc, AuthState>(
       'Logout emits [AuthLoading, AuthUnauthenticated] when logout succeeds',
       build: () {
-        when(
-          mockAuthService.logout(),
-        ).thenAnswer((_) async => Result.success(null));
+        when(mockAuthService.logout()).thenAnswer((_) async => Result.success(null));
+        when(mockAnalytics.logLogout()).thenAnswer((_) async {});
+        when(mockAnalytics.setUserId(any)).thenAnswer((_) async {});
         return bloc;
       },
       act: (bloc) => bloc.add(AuthLogoutRequested()),

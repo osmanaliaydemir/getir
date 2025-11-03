@@ -2,7 +2,21 @@ using Microsoft.AspNetCore.Components.Web;
 
 namespace WebApp.Services;
 
-public class SeoService
+public interface ISeoService
+{
+    Dictionary<string, string> GetDefaultMetaTags();
+    Dictionary<string, string> GetOpenGraphTags(string? title = null, string? description = null, string? image = null, string? url = null);
+    Dictionary<string, string> GetProductMetaTags(string productName, string productDescription, decimal price, string? imageUrl = null);
+    Dictionary<string, string> GetMerchantMetaTags(string merchantName, string merchantDescription, string? imageUrl = null);
+    Dictionary<string, string> GetPageMetaTags(string pageTitle, string pageDescription, string? imageUrl = null);
+    string GenerateStructuredData(string type, Dictionary<string, object> data);
+    string GenerateProductStructuredData(string productName, string description, decimal price, string? imageUrl = null, string? brand = null);
+    string GenerateOrganizationStructuredData();
+    string GenerateBreadcrumbStructuredData(List<(string Name, string Url)> breadcrumbs);
+    string GenerateLocalBusinessStructuredData(string businessName, string address, string phone, string? openingHours = null);
+}
+
+public class SeoService : ISeoService
 {
     private readonly ILogger<SeoService> _logger;
 

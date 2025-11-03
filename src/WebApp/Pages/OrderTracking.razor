@@ -1,0 +1,511 @@
+@page "/order/{OrderId:guid}/tracking"
+@using WebApp.Models
+@inject IOrderService OrderService
+@inject IAuthService AuthService
+@inject ISignalRService SignalRService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@inject ILogger<OrderTracking> Logger
+@implements IDisposable
+
+<PageTitle>Sipariş Takibi - Getir</PageTitle>
+
+@if (!isAuthenticated)
+{
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center">
+                <div class="card">
+                    <div class="card-body py-5">
+                        <i class="bi bi-person-x display-1 text-warning mb-4"></i>
+                        <h3>Giriş Yapın</h3>
+                        <p class="text-muted mb-4">
+                            Sipariş takibi için giriş yapmanız gerekiyor.
+                        </p>
+                        <a href="/login" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            Giriş Yap
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else if (isLoading)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Yükleniyor...</span>
+        </div>
+        <p class="mt-3">Sipariş bilgileri yükleniyor...</p>
+    </div>
+}
+else if (order == null)
+{
+    <div class="container py-5">
+        <div class="text-center">
+            <i class="bi bi-exclamation-triangle display-1 text-warning mb-4"></i>
+            <h3>Sipariş Bulunamadı</h3>
+            <p class="text-muted mb-4">Bu siparişe erişim yetkiniz yok veya sipariş mevcut değil.</p>
+            <a href="/orders" class="btn btn-primary">Siparişlerime Dön</a>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
+                <li class="breadcrumb-item"><a href="/orders">Siparişlerim</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Sipariş Takibi</li>
+            </ol>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">
+                                    <i class="bi bi-box-seam"></i>
+                                    Sipariş #@order.OrderNumber
+                                </h5>
+                                <small>@order.OrderDate.ToString("dd.MM.yyyy HH:mm")</small>
+                            </div>
+                            <span class="badge bg-light text-dark fs-6">
+                                @GetOrderStatusText(order.Status)
+                                @if (!string.IsNullOrEmpty(currentEta))
+                                {
+                                    <span class="ms-2 text-muted small" id="eta-@OrderId">(~@currentEta)</span>
+                                }
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Order Status Timeline -->
+                        <div class="order-timeline mb-4">
+                            <h6 class="mb-3">Sipariş Durumu</h6>
+                            <div class="timeline">
+                                <div class="timeline-item @(IsStatusActive("Pending") ? "active" : IsStatusCompleted("Pending") ? "completed" : "")">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h6>Beklemede</h6>
+                                        <p class="text-muted small mb-0">Siparişiniz alındı ve onay bekliyor</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-item @(IsStatusActive("Confirmed") ? "active" : IsStatusCompleted("Confirmed") ? "completed" : "")">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h6>Onaylandı</h6>
+                                        <p class="text-muted small mb-0">Siparişiniz onaylandı</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-item @(IsStatusActive("Preparing") ? "active" : IsStatusCompleted("Preparing") ? "completed" : "")">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h6>Hazırlanıyor</h6>
+                                        <p class="text-muted small mb-0">Siparişiniz hazırlanıyor</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-item @(IsStatusActive("OnTheWay") ? "active" : IsStatusCompleted("OnTheWay") ? "completed" : "")">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h6>Yolda</h6>
+                                        <p class="text-muted small mb-0">Kuryemiz yola çıktı</p>
+                                        @if (order.Status == "OnTheWay" && isTracking)
+                                        {
+                                            <div class="alert alert-info mt-2 mb-0">
+                                                <i class="bi bi-geo-alt"></i>
+                                                <strong>Kurye konumu takip ediliyor</strong>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="timeline-item @(IsStatusActive("Delivered") ? "active" : IsStatusCompleted("Delivered") ? "completed" : "")">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h6>Teslim Edildi</h6>
+                                        <p class="text-muted small mb-0">Siparişiniz teslim edildi</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Live Map -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0">Canlı Harita</h6>
+                                <div class="d-flex gap-2">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="followSwitch" @onchange="OnFollowSwitchChanged" checked />
+                                        <label class="form-check-label" for="followSwitch">Kuryeyi takip et</label>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="trailSwitch" @onchange="OnTrailSwitchChanged" checked />
+                                        <label class="form-check-label" for="trailSwitch">İz göster</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="map-@OrderId" style="height: 320px; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0;"></div>
+                        </div>
+
+                        <!-- Order Details -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Sipariş Detayları</h6>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2">
+                                        <strong>Mağaza:</strong> @order.Merchant.Name
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>Teslimat Adresi:</strong> @order.DeliveryAddress
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>Ödeme Yöntemi:</strong> @order.PaymentMethod
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>Toplam Tutar:</strong> ₺@order.TotalAmount.ToString("F2")
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Sipariş Öğeleri</h6>
+                                @foreach (var item in order.Items)
+                                {
+                                    <div class="d-flex align-items-center mb-2 p-2 bg-light rounded">
+                                        <img src="@(string.IsNullOrEmpty(item.ProductImageUrl) ? "https://via.placeholder.com/50x50/007bff/ffffff?text=" + Uri.EscapeDataString(item.ProductName) : item.ProductImageUrl)" 
+                                             class="me-3" width="50" height="50" alt="@item.ProductName" />
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold">@item.ProductName</div>
+                                            <small class="text-muted">@item.Quantity adet × ₺@item.UnitPrice.ToString("F2")</small>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real-time Status Indicator -->
+                @if (isTracking && SignalRService.IsConnected)
+                {
+                    <div class="alert alert-success">
+                        <i class="bi bi-wifi"></i>
+                        <strong>Canlı Takip Aktif</strong> - Sipariş durumu anlık güncelleniyor
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .order-timeline {
+        position: relative;
+    }
+
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 30px;
+    }
+
+    .timeline-item:not(:last-child)::before {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 20px;
+        bottom: -10px;
+        width: 2px;
+        background: #e0e0e0;
+    }
+
+    .timeline-item.completed::before {
+        background: #28a745;
+    }
+
+    .timeline-item.active::before {
+        background: linear-gradient(to bottom, #28a745 0%, #28a745 50%, #e0e0e0 50%, #e0e0e0 100%);
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -26px;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #e0e0e0;
+        border: 2px solid #fff;
+    }
+
+    .timeline-item.completed .timeline-marker {
+        background: #28a745;
+        border-color: #28a745;
+    }
+
+    .timeline-item.active .timeline-marker {
+        background: #007bff;
+        border-color: #007bff;
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.2);
+            opacity: 0.8;
+        }
+    }
+
+    .timeline-content h6 {
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+
+    .timeline-item.completed .timeline-content h6 {
+        color: #28a745;
+    }
+
+    .timeline-item.active .timeline-content h6 {
+        color: #007bff;
+    }
+</style>
+
+@code {
+    [Parameter] public Guid OrderId { get; set; }
+
+    private bool isAuthenticated = false;
+    private bool isLoading = true;
+    private bool isTracking = false;
+    private bool mapInitialized = false;
+    private OrderResponse? order;
+    private string? currentEta;
+    private bool followCourier = true;
+    private bool showTrail = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        if (isAuthenticated)
+        {
+            await LoadOrder();
+            await InitializeSignalR();
+        }
+        isLoading = false;
+        AuthService.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    }
+
+    private async void OnAuthenticationStateChanged()
+    {
+        isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        if (isAuthenticated && order == null)
+        {
+            await LoadOrder();
+            await InitializeSignalR();
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AuthService.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+        SignalRService.NotificationReceived -= OnSignalROrderUpdate;
+        if (isTracking)
+        {
+            SignalRService.LeaveGroupAsync($"order-tracking-{OrderId}");
+        }
+    }
+
+    private async Task LoadOrder()
+    {
+        try
+        {
+            isLoading = true;
+            order = await OrderService.GetOrderByIdAsync(OrderId);
+            
+            if (order != null && (order.Status == "Preparing" || order.Status == "OnTheWay"))
+            {
+                isTracking = true;
+            }
+
+            // Initialize map once we have order data
+            if (!mapInitialized)
+            {
+                double? lat = null;
+                double? lng = null;
+                await JSRuntime.InvokeAsync<bool>("initOrderMap", OrderId.ToString(), $"map-{OrderId}", lat, lng);
+                mapInitialized = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading order for tracking");
+            await JSRuntime.InvokeVoidAsync("showError", "Sipariş bilgileri yüklenirken bir hata oluştu.");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task InitializeSignalR()
+    {
+        try
+        {
+            SignalRService.NotificationReceived += OnSignalROrderUpdate;
+            
+            if (!SignalRService.IsConnected)
+            {
+                await SignalRService.StartConnectionAsync();
+            }
+
+            // Join order tracking group for real-time updates
+            if (order != null && (order.Status == "Preparing" || order.Status == "OnTheWay"))
+            {
+                await SignalRService.JoinGroupAsync($"order-tracking-{OrderId}");
+                isTracking = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error initializing SignalR for order tracking");
+        }
+    }
+
+    private async Task OnFollowSwitchChanged(ChangeEventArgs e)
+    {
+        followCourier = e?.Value is bool b && b;
+        _ = JSRuntime.InvokeAsync<bool>("toggleFollowCourier", OrderId.ToString(), followCourier);
+    }
+
+    private async Task OnTrailSwitchChanged(ChangeEventArgs e)
+    {
+        showTrail = e?.Value is bool b && b;
+        _ = JSRuntime.InvokeAsync<bool>("toggleTrail", OrderId.ToString(), showTrail);
+    }
+
+    private void OnSignalROrderUpdate(string type, object data)
+    {
+        try
+        {
+            if (type == "OrderUpdate" || type == "ReceiveOrderUpdate")
+            {
+                var orderJson = System.Text.Json.JsonSerializer.Serialize(data);
+                var orderUpdate = System.Text.Json.JsonSerializer.Deserialize<OrderTrackingUpdate>(orderJson);
+                
+                if (orderUpdate != null && orderUpdate.OrderId == OrderId && order != null)
+                {
+                    order.Status = orderUpdate.NewStatus;
+                    
+                    // Update tracking status
+                    if (orderUpdate.NewStatus == "OnTheWay" && !isTracking)
+                    {
+                        isTracking = true;
+                        SignalRService.JoinGroupAsync($"order-tracking-{OrderId}");
+                    }
+                    else if (orderUpdate.NewStatus == "Delivered" || orderUpdate.NewStatus == "Cancelled")
+                    {
+                        isTracking = false;
+                        SignalRService.LeaveGroupAsync($"order-tracking-{OrderId}");
+                    }
+
+                    // Update courier marker if coordinates present
+                    if (orderUpdate.CourierLatitude.HasValue && orderUpdate.CourierLongitude.HasValue)
+                    {
+                        _ = JSRuntime.InvokeAsync<bool>("updateCourierMarker", OrderId.ToString(), orderUpdate.CourierLatitude.Value, orderUpdate.CourierLongitude.Value);
+                    }
+
+                    // Update ETA if provided
+                    if (!string.IsNullOrEmpty(orderUpdate.EstimatedDeliveryTime))
+                    {
+                        currentEta = orderUpdate.EstimatedDeliveryTime;
+                        _ = JSRuntime.InvokeAsync<bool>("updateEtaBadge", $"eta-{OrderId}", currentEta);
+                    }
+
+                    // Destination and merchant markers + route/ETA
+                    if (orderUpdate.DestinationLatitude.HasValue && orderUpdate.DestinationLongitude.HasValue)
+                    {
+                        _ = JSRuntime.InvokeAsync<bool>("setDestinationMarker", OrderId.ToString(), orderUpdate.DestinationLatitude.Value, orderUpdate.DestinationLongitude.Value);
+                        if (orderUpdate.CourierLatitude.HasValue && orderUpdate.CourierLongitude.HasValue)
+                        {
+                            // Prefer OSRM routing for accurate ETA; fallback handled inside JS if needed
+                            _ = JSRuntime.InvokeAsync<bool>("updateRouteAndEtaOsrm", OrderId.ToString(), orderUpdate.CourierLatitude.Value, orderUpdate.CourierLongitude.Value, orderUpdate.DestinationLatitude.Value, orderUpdate.DestinationLongitude.Value);
+                        }
+                    }
+                    if (orderUpdate.MerchantLatitude.HasValue && orderUpdate.MerchantLongitude.HasValue)
+                    {
+                        _ = JSRuntime.InvokeAsync<bool>("setMerchantMarker", OrderId.ToString(), orderUpdate.MerchantLatitude.Value, orderUpdate.MerchantLongitude.Value);
+                    }
+
+                    InvokeAsync(StateHasChanged);
+                    
+                    Logger.LogInformation("Order {OrderId} status updated to {Status}", OrderId, orderUpdate.NewStatus);
+                    
+                    // Show notification
+                    JSRuntime.InvokeVoidAsync("showSuccess", $"Sipariş durumu güncellendi: {GetOrderStatusText(orderUpdate.NewStatus)}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error processing SignalR order update");
+        }
+    }
+
+    private bool IsStatusActive(string status)
+    {
+        return order?.Status == status;
+    }
+
+    private bool IsStatusCompleted(string status)
+    {
+        var statusOrder = new[] { "Pending", "Confirmed", "Preparing", "OnTheWay", "Delivered" };
+        var currentIndex = Array.IndexOf(statusOrder, order?.Status ?? "");
+        var checkIndex = Array.IndexOf(statusOrder, status);
+        
+        return currentIndex > checkIndex;
+    }
+
+    private string GetOrderStatusText(string status)
+    {
+        return status switch
+        {
+            "Pending" => "Bekleyen",
+            "Confirmed" => "Onaylandı",
+            "Preparing" => "Hazırlanıyor",
+            "OnTheWay" => "Yolda",
+            "Delivered" => "Teslim Edildi",
+            "Cancelled" => "İptal Edildi",
+            _ => status
+        };
+    }
+    
+    private class OrderTrackingUpdate
+    {
+        public Guid OrderId { get; set; }
+        public string NewStatus { get; set; } = string.Empty;
+        public DateTime UpdatedAt { get; set; }
+        public double? CourierLatitude { get; set; }
+        public double? CourierLongitude { get; set; }
+        public string? EstimatedDeliveryTime { get; set; }
+        public double? DestinationLatitude { get; set; }
+        public double? DestinationLongitude { get; set; }
+        public double? MerchantLatitude { get; set; }
+        public double? MerchantLongitude { get; set; }
+    }
+}
+
