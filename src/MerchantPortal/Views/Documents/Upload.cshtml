@@ -1,0 +1,27 @@
+@inject ILocalizationService LocalizationService
+@model Getir.MerchantPortal.Models.UploadMerchantDocumentRequest
+
+<h3>@LocalizationService.GetString("UploadDocument")</h3>
+
+<form asp-action="Upload" method="post" enctype="multipart/form-data">
+	@Html.AntiForgeryToken()
+	<input type="hidden" asp-for="MerchantId" />
+
+	<div class="mb-3">
+		<label class="form-label">@LocalizationService.GetString("DocumentType")</label>
+		<input asp-for="DocumentType" class="form-control" />
+	</div>
+	<div class="mb-3">
+		<label class="form-label">@LocalizationService.GetString("Notes")</label>
+		<input asp-for="Notes" class="form-control" />
+	</div>
+	<div class="mb-3">
+		<label class="form-label">@LocalizationService.GetString("File")</label>
+		<input type="file" name="file" class="form-control" />
+	</div>
+
+	<button class="btn btn-primary" type="submit">@LocalizationService.GetString("Upload")</button>
+	<a class="btn btn-secondary" href="@Url.Action("Index")">@LocalizationService.GetString("Cancel")</a>
+</form>
+
+

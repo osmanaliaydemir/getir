@@ -1,3 +1,42 @@
+class CSVImporter {
+	constructor(basePath){
+		this.basePath = basePath;
+	}
+
+	openImportModal(){
+		const modal = new bootstrap.Modal(document.getElementById('csvImportModal'));
+		modal.show();
+	}
+
+	downloadTemplate(){
+		window.location.href = `${this.basePath}/ExportToCSV`;
+	}
+
+	async importData(){
+		const input = document.getElementById('csvFileInput');
+		if(!input || !input.files || input.files.length === 0){
+			alert('CSV dosyası seçiniz');
+			return;
+		}
+		const form = new FormData();
+		form.append('file', input.files[0]);
+		try{
+			const res = await fetch(`${this.basePath}/ImportFromCSV`, { method:'POST', body: form });
+			const data = await res.json();
+			const result = document.getElementById('importResult');
+			if(!result) return;
+			result.style.display = '';
+			result.className = 'alert ' + (data.success ? 'alert-success' : 'alert-danger');
+			result.textContent = data.message || 'Bitti';
+		} catch(err){
+			console.error('Import error', err);
+			alert('Import sırasında hata oluştu');
+		}
+	}
+}
+
+window.CSVImporter = CSVImporter;
+
 /**
  * CSV Stock Import/Export Module
  */

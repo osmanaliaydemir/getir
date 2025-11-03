@@ -399,9 +399,18 @@ public class StockService : IStockService
             // Send bulk update to API
             if (updates.Any())
             {
+                var mapped = updates.Select(u => new UpdateStockRequest
+                {
+                    ProductId = u.ProductId,
+                    ProductVariantId = null,
+                    NewStockQuantity = u.NewStockLevel,
+                    Reason = result.Errors.Any() ? "CSV Import" : null,
+                    Notes = null
+                }).ToList();
+
                 var bulkRequest = new BulkUpdateStockRequest
                 {
-                    Updates = updates
+                    StockUpdates = mapped
                 };
 
                 var success = await BulkUpdateStockLevelsAsync(bulkRequest, ct);

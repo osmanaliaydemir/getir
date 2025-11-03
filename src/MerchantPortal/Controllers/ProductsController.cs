@@ -9,6 +9,8 @@ namespace Getir.MerchantPortal.Controllers;
 public class ProductsController : Controller
 {
     private readonly IProductService _productService;
+    private readonly IFileService _fileService;
+    private readonly ISearchService _searchService;
     private readonly ILogger<ProductsController> _logger;
 
     /// <summary>
@@ -16,9 +18,11 @@ public class ProductsController : Controller
     /// </summary>
     /// <param name="productService">Ürün servisi</param>
     /// <param name="logger">Logger instance</param>
-    public ProductsController(IProductService productService, ILogger<ProductsController> logger)
+    public ProductsController(IProductService productService, ISearchService searchService, IFileService fileService, ILogger<ProductsController> logger)
     {
         _productService = productService;
+        _searchService = searchService;
+        _fileService = fileService;
         _logger = logger;
     }
 
@@ -27,12 +31,18 @@ public class ProductsController : Controller
     /// </summary>
     /// <param name="page">Sayfa numarası</param>
     /// <returns>Ürün listesi sayfası</returns>
-    public async Task<IActionResult> Index(int page = 1)
+    public async Task<IActionResult> Index(int page = 1, string? q = null, Guid? categoryId = null)
     {
-        var products = await _productService.GetProductsAsync(page, 20);
+        var useSearch = !string.IsNullOrWhiteSpace(q) || categoryId.HasValue;
+        var products = useSearch
+            ? await _searchService.SearchProductsAsync(q, categoryId, page, 20)
+            : await _productService.GetProductsAsync(page, 20);
+
         var categories = await _productService.GetCategoriesAsync();
 
         ViewBag.Categories = categories ?? new();
+        ViewBag.Query = q;
+        ViewBag.CategoryId = categoryId;
         
         return View(products);
     }
@@ -57,13 +67,23 @@ public class ProductsController : Controller
     /// <returns>Ürün oluşturma sayfası veya listeye yönlendirme</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(CreateProductRequest model)
+    public async Task<IActionResult> Create(CreateProductRequest model, IFormFile? imageFile)
     {
         if (!ModelState.IsValid)
         {
             var categories = await _productService.GetCategoriesAsync();
             ViewBag.Categories = categories ?? new();
             return View(model);
+        }
+
+        if (imageFile != null && imageFile.Length > 0)
+        {
+            using var stream = imageFile.OpenReadStream();
+            var upload = await _fileService.UploadMerchantFileAsync(stream, imageFile.FileName, imageFile.ContentType);
+            if (upload?.Url != null)
+            {
+                model.ImageUrl = upload.Url;
+            }
         }
 
         var result = await _productService.CreateProductAsync(model);
@@ -124,13 +144,23 @@ public class ProductsController : Controller
     /// <returns>Ürün düzenleme sayfası veya listeye yönlendirme</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(Guid id, UpdateProductRequest model)
+    public async Task<IActionResult> Edit(Guid id, UpdateProductRequest model, IFormFile? imageFile)
     {
         if (!ModelState.IsValid)
         {
             var categories = await _productService.GetCategoriesAsync();
             ViewBag.Categories = categories ?? new();
             return View(model);
+        }
+
+        if (imageFile != null && imageFile.Length > 0)
+        {
+            using var stream = imageFile.OpenReadStream();
+            var upload = await _fileService.UploadMerchantFileAsync(stream, imageFile.FileName, imageFile.ContentType);
+            if (upload?.Url != null)
+            {
+                model.ImageUrl = upload.Url;
+            }
         }
 
         var result = await _productService.UpdateProductAsync(id, model);

@@ -85,6 +85,7 @@ builder.Services.AddHttpContextAccessor();
 
 // Register AuthTokenHandler
 builder.Services.AddTransient<AuthTokenHandler>();
+builder.Services.AddTransient<RetryPolicyHandler>();
 
 // HttpClient for API calls
 builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
@@ -94,6 +95,7 @@ builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 })
 .AddHttpMessageHandler<AuthTokenHandler>() // Auto-inject JWT token from session
+.AddHttpMessageHandler<RetryPolicyHandler>()
 .ConfigurePrimaryHttpMessageHandler(() =>
 {
     var handler = new HttpClientHandler();
@@ -122,6 +124,47 @@ builder.Services.AddScoped<IProductReviewService, ProductReviewService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddSingleton<ISignalRService, SignalRService>();
 builder.Services.AddScoped<ISettingsService, SettingsService>();
+builder.Services.AddScoped<ISearchService, SearchService>();
+builder.Services.AddScoped<ICampaignService, CampaignService>();
+builder.Services.AddScoped<ICouponService, CouponService>();
+builder.Services.AddScoped<IProductOptionService, ProductOptionService>();
+builder.Services.AddScoped<IMarketProductVariantService, MarketProductVariantService>();
+builder.Services.AddScoped<IDeliveryZoneService, DeliveryZoneService>();
+builder.Services.AddScoped<IDeliveryOptimizationService, DeliveryOptimizationService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddHttpClient<IMerchantDocumentService, MerchantDocumentService>(client =>
+{
+	client.BaseAddress = new Uri(apiSettings.BaseUrl);
+	client.DefaultRequestHeaders.Add("Accept", "application/json");
+	client.Timeout = TimeSpan.FromSeconds(60);
+})
+.AddHttpMessageHandler<AuthTokenHandler>()
+.AddHttpMessageHandler<RetryPolicyHandler>()
+.ConfigurePrimaryHttpMessageHandler(() =>
+{
+	var handler = new HttpClientHandler();
+	if (builder.Environment.IsDevelopment())
+		handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+	return handler;
+});
+builder.Services.AddScoped<IMerchantOnboardingService, MerchantOnboardingService>();
+builder.Services.AddHttpClient<IFileService, FileService>(client =>
+{
+	client.BaseAddress = new Uri(apiSettings.BaseUrl);
+	client.DefaultRequestHeaders.Add("Accept", "application/json");
+	client.Timeout = TimeSpan.FromSeconds(30);
+})
+.AddHttpMessageHandler<AuthTokenHandler>()
+.AddHttpMessageHandler<RetryPolicyHandler>()
+.ConfigurePrimaryHttpMessageHandler(() =>
+{
+	var handler = new HttpClientHandler();
+	if (builder.Environment.IsDevelopment())
+	{
+		handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+	}
+	return handler;
+});
 
 // Simple JSON-based Localization Service
 builder.Services.AddSingleton<ILocalizationService, LocalizationService>();
@@ -159,6 +202,7 @@ app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
 app.UseSessionValidation(); // Validate session/cookie consistency
+app.UseMiddleware<SerilogEnrichMiddleware>();
 app.UseAuthorization();
 
 app.MapControllerRoute(

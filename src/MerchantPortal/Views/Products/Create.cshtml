@@ -12,7 +12,7 @@
                 <i class="fas fa-box"></i> @LocalizationService.GetString("AddProductTitle")
             </h4>
 
-            <form asp-action="Create" method="post">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
@@ -87,6 +87,15 @@
                                  MaxFileSize = 5242880
                              })" />
                     <input asp-for="ImageUrl" type="hidden" id="imageUrlField" />
+                    <div class="mt-2">
+                        <label class="form-label">@LocalizationService.GetString("UploadImage")</label>
+                        <input type="file" name="imageFile" id="imageFileInput" class="form-control" accept="image/*" />
+                        <div id="imagePreview" class="mt-2" style="display:none;">
+                            <img id="imagePreviewImg" src="#" alt="preview" style="max-height:120px;border:1px solid #eee;border-radius:6px;padding:4px;" />
+                            <button type="button" id="btnRemoveImage" class="btn btn-sm btn-outline-danger ms-2">@LocalizationService.GetString("Remove")</button>
+                            <small id="imageValidationMsg" class="text-danger d-block mt-1" style="display:none;"></small>
+                        </div>
+                    </div>
                     <span asp-validation-for="ImageUrl" class="text-danger"></span>
                 </div>
 
@@ -127,6 +136,28 @@
     <script src="~/js/modules/upload/imageCompression.js"></script>
     <script src="~/js/modules/upload/multipleFiles.js"></script>
     <script src="~/js/modules/upload/uploadProgress.js"></script>
+    <script>
+        (function(){
+            const input = document.getElementById('imageFileInput');
+            const preview = document.getElementById('imagePreview');
+            const img = document.getElementById('imagePreviewImg');
+            const removeBtn = document.getElementById('btnRemoveImage');
+            const msg = document.getElementById('imageValidationMsg');
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            const types = ['image/jpeg','image/png','image/webp','image/jpg'];
+            if(!input) return;
+            input.addEventListener('change', function(){
+                msg.style.display = 'none';
+                if(!input.files || input.files.length === 0){ preview.style.display = 'none'; return; }
+                const f = input.files[0];
+                if(f.size > maxSize){ msg.textContent = 'Dosya boyutu 5MB üzeri'; msg.style.display=''; input.value=''; preview.style.display='none'; return; }
+                if(!types.includes(f.type)){ msg.textContent = 'Geçersiz dosya türü'; msg.style.display=''; input.value=''; preview.style.display='none'; return; }
+                const url = URL.createObjectURL(f);
+                img.src = url; preview.style.display = '';
+            });
+            removeBtn?.addEventListener('click', function(){ input.value=''; preview.style.display='none'; });
+        })();
+    </script>
     
     <script>
         // Initialize image upload

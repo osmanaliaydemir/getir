@@ -26,38 +26,33 @@
 </div>
 
 <!-- Search & Filter Bar -->
-<div class="search-filter-bar fade-in" style="animation-delay: 0.1s;">
+<form method="get" class="search-filter-bar fade-in" style="animation-delay: 0.1s;">
     <div class="row g-3 align-items-end">
-        <div class="col-md-4">
+        <div class="col-md-5">
             <label class="form-label fw-semibold"><i class="fas fa-search me-2"></i>@LocalizationService.GetString("Search")</label>
-            <input type="text" class="form-control" placeholder="@LocalizationService.GetString("ProductName")..." style="border-radius: 10px; border: 2px solid #e5e7eb;">
+            <input type="text" name="q" value="@ViewBag.Query" class="form-control" placeholder="@LocalizationService.GetString("ProductName")..." style="border-radius: 10px; border: 2px solid #e5e7eb;">
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <label class="form-label fw-semibold"><i class="fas fa-tag me-2"></i>@LocalizationService.GetString("Category")</label>
-            <select class="form-select" style="border-radius: 10px; border: 2px solid #e5e7eb;">
-                <option>@LocalizationService.GetString("AllCategories")</option>
-                <option>@LocalizationService.GetString("Food")</option>
-                <option>@LocalizationService.GetString("Beverage")</option>
-                <option>@LocalizationService.GetString("Snacks")</option>
+            <select name="categoryId" class="form-select" style="border-radius: 10px; border: 2px solid #e5e7eb;">
+                <option value="">@LocalizationService.GetString("AllCategories")</option>
+                @if (ViewBag.Categories != null)
+                {
+                    foreach (var cat in (List<Getir.MerchantPortal.Models.ProductCategoryResponse>)ViewBag.Categories)
+                    {
+                        var selected = ViewBag.CategoryId != null && (Guid)ViewBag.CategoryId == cat.Id ? "selected" : "";
+                        <option value="@cat.Id" @selected>@cat.Name</option>
+                    }
+                }
             </select>
         </div>
-        <div class="col-md-3">
-            <label class="form-label fw-semibold"><i class="fas fa-filter me-2"></i>@LocalizationService.GetString("Status")</label>
-            <select class="form-select" style="border-radius: 10px; border: 2px solid #e5e7eb;">
-                <option>@LocalizationService.GetString("All")</option>
-                <option>@LocalizationService.GetString("Active")</option>
-                <option>@LocalizationService.GetString("Inactive")</option>
-                <option>@LocalizationService.GetString("OutOfStock")</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <div class="view-toggle">
-                <button class="active" title="@LocalizationService.GetString("GridView")"><i class="fas fa-th"></i></button>
-                <button title="@LocalizationService.GetString("ListView")"><i class="fas fa-list"></i></button>
-            </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100" style="border-radius: 10px;">
+                <i class="fas fa-search me-2"></i>@LocalizationService.GetString("Search")
+            </button>
         </div>
     </div>
-</div>
+</form>
 
 <!-- Products Grid -->
 @if (Model != null && Model.Items.Any())
@@ -191,7 +186,7 @@
             <nav>
                 <ul class="pagination pagination-lg">
                     <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
-                        <a class="page-link" href="?page=@(Model.Page - 1)" style="border-radius: 10px 0 0 10px;">
+                            <a class="page-link" href="?page=@(Model.Page - 1)&q=@(ViewBag.Query)&categoryId=@(ViewBag.CategoryId)" style="border-radius: 10px 0 0 10px;">
                             <i class="fas fa-chevron-left"></i>
                         </a>
                     </li>
@@ -199,12 +194,12 @@
                     @for (var i = 1; i <= Model.TotalPages; i++)
                     {
                         <li class="page-item @(i == Model.Page ? "active" : "")">
-                            <a class="page-link" href="?page=@i">@i</a>
+                            <a class="page-link" href="?page=@i&q=@(ViewBag.Query)&categoryId=@(ViewBag.CategoryId)">@i</a>
                         </li>
                     }
                     
                     <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
-                        <a class="page-link" href="?page=@(Model.Page + 1)" style="border-radius: 0 10px 10px 0;">
+                            <a class="page-link" href="?page=@(Model.Page + 1)&q=@(ViewBag.Query)&categoryId=@(ViewBag.CategoryId)" style="border-radius: 0 10px 10px 0;">
                             <i class="fas fa-chevron-right"></i>
                         </a>
                     </li>

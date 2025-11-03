@@ -7,6 +7,7 @@ public class CategoryService : ICategoryService
     private readonly IApiClient _apiClient;
     private readonly ILogger<CategoryService> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IMemoryCache _cache;
 
     /// <summary>
     /// CategoryService constructor
@@ -17,11 +18,13 @@ public class CategoryService : ICategoryService
     public CategoryService(
         IApiClient apiClient, 
         ILogger<CategoryService> logger,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        IMemoryCache cache)
     {
         _apiClient = apiClient;
         _logger = logger;
         _httpContextAccessor = httpContextAccessor;
+        _cache = cache;
     }
 
     /// <summary>
@@ -52,9 +55,13 @@ public class CategoryService : ICategoryService
     {
         try
         {
-            var response = await _apiClient.GetAsync<ApiResponse<List<ProductCategoryResponse>>>("api/v1/productcategory", ct);
+            if (_cache.TryGetValue("categories:all", out List<ProductCategoryResponse>? cached) && cached != null)
+                return cached;
 
-            return response?.Data;
+            var response = await _apiClient.GetAsync<ApiResponse<List<ProductCategoryResponse>>>("api/v1/productcategory", ct);
+            var data = response?.Data ?? new List<ProductCategoryResponse>();
+            _cache.Set("categories:all", data, TimeSpan.FromMinutes(5));
+            return data;
         }
         catch (Exception ex)
         {

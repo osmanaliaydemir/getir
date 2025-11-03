@@ -367,6 +367,31 @@ public class PaymentResponse
     public DateTime CreatedAt { get; set; }
 }
 
+// Notification Models
+public class NotificationResponse
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = default!;
+    public string Message { get; set; } = default!;
+    public string Type { get; set; } = default!;
+    public bool IsRead { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class UpdateNotificationPreferencesRequest
+{
+    public bool EmailEnabled { get; set; }
+    public bool SmsEnabled { get; set; }
+    public bool PushEnabled { get; set; }
+}
+
+public class NotificationPreferencesResponse
+{
+    public bool EmailEnabled { get; set; }
+    public bool SmsEnabled { get; set; }
+    public bool PushEnabled { get; set; }
+}
+
 public class MerchantCashSummaryResponse
 {
     public Guid MerchantId { get; set; }
@@ -659,9 +684,6 @@ public class BulkUpdateStockRequest
 {
     public List<UpdateStockRequest> StockUpdates { get; set; } = new();
     public string? Reason { get; set; }
-    public List<BulkStockUpdateModel> Updates { get; set; } = new();
-
-
 }
 
 public class StockSummaryResponse
@@ -829,3 +851,290 @@ public class RespondToReviewRequest
     public string Response { get; set; } = default!;
 }
 
+// Delivery Zones
+public class DeliveryZoneResponse
+{
+    public Guid Id { get; set; }
+    public Guid MerchantId { get; set; }
+    public string Name { get; set; } = default!;
+    public string PolygonGeoJson { get; set; } = default!;
+    public decimal DeliveryFee { get; set; }
+    public int EstimatedMinutes { get; set; }
+    public bool IsActive { get; set; }
+}
+
+public class CreateDeliveryZoneRequest
+{
+    public Guid MerchantId { get; set; }
+    public string Name { get; set; } = default!;
+    public string PolygonGeoJson { get; set; } = default!;
+    public decimal DeliveryFee { get; set; }
+    public int EstimatedMinutes { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
+public class UpdateDeliveryZoneRequest : CreateDeliveryZoneRequest { }
+
+public class CheckDeliveryZoneRequest
+{
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+}
+
+public class CheckDeliveryZoneResponse
+{
+    public bool IsInside { get; set; }
+    public Guid? ZoneId { get; set; }
+    public string? ZoneName { get; set; }
+}
+
+// Delivery Optimization
+public class DeliveryCapacityRequest
+{
+    public Guid MerchantId { get; set; }
+    public Guid? DeliveryZoneId { get; set; }
+    public int MaxActiveDeliveries { get; set; }
+    public int MaxDailyDeliveries { get; set; }
+}
+
+public class DeliveryCapacityResponse : DeliveryCapacityRequest
+{
+    public Guid Id { get; set; }
+    public int CurrentActiveDeliveries { get; set; }
+    public int CurrentDailyDeliveries { get; set; }
+}
+
+public class DeliveryCapacityCheckRequest
+{
+    public Guid MerchantId { get; set; }
+    public Guid? DeliveryZoneId { get; set; }
+    public int RequestedDeliveries { get; set; }
+}
+
+public class DeliveryCapacityCheckResponse
+{
+    public bool Allowed { get; set; }
+    public string? Reason { get; set; }
+}
+
+public class RouteWaypoint
+{
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+}
+
+public class RouteOptimizationRequest
+{
+    public Guid MerchantId { get; set; }
+    public List<RouteWaypoint> Waypoints { get; set; } = new();
+}
+
+public class DeliveryRouteResponse
+{
+    public Guid RouteId { get; set; }
+    public double DistanceKm { get; set; }
+    public int DurationMinutes { get; set; }
+    public List<RouteWaypoint> Path { get; set; } = new();
+}
+
+public class RouteOptimizationResponse
+{
+    public List<DeliveryRouteResponse> Routes { get; set; } = new();
+}
+
+// File Upload Models
+public class FileUploadResponse
+{
+    public string? Url { get; set; }
+    public string? FileName { get; set; }
+    public string? Container { get; set; }
+    public long? Size { get; set; }
+}
+
+// Merchant Documents
+public class MerchantDocumentResponse
+{
+    public Guid Id { get; set; }
+    public Guid MerchantId { get; set; }
+    public string DocumentType { get; set; } = default!;
+    public string FileName { get; set; } = default!;
+    public string Url { get; set; } = default!;
+    public string Status { get; set; } = default!;
+    public DateTime UploadedAt { get; set; }
+}
+
+public class UploadMerchantDocumentRequest
+{
+    public Guid MerchantId { get; set; }
+    public string DocumentType { get; set; } = default!;
+    public string? Notes { get; set; }
+}
+
+
+// Campaign Models
+public class CampaignResponse
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = default!;
+    public string? Description { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public bool IsActive { get; set; }
+}
+
+// Coupon Models
+public class ValidateCouponRequest
+{
+    public string Code { get; set; } = default!;
+    public decimal? OrderAmount { get; set; }
+}
+
+public class CouponValidationResponse
+{
+    public bool IsValid { get; set; }
+    public string? Reason { get; set; }
+    public decimal? DiscountAmount { get; set; }
+    public string? DiscountType { get; set; }
+}
+
+public class CreateCouponRequest
+{
+    public string Code { get; set; } = default!;
+    public string? Description { get; set; }
+    public string DiscountType { get; set; } = "Amount"; // Amount | Percentage
+    public decimal DiscountValue { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public int UsageLimit { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
+public class CouponResponse
+{
+    public Guid Id { get; set; }
+    public string Code { get; set; } = default!;
+    public string? Description { get; set; }
+    public string DiscountType { get; set; } = default!;
+    public decimal DiscountValue { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public int UsageLimit { get; set; }
+    public int UsedCount { get; set; }
+    public bool IsActive { get; set; }
+}
+
+// Product Option Models
+public class ProductOptionGroupResponse
+{
+    public Guid Id { get; set; }
+    public Guid ProductId { get; set; }
+    public string Name { get; set; } = default!;
+    public string? Description { get; set; }
+    public int DisplayOrder { get; set; }
+    public bool IsRequired { get; set; }
+}
+
+public class CreateProductOptionGroupRequest
+{
+    public Guid ProductId { get; set; }
+    public string Name { get; set; } = default!;
+    public string? Description { get; set; }
+    public int DisplayOrder { get; set; }
+    public bool IsRequired { get; set; }
+}
+
+public class UpdateProductOptionGroupRequest : CreateProductOptionGroupRequest { }
+
+public class ProductOptionResponse
+{
+    public Guid Id { get; set; }
+    public Guid ProductOptionGroupId { get; set; }
+    public string Name { get; set; } = default!;
+    public string? Description { get; set; }
+    public decimal? ExtraPrice { get; set; }
+    public int DisplayOrder { get; set; }
+    public bool IsActive { get; set; }
+}
+
+public class CreateProductOptionRequest
+{
+    public Guid ProductOptionGroupId { get; set; }
+    public string Name { get; set; } = default!;
+    public string? Description { get; set; }
+    public decimal? ExtraPrice { get; set; }
+    public int DisplayOrder { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
+public class UpdateProductOptionRequest : CreateProductOptionRequest { }
+
+public class BulkCreateProductOptionsRequest
+{
+    public Guid ProductId { get; set; }
+    public List<CreateProductOptionGroupRequest> Groups { get; set; } = new();
+    public List<CreateProductOptionRequest> Options { get; set; } = new();
+}
+
+public class BulkUpdateProductOptionsRequest
+{
+    public List<UpdateProductOptionGroupRequest> Groups { get; set; } = new();
+    public List<UpdateProductOptionRequest> Options { get; set; } = new();
+}
+
+// Market Product Variant Models
+public class MarketProductVariantResponse
+{
+    public Guid Id { get; set; }
+    public Guid ProductId { get; set; }
+    public string Name { get; set; } = default!;
+    public string? Sku { get; set; }
+    public decimal Price { get; set; }
+    public int StockQuantity { get; set; }
+    public bool IsActive { get; set; }
+}
+
+public class CreateMarketProductVariantRequest
+{
+    public Guid ProductId { get; set; }
+    public string Name { get; set; } = default!;
+    public string? Sku { get; set; }
+    public decimal Price { get; set; }
+    public int StockQuantity { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
+public class UpdateMarketProductVariantRequest : CreateMarketProductVariantRequest { }
+
+public class UpdateVariantStockRequest
+{
+    public Guid Id { get; set; }
+    public int NewStockQuantity { get; set; }
+}
+
+// Onboarding Models
+public class MerchantOnboardingResponse
+{
+    public Guid MerchantId { get; set; }
+    public string Status { get; set; } = default!;
+    public DateTime? SubmittedAt { get; set; }
+}
+
+public class OnboardingProgressResponse
+{
+    public int CompletedSteps { get; set; }
+    public int TotalSteps { get; set; }
+    public decimal Progress => TotalSteps == 0 ? 0 : Math.Round((decimal)CompletedSteps / TotalSteps * 100, 2);
+}
+
+public class OnboardingStepResponse
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = default!;
+    public string Description { get; set; } = default!;
+    public bool IsCompleted { get; set; }
+}
+
+public class CompleteOnboardingStepRequest
+{
+    public string Notes { get; set; } = string.Empty;
+}

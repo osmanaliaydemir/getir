@@ -1,0 +1,46 @@
+@inject ILocalizationService LocalizationService
+@model Getir.MerchantPortal.Models.PagedResult<Getir.MerchantPortal.Models.MerchantDocumentResponse>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+	<h3>@LocalizationService.GetString("Documents")</h3>
+	<a class="btn btn-primary" href="@Url.Action("Upload", new { merchantId = (Guid)ViewBag.MerchantId })"><i class="fas fa-upload me-1"></i> @LocalizationService.GetString("Upload")</a>
+</div>
+
+@if (Model != null && Model.Items.Any())
+{
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>@LocalizationService.GetString("Type")</th>
+				<th>@LocalizationService.GetString("File")</th>
+				<th>@LocalizationService.GetString("Status")</th>
+				<th>@LocalizationService.GetString("UploadedAt")</th>
+				<th class="text-end"></th>
+			</tr>
+		</thead>
+		<tbody>
+		@foreach (var d in Model.Items)
+		{
+			<tr>
+				<td>@d.DocumentType</td>
+				<td><a href="@d.Url" target="_blank">@d.FileName</a></td>
+				<td>@d.Status</td>
+				<td>@d.UploadedAt.ToString("yyyy-MM-dd HH:mm")</td>
+				<td class="text-end">
+					<form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Silinsin mi?');">
+						@Html.AntiForgeryToken()
+						<input type="hidden" name="id" value="@d.Id" />
+						<button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+					</form>
+				</td>
+			</tr>
+		}
+		</tbody>
+	</table>
+}
+else
+{
+	<div class="alert alert-info">@LocalizationService.GetString("NoData")</div>
+}
+
+
