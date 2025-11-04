@@ -329,6 +329,8 @@ public class CreateOrderRequest
 {
     public Guid MerchantId { get; set; }
     public Guid DeliveryAddressId { get; set; }
+    public decimal? DeliveryLatitude { get; set; }
+    public decimal? DeliveryLongitude { get; set; }
     public string PaymentMethod { get; set; } = "Cash";
     public string? Notes { get; set; }
     public List<OrderItemRequest> Items { get; set; } = new();

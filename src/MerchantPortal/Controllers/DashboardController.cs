@@ -29,9 +29,22 @@ public class DashboardController : Controller
     public async Task<IActionResult> Index()
     {
         var merchantIdStr = HttpContext.Session.GetString("MerchantId");
-        if (string.IsNullOrEmpty(merchantIdStr) || !Guid.TryParse(merchantIdStr, out var merchantId))
+        if (string.IsNullOrEmpty(merchantIdStr) || !Guid.TryParse(merchantIdStr, out var merchantId) || merchantId == Guid.Empty)
         {
-            return RedirectToAction("Login", "Auth");
+            // Try to resolve merchant from API and cache it into session
+            _logger.LogWarning("MerchantId missing or empty in session. Attempting to resolve from API.");
+            var myMerchant = await _merchantService.GetMyMerchantAsync();
+            if (myMerchant != null && myMerchant.Id != Guid.Empty)
+            {
+                HttpContext.Session.SetString("MerchantId", myMerchant.Id.ToString());
+                merchantId = myMerchant.Id;
+                _logger.LogInformation("MerchantId resolved and stored in session: {MerchantId}", merchantId);
+            }
+            else
+            {
+                _logger.LogWarning("Unable to resolve MerchantId. Redirecting to login or onboarding.");
+                return RedirectToAction("Login", "Auth");
+            }
         }
 
         var dashboard = await _merchantService.GetDashboardAsync(merchantId);

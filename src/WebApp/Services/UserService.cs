@@ -68,7 +68,34 @@ namespace WebApp.Services
         public async Task<bool> AddAddressAsync(AddAddressRequest request)
         {
             var token = await _authService.GetTokenAsync();
-            var response = await _apiClient.PostAsync("api/v1/user/addresses", request, token);
+
+            // Map UI model to API contract: derive FullAddress and keep other fields
+            var parts = new List<string>
+            {
+                request.AddressLine1,
+                request.AddressLine2,
+                request.District,
+                request.City,
+                request.PostalCode
+            };
+            var fullAddress = string.Join(" ", parts.Where(p => !string.IsNullOrWhiteSpace(p))).Trim();
+
+            var payload = new
+            {
+                title = request.Title,
+                fullAddress = fullAddress,
+                city = request.City,
+                district = request.District,
+                latitude = 0m,
+                longitude = 0m,
+                postalCode = request.PostalCode,
+                country = request.Country,
+                instructions = request.Instructions,
+                isDefault = request.IsDefault
+                // Add optional ids if available in future: cityId, districtId, countryCode
+            };
+
+            var response = await _apiClient.PostAsync("api/v1/user/addresses", payload, token);
             return response.IsSuccess;
         }
 

@@ -1,4 +1,5 @@
 using Getir.MerchantPortal.Models;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Getir.MerchantPortal.Services;
 

@@ -172,13 +172,14 @@
     </div>
 
     <script src="_framework/blazor.server.js"></script>
-    <script src="js/site.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
     <!-- Service Worker Registration -->
     <script>
-        if ('serviceWorker' in navigator) {
+        // Register Service Worker only outside localhost to avoid dev caching issues
+        if ('serviceWorker' in navigator && window.location.hostname !== 'localhost') {
             window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/sw.js')
                     .then(function(registration) {

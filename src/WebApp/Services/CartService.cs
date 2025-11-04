@@ -109,7 +109,44 @@ public class CartService : ICartService
         if (string.IsNullOrEmpty(token))
             return null;
 
-        var response = await _apiClient.PostAsync<OrderResponse>("api/v1/order", request, token);
+        // Map WebApp request -> API contract (CreateOrderRequest in backend expects DeliveryAddress, Lat/Lng)
+        string deliveryAddressText = string.Empty;
+        decimal latitude = request.DeliveryLatitude ?? 0m;
+        decimal longitude = request.DeliveryLongitude ?? 0m;
+
+        if (request.DeliveryAddressId != Guid.Empty)
+        {
+            // try fetch addresses and build text
+            var addressesResp = await _apiClient.GetAsync<List<AddressResponse>>("api/v1/user/addresses", token);
+            var addr = addressesResp.IsSuccess ? addressesResp.Data?.FirstOrDefault(a => a.Id == request.DeliveryAddressId) : null;
+            if (addr != null)
+            {
+                var parts = new List<string> { addr.AddressLine1, addr.AddressLine2 ?? string.Empty, addr.District, addr.City, addr.PostalCode };
+                deliveryAddressText = string.Join(" ", parts.Where(p => !string.IsNullOrWhiteSpace(p))).Trim();
+            }
+        }
+
+        var apiItems = request.Items.Select(i => new
+        {
+            productId = i.ProductId,
+            productVariantId = (Guid?)null,
+            quantity = i.Quantity,
+            notes = (string?)null,
+            options = (object?)null
+        }).ToList();
+
+        var payload = new
+        {
+            merchantId = request.MerchantId,
+            items = apiItems,
+            deliveryAddress = deliveryAddressText,
+            deliveryLatitude = latitude,
+            deliveryLongitude = longitude,
+            paymentMethod = request.PaymentMethod,
+            notes = request.Notes
+        };
+
+        var response = await _apiClient.PostAsync<OrderResponse>("api/v1/order", payload, token);
         return response.IsSuccess ? response.Data : null;
     }
 }

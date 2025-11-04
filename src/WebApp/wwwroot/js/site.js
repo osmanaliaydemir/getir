@@ -422,3 +422,47 @@ window.updateEtaBadge = function(elementId, etaText) {
         return false;
     }
 };
+
+// ===== Localization UI helpers =====
+// Safe no-op function used by Blazor component LanguageSelector via JS interop
+// Prevents JSException if not needed in current layout
+window.updateLanguageDisplay = function(culture, elementId) {
+    try {
+        const targetId = elementId || 'language-display';
+        const el = document.getElementById(targetId);
+        if (el && typeof culture === 'string') {
+            el.textContent = culture.toUpperCase();
+        }
+        return true;
+    } catch {
+        return false;
+    }
+};
+
+// Update html lang and dir attributes safely
+window.updateLanguageAttributes = function(culture) {
+    try {
+        const html = document.documentElement;
+        const isRtl = typeof culture === 'string' && culture.toLowerCase().startsWith('ar');
+        html.setAttribute('lang', (culture || 'tr').toLowerCase());
+        html.setAttribute('dir', isRtl ? 'rtl' : 'ltr');
+        return true;
+    } catch {
+        return false;
+    }
+};
+
+// ===== Geolocation Helpers =====
+window.getCurrentPositionAsync = function() {
+    return new Promise(function(resolve) {
+        if (!('geolocation' in navigator)) {
+            resolve(null);
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(function(pos) {
+            resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+        }, function() {
+            resolve(null);
+        }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 });
+    });
+};

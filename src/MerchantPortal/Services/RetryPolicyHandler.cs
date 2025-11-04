@@ -1,3 +1,5 @@
+using System.Net;
+
 namespace Getir.MerchantPortal.Services;
 
 public class RetryPolicyHandler : DelegatingHandler

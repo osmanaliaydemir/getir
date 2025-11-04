@@ -304,21 +304,39 @@
 
 @code {
     private List<ProductResponse>? featuredProducts;
+    private bool isLoadingProducts = false;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadFeaturedProducts();
+        // İlk render'ı engellemeden sayfayı göster
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !isLoadingProducts)
+        {
+            await LoadFeaturedProducts();
+        }
     }
 
     private async Task LoadFeaturedProducts()
     {
+        if (isLoadingProducts) return;
+        
         try
         {
+            isLoadingProducts = true;
             featuredProducts = await ProductService.GetPopularProductsAsync(8);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error loading products: {Message}", ex.Message);
+            featuredProducts = new List<ProductResponse>(); // Boş liste göster
+        }
+        finally
+        {
+            isLoadingProducts = false;
+            await InvokeAsync(StateHasChanged);
         }
     }
 

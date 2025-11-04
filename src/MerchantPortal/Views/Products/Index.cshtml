@@ -40,8 +40,7 @@
                 {
                     foreach (var cat in (List<Getir.MerchantPortal.Models.ProductCategoryResponse>)ViewBag.Categories)
                     {
-                        var selected = ViewBag.CategoryId != null && (Guid)ViewBag.CategoryId == cat.Id ? "selected" : "";
-                        <option value="@cat.Id" @selected>@cat.Name</option>
+                        <option value="@cat.Id" selected="@((ViewBag.CategoryId != null && (Guid)ViewBag.CategoryId == cat.Id) ? "selected" : null)">@cat.Name</option>
                     }
                 }
             </select>

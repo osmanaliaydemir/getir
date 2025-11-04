@@ -148,39 +148,50 @@ public partial class ApiClient
                 }
             }
 
-            var response = await SendWithAuthRetry(async () =>
-                await _httpClient.PostAsync(endpoint, content, cancellationToken));
+            var response = await SendWithAuthRetry(async () => await _httpClient.PostAsync(endpoint, content, cancellationToken));
             
             var responseContent = await response.Content.ReadAsStringAsync();
 
-            if (response.IsSuccessStatusCode)
-            {
-                try
-                {
-                    // API response'unu ApiResponse<T> olarak parse et
-                    var apiResponse = JsonSerializer.Deserialize<ApiResponse<T>>(responseContent, _jsonOptions);
-
-                    if (apiResponse != null && apiResponse.IsSuccess)
-                    {
-                        _logger.LogDebug("POST request successful for endpoint: {Endpoint}", endpoint);
-                        return apiResponse;
-                    }
-                    else
-                    {
-                        _logger.LogWarning("POST request returned error for endpoint {Endpoint}: {Error}", endpoint, apiResponse?.Error ?? "Unknown error");
-                        return new ApiResponse<T> { IsSuccess = false, Error = apiResponse?.Error ?? "Unknown error" };
-                    }
-                }
-                catch (JsonException ex)
-                {
-                    _logger.LogError(ex, "JSON deserialization error for endpoint {Endpoint}", endpoint);
-                    return new ApiResponse<T> { IsSuccess = false, Error = $"JSON Deserialization Error: {ex.Message}" };
-                }
-            }
-            else
+            if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("HTTP error for POST endpoint {Endpoint}: {StatusCode} - {Content}", endpoint, response.StatusCode, responseContent.Substring(0, Math.Min(200, responseContent.Length)));
                 return new ApiResponse<T> { IsSuccess = false, Error = $"HTTP {response.StatusCode}: {responseContent}" };
+            }
+
+            // Success path: try ApiResponse<T>, then try direct T, finally return raw content
+            try
+            {
+                var apiResponse = JsonSerializer.Deserialize<ApiResponse<T>>(responseContent, _jsonOptions);
+                if (apiResponse != null && (apiResponse.IsSuccess || apiResponse.Data != null))
+                {
+                    _logger.LogDebug("POST request successful for endpoint: {Endpoint}", endpoint);
+                    return new ApiResponse<T>
+                    {
+                        IsSuccess = apiResponse.IsSuccess || true,
+                        Data = apiResponse.Data,
+                        Error = apiResponse.Error
+                    };
+                }
+            }
+            catch (JsonException)
+            {
+                // fallthrough to direct T parsing
+            }
+
+            try
+            {
+                var asT = JsonSerializer.Deserialize<T>(responseContent, _jsonOptions);
+                return new ApiResponse<T> { IsSuccess = true, Data = asT! };
+            }
+            catch (JsonException)
+            {
+                // Return raw content as string when T is string or parsing fails
+                if (typeof(T) == typeof(string))
+                {
+                    return new ApiResponse<T> { IsSuccess = true, Data = (T)(object)responseContent };
+                }
+                _logger.LogWarning("POST {Endpoint} returned unexpected JSON; delivering raw text.", endpoint);
+                return new ApiResponse<T> { IsSuccess = false, Error = "Unexpected response format" };
             }
         }
         catch (Exception ex)

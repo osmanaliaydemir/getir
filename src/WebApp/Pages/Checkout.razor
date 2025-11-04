@@ -343,6 +343,8 @@ else
         checkoutRequest.PaymentMethod = paymentMethod;
     }
 
+    private class GeoResult { public double latitude { get; set; } public double longitude { get; set; } }
+
     private async Task ProcessOrder()
     {
         try
@@ -361,6 +363,18 @@ else
                 await JSRuntime.InvokeVoidAsync("alert", "Sepetinizde ürün bulunmuyor.");
                 return;
             }
+
+            // Get geolocation (best-effort)
+            try
+            {
+                var pos = await JSRuntime.InvokeAsync<GeoResult>("getCurrentPositionAsync");
+                if (pos != null)
+                {
+                    checkoutRequest.DeliveryLatitude = (decimal)pos.latitude;
+                    checkoutRequest.DeliveryLongitude = (decimal)pos.longitude;
+                }
+            }
+            catch { /* ignore */ }
 
             // Prepare order items
             checkoutRequest.Items = cart.Items.Select(item => new OrderItemRequest

@@ -57,7 +57,16 @@
     protected override async Task OnInitializedAsync()
     {
         currentLanguage = LocalizationService.GetCurrentCulture();
-        await UpdateLanguageDisplay();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Ensure JS functions exist and DOM is ready before invoking
+            await JSRuntime.InvokeVoidAsync("updateLanguageAttributes", currentLanguage);
+            await JSRuntime.InvokeVoidAsync("updateLanguageDisplay", currentLanguage.ToUpper(), "current-language");
+        }
     }
 
     private async Task ChangeLanguage(string language)
@@ -65,11 +74,9 @@
         LocalizationService.SetCulture(language);
         currentLanguage = language;
         
-        // Update HTML lang and dir attributes
+        // Update HTML attributes and UI text after language change
         await JSRuntime.InvokeVoidAsync("updateLanguageAttributes", language);
-        
-        // Update language display
-        await UpdateLanguageDisplay();
+        await JSRuntime.InvokeVoidAsync("updateLanguageDisplay", language.ToUpper(), "current-language");
         
         // Force component refresh
         StateHasChanged();
@@ -78,6 +85,6 @@
     private async Task UpdateLanguageDisplay()
     {
         var languageCode = currentLanguage.ToUpper();
-        await JSRuntime.InvokeVoidAsync("updateLanguageDisplay", languageCode);
+        await JSRuntime.InvokeVoidAsync("updateLanguageDisplay", languageCode, "current-language");
     }
 }
