@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../presentation/bloc/order/order_bloc.dart';
 import 'signalr_service.dart';
 import '../di/injection.dart';

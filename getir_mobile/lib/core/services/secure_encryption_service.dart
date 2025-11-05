@@ -3,8 +3,6 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:crypto/crypto.dart';
-import '../config/environment_config.dart';
 import 'logger_service.dart';
 
 /// Secure Encryption Service with AES-256-GCM
@@ -42,6 +40,7 @@ class SecureEncryptionService {
   static const String _refreshTokenKey = 'refresh_token';
   static const String _userIdKey = 'user_id';
   static const String _userEmailKey = 'user_email';
+  static const String _tokenExpiresAtKey = 'token_expires_at';
 
   encrypt.Key? _encryptionKey;
 
@@ -66,12 +65,11 @@ class SecureEncryptionService {
         _encryptionKey = encrypt.Key(Uint8List.fromList(keyBytes));
         logger.info('Using existing encryption key', tag: 'Encryption');
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       logger.error(
         'Encryption initialization failed',
         tag: 'Encryption',
         error: e,
-        stackTrace: stackTrace,
       );
       rethrow;
     }
@@ -107,12 +105,11 @@ class SecureEncryptionService {
 
       // Return as Base64
       return base64.encode(combined);
-    } catch (e, stackTrace) {
+    } catch (e) {
       logger.error(
         'Encryption failed',
         tag: 'Encryption',
         error: e,
-        stackTrace: stackTrace,
       );
       rethrow;
     }
@@ -147,12 +144,11 @@ class SecureEncryptionService {
       );
 
       return decrypted;
-    } catch (e, stackTrace) {
+    } catch (e) {
       logger.error(
         'Decryption failed',
         tag: 'Encryption',
         error: e,
-        stackTrace: stackTrace,
       );
       rethrow;
     }
@@ -165,22 +161,30 @@ class SecureEncryptionService {
   /// Save access token securely (Keychain/Keystore)
   Future<void> saveAccessToken(String token) async {
     try {
-      debugPrint('🔐 [Encryption] Saving access token (${token.length} chars)');
+      if (kDebugMode) {
+        debugPrint('🔐 [Encryption] Saving access token (${token.length} chars)');
+      }
       await _secureStorage.write(key: _accessTokenKey, value: token);
-      debugPrint('✅ [Encryption] Access token saved successfully');
+      if (kDebugMode) {
+        debugPrint('✅ [Encryption] Access token saved successfully');
+      }
 
       // Verify immediately
       final savedToken = await _secureStorage.read(key: _accessTokenKey);
-      debugPrint(
-        '✅ [Encryption] Verification: ${savedToken != null ? "OK (${savedToken.length} chars)" : "FAILED - NULL"}',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          '✅ [Encryption] Verification: ${savedToken != null ? "OK (${savedToken.length} chars)" : "FAILED - NULL"}',
+        );
+      }
 
       logger.logSensitiveOperation(
         operation: 'save_access_token',
         success: true,
       );
-    } catch (e, stackTrace) {
-      debugPrint('❌ [Encryption] saveAccessToken ERROR: $e');
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ [Encryption] saveAccessToken ERROR: $e');
+      }
       logger.logSensitiveOperation(
         operation: 'save_access_token',
         success: false,
@@ -194,17 +198,39 @@ class SecureEncryptionService {
   Future<String?> getAccessToken() async {
     try {
       final token = await _secureStorage.read(key: _accessTokenKey);
-      debugPrint(
-        '🔓 [Encryption] getAccessToken: ${token != null ? "FOUND (${token.length} chars)" : "NULL"}',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          '🔓 [Encryption] getAccessToken: ${token != null ? "FOUND (${token.length} chars)" : "NULL"}',
+        );
+      }
       return token;
     } catch (e) {
-      debugPrint('❌ [Encryption] getAccessToken ERROR: $e');
+      if (kDebugMode) {
+        debugPrint('❌ [Encryption] getAccessToken ERROR: $e');
+      }
       logger.logSensitiveOperation(
         operation: 'read_access_token',
         success: false,
         error: e,
       );
+      return null;
+    }
+  }
+
+  /// Save token expiration securely
+  Future<void> saveTokenExpiration(DateTime expiresAt) async {
+    try {
+      await _secureStorage.write(key: _tokenExpiresAtKey, value: expiresAt.toIso8601String());
+    } catch (_) {}
+  }
+
+  /// Get token expiration
+  Future<DateTime?> getTokenExpiration() async {
+    try {
+      final value = await _secureStorage.read(key: _tokenExpiresAtKey);
+      if (value == null) return null;
+      return DateTime.tryParse(value);
+    } catch (_) {
       return null;
     }
   }
@@ -217,7 +243,7 @@ class SecureEncryptionService {
         operation: 'save_refresh_token',
         success: true,
       );
-    } catch (e, stackTrace) {
+    } catch (e) {
       logger.logSensitiveOperation(
         operation: 'save_refresh_token',
         success: false,
@@ -253,7 +279,7 @@ class SecureEncryptionService {
         operation: 'save_user_credentials',
         success: true,
       );
-    } catch (e, stackTrace) {
+    } catch (e) {
       logger.logSensitiveOperation(
         operation: 'save_user_credentials',
         success: false,
@@ -287,12 +313,11 @@ class SecureEncryptionService {
       final encrypted = encryptData(data);
       await _secureStorage.write(key: key, value: encrypted);
       logger.debug('Saved encrypted data', tag: 'Encryption');
-    } catch (e, stackTrace) {
+    } catch (e) {
       logger.error(
         'Failed to save encrypted data',
         tag: 'Encryption',
         error: e,
-        stackTrace: stackTrace,
       );
       rethrow;
     }
@@ -399,12 +424,11 @@ class SecureEncryptionService {
       }
 
       logger.info('Key rotation completed successfully', tag: 'Encryption');
-    } catch (e, stackTrace) {
+    } catch (e) {
       logger.error(
         'Key rotation failed',
         tag: 'Encryption',
         error: e,
-        stackTrace: stackTrace,
       );
       rethrow;
     }

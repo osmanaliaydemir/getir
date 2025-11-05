@@ -12,9 +12,12 @@ import '../services/search_history_service.dart';
 import '../services/analytics_service.dart';
 import '../services/logger_service.dart';
 import '../services/signalr_service.dart';
+import '../services/order_realtime_binder.dart';
 import '../services/network_service.dart';
 import '../config/environment_config.dart';
 import '../interceptors/token_refresh_interceptor.dart';
+import '../interceptors/ssl_pinning_interceptor.dart';
+import '../interceptors/cache_interceptor.dart';
 
 // DataSources (interface + implementation in same files)
 import '../../data/datasources/auth_datasource.dart';
@@ -284,6 +287,7 @@ void _registerRepositories() {
 
 void _registerOtherServices(SharedPreferences prefs) {
   getIt.registerLazySingleton(() => SearchHistoryService(prefs));
+  getIt.registerLazySingleton(() => OrderRealtimeBinder());
 }
 
 /// Registers domain services (replaces 49 UseCase registrations!)
@@ -311,9 +315,11 @@ void _registerCubits(SharedPreferences prefs, NetworkService networkService) {
   getIt.registerLazySingleton(() => LanguageCubit(prefs));
   getIt.registerLazySingleton(() => ThemeCubit(prefs));
   getIt.registerLazySingleton(() => NotificationBadgeCubit());
-  
+
   // Presentation Cubits
-  getIt.registerFactory(() => CategoryCubit(getIt<IServiceCategoryRepository>()));
+  getIt.registerFactory(
+    () => CategoryCubit(getIt<IServiceCategoryRepository>()),
+  );
 }
 
 void _registerBlocs() {
@@ -396,7 +402,10 @@ Dio _createDio(SecureEncryptionService encryption) {
   dio.interceptors.addAll([
     _AuthInterceptor(encryption),
     TokenRefreshInterceptor(dio, encryption), // ✅ Auto token refresh on 401
+    if (EnvironmentConfig.enableSslPinning && EnvironmentConfig.isProduction)
+      SslPinningInterceptor(),
     _LoggingInterceptor(),
+    if (ApiCacheInterceptor.isInitialized) ApiCacheInterceptor.interceptor,
     _RetryInterceptor(dio: dio),
     _ResponseAdapterInterceptor(),
   ]);

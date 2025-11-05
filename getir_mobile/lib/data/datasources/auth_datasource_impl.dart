@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_datasource.dart';
 import '../models/auth_models.dart';
@@ -33,7 +34,7 @@ class AuthDataSourceImpl implements AuthDataSource {
 
         // Token'ları ve expiration'ı kaydet
         await saveTokens(authResponse.accessToken, authResponse.refreshToken);
-        await _saveTokenExpiration(authResponse.expiresAt);
+        await _encryptionService.saveTokenExpiration(authResponse.expiresAt);
 
         // User bilgilerini kaydet
         final userModel = authResponse.toUserModel();
@@ -66,7 +67,7 @@ class AuthDataSourceImpl implements AuthDataSource {
 
         // Token'ları ve expiration'ı kaydet
         await saveTokens(authResponse.accessToken, authResponse.refreshToken);
-        await _saveTokenExpiration(authResponse.expiresAt);
+        await _encryptionService.saveTokenExpiration(authResponse.expiresAt);
 
         // User bilgilerini kaydet
         final userModel = authResponse.toUserModel();
@@ -200,27 +201,21 @@ class AuthDataSourceImpl implements AuthDataSource {
 
   @override
   Future<String?> getAccessToken() async {
-    // Try SecureEncryptionService first, fallback to SharedPreferences
-    final secureToken = await _encryptionService.getAccessToken();
-    return secureToken ?? prefs.getString('access_token');
+    // Read only from secure storage
+    return await _encryptionService.getAccessToken();
   }
 
   @override
   Future<String?> getRefreshToken() async {
-    // Try SecureEncryptionService first, fallback to SharedPreferences
-    final secureToken = await _encryptionService.getRefreshToken();
-    return secureToken ?? prefs.getString('refresh_token');
+    // Read only from secure storage
+    return await _encryptionService.getRefreshToken();
   }
 
   @override
   Future<void> saveTokens(String accessToken, String refreshToken) async {
-    // Use SecureEncryptionService for token storage
+    // Store tokens only in secure storage
     await _encryptionService.saveAccessToken(accessToken);
     await _encryptionService.saveRefreshToken(refreshToken);
-
-    // Also save to SharedPreferences as fallback (deprecated but kept for compatibility)
-    await prefs.setString('access_token', accessToken);
-    await prefs.setString('refresh_token', refreshToken);
   }
 
   @override
@@ -240,24 +235,8 @@ class AuthDataSourceImpl implements AuthDataSource {
       final userJson = prefs.getString('current_user');
 
       if (userJson != null && userJson.isNotEmpty) {
-        // Basic parsing (SharedPreferences'ta pipe-separated values olarak saklıyoruz)
-        // Daha iyi bir çözüm için json_serializable kullanılabilir
-        final parts = userJson.split('|');
-        if (parts.length >= 7) {
-          return UserModel(
-            id: parts[0],
-            email: parts[1],
-            firstName: parts[2],
-            lastName: parts[3],
-            phoneNumber: parts[4].isEmpty ? null : parts[4],
-            role: parts[5],
-            isEmailVerified: parts[6] == 'true',
-            isActive: true,
-            createdAt: DateTime.now(),
-            updatedAt: null,
-            lastLoginAt: null,
-          );
-        }
+        final map = jsonDecode(userJson) as Map<String, dynamic>;
+        return UserModel.fromJson(map);
       }
       return null;
     } catch (e) {
@@ -269,9 +248,7 @@ class AuthDataSourceImpl implements AuthDataSource {
   @override
   Future<void> saveCurrentUser(UserModel user) async {
     try {
-      // Simple serialization (pipe-separated values)
-      final userString =
-          '${user.id}|${user.email}|${user.firstName}|${user.lastName}|${user.phoneNumber ?? ''}|${user.role}|${user.isEmailVerified}';
+      final userString = jsonEncode(user.toJson());
       await prefs.setString('current_user', userString);
     } catch (e) {
       // Error handling
@@ -297,18 +274,10 @@ class AuthDataSourceImpl implements AuthDataSource {
       return false;
     }
 
-    // Token expiration kontrolü (SharedPreferences'tan)
-    final expiresAtString = prefs.getString('token_expires_at');
-
-    if (expiresAtString != null) {
-      try {
-        final expiresAt = DateTime.parse(expiresAtString);
-        // Token expire olmadıysa valid
-        return DateTime.now().isBefore(expiresAt);
-      } catch (e) {
-        // Parse hatası olursa token geçersiz say
-        return false;
-      }
+    // Token expiration kontrolü (Secure storage üzerinden)
+    final expiresAt = await _encryptionService.getTokenExpiration();
+    if (expiresAt != null) {
+      return DateTime.now().isBefore(expiresAt);
     }
 
     // Expiration bilgisi yoksa, token'ı valid say
@@ -368,7 +337,5 @@ class AuthDataSourceImpl implements AuthDataSource {
   }
 
   /// Token expiration'ı kaydet
-  Future<void> _saveTokenExpiration(DateTime expiresAt) async {
-    await prefs.setString('token_expires_at', expiresAt.toIso8601String());
-  }
+  // Removed legacy _saveTokenExpiration usage
 }

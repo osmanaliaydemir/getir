@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Custom page transition animations for the app
-class PageTransitions {
+class AppPageAnimations {
   /// Slide transition from right to left
   static Widget slideFromRight(Widget child) {
     return SlideTransition(
@@ -146,19 +146,19 @@ class GetirPageRoute<T> extends PageRouteBuilder<T> {
          transitionsBuilder: (context, animation, secondaryAnimation, child) {
            switch (transitionType) {
              case 'slideRight':
-               return PageTransitions.slideFromRight(child);
+               return AppPageAnimations.slideFromRight(child);
              case 'slideLeft':
-               return PageTransitions.slideFromLeft(child);
+               return AppPageAnimations.slideFromLeft(child);
              case 'slideBottom':
-               return PageTransitions.slideFromBottom(child);
+               return AppPageAnimations.slideFromBottom(child);
              case 'fade':
-               return PageTransitions.fadeTransition(child);
+               return AppPageAnimations.fadeTransition(child);
              case 'scale':
-               return PageTransitions.scaleTransition(child);
+               return AppPageAnimations.scaleTransition(child);
              case 'slideAndFade':
-               return PageTransitions.slideAndFade(child);
+               return AppPageAnimations.slideAndFade(child);
              default:
-               return PageTransitions.slideFromRight(child);
+               return AppPageAnimations.slideFromRight(child);
            }
          },
        );

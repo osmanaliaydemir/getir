@@ -40,11 +40,11 @@ import 'presentation/bloc/language/language_bloc.dart' as lang_bloc;
 import 'l10n/app_localizations.g.dart';
 
 /// Main entry point for the application
-/// 
+///
 /// By default, uses dev environment.
 /// For other environments, see:
 /// - main_dev.dart for development
-/// - main_staging.dart for staging  
+/// - main_staging.dart for staging
 /// - main_prod.dart for production
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -222,7 +222,7 @@ class _GetirAppState extends State<GetirApp> with WidgetsBindingObserver {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     AppStartupTracker().markFirstFrame();
                     // Start order realtime binder once we have a context with blocs
-                    OrderRealtimeBinder().start(context);
+                    getIt<OrderRealtimeBinder>().start(context);
                   });
                   return child!;
                 },
