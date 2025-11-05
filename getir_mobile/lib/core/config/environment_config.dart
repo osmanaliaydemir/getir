@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../services/logger_service.dart';
 
 /// Environment configuration for the app
 /// Supports dev, staging, and production environments
@@ -40,6 +39,41 @@ class EnvironmentConfig {
         '⚠️ [EnvConfig] .env file not found ($envFile), using default values',
       );
       debugPrint('💡 [EnvConfig] Create a .env.dev file in the root directory');
+    }
+  }
+
+  /// Validate critical production configuration and fail-fast if invalid
+  static void validateOrThrow() {
+    if (!isProduction) return;
+    final errors = <String>[];
+    if (apiBaseUrl.isEmpty || apiBaseUrl.startsWith('http') == false) {
+      errors.add('API_BASE_URL is missing/invalid');
+    }
+    if (apiTimeout <= 0) {
+      errors.add('API_TIMEOUT must be > 0');
+    }
+    if (apiKey.isEmpty || apiKey == 'dev_api_key_12345') {
+      errors.add('API_KEY must be set for production');
+    }
+    if (encryptionKey.length < 32 || encryptionKey.contains('dev_')) {
+      errors.add('ENCRYPTION_KEY must be a strong 32+ char key');
+    }
+    if (debugMode) {
+      errors.add('DEBUG_MODE must be false in production');
+    }
+    if (enableSslPinning == false) {
+      // Allow disabling only if explicitly acknowledged in pipeline
+      debugPrint('⚠️ [EnvConfig] ENABLE_SSL_PINNING=false in PROD');
+    }
+    if (googleMapsApiKey.isEmpty ||
+        googleMapsApiKey == 'your_google_maps_api_key') {
+      errors.add('GOOGLE_MAPS_API_KEY must be set');
+    }
+    if (errors.isNotEmpty) {
+      final message =
+          'Production environment configuration errors:\n - ' +
+          errors.join('\n - ');
+      throw StateError(message);
     }
   }
 

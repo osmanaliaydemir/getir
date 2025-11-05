@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import '../services/secure_encryption_service.dart';
 import '../services/logger_service.dart';
+import '../di/injection.dart';
+import '../services/signalr_service.dart';
 
 /// Token Refresh Interceptor
 ///
@@ -94,6 +96,17 @@ class TokenRefreshInterceptor extends QueuedInterceptor {
         await _encryptionService.saveRefreshToken(newRefreshToken);
 
         logger.info('Token refreshed successfully', tag: 'TokenRefresh');
+
+        // Soft-restart real-time hubs to re-auth with the new token
+        try {
+          final signalR = getIt<SignalRService>();
+          // do not await to keep request latency low
+          // best-effort reconnect in background
+          // ignore: unawaited_futures
+          signalR.disconnectAll().then((_) => signalR.initialize());
+        } catch (_) {
+          // DI may not be ready in some unit tests; ignore
+        }
 
         // Retry original request with new token
         final retryResponse = await _retryRequest(

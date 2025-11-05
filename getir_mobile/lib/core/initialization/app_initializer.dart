@@ -79,6 +79,14 @@ class AppInitializer {
       FirebaseService.initialize(),
     ]);
 
+    // Validate production environment early (fail-fast)
+    try {
+      EnvironmentConfig.validateOrThrow();
+    } catch (e) {
+      debugPrint('❌ [AppInit] Invalid production configuration: $e');
+      rethrow;
+    }
+
     // Print config in debug mode
     if (kDebugMode) {
       EnvironmentConfig.printConfig();

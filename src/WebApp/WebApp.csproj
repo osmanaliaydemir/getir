@@ -62,4 +62,9 @@
     <!-- Rate Limiting: use built-in in Microsoft.AspNetCore.App for .NET 9 (no extra package) -->
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Data\" />
+    <Folder Include="logs\" />
+  </ItemGroup>
+
 </Project>

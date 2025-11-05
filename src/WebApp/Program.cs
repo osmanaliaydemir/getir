@@ -10,7 +10,6 @@ using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Localization;
 using FluentValidation;
 using Serilog;
-using WebApp.Data;
 using WebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -222,8 +221,6 @@ builder.Services.AddScoped<IAdvancedPwaService, AdvancedPwaService>();
 builder.Services.AddSingleton<IPerformanceMonitoringService, PerformanceMonitoringService>();
 builder.Services.AddSingleton<IAdvancedCacheService, AdvancedCacheService>();
 
-// Add WeatherForecastService (keep for compatibility)
-builder.Services.AddSingleton<WeatherForecastService>();
 
 WebApplication? app = null;
 try
