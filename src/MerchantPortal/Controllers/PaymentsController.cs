@@ -2,6 +2,7 @@ using Getir.MerchantPortal.Models;
 using Getir.MerchantPortal.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading;
 
 namespace Getir.MerchantPortal.Controllers;
 
@@ -42,6 +43,42 @@ public class PaymentsController : Controller
     {
         ViewData["Title"] = "PaymentReports";
         return View();
+    }
+
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> CashCollections(string? status = null, int page = 1, CancellationToken ct = default)
+    {
+        var viewModel = await BuildCashCollectionsViewModel(status, page, ct);
+        return View(viewModel);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ProcessSettlement(ProcessSettlementInput input, CancellationToken ct = default)
+    {
+        input.ReturnPage = input.ReturnPage <= 0 ? 1 : input.ReturnPage;
+
+        if (!ModelState.IsValid)
+        {
+            var viewModel = await BuildCashCollectionsViewModel(input.ReturnStatus, input.ReturnPage, ct);
+            viewModel.Settlement = input;
+            return View("CashCollections", viewModel);
+        }
+
+        var request = new ProcessSettlementRequest
+        {
+            CommissionRate = input.CommissionRate,
+            Notes = input.Notes,
+            BankTransferReference = input.BankTransferReference
+        };
+
+        var success = await _paymentService.ProcessSettlementAsync(input.MerchantId, request, ct);
+        TempData[success ? "SuccessMessage" : "ErrorMessage"] = success
+            ? "Mutabakat işlemi tamamlandı."
+            : "Mutabakat işlemi sırasında bir hata oluştu.";
+
+        return RedirectToAction(nameof(CashCollections), new { status = input.ReturnStatus, page = input.ReturnPage });
     }
 
     /// <summary>
@@ -244,5 +281,23 @@ public class PaymentsController : Controller
             _logger.LogError(ex, "Error exporting to PDF");
             return StatusCode(500, "Error exporting data");
         }
+    }
+
+    private async Task<CashCollectionsViewModel> BuildCashCollectionsViewModel(string? status, int page, CancellationToken ct)
+    {
+        var collections = await _paymentService.GetAdminCashCollectionsAsync(page, 20, status, ct)
+                          ?? new PagedResult<PaymentResponse>();
+        return new CashCollectionsViewModel
+        {
+            Collections = collections,
+            Status = status,
+            Page = page,
+            Settlement = new ProcessSettlementInput
+            {
+                CommissionRate = 0.1m,
+                ReturnPage = page,
+                ReturnStatus = status
+            }
+        };
     }
 }

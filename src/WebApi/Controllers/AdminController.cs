@@ -199,9 +199,7 @@ public class AdminController : BaseController
     [HttpPost("users")]
     [ProducesResponseType(typeof(AdminUserResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> CreateUser(
-        [FromBody] AdminCreateUserRequest request,
-        CancellationToken ct = default)
+    public async Task<IActionResult> CreateUser([FromBody] AdminCreateUserRequest request, CancellationToken ct = default)
     {
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;
@@ -253,9 +251,7 @@ public class AdminController : BaseController
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteUser(
-        [FromRoute] Guid userId,
-        CancellationToken ct = default)
+    public async Task<IActionResult> DeleteUser([FromRoute] Guid userId, CancellationToken ct = default)
     {
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var adminId);
         if (unauthorizedResult != null) return unauthorizedResult;
@@ -278,9 +274,7 @@ public class AdminController : BaseController
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ActivateUser(
-        [FromRoute] Guid userId,
-        CancellationToken ct = default)
+    public async Task<IActionResult> ActivateUser([FromRoute] Guid userId, CancellationToken ct = default)
     {
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var adminId);
         if (unauthorizedResult != null) return unauthorizedResult;
@@ -299,9 +293,7 @@ public class AdminController : BaseController
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeactivateUser(
-        [FromRoute] Guid userId,
-        CancellationToken ct = default)
+    public async Task<IActionResult> DeactivateUser([FromRoute] Guid userId, CancellationToken ct = default)
     {
         var unauthorizedResult = GetCurrentUserIdOrUnauthorized(out var adminId);
         if (unauthorizedResult != null) return unauthorizedResult;
@@ -319,9 +311,7 @@ public class AdminController : BaseController
     [HttpGet("users/{userId:guid}/stats")]
     [ProducesResponseType(typeof(AdminUserStatsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetUserStats(
-        [FromRoute] Guid userId,
-        CancellationToken ct = default)
+    public async Task<IActionResult> GetUserStats([FromRoute] Guid userId, CancellationToken ct = default)
     {
         var result = await _adminService.GetUserStatsAsync(userId, ct);
         return ToActionResult(result);
@@ -419,9 +409,7 @@ public class AdminController : BaseController
     /// <returns>Arama sonuçları</returns>
     [HttpPost("search")]
     [ProducesResponseType(typeof(AdminSearchResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> Search(
-        [FromBody] AdminSearchQuery query,
-        CancellationToken ct = default)
+    public async Task<IActionResult> Search([FromBody] AdminSearchQuery query, CancellationToken ct = default)
     {
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;
@@ -443,10 +431,7 @@ public class AdminController : BaseController
     /// <returns>Kullanıcı büyüme verileri</returns>
     [HttpGet("reports/user-growth")]
     [ProducesResponseType(typeof(UserGrowthDataResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetUserGrowthData(
-        [FromQuery] DateTime fromDate,
-        [FromQuery] DateTime toDate,
-        CancellationToken ct = default)
+    public async Task<IActionResult> GetUserGrowthData([FromQuery] DateTime fromDate, [FromQuery] DateTime toDate, CancellationToken ct = default)
     {
         var result = await _adminService.GetUserGrowthDataAsync(fromDate, toDate, ct);
         return ToActionResult(result);
@@ -461,10 +446,7 @@ public class AdminController : BaseController
     /// <returns>Mağaza büyüme verileri</returns>
     [HttpGet("reports/merchant-growth")]
     [ProducesResponseType(typeof(MerchantGrowthDataResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetMerchantGrowthData(
-        [FromQuery] DateTime fromDate,
-        [FromQuery] DateTime toDate,
-        CancellationToken ct = default)
+    public async Task<IActionResult> GetMerchantGrowthData([FromQuery] DateTime fromDate, [FromQuery] DateTime toDate, CancellationToken ct = default)
     {
         var result = await _adminService.GetMerchantGrowthDataAsync(fromDate, toDate, ct);
         return ToActionResult(result);
@@ -479,10 +461,7 @@ public class AdminController : BaseController
     /// <returns>Sipariş trend verileri</returns>
     [HttpGet("reports/order-trends")]
     [ProducesResponseType(typeof(AdminOrderTrendDataResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetOrderTrendData(
-        [FromQuery] DateTime fromDate,
-        [FromQuery] DateTime toDate,
-        CancellationToken ct = default)
+    public async Task<IActionResult> GetOrderTrendData([FromQuery] DateTime fromDate, [FromQuery] DateTime toDate, CancellationToken ct = default)
     {
         var result = await _adminService.GetOrderTrendDataAsync(fromDate, toDate, ct);
         return ToActionResult(result);
@@ -497,10 +476,7 @@ public class AdminController : BaseController
     /// <returns>Gelir trend verileri</returns>
     [HttpGet("reports/revenue-trends")]
     [ProducesResponseType(typeof(RevenueTrendDataResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetRevenueTrendData(
-        [FromQuery] DateTime fromDate,
-        [FromQuery] DateTime toDate,
-        CancellationToken ct = default)
+    public async Task<IActionResult> GetRevenueTrendData([FromQuery] DateTime fromDate, [FromQuery] DateTime toDate, CancellationToken ct = default)
     {
         var result = await _adminService.GetRevenueTrendDataAsync(fromDate, toDate, ct);
         return ToActionResult(result);
@@ -519,19 +495,12 @@ public class AdminController : BaseController
     [HttpPost("notifications/send")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> SendSystemNotification(
-        [FromBody] SendSystemNotificationRequest request,
-        CancellationToken ct = default)
+    public async Task<IActionResult> SendSystemNotification([FromBody] SendSystemNotificationRequest request, CancellationToken ct = default)
     {
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;
 
-        var result = await _adminService.SendSystemNotificationAsync(
-            request.Title, 
-            request.Message, 
-            request.Type, 
-            request.TargetRoles, 
-            ct);
+        var result = await _adminService.SendSystemNotificationAsync(request.Title, request.Message, request.Type, request.TargetRoles, ct);
         return ToActionResult(result);
     }
 
@@ -544,17 +513,12 @@ public class AdminController : BaseController
     [HttpPost("broadcast")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> BroadcastSystemMessage(
-        [FromBody] BroadcastSystemMessageRequest request,
-        CancellationToken ct = default)
+    public async Task<IActionResult> BroadcastSystemMessage([FromBody] BroadcastSystemMessageRequest request, CancellationToken ct = default)
     {
         var validationResult = HandleValidationErrors();
         if (validationResult != null) return validationResult;
 
-        var result = await _adminService.BroadcastSystemMessageAsync(
-            request.Message, 
-            request.TargetRoles, 
-            ct);
+        var result = await _adminService.BroadcastSystemMessageAsync(request.Message, request.TargetRoles, ct);
         return ToActionResult(result);
     }
 

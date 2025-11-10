@@ -1,0 +1,1 @@
+        print('Language {} missing or not dict'.format(lang)) 

@@ -301,6 +301,9 @@
                 </a>
                 @if (User.IsInRole("Admin"))
                 {
+                    <a href="@Url.Action("Directory", "Merchant")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Merchant" && ViewContext.RouteData.Values["Action"]?.ToString() == "Directory" ? "active" : "")">
+                        <i class="fas fa-store-alt"></i> Mağazalar
+                    </a>
                     <a href="@Url.Action("Index", "Campaigns")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Campaigns" ? "active" : "")">
                         <i class="fas fa-bullhorn"></i> @LocalizationService.GetString("Campaigns")
                     </a>
@@ -309,6 +312,12 @@
                     </a>
                     <a href="@Url.Action("Index", "Documents")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Documents" ? "active" : "")">
                         <i class="fas fa-file-shield"></i> @LocalizationService.GetString("Documents")
+                    </a>
+                    <a href="@Url.Action("Index", "LocalizationAdmin")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "LocalizationAdmin" ? "active" : "")">
+                        <i class="fas fa-language"></i> @LocalizationService.GetString("Localization")
+                    </a>
+                    <a href="@Url.Action("Index", "RateLimitAdmin")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "RateLimitAdmin" ? "active" : "")">
+                        <i class="fas fa-tachometer-alt"></i> @LocalizationService.GetString("RateLimit")
                     </a>
                 }
                 
@@ -339,11 +348,19 @@
                                 <i class="fas fa-box me-2"></i> @LocalizationService.GetString("Product Performance")
                             </a>
                         </li>
+                        <li>
+                            <a href="@Url.Action("Index", "Inventory")" class="dropdown-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Inventory" ? "active" : "")">
+                                <i class="fas fa-warehouse me-2"></i> @LocalizationService.GetString("InventoryAnalytics")
+                            </a>
+                        </li>
                     </ul>
                 </div>
                 
                 <a href="@Url.Action("Index", "Stock")">
                     <i class="fas fa-cubes"></i> @LocalizationService.GetString("Stock")
+                </a>
+                <a href="@Url.Action("Index", "SpecialHolidays")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "SpecialHolidays" ? "active" : "")">
+                    <i class="fas fa-calendar-alt"></i> @LocalizationService.GetString("SpecialHolidays")
                 </a>
                 <a href="@Url.Action("Index", "DeliveryZones")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "DeliveryZones" ? "active" : "")">
                     <i class="fas fa-draw-polygon"></i> @LocalizationService.GetString("DeliveryZones")
@@ -371,6 +388,12 @@
                 </a>
                 <a href="@Url.Action("Index", "Documents")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Documents" ? "active" : "")">
                     <i class="fas fa-file-alt"></i> @LocalizationService.GetString("Documents")
+                </a>
+                <a href="@Url.Action("Index", "FileManager")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "FileManager" ? "active" : "")">
+                    <i class="fas fa-cloud-upload-alt"></i> @LocalizationService.GetString("FileManager")
+                </a>
+                <a href="@Url.Action("Index", "RealtimeTracking")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "RealtimeTracking" ? "active" : "")">
+                    <i class="fas fa-map-marker-alt"></i> @LocalizationService.GetString("RealtimeTracking")
                 </a>
                 <a href="@Url.Action("Index", "Onboarding")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Onboarding" ? "active" : "")">
                     <i class="fas fa-list-check"></i> @LocalizationService.GetString("Onboarding")

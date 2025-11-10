@@ -59,6 +59,27 @@
                                 </div>
                             }
                         </div>
+
+                        <div class="mt-3">
+                            <h6 class="text-xs text-uppercase text-muted mb-2">@LocalizationService.GetString("TopTags")</h6>
+                            @if (Model.MerchantStats.TopTags?.Any() == true)
+                            {
+                                <ul class="list-inline mb-0">
+                                    @foreach (var tag in Model.MerchantStats.TopTags.Take(6))
+                                    {
+                                        <li class="list-inline-item mb-1">
+                                            <span class="badge bg-primary-subtle text-primary">
+                                                #@tag.Tag <span class="text-muted">(@tag.Count)</span>
+                                            </span>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">@LocalizationService.GetString("NoTagData")</span>
+                            }
+                        </div>
                     }
                     else
                     {
@@ -119,6 +140,27 @@
                                              style="width: @percentage%"></div>
                                     </div>
                                 </div>
+                            }
+                        </div>
+
+                        <div class="mt-3">
+                            <h6 class="text-xs text-uppercase text-muted mb-2">@LocalizationService.GetString("TopTags")</h6>
+                            @if (Model.CourierStats.TopTags?.Any() == true)
+                            {
+                                <ul class="list-inline mb-0">
+                                    @foreach (var tag in Model.CourierStats.TopTags.Take(6))
+                                    {
+                                        <li class="list-inline-item mb-1">
+                                            <span class="badge bg-info-subtle text-info">
+                                                #@tag.Tag <span class="text-muted">(@tag.Count)</span>
+                                            </span>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">@LocalizationService.GetString("NoTagData")</span>
                             }
                         </div>
                     }

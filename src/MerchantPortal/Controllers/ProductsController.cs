@@ -80,9 +80,9 @@ public class ProductsController : Controller
         {
             using var stream = imageFile.OpenReadStream();
             var upload = await _fileService.UploadMerchantFileAsync(stream, imageFile.FileName, imageFile.ContentType);
-            if (upload?.Url != null)
+            if (!string.IsNullOrWhiteSpace(upload?.BlobUrl))
             {
-                model.ImageUrl = upload.Url;
+                model.ImageUrl = upload.BlobUrl;
             }
         }
 
@@ -157,9 +157,9 @@ public class ProductsController : Controller
         {
             using var stream = imageFile.OpenReadStream();
             var upload = await _fileService.UploadMerchantFileAsync(stream, imageFile.FileName, imageFile.ContentType);
-            if (upload?.Url != null)
+            if (!string.IsNullOrWhiteSpace(upload?.BlobUrl))
             {
-                model.ImageUrl = upload.Url;
+                model.ImageUrl = upload.BlobUrl;
             }
         }
 

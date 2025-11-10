@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Getir.MerchantPortal.Models;
 using Getir.MerchantPortal.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -48,16 +49,28 @@ public class DashboardController : Controller
         }
 
         var dashboard = await _merchantService.GetDashboardAsync(merchantId);
-        var recentOrders = await _merchantService.GetRecentOrdersAsync(merchantId, 5);
-        var topProducts = await _merchantService.GetTopProductsAsync(merchantId, 5);
         var stockSummary = await _stockService.GetStockSummaryAsync();
 
-        ViewBag.Dashboard = dashboard;
-        ViewBag.RecentOrders = recentOrders ?? new();
-        ViewBag.TopProducts = topProducts ?? new();
-        ViewBag.StockSummary = stockSummary;
+        var recentOrders = dashboard?.RecentOrders?.Any() == true
+            ? dashboard!.RecentOrders
+            : await _merchantService.GetRecentOrdersAsync(merchantId, 5) ?? new List<RecentOrderResponse>();
 
-        return View();
+        var topProducts = dashboard?.TopProducts?.Any() == true
+            ? dashboard!.TopProducts
+            : await _merchantService.GetTopProductsAsync(merchantId, 5) ?? new List<TopProductResponse>();
+
+        var performance = dashboard?.Performance ?? await _merchantService.GetPerformanceMetricsAsync(merchantId);
+
+        var model = new DashboardViewModel
+        {
+            Stats = dashboard?.Stats,
+            Performance = performance,
+            RecentOrders = recentOrders,
+            TopProducts = topProducts,
+            StockSummary = stockSummary
+        };
+
+        return View(model);
     }
 
     /// <summary>

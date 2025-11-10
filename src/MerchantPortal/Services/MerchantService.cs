@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Getir.MerchantPortal.Models;
 
 namespace Getir.MerchantPortal.Services;
@@ -18,11 +20,6 @@ public class MerchantService : IMerchantService
         _logger = logger;
     }
 
-    /// <summary>
-    /// Mağazayı getir
-    /// </summary>
-    /// <param name="ct">İptal token'ı</param>
-    /// <returns>Mağaza bilgileri</returns>
     public async Task<MerchantResponse?> GetMyMerchantAsync(CancellationToken ct = default)
     {
         try
@@ -40,13 +37,96 @@ public class MerchantService : IMerchantService
         }
     }
 
-    /// <summary>
-    /// Mağazayı güncelle
-    /// </summary>
-    /// <param name="merchantId">Mağaza ID</param>
-    /// <param name="request">Güncelleme isteği</param>
-    /// <param name="ct">İptal token'ı</param>
-    /// <returns>Güncellenmiş mağaza bilgileri</returns>
+    public async Task<MerchantResponse?> GetMerchantByIdAsync(Guid merchantId, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _apiClient.GetAsync<ApiResponse<MerchantResponse>>(
+                $"api/v1/merchant/{merchantId}", ct);
+            return response?.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting merchant {MerchantId}", merchantId);
+            return null;
+        }
+    }
+
+    public async Task<PagedResult<MerchantResponse>?> GetMerchantsAsync(int page = 1, int pageSize = 20, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _apiClient.GetAsync<ApiResponse<PagedResult<MerchantResponse>>>(
+                $"api/v1/merchant?page={page}&pageSize={pageSize}", ct);
+            return response?.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting merchant list");
+            return null;
+        }
+    }
+
+    public async Task<PagedResult<MerchantResponse>?> GetMerchantsByCategoryTypeAsync(string categoryType, int page = 1, int pageSize = 20, CancellationToken ct = default)
+    {
+        try
+        {
+			var encodedType = Uri.EscapeDataString(categoryType);
+            var response = await _apiClient.GetAsync<ApiResponse<PagedResult<MerchantResponse>>>(
+				$"api/v1/merchant/by-category-type/{encodedType}?page={page}&pageSize={pageSize}", ct);
+            return response?.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting merchants by category type {CategoryType}", categoryType);
+            return null;
+        }
+    }
+
+    public async Task<List<MerchantResponse>?> GetActiveMerchantsByCategoryTypeAsync(string categoryType, CancellationToken ct = default)
+    {
+        try
+        {
+			var encodedType = Uri.EscapeDataString(categoryType);
+            var response = await _apiClient.GetAsync<ApiResponse<List<MerchantResponse>>>(
+				$"api/v1/merchant/active/by-category-type/{encodedType}", ct);
+            return response?.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting active merchants by category type {CategoryType}", categoryType);
+            return null;
+        }
+    }
+
+    public async Task<MerchantResponse?> CreateMerchantAsync(CreateMerchantRequest request, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _apiClient.PostAsync<ApiResponse<MerchantResponse>>(
+                "api/v1/merchant", request, ct);
+            return response?.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating merchant {Name}", request.Name);
+            return null;
+        }
+    }
+
+    public async Task<bool> DeleteMerchantAsync(Guid merchantId, CancellationToken ct = default)
+    {
+        try
+        {
+            return await _apiClient.DeleteAsync($"api/v1/merchant/{merchantId}", ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting merchant {MerchantId}", merchantId);
+            return false;
+        }
+    }
+
     public async Task<MerchantResponse?> UpdateMerchantAsync(Guid merchantId, UpdateMerchantRequest request, CancellationToken ct = default)
     {
         try
@@ -202,6 +282,29 @@ public class MerchantService : IMerchantService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting category performance for merchant {MerchantId}", merchantId);
+            return null;
+        }
+    }
+
+    public async Task<MerchantPerformanceMetrics?> GetPerformanceMetricsAsync(Guid merchantId, DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default)
+    {
+        try
+        {
+            var url = $"api/v1/merchants/{merchantId}/merchantdashboard/performance";
+            var query = new List<string>();
+            if (startDate.HasValue) query.Add($"startDate={startDate.Value:O}");
+            if (endDate.HasValue) query.Add($"endDate={endDate.Value:O}");
+            if (query.Any())
+            {
+                url += "?" + string.Join("&", query);
+            }
+
+            var response = await _apiClient.GetAsync<ApiResponse<MerchantPerformanceMetrics>>(url, ct);
+            return response?.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting performance metrics for merchant {MerchantId}", merchantId);
             return null;
         }
     }

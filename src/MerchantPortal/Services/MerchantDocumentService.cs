@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using Getir.MerchantPortal.Models;
 
 namespace Getir.MerchantPortal.Services;
@@ -31,6 +32,142 @@ public class MerchantDocumentService : IMerchantDocumentService
 		catch (Exception ex)
 		{
 			_logger.LogError(ex, "Error getting merchant documents");
+			return null;
+		}
+	}
+
+	public async Task<PagedResult<MerchantDocumentResponse>?> GetPendingDocumentsAsync(int page = 1, int pageSize = 20, CancellationToken ct = default)
+	{
+		var url = $"api/merchantdocument/pending?page={page}&pageSize={pageSize}";
+		try
+		{
+			var res = await _apiClient.GetAsync<ApiResponse<PagedResult<MerchantDocumentResponse>>>(url, ct);
+			return res?.Data;
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error getting pending merchant documents");
+			return null;
+		}
+	}
+
+	public async Task<MerchantDocumentResponse?> GetDocumentAsync(Guid documentId, CancellationToken ct = default)
+	{
+		try
+		{
+			var res = await _apiClient.GetAsync<ApiResponse<MerchantDocumentResponse>>($"api/merchantdocument/{documentId}", ct);
+			return res?.Data;
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error getting document detail {DocumentId}", documentId);
+			return null;
+		}
+	}
+
+	public async Task<DocumentDownloadResult?> DownloadAsync(Guid documentId, CancellationToken ct = default)
+	{
+		try
+		{
+			using var response = await _httpClient.GetAsync($"api/merchantdocument/{documentId}/download", ct);
+			if (!response.IsSuccessStatusCode)
+			{
+				var error = await response.Content.ReadAsStringAsync(ct);
+				_logger.LogWarning("Document download failed for {DocumentId} - {StatusCode} {Message}", documentId, response.StatusCode, error);
+				return null;
+			}
+
+			var bytes = await response.Content.ReadAsByteArrayAsync(ct);
+			var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+			var fileName = response.Content.Headers.ContentDisposition?.FileName?.Trim('\"') ?? $"document_{documentId}";
+
+			return new DocumentDownloadResult
+			{
+				Content = bytes,
+				ContentType = contentType,
+				FileName = fileName
+			};
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error downloading document {DocumentId}", documentId);
+			return null;
+		}
+	}
+
+	public async Task<MerchantDocumentProgressResponse?> GetProgressAsync(Guid merchantId, CancellationToken ct = default)
+	{
+		try
+		{
+			var res = await _apiClient.GetAsync<ApiResponse<MerchantDocumentProgressResponse>>($"api/merchantdocument/progress/{merchantId}", ct);
+			return res?.Data;
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error getting document progress for merchant {MerchantId}", merchantId);
+			return null;
+		}
+	}
+
+	public async Task<IReadOnlyList<DocumentTypeResponse>?> GetRequiredTypesAsync(CancellationToken ct = default)
+	{
+		try
+		{
+			var res = await _apiClient.GetAsync<ApiResponse<List<DocumentTypeResponse>>>("api/merchantdocument/required-types", ct);
+			return res?.Data ?? new List<DocumentTypeResponse>();
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error getting required document types");
+			return null;
+		}
+	}
+
+	public async Task<MerchantDocumentStatisticsResponse?> GetStatisticsAsync(Guid? merchantId = null, CancellationToken ct = default)
+	{
+		var url = "api/merchantdocument/statistics";
+		if (merchantId.HasValue)
+		{
+			url += $"?merchantId={merchantId}";
+		}
+
+		try
+		{
+			var res = await _apiClient.GetAsync<ApiResponse<MerchantDocumentStatisticsResponse>>(url, ct);
+			return res?.Data;
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error getting document statistics");
+			return null;
+		}
+	}
+
+	public async Task<MerchantDocumentResponse?> VerifyDocumentAsync(Guid documentId, VerifyMerchantDocumentRequest request, CancellationToken ct = default)
+	{
+		try
+		{
+			request.DocumentId = documentId;
+			var res = await _apiClient.PostAsync<ApiResponse<MerchantDocumentResponse>>($"api/merchantdocument/{documentId}/verify", request, ct);
+			return res?.Data;
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error verifying document {DocumentId}", documentId);
+			return null;
+		}
+	}
+
+	public async Task<BulkVerifyDocumentsResponse?> BulkVerifyDocumentsAsync(BulkVerifyDocumentsRequest request, CancellationToken ct = default)
+	{
+		try
+		{
+			var res = await _apiClient.PostAsync<ApiResponse<BulkVerifyDocumentsResponse>>("api/merchantdocument/bulk-verify", request, ct);
+			return res?.Data;
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error bulk verifying documents");
 			return null;
 		}
 	}

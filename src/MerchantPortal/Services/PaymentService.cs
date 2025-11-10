@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using Getir.MerchantPortal.Models;
 using System.Text;
 
@@ -280,13 +281,6 @@ public class PaymentService : IPaymentService
         return await ExportToExcelAsync(merchantId, request);
     }
 
-    /// <summary>
-    /// Merchant mutabakatlarını getir
-    /// </summary>
-    /// <param name="merchantId">Merchant ID</param>
-    /// <param name="page">Sayfa numarası</param>
-    /// <param name="pageSize">Sayfa boyutu</param>
-    /// <returns>Mutabakat listesi</returns>
     public async Task<List<SettlementResponse>> GetMerchantSettlementsAsync(Guid merchantId, int page = 1, int pageSize = 50)
     {
         try
@@ -307,6 +301,170 @@ public class PaymentService : IPaymentService
         {
             _logger.LogError(ex, "Error getting settlements for merchant {MerchantId}", merchantId);
             return new List<SettlementResponse>();
+        }
+    }
+
+    public async Task<PagedResult<PaymentResponse>?> GetAdminCashCollectionsAsync(int page = 1, int pageSize = 20, string? status = null, CancellationToken ct = default)
+    {
+        try
+        {
+            var query = new List<string> { $"Page={page}", $"PageSize={pageSize}" };
+            if (!string.IsNullOrWhiteSpace(status))
+                query.Add($"status={Uri.EscapeDataString(status)}");
+
+            var response = await _httpClient.GetAsync($"api/v1/payment/admin/cash-collections?{string.Join("&", query)}", ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Failed to fetch admin cash collections: {Status}", response.StatusCode);
+                return null;
+            }
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<PaymentResponse>>>(cancellationToken: ct);
+            return apiResponse?.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving admin cash collections");
+            return null;
+        }
+    }
+
+    public async Task<bool> ProcessSettlementAsync(Guid merchantId, ProcessSettlementRequest request, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                $"api/v1/payment/admin/settlements/{merchantId}/process", request, ct);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing settlement for merchant {MerchantId}", merchantId);
+            return false;
+        }
+    }
+
+    public async Task<PagedResult<PaymentResponse>?> GetOrderPaymentsAsync(Guid orderId, int page = 1, int pageSize = 20, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                $"api/v1/payment/order/{orderId}?Page={page}&PageSize={pageSize}", ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Failed to fetch order payments: {Status}", response.StatusCode);
+                return null;
+            }
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<PaymentResponse>>>(cancellationToken: ct);
+            return apiResponse?.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving payments for order {OrderId}", orderId);
+            return null;
+        }
+    }
+
+    public async Task<PaymentResponse?> CreatePaymentAsync(CreatePaymentRequest request, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/v1/payment", request, ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync(ct);
+                _logger.LogWarning("Failed to create payment. Status {Status}, Error {Error}", response.StatusCode, error);
+                return null;
+            }
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PaymentResponse>>(cancellationToken: ct);
+            return apiResponse?.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating payment for order {OrderId}", request.OrderId);
+            return null;
+        }
+    }
+
+    public async Task<PagedResult<PaymentResponse>?> GetPendingCourierPaymentsAsync(int page = 1, int pageSize = 20, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                $"api/v1/payment/courier/pending?Page={page}&PageSize={pageSize}", ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Failed to fetch pending courier payments: {Status}", response.StatusCode);
+                return null;
+            }
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<PaymentResponse>>>(cancellationToken: ct);
+            return apiResponse?.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving pending courier payments");
+            return null;
+        }
+    }
+
+    public async Task<CourierCashSummaryResponse?> GetCourierCashSummaryAsync(DateTime? date = null, CancellationToken ct = default)
+    {
+        try
+        {
+            var url = "api/v1/payment/courier/summary";
+            if (date.HasValue)
+            {
+                url += $"?date={date.Value:yyyy-MM-dd}";
+            }
+
+            var response = await _httpClient.GetAsync(url, ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Failed to fetch courier cash summary: {Status}", response.StatusCode);
+                return null;
+            }
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<CourierCashSummaryResponse>>(cancellationToken: ct);
+            return apiResponse?.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving courier cash summary");
+            return null;
+        }
+    }
+
+    public async Task<bool> CollectCashPaymentAsync(Guid paymentId, CollectCashPaymentRequest request, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                $"api/v1/payment/courier/{paymentId}/collect", request, ct);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error collecting cash payment {PaymentId}", paymentId);
+            return false;
+        }
+    }
+
+    public async Task<bool> FailCashPaymentAsync(Guid paymentId, string reason, CancellationToken ct = default)
+    {
+        try
+        {
+            var request = new FailPaymentRequest { Reason = reason };
+            var response = await _httpClient.PostAsJsonAsync(
+                $"api/v1/payment/courier/{paymentId}/fail", request, ct);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error marking cash payment {PaymentId} as failed", paymentId);
+            return false;
         }
     }
 

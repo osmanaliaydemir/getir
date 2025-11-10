@@ -97,3 +97,31 @@ public class PaymentExportRequest
     public string Format { get; set; } = "excel"; // excel or pdf
 }
 
+public class CashCollectionsViewModel
+{
+    public PagedResult<PaymentResponse> Collections { get; set; } = new();
+    public string? Status { get; set; }
+    public int Page { get; set; } = 1;
+    public ProcessSettlementInput Settlement { get; set; } = new();
+}
+
+public class ProcessSettlementInput
+{
+    [Required]
+    [Display(Name = "Mağaza")]
+    public Guid MerchantId { get; set; }
+
+    [Range(0, 1, ErrorMessage = "Komisyon oranı 0 ile 1 arasında olmalıdır.")]
+    [Display(Name = "Komisyon Oranı")]
+    public decimal CommissionRate { get; set; }
+
+    [Display(Name = "Açıklama")]
+    public string? Notes { get; set; }
+
+    [Display(Name = "Havale Referansı")]
+    public string? BankTransferReference { get; set; }
+
+    public string? ReturnStatus { get; set; }
+    public int ReturnPage { get; set; } = 1;
+}
+

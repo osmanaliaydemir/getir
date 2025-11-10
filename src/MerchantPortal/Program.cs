@@ -132,6 +132,12 @@ builder.Services.AddScoped<IMarketProductVariantService, MarketProductVariantSer
 builder.Services.AddScoped<IDeliveryZoneService, DeliveryZoneService>();
 builder.Services.AddScoped<IDeliveryOptimizationService, DeliveryOptimizationService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IServiceCategoryDirectory, ServiceCategoryDirectory>();
+builder.Services.AddScoped<ISpecialHolidayService, SpecialHolidayService>();
+builder.Services.AddScoped<IInternationalizationService, InternationalizationService>();
+builder.Services.AddScoped<IRateLimitAdminService, RateLimitAdminService>();
+builder.Services.AddScoped<IRealtimeTrackingPortalService, RealtimeTrackingPortalService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddHttpClient<IMerchantDocumentService, MerchantDocumentService>(client =>
 {
 	client.BaseAddress = new Uri(apiSettings.BaseUrl);
@@ -153,6 +159,23 @@ builder.Services.AddHttpClient<IFileService, FileService>(client =>
 	client.BaseAddress = new Uri(apiSettings.BaseUrl);
 	client.DefaultRequestHeaders.Add("Accept", "application/json");
 	client.Timeout = TimeSpan.FromSeconds(30);
+})
+.AddHttpMessageHandler<AuthTokenHandler>()
+.AddHttpMessageHandler<RetryPolicyHandler>()
+.ConfigurePrimaryHttpMessageHandler(() =>
+{
+	var handler = new HttpClientHandler();
+	if (builder.Environment.IsDevelopment())
+	{
+		handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+	}
+	return handler;
+});
+builder.Services.AddHttpClient<IFileManagerService, FileManagerService>(client =>
+{
+	client.BaseAddress = new Uri(apiSettings.BaseUrl);
+	client.DefaultRequestHeaders.Add("Accept", "application/json");
+	client.Timeout = TimeSpan.FromSeconds(60);
 })
 .AddHttpMessageHandler<AuthTokenHandler>()
 .AddHttpMessageHandler<RetryPolicyHandler>()

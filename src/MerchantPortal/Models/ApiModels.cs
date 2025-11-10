@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Getir.MerchantPortal.Models;
 
 // API Response Models
@@ -69,6 +71,7 @@ public class MerchantResponse
 {
     public Guid Id { get; set; }
     public Guid OwnerId { get; set; }
+    public string OwnerName { get; set; } = default!;
     public string Name { get; set; } = default!;
     public string? Description { get; set; }
     public Guid ServiceCategoryId { get; set; }
@@ -110,6 +113,52 @@ public class UpdateMerchantRequest
     public string? CoverImageUrl { get; set; }
 }
 
+public class CreateMerchantRequest
+{
+    [Required]
+    public string Name { get; set; } = default!;
+
+    public string? Description { get; set; }
+
+    [Required]
+    public Guid ServiceCategoryId { get; set; }
+
+    [Required]
+    public string Address { get; set; } = default!;
+
+    [Range(-90, 90)]
+    public decimal Latitude { get; set; }
+
+    [Range(-180, 180)]
+    public decimal Longitude { get; set; }
+
+    [Required]
+    [Phone]
+    public string PhoneNumber { get; set; } = default!;
+
+    [EmailAddress]
+    public string? Email { get; set; }
+
+    [Range(0, double.MaxValue)]
+    public decimal MinimumOrderAmount { get; set; }
+
+    [Range(0, double.MaxValue)]
+    public decimal DeliveryFee { get; set; }
+}
+
+public class ServiceCategoryResponse
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = default!;
+    public string? Description { get; set; }
+    public string Type { get; set; } = default!;
+    public string? ImageUrl { get; set; }
+    public string? IconUrl { get; set; }
+    public int DisplayOrder { get; set; }
+    public bool IsActive { get; set; }
+    public int MerchantCount { get; set; }
+}
+
 // Working Hours Models
 public class WorkingHoursResponse
 {
@@ -140,16 +189,33 @@ public class MerchantSettingsViewModel
 // Dashboard Models
 public class MerchantDashboardResponse
 {
-    public decimal TodayRevenue { get; set; }
+    public MerchantDashboardStats Stats { get; set; } = new();
+    public List<RecentOrderResponse> RecentOrders { get; set; } = new();
+    public List<TopProductResponse> TopProducts { get; set; } = new();
+    public MerchantPerformanceMetrics Performance { get; set; } = new();
+}
+
+public class MerchantDashboardStats
+{
+    public int TotalOrders { get; set; }
     public int TodayOrders { get; set; }
-    public int PendingOrders { get; set; }
+    public decimal TodayRevenue { get; set; }
+    public decimal TotalRevenue { get; set; }
     public int ActiveProducts { get; set; }
-    public decimal? AverageRating { get; set; }
+    public int TotalProducts { get; set; }
+    public decimal AverageRating { get; set; }
     public int TotalReviews { get; set; }
-    public decimal WeekRevenue { get; set; }
-    public int WeekOrders { get; set; }
-    public decimal MonthRevenue { get; set; }
-    public int MonthOrders { get; set; }
+    public bool IsOpen { get; set; }
+    public int PendingOrders { get; set; }
+}
+
+public class MerchantPerformanceMetrics
+{
+    public decimal AverageOrderValue { get; set; }
+    public int OrdersPerDay { get; set; }
+    public decimal CompletionRate { get; set; }
+    public int AveragePreparationTime { get; set; }
+    public decimal CustomerSatisfactionScore { get; set; }
 }
 
 public class RecentOrderResponse
@@ -157,18 +223,36 @@ public class RecentOrderResponse
     public Guid Id { get; set; }
     public string OrderNumber { get; set; } = default!;
     public string CustomerName { get; set; } = default!;
-    public decimal TotalAmount { get; set; }
+    public decimal Total { get; set; }
     public string Status { get; set; } = default!;
     public DateTime CreatedAt { get; set; }
+
+    public decimal TotalAmount
+    {
+        get => Total;
+        set => Total = value;
+    }
 }
 
 public class TopProductResponse
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = default!;
+    public int QuantitySold { get; set; }
+    public decimal Revenue { get; set; }
     public string? ImageUrl { get; set; }
-    public int OrderCount { get; set; }
-    public decimal TotalRevenue { get; set; }
+
+    public int OrderCount
+    {
+        get => QuantitySold;
+        set => QuantitySold = value;
+    }
+
+    public decimal TotalRevenue
+    {
+        get => Revenue;
+        set => Revenue = value;
+    }
 }
 
 // Product Models
@@ -359,12 +443,62 @@ public class PaymentResponse
     public DateTime? CompletedAt { get; set; }
     public DateTime? CollectedAt { get; set; }
     public DateTime? SettledAt { get; set; }
+    public Guid? CollectedByCourierId { get; set; }
     public string? CollectedByCourierName { get; set; }
     public string? Notes { get; set; }
     public string? FailureReason { get; set; }
+    public string? RefundReason { get; set; }
     public decimal? RefundAmount { get; set; }
     public DateTime? RefundedAt { get; set; }
     public DateTime CreatedAt { get; set; }
+}
+
+public class CreatePaymentRequest
+{
+    [Required]
+    public Guid OrderId { get; set; }
+
+    [Required]
+    public string PaymentMethod { get; set; } = default!;
+
+    [Range(0, double.MaxValue)]
+    public decimal Amount { get; set; }
+
+    public decimal? ChangeAmount { get; set; }
+    public string? Notes { get; set; }
+}
+
+public class CollectCashPaymentRequest
+{
+    [Range(0, double.MaxValue)]
+    public decimal CollectedAmount { get; set; }
+    public string? Notes { get; set; }
+}
+
+public class ProcessSettlementRequest
+{
+    [Range(0, 1, ErrorMessage = "Komisyon oranı 0 ile 1 arasında olmalıdır.")]
+    public decimal CommissionRate { get; set; }
+    public string? Notes { get; set; }
+    public string? BankTransferReference { get; set; }
+}
+
+public class CourierCashSummaryResponse
+{
+    public Guid CourierId { get; set; }
+    public string CourierName { get; set; } = default!;
+    public DateTime Date { get; set; }
+    public decimal TotalCollected { get; set; }
+    public int TotalOrders { get; set; }
+    public int SuccessfulCollections { get; set; }
+    public int FailedCollections { get; set; }
+    public List<PaymentResponse> Collections { get; set; } = new();
+}
+
+public class FailPaymentRequest
+{
+    [Required]
+    public string Reason { get; set; } = default!;
 }
 
 // Notification Models
@@ -374,7 +508,11 @@ public class NotificationResponse
     public string Title { get; set; } = default!;
     public string Message { get; set; } = default!;
     public string Type { get; set; } = default!;
+    public Guid? RelatedEntityId { get; set; }
+    public string? RelatedEntityType { get; set; }
     public bool IsRead { get; set; }
+    public string? ImageUrl { get; set; }
+    public string? ActionUrl { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 
@@ -390,6 +528,58 @@ public class NotificationPreferencesResponse
     public bool EmailEnabled { get; set; }
     public bool SmsEnabled { get; set; }
     public bool PushEnabled { get; set; }
+}
+
+// Special Holiday Models
+public class SpecialHolidayResponse
+{
+    public Guid Id { get; set; }
+    public Guid MerchantId { get; set; }
+    public string Title { get; set; } = default!;
+    public string? Description { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public bool IsClosed { get; set; }
+    public TimeSpan? SpecialOpenTime { get; set; }
+    public TimeSpan? SpecialCloseTime { get; set; }
+    public bool IsRecurring { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+
+public class CreateSpecialHolidayRequest
+{
+    public Guid MerchantId { get; set; }
+    public string Title { get; set; } = default!;
+    public string? Description { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public bool IsClosed { get; set; }
+    public TimeSpan? SpecialOpenTime { get; set; }
+    public TimeSpan? SpecialCloseTime { get; set; }
+    public bool IsRecurring { get; set; }
+}
+
+public class UpdateSpecialHolidayRequest
+{
+    public string Title { get; set; } = default!;
+    public string? Description { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public bool IsClosed { get; set; }
+    public TimeSpan? SpecialOpenTime { get; set; }
+    public TimeSpan? SpecialCloseTime { get; set; }
+    public bool IsRecurring { get; set; }
+    public bool IsActive { get; set; }
+}
+
+public class MerchantAvailabilityResponse
+{
+    public bool IsOpen { get; set; }
+    public string Status { get; set; } = default!;
+    public SpecialHolidayResponse? SpecialHoliday { get; set; }
+    public string? Message { get; set; }
 }
 
 public class MerchantCashSummaryResponse
@@ -945,10 +1135,245 @@ public class RouteOptimizationResponse
 // File Upload Models
 public class FileUploadResponse
 {
-    public string? Url { get; set; }
-    public string? FileName { get; set; }
-    public string? Container { get; set; }
-    public long? Size { get; set; }
+    public string FileName { get; set; } = string.Empty;
+    public string BlobUrl { get; set; } = string.Empty;
+    public string Url => BlobUrl;
+    public string ContainerName { get; set; } = string.Empty;
+    public long FileSizeBytes { get; set; }
+    public string ContentType { get; set; } = string.Empty;
+    public DateTime UploadedAt { get; set; }
+    public string? ThumbnailUrl { get; set; }
+}
+
+// Internationalization
+public class LanguageResponse
+{
+    public Guid Id { get; set; }
+    public int Code { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string NativeName { get; set; } = string.Empty;
+    public string CultureCode { get; set; } = string.Empty;
+    public bool IsRtl { get; set; }
+    public bool IsActive { get; set; }
+    public bool IsDefault { get; set; }
+    public int SortOrder { get; set; }
+    public string? FlagIcon { get; set; }
+}
+
+public class LanguageStatisticsResponse
+{
+    public int LanguageCode { get; set; }
+    public string LanguageName { get; set; } = string.Empty;
+    public int TotalTranslations { get; set; }
+    public int ActiveTranslations { get; set; }
+    public int InactiveTranslations { get; set; }
+    public int UserCount { get; set; }
+    public double CompletionPercentage { get; set; }
+}
+
+public class TranslationSearchResponseModel
+{
+    public List<TranslationItemModel> Translations { get; set; } = new();
+    public int TotalCount { get; set; }
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+    public int TotalPages { get; set; }
+}
+
+public class TranslationItemModel
+{
+    public Guid Id { get; set; }
+    public string Key { get; set; } = string.Empty;
+    public string Value { get; set; } = string.Empty;
+    public int LanguageCode { get; set; }
+    public string? Category { get; set; }
+    public string? Context { get; set; }
+    public string? Description { get; set; }
+    public bool IsActive { get; set; }
+}
+
+public class TranslationSearchRequestModel
+{
+    public string? Key { get; set; }
+    public int? LanguageCode { get; set; }
+    public string? Category { get; set; }
+    public string? Context { get; set; }
+    public bool? IsActive { get; set; }
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+}
+
+// Rate limiting
+public class RateLimitRuleResponse
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public int Type { get; set; }
+    public string? Endpoint { get; set; }
+    public string? HttpMethod { get; set; }
+    public int RequestLimit { get; set; }
+    public int Period { get; set; }
+    public int Action { get; set; }
+    public int? ThrottleDelayMs { get; set; }
+    public bool IsActive { get; set; }
+    public int Priority { get; set; }
+    public string? UserRole { get; set; }
+    public string? UserTier { get; set; }
+}
+
+public class RateLimitSearchRequestModel
+{
+    public string? Endpoint { get; set; }
+    public string? HttpMethod { get; set; }
+    public string? UserId { get; set; }
+    public string? UserRole { get; set; }
+    public string? UserTier { get; set; }
+    public string? IpAddress { get; set; }
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public bool? IsLimitExceeded { get; set; }
+}
+
+public class RateLimitLogResponse
+{
+    public Guid Id { get; set; }
+    public Guid? RateLimitRuleId { get; set; }
+    public string? Endpoint { get; set; }
+    public string? HttpMethod { get; set; }
+    public string? UserId { get; set; }
+    public string? UserName { get; set; }
+    public string? UserRole { get; set; }
+    public string? IpAddress { get; set; }
+    public string? UserAgent { get; set; }
+    public int Type { get; set; }
+    public int Action { get; set; }
+    public int RequestCount { get; set; }
+    public int RequestLimit { get; set; }
+    public int Period { get; set; }
+    public bool IsLimitExceeded { get; set; }
+    public string? Reason { get; set; }
+    public DateTime RequestTime { get; set; }
+    public DateTime? BlockedUntil { get; set; }
+    public string? RequestId { get; set; }
+    public string? SessionId { get; set; }
+    public string? Country { get; set; }
+    public string? City { get; set; }
+    public string? DeviceType { get; set; }
+    public string? Browser { get; set; }
+    public string? OperatingSystem { get; set; }
+}
+
+public class RateLimitSearchResponseModel
+{
+    public List<RateLimitLogResponse> Logs { get; set; } = new();
+    public int TotalCount { get; set; }
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+    public int TotalPages { get; set; }
+}
+
+public class RateLimitCheckResponseModel
+{
+    public bool IsLimitExceeded { get; set; }
+    public string? Message { get; set; }
+    public int RemainingRequests { get; set; }
+    public DateTime? RetryAfter { get; set; }
+    public string? RuleName { get; set; }
+    public string? Action { get; set; }
+}
+
+// Realtime tracking
+public class OrderTrackingResponse
+{
+    public Guid Id { get; set; }
+    public Guid OrderId { get; set; }
+    public Guid? CourierId { get; set; }
+    public string? CourierName { get; set; }
+    public string? CourierPhone { get; set; }
+    public int Status { get; set; }
+    public string StatusDisplayName { get; set; } = string.Empty;
+    public string? StatusMessage { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
+    public string? Address { get; set; }
+    public string? City { get; set; }
+    public string? District { get; set; }
+    public int LocationUpdateType { get; set; }
+    public double? Accuracy { get; set; }
+    public DateTime? EstimatedArrivalTime { get; set; }
+    public DateTime? ActualArrivalTime { get; set; }
+    public int? EstimatedMinutesRemaining { get; set; }
+    public double? DistanceFromDestination { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime LastUpdatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class LocationUpdateRequestModel
+{
+    public Guid OrderTrackingId { get; set; }
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public string? Address { get; set; }
+    public string? City { get; set; }
+    public string? District { get; set; }
+    public int UpdateType { get; set; }
+    public double? Accuracy { get; set; }
+    public double? Speed { get; set; }
+    public double? Bearing { get; set; }
+    public double? Altitude { get; set; }
+    public string? DeviceInfo { get; set; }
+    public string? AppVersion { get; set; }
+}
+
+public class LocationUpdateResponse
+{
+    public bool Success { get; set; }
+    public string? Message { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public double? DistanceFromDestination { get; set; }
+    public int? EstimatedMinutesRemaining { get; set; }
+}
+
+public class StatusUpdateRequestModel
+{
+    public Guid OrderTrackingId { get; set; }
+    public int Status { get; set; }
+    public string? StatusMessage { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
+    public string? Address { get; set; }
+}
+
+public class StatusUpdateResponse
+{
+    public bool Success { get; set; }
+    public string? Message { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public bool NotificationSent { get; set; }
+}
+
+public class TrackingNotificationResponse
+{
+    public Guid Id { get; set; }
+    public Guid OrderTrackingId { get; set; }
+    public Guid? UserId { get; set; }
+    public int Type { get; set; }
+    public string TypeDisplayName { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public bool IsSent { get; set; }
+    public bool IsRead { get; set; }
+    public DateTime? SentAt { get; set; }
+    public DateTime? ReadAt { get; set; }
+    public string? DeliveryMethod { get; set; }
+    public string? DeliveryStatus { get; set; }
+    public string? ErrorMessage { get; set; }
+    public int RetryCount { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
 
 // Merchant Documents
@@ -956,11 +1381,29 @@ public class MerchantDocumentResponse
 {
     public Guid Id { get; set; }
     public Guid MerchantId { get; set; }
+    public Guid UploadedBy { get; set; }
     public string DocumentType { get; set; } = default!;
+    public string DocumentName { get; set; } = default!;
     public string FileName { get; set; } = default!;
-    public string Url { get; set; } = default!;
+    public string FileUrl { get; set; } = default!;
+    public string MimeType { get; set; } = default!;
+    public long FileSize { get; set; }
+    public string? Description { get; set; }
+    public DateTime? ExpiryDate { get; set; }
+    public bool IsRequired { get; set; }
+    public bool IsVerified { get; set; }
+    public bool IsApproved { get; set; }
+    public string? VerificationNotes { get; set; }
+    public Guid? VerifiedBy { get; set; }
+    public DateTime? VerifiedAt { get; set; }
     public string Status { get; set; } = default!;
-    public DateTime UploadedAt { get; set; }
+    public string? RejectionReason { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public string UploadedByUserName { get; set; } = default!;
+    public string? VerifiedByUserName { get; set; }
+    public bool IsExpired { get; set; }
+    public int DaysUntilExpiry { get; set; }
 }
 
 public class UploadMerchantDocumentRequest
@@ -968,6 +1411,61 @@ public class UploadMerchantDocumentRequest
     public Guid MerchantId { get; set; }
     public string DocumentType { get; set; } = default!;
     public string? Notes { get; set; }
+}
+
+public class MerchantDocumentProgressResponse
+{
+    public Guid MerchantId { get; set; }
+    public int TotalRequiredDocuments { get; set; }
+    public int UploadedDocuments { get; set; }
+    public int VerifiedDocuments { get; set; }
+    public decimal CompletionPercentage { get; set; }
+}
+
+public class DocumentTypeResponse
+{
+    public string Type { get; set; } = default!;
+    public string Name { get; set; } = default!;
+    public bool IsRequired { get; set; }
+}
+
+public class MerchantDocumentStatisticsResponse
+{
+    public int TotalDocuments { get; set; }
+    public int PendingDocuments { get; set; }
+    public int ApprovedDocuments { get; set; }
+    public int RejectedDocuments { get; set; }
+    public int ExpiredDocuments { get; set; }
+}
+
+public class VerifyMerchantDocumentRequest
+{
+    public Guid DocumentId { get; set; }
+    public bool IsApproved { get; set; }
+    public string? VerificationNotes { get; set; }
+    public string? RejectionReason { get; set; }
+}
+
+public class BulkVerifyDocumentsRequest
+{
+    public List<Guid> DocumentIds { get; set; } = new();
+    public bool IsApproved { get; set; }
+    public string? VerificationNotes { get; set; }
+}
+
+public class BulkVerifyDocumentsResponse
+{
+    public int TotalDocuments { get; set; }
+    public int SuccessfulVerifications { get; set; }
+    public int FailedVerifications { get; set; }
+    public List<string> Errors { get; set; } = new();
+}
+
+public class DocumentDownloadResult
+{
+    public byte[] Content { get; set; } = Array.Empty<byte>();
+    public string ContentType { get; set; } = "application/octet-stream";
+    public string FileName { get; set; } = "document";
 }
 
 

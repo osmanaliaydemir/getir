@@ -70,4 +70,13 @@ public interface IPaymentService
     /// <param name="pageSize">Sayfa boyutu</param>
     /// <returns>Mutabakat listesi</returns>
     Task<List<SettlementResponse>> GetMerchantSettlementsAsync(Guid merchantId, int page = 1, int pageSize = 50);
+
+    Task<PagedResult<PaymentResponse>?> GetAdminCashCollectionsAsync(int page = 1, int pageSize = 20, string? status = null, CancellationToken ct = default);
+    Task<bool> ProcessSettlementAsync(Guid merchantId, ProcessSettlementRequest request, CancellationToken ct = default);
+    Task<PagedResult<PaymentResponse>?> GetOrderPaymentsAsync(Guid orderId, int page = 1, int pageSize = 20, CancellationToken ct = default);
+    Task<PaymentResponse?> CreatePaymentAsync(CreatePaymentRequest request, CancellationToken ct = default);
+    Task<PagedResult<PaymentResponse>?> GetPendingCourierPaymentsAsync(int page = 1, int pageSize = 20, CancellationToken ct = default);
+    Task<CourierCashSummaryResponse?> GetCourierCashSummaryAsync(DateTime? date = null, CancellationToken ct = default);
+    Task<bool> CollectCashPaymentAsync(Guid paymentId, CollectCashPaymentRequest request, CancellationToken ct = default);
+    Task<bool> FailCashPaymentAsync(Guid paymentId, string reason, CancellationToken ct = default);
 }

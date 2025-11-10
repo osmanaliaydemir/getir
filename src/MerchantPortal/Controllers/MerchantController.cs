@@ -1,3 +1,4 @@
+using System.Linq;
 using Getir.MerchantPortal.Models;
 using Getir.MerchantPortal.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -10,6 +11,7 @@ public class MerchantController : Controller
 {
     private readonly IMerchantService _merchantService;
     private readonly IWorkingHoursService _workingHoursService;
+    private readonly IServiceCategoryDirectory _serviceCategoryDirectory;
     private readonly ILogger<MerchantController> _logger;
 
     /// <summary>
@@ -18,11 +20,148 @@ public class MerchantController : Controller
     /// <param name="merchantService">Merchant servisi</param>
     /// <param name="workingHoursService">Çalışma saatleri servisi</param>
     /// <param name="logger">Logger instance</param>
-    public MerchantController(IMerchantService merchantService, IWorkingHoursService workingHoursService, ILogger<MerchantController> logger)
+    public MerchantController(IMerchantService merchantService, IWorkingHoursService workingHoursService, IServiceCategoryDirectory serviceCategoryDirectory, ILogger<MerchantController> logger)
     {
         _merchantService = merchantService;
         _workingHoursService = workingHoursService;
+        _serviceCategoryDirectory = serviceCategoryDirectory;
         _logger = logger;
+    }
+
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Directory(string? categoryType = null, bool onlyActive = false, int page = 1)
+    {
+        const int pageSize = 20;
+
+        PagedResult<MerchantResponse>? merchants;
+        if (!string.IsNullOrWhiteSpace(categoryType))
+        {
+            if (onlyActive)
+            {
+                var active = await _merchantService.GetActiveMerchantsByCategoryTypeAsync(categoryType) ?? new List<MerchantResponse>();
+                merchants = new PagedResult<MerchantResponse>
+                {
+                    Items = active,
+                    Page = 1,
+                    PageSize = active.Count,
+                    TotalCount = active.Count,
+                    TotalPages = 1
+                };
+            }
+            else
+            {
+                merchants = await _merchantService.GetMerchantsByCategoryTypeAsync(categoryType, page, pageSize);
+            }
+        }
+        else
+        {
+            merchants = await _merchantService.GetMerchantsAsync(page, pageSize);
+            if (onlyActive && merchants != null)
+            {
+                merchants.Items = merchants.Items.Where(m => m.IsActive).ToList();
+                merchants.TotalCount = merchants.Items.Count;
+                merchants.TotalPages = 1;
+                merchants.Page = 1;
+                merchants.PageSize = merchants.Items.Count;
+            }
+        }
+
+        var serviceCategories = await _serviceCategoryDirectory.GetServiceCategoriesAsync() ?? Array.Empty<ServiceCategoryResponse>();
+
+        var viewModel = new MerchantListViewModel
+        {
+            Merchants = merchants ?? new PagedResult<MerchantResponse>(),
+            Filter = new MerchantListFilter
+            {
+                CategoryType = categoryType,
+                OnlyActive = onlyActive,
+                Page = page
+            },
+            ServiceCategories = serviceCategories
+        };
+
+        return View(viewModel);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet]
+    public async Task<IActionResult> Create()
+    {
+        var categories = await _serviceCategoryDirectory.GetServiceCategoriesAsync() ?? Array.Empty<ServiceCategoryResponse>();
+        var model = new MerchantCreateViewModel
+        {
+            ServiceCategories = categories
+        };
+        return View(model);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(MerchantCreateViewModel model)
+    {
+        model.ServiceCategories = await _serviceCategoryDirectory.GetServiceCategoriesAsync() ?? Array.Empty<ServiceCategoryResponse>();
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var request = new CreateMerchantRequest
+        {
+            Name = model.Input.Name,
+            Description = model.Input.Description,
+            ServiceCategoryId = model.Input.ServiceCategoryId,
+            Address = model.Input.Address,
+            Latitude = model.Input.Latitude,
+            Longitude = model.Input.Longitude,
+            PhoneNumber = model.Input.PhoneNumber,
+            Email = model.Input.Email,
+            MinimumOrderAmount = model.Input.MinimumOrderAmount,
+            DeliveryFee = model.Input.DeliveryFee
+        };
+
+        var created = await _merchantService.CreateMerchantAsync(request);
+        if (created == null)
+        {
+            ModelState.AddModelError(string.Empty, "Mağaza oluşturulamadı. Lütfen bilgileri kontrol edin.");
+            return View(model);
+        }
+
+        TempData["SuccessMessage"] = "Mağaza başarıyla oluşturuldu.";
+        return RedirectToAction(nameof(Directory));
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var success = await _merchantService.DeleteMerchantAsync(id);
+        TempData[success ? "SuccessMessage" : "ErrorMessage"] = success
+            ? "Mağaza silindi."
+            : "Mağaza silme işlemi başarısız oldu.";
+        return RedirectToAction(nameof(Directory));
+    }
+
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Details(Guid id)
+    {
+        var merchant = await _merchantService.GetMerchantByIdAsync(id);
+        if (merchant == null)
+        {
+            TempData["ErrorMessage"] = "Mağaza bulunamadı.";
+            return RedirectToAction(nameof(Directory));
+        }
+
+        var categories = await _serviceCategoryDirectory.GetServiceCategoriesAsync() ?? Array.Empty<ServiceCategoryResponse>();
+        var viewModel = new MerchantDetailViewModel
+        {
+            Merchant = merchant,
+            ServiceCategories = categories
+        };
+
+        return View(viewModel);
     }
 
     /// <summary>

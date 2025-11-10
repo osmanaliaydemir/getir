@@ -1,12 +1,13 @@
+@model Getir.MerchantPortal.Models.DashboardViewModel
 @inject ILocalizationService LocalizationService
 @using Getir.MerchantPortal.Services
 @{
     ViewData["Title"] = LocalizationService.GetString("Dashboard");
-    var dashboard = ViewBag.Dashboard as MerchantDashboardResponse;
-    var recentOrders = ViewBag.RecentOrders as List<RecentOrderResponse> ?? new List<RecentOrderResponse>();
-    var topProducts = ViewBag.TopProducts as List<TopProductResponse> ?? new List<TopProductResponse>();
-    var stockSummary = ViewBag.StockSummary as StockSummaryResponse;
-    
+    var stats = Model.Stats;
+    var performance = Model.Performance;
+    var recentOrders = Model.RecentOrders ?? new List<RecentOrderResponse>();
+    var topProducts = Model.TopProducts ?? new List<TopProductResponse>();
+    var stockSummary = Model.StockSummary;
 }
 
 @section Styles {
@@ -42,10 +43,10 @@
                 <i class="fas fa-lira-sign"></i>
             </div>
             <div class="stat-label">@LocalizationService.GetString("TodayRevenue")</div>
-            <div class="stat-value">₺@(dashboard?.TodayRevenue.ToString("N2") ?? "0")</div>
+            <div class="stat-value">₺@(stats?.TodayRevenue.ToString("N2") ?? "0")</div>
             <div class="stat-change positive">
                 <i class="fas fa-arrow-up"></i>
-                <span>@(dashboard?.TodayOrders ?? 0) @LocalizationService.GetString("OrdersCount")</span>
+                <span>@(stats?.TodayOrders ?? 0) @LocalizationService.GetString("OrdersCount")</span>
             </div>
         </div>
     </div>
@@ -57,8 +58,8 @@
                 <i class="fas fa-clock"></i>
             </div>
             <div class="stat-label">@LocalizationService.GetString("PendingOrders")</div>
-            <div class="stat-value">@(dashboard?.PendingOrders ?? 0)</div>
-            <div class="stat-change @(dashboard?.PendingOrders > 0 ? "negative" : "neutral")">
+            <div class="stat-value">@(stats?.PendingOrders ?? 0)</div>
+            <div class="stat-change @((stats?.PendingOrders ?? 0) > 0 ? "negative" : "neutral")">
                 <i class="fas fa-exclamation-circle"></i>
                 <span>@LocalizationService.GetString("PendingAction")</span>
             </div>
@@ -72,7 +73,7 @@
                 <i class="fas fa-box"></i>
             </div>
             <div class="stat-label">@LocalizationService.GetString("ActiveProducts")</div>
-            <div class="stat-value">@(dashboard?.ActiveProducts ?? 0)</div>
+            <div class="stat-value">@(stats?.ActiveProducts ?? 0)</div>
             <div class="stat-change positive">
                 <i class="fas fa-check-circle"></i>
                 <span>@LocalizationService.GetString("OnSale")</span>
@@ -87,10 +88,10 @@
                 <i class="fas fa-star"></i>
             </div>
             <div class="stat-label">@LocalizationService.GetString("Review")</div>
-            <div class="stat-value">@(dashboard?.AverageRating?.ToString("N1") ?? "0.0")</div>
+            <div class="stat-value">@(stats?.AverageRating.ToString("N1") ?? "0.0")</div>
             <div class="stat-change neutral">
                 <i class="fas fa-users"></i>
-                <span>@(dashboard?.TotalReviews ?? 0) @LocalizationService.GetString("Reviews")</span>
+                <span>@(stats?.TotalReviews ?? 0) @LocalizationService.GetString("Reviews")</span>
             </div>
         </div>
     </div>
@@ -102,54 +103,71 @@
         <div class="performance-card fade-in" style="animation-delay: 0.5s;">
             <div class="chart-header">
                 <div class="chart-title">
-                    <i class="fas fa-chart-line"></i>
-                    @LocalizationService.GetString("WeeklyPerformance")
+                    <i class="fas fa-coins"></i>
+                    @LocalizationService.GetString("AverageOrderValue")
                 </div>
             </div>
-            <div class="row">
-                <div class="col-6">
-                    <div class="metric-row">
-                        <div>
-                            <div class="metric-label">@LocalizationService.GetString("Revenue")</div>
-                            <div class="metric-value text-primary">₺@(dashboard?.WeekRevenue.ToString("N2") ?? "0")</div>
-                        </div>
+            <div class="metric-row">
+                <div>
+                    <div class="metric-label">@LocalizationService.GetString("AverageOrderValue")</div>
+                    <div class="metric-value text-primary">
+                        ₺@(performance?.AverageOrderValue.ToString("N2") ?? "0")
                     </div>
                 </div>
-                <div class="col-6">
-                    <div class="metric-row">
-                        <div>
-                            <div class="metric-label">@LocalizationService.GetString("Order")</div>
-                            <div class="metric-value text-success">@(dashboard?.WeekOrders ?? 0)</div>
-                        </div>
+                <div>
+                    <div class="metric-label">@LocalizationService.GetString("TotalOrders")</div>
+                    <div class="metric-value text-success">
+                        @(stats?.TotalOrders ?? 0)
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-6 col-lg-4">
         <div class="performance-card fade-in" style="animation-delay: 0.6s;">
             <div class="chart-header">
                 <div class="chart-title">
-                    <i class="fas fa-calendar-alt"></i>
-                    @LocalizationService.GetString("MonthlyPerformance")
+                    <i class="fas fa-stream"></i>
+                    @LocalizationService.GetString("MerchantPerformance")
                 </div>
             </div>
-            <div class="row">
-                <div class="col-6">
-                    <div class="metric-row">
-                        <div>
-                            <div class="metric-label">@LocalizationService.GetString("Revenue")</div>
-                            <div class="metric-value text-primary">₺@(dashboard?.MonthRevenue.ToString("N2") ?? "0")</div>
-                        </div>
+            <div class="metric-row">
+                <div>
+                    <div class="metric-label">@LocalizationService.GetString("OrdersPerDay")</div>
+                    <div class="metric-value text-info">
+                        @(performance?.OrdersPerDay ?? 0)
                     </div>
                 </div>
-                <div class="col-6">
-                    <div class="metric-row">
-                        <div>
-                            <div class="metric-label">@LocalizationService.GetString("Order")</div>
-                            <div class="metric-value text-success">@(dashboard?.MonthOrders ?? 0)</div>
-                        </div>
+                <div>
+                    <div class="metric-label">@LocalizationService.GetString("AveragePreparationTime")</div>
+                    <div class="metric-value text-warning">
+                        @(performance?.AveragePreparationTime ?? 0) dk
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-12 col-lg-4">
+        <div class="performance-card fade-in" style="animation-delay: 0.7s;">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <i class="fas fa-percentage"></i>
+                    @LocalizationService.GetString("CompletionRate")
+                </div>
+            </div>
+            <div class="metric-row">
+                <div>
+                    <div class="metric-label">@LocalizationService.GetString("CompletionRate")</div>
+                    <div class="metric-value text-success">
+                        @(performance != null ? performance.CompletionRate.ToString("N1") : "0")%
+                    </div>
+                </div>
+                <div>
+                    <div class="metric-label">@LocalizationService.GetString("CustomerSatisfaction")</div>
+                    <div class="metric-value text-primary">
+                        @(performance?.CustomerSatisfactionScore.ToString("N1") ?? "0")
                     </div>
                 </div>
             </div>
