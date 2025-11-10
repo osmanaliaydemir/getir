@@ -395,6 +395,18 @@
                 <a href="@Url.Action("Index", "RealtimeTracking")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "RealtimeTracking" ? "active" : "")">
                     <i class="fas fa-map-marker-alt"></i> @LocalizationService.GetString("RealtimeTracking")
                 </a>
+                <a href="@Url.Action("Index", "UserSelfService")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "UserSelfService" ? "active" : "")">
+                    <i class="fas fa-user-circle"></i> @LocalizationService.GetString("UserSelfService")
+                </a>
+                <a href="@Url.Action("Index", "AuditLoggingAdmin")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "AuditLoggingAdmin" ? "active" : "")">
+                    <i class="fas fa-shield-alt"></i> @LocalizationService.GetString("AuditLoggingCenter")
+                </a>
+                <a href="@Url.Action("Index", "PlatformAdmin")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "PlatformAdmin" ? "active" : "")">
+                    <i class="fas fa-tachometer-alt"></i> @LocalizationService.GetString("PlatformAdminCenter")
+                </a>
+                <a href="@Url.Action("Index", "GeoAnalytics")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "GeoAnalytics" ? "active" : "")">
+                    <i class="fas fa-globe-europe"></i> @LocalizationService.GetString("GeoAnalytics")
+                </a>
                 <a href="@Url.Action("Index", "Onboarding")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Onboarding" ? "active" : "")">
                     <i class="fas fa-list-check"></i> @LocalizationService.GetString("Onboarding")
                 </a>

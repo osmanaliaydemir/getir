@@ -1,49 +1,63 @@
-# Merchant Portal – API Entegrasyon Yol Haritası
+# Merchant Portal – API Entegrasyon Yol Haritası (Güncel)
 
-Bu plan `analysis/endpoint-analysis.json` çıktısındaki eksik Portal entegrasyonlarına göre hazırlanmıştır. Sprintler 1 haftalık varsayılmıştır.
+Kaynak: `analysis/endpoint-analysis.json` (2025-11-09) çıktısındaki kalan `missingInPortal` uçları. Sprintler ~1 hafta.
 
-## Sprint 1 – Yüksek Öncelik (Temel Operasyonlar)
+## Sprint 4 – Operasyonel İzleme
 
-- [x] **Merchant Belge Yönetimi**
-  - `GET api/MerchantDocument` → Belge listesi sayfası
-  - `GET api/MerchantDocument/{id}` & `/download` → Detay + indirme
-  - `GET api/MerchantDocument/required-types` → Belge türleri konfigürasyonu
-  - `POST api/MerchantDocument/{id}/verify` & `/bulk-verify` → Onay/Toplu onay akışı
-- [x] **Merchant CRUD Eksikleri**
-  - `GET api/v1/Merchant` & `/active/by-category-type/{categoryType}`
-  - `GET/DELETE api/v1/Merchant/{id}`
-  - `POST api/v1/Merchant`
-  - Portal UI/rol modeli ile uyumlu yetki kontrolü ekle.
-- [x] **Payment – Courier/Admin Senaryoları (Seçmeli)**
-  - `GET api/v1/Payment/courier/pending` & `/summary`
-  - `POST api/v1/Payment/courier/{paymentId}/collect|fail`
-  - Merchant’ın kurye tahsilatlarını izlemesi gerekiyorsa yeni ekran tasarla.
+- [x] **Realtime Tracking Tamamlanması**
+  - `GET api/RealtimeTracking/{trackingId}` / `IsTrackingActive`
+  - ETA & metrik uçları: `GetCurrentETA`, `GetTrackingMetrics`, `GetETAHistory`
+  - Konum geçmişi: `GetLocationHistory`, `GetTrackingEvents`
+  - Bildirim yönetimi: `GetNotificationsByTrackingId`, `DeleteNotification`
+  - Ayarlar: `GetMerchantSettings`, `DeleteMerchantSettings`, `GetUserSettings`
+- [x] **Realtime Bildirim & UI**
+  - Portal modülü için canlı takip panelleri, websocket/polling kararını al.
+  - Manuel durum/konum güncelleme yetkileri (`UpdateStatus`, `UpdateLocation`).
 
-## Sprint 2 – Orta Öncelik (Operasyonel Genişleme)
+## Sprint 5 – Rate Limit ve Uluslararasılaştırma
 
-- [x] **Merchant Dashboard Genişletme**
-  - Kullanılmayan `MerchantDashboard` endpoint’lerini (ör. export/metrics) dahil et.
-- [x] **Stok & Uyarı Tamamlamaları**
-  - `StockManagement` ve `StockAlert` altında portalda olmayan kontrolleri bağla.
-- [x] **Special Holiday & Notification Tarihçesi**
-  - `GET/POST/PUT/DELETE api/v1/SpecialHoliday` → Tatil günleri UI.
-  - `GET api/v1/Notification/*` → Bildirim geçmişi ekranı.
+- [ ] **Rate Limit Yönetim Stüdyosu**
+  - Kural CRUD: `GetAllRules`, `CreateRule`, `UpdateRule`, `DeleteRule`
+  - Konfigürasyon uçları: `GetAllConfigurations`, `CreateConfiguration`, `DeleteConfiguration`
+  - Gözlemleme: `GetDashboardData`, `GetStatistics`, `GetEndpointStatistics`, `GetRealTimeLogs`, `GetRecentLogs`, `SearchLogs`
+- [ ] **Internationalization Admin Derinleştirme**
+  - Dil CRUD: `GetAllLanguages`, `CreateLanguage`, `UpdateLanguage`, `DeleteLanguage`
+  - Çeviri yönetimi: `GetTranslation`, `GetTranslationsByCategory`, `ExportTranslations`, `ImportTranslations`
+  - Kullanıcı dil tercihleri: `GetUserLanguagePreferences`, `SetUserLanguagePreference`, `RemoveUserLanguagePreference`
 
-## Sprint 3 – Düşük Öncelik / Nice-to-have
+## Sprint 6 – Güvenlik & Platform Yönetimi
 
-- [x] **İleri Analitik & Raporlama**
-  - [x] `Inventory` için envanter analitiği ve değerleme raporları
-  - [x] `FileUpload` için dosya yönetimi paneli
-  - [x] `Review` / `ProductReview` tarafında gelişmiş metrikler ve trend ekranları
-- [x] **Uluslararasılaştırma & Rate Limit Araçları**
-  - `InternationalizationController` & `RateLimitController` entegrasyonu; gerekirse sadece admin araçları için planla.
-- [x] **Realtime Tracking / Courier Araçları**
-  - Merchant Portal’da gerçek zamanlı kurye/sipariş takibi gerekiyorsa `RealtimeTrackingController` uçlarını kullanacak modül tasarla.
+- [x] **Audit Logging Merkezi**
+  - Raporlama: `GetLogAnalysisReports`, `GenerateAuditLogAnalytics`, `ExportReport`
+  - Güvenlik olayları: `GetSecurityEventLogs`, `GetHighRiskSecurityEvents`
+  - Temizlik: `DeleteExpiredReports`, `DeleteOldSecurityEventLogs`, `DeleteOldUserActivityLogs`
+- [x] **Platform Admin Paneli**
+  - Dashboard & metrikler: `GetDashboard`, `GetPerformanceMetrics`, `GetRevenueTrendData`
+  - Merchant başvuruları: `GetMerchantApplications`, `GetMerchantApplicationDetails`, `ApproveMerchantApplication`
+  - Sistem bildirimleri: `GetSystemNotifications`, `CreateNotification`, `DeleteNotification`
 
-## Teknik Notlar
+## Sprint 7 – Dağıtım Optimizasyonu & Finansal Güvenlik
 
-- Yeni entegrasyonlar için servis katmanında ilgili HTTP çağrıları açılmalı, ardından Controller/View tarafında UI güncellenmeli.
-- Her sprintte eklenen endpointler için birim test + entegrasyon testleri yazılmalı.
-- Gereksiz bulunan endpointleri (Portal kapsamı dışı) ayrı bir dokümana (ör. `docs/UNUSED_API_ENDPOINTS_ANALYSIS.md`) not ederek takip et.
+- [ ] **Delivery Optimization**
+  - Kapasite yönetimi: `GetCapacity`, `AdjustCapacity`, `ResetDailyCounters`, `ResetWeeklyCounters`
+  - Rota optimizasyonu: `OptimizeMultiPointRoute`, `SelectBestRoute`, `AnalyzeRoutePerformance`, `GetRouteHistory`
+- [ ] **Cash Payment Güvenlik & Denetim**
+  - Güvenlik uçları: `GetAnomalyAlerts`, `EscalateIncident`, `ResolveIncident`
+  - Denetim raporları: `GetCashAuditSummaries`, `CreateAuditReport`, `CloseAuditReport`
 
+## Sprint 8 – Kullanıcı Self-Service & Geo Analytics
 
+- [x] **User Self-Service**
+  - Profil & tercih yönetimi: `GetProfile`, `UpdateProfile`, `GetNotificationPreferences`, `UpdateNotificationPreferences`, `GetLanguage`, `SetLanguage`
+  - Sipariş geçmişi: `GetUserOrders`, `GetOrderDetails`, `GetOrderTimeline`
+  - Favoriler & adresler: `GetFavorites`, `AddToFavorites`, `RemoveFromFavorites`, `GetUserAddresses`, `CreateAddress`, `DeleteAddress`
+- [x] **Geo / Lokal Analitik**
+  - `GeoLocation` metrikleri: `GetHeatmapData`, `GetCoverageGaps`, `GetDeliveryTimeMatrix`
+  - Merchant bölge konfigürasyonu: `GetServiceAreas`, `UpdateServiceArea`, `DeleteServiceArea`
+
+## Teknik İlkeler
+
+- Her sprint sonunda EndpointAnalyzer yeniden çalıştırılarak kalan açık uçlar doğrulanmalı.
+- Servis katmanı → Controller → View zincirinde istisna yönetimi ve yetkilendirme testleri eklenmeli.
+- Yeni modüller için lokalizasyon (TR/EN/AR) ve rol bazlı görünürlük kontrolleri tamamlanmalı.
+- Portal kapsamı dışında kalması netleşen uçlar `docs/UNUSED_API_ENDPOINTS_ANALYSIS.md` altına taşınmalı.

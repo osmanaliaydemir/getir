@@ -1376,6 +1376,763 @@ public class TrackingNotificationResponse
     public DateTime CreatedAt { get; set; }
 }
 
+public class TrackingActiveResponse
+{
+    public bool IsActive { get; set; }
+}
+
+public class TrackingEtaResponse
+{
+    public Guid Id { get; set; }
+    public Guid OrderTrackingId { get; set; }
+    public DateTime EstimatedArrivalTime { get; set; }
+    public int EstimatedMinutesRemaining { get; set; }
+    public double? DistanceRemaining { get; set; }
+    public double? AverageSpeed { get; set; }
+    public string? CalculationMethod { get; set; }
+    public double? Confidence { get; set; }
+    public string? Notes { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class LocationHistoryResponse
+{
+    public Guid Id { get; set; }
+    public Guid OrderTrackingId { get; set; }
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public string? Address { get; set; }
+    public string? City { get; set; }
+    public string? District { get; set; }
+    public int UpdateType { get; set; }
+    public string UpdateTypeDisplayName { get; set; } = string.Empty;
+    public double? Accuracy { get; set; }
+    public double? Speed { get; set; }
+    public double? Bearing { get; set; }
+    public double? Altitude { get; set; }
+    public string? DeviceInfo { get; set; }
+    public string? AppVersion { get; set; }
+    public DateTime RecordedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class TrackingSettingsResponse
+{
+    public Guid Id { get; set; }
+    public Guid? UserId { get; set; }
+    public Guid? MerchantId { get; set; }
+    public bool EnableLocationTracking { get; set; }
+    public bool EnablePushNotifications { get; set; }
+    public bool EnableSMSNotifications { get; set; }
+    public bool EnableEmailNotifications { get; set; }
+    public int LocationUpdateInterval { get; set; }
+    public int NotificationInterval { get; set; }
+    public double LocationAccuracyThreshold { get; set; }
+    public bool EnableETAUpdates { get; set; }
+    public int ETAUpdateInterval { get; set; }
+    public bool EnableDelayAlerts { get; set; }
+    public int DelayThresholdMinutes { get; set; }
+    public bool EnableNearbyAlerts { get; set; }
+    public double NearbyDistanceMeters { get; set; }
+    public string? PreferredLanguage { get; set; }
+    public string? TimeZone { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+
+public class UpdateTrackingSettingsRequestModel
+{
+    public bool EnableLocationTracking { get; set; }
+    public bool EnablePushNotifications { get; set; }
+    public bool EnableSMSNotifications { get; set; }
+    public bool EnableEmailNotifications { get; set; }
+    public int LocationUpdateInterval { get; set; }
+    public int NotificationInterval { get; set; }
+    public double LocationAccuracyThreshold { get; set; }
+    public bool EnableETAUpdates { get; set; }
+    public int ETAUpdateInterval { get; set; }
+    public bool EnableDelayAlerts { get; set; }
+    public int DelayThresholdMinutes { get; set; }
+    public bool EnableNearbyAlerts { get; set; }
+    public double NearbyDistanceMeters { get; set; }
+    public string? PreferredLanguage { get; set; }
+    public string? TimeZone { get; set; }
+}
+
+// User self-service models
+public class UserProfileResponse
+{
+    public Guid Id { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+    public string Role { get; set; } = string.Empty;
+    public bool IsEmailVerified { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class UpdateUserProfileRequest
+{
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+    public string? AvatarUrl { get; set; }
+}
+
+public class UserNotificationPreferencesResponse
+{
+    public Guid Id { get; set; }
+    public Guid UserId { get; set; }
+    public bool EmailEnabled { get; set; }
+    public bool EmailOrderUpdates { get; set; }
+    public bool EmailPromotions { get; set; }
+    public bool EmailNewsletter { get; set; }
+    public bool EmailSecurityAlerts { get; set; }
+    public bool SmsEnabled { get; set; }
+    public bool SmsOrderUpdates { get; set; }
+    public bool SmsPromotions { get; set; }
+    public bool SmsSecurityAlerts { get; set; }
+    public bool PushEnabled { get; set; }
+    public bool PushOrderUpdates { get; set; }
+    public bool PushPromotions { get; set; }
+    public bool PushMerchantUpdates { get; set; }
+    public bool PushSecurityAlerts { get; set; }
+    public bool SoundEnabled { get; set; }
+    public bool DesktopNotifications { get; set; }
+    public string NotificationSound { get; set; } = "default";
+    public bool NewOrderNotifications { get; set; }
+    public bool StatusChangeNotifications { get; set; }
+    public bool CancellationNotifications { get; set; }
+    public TimeSpan? QuietStartTime { get; set; }
+    public TimeSpan? QuietEndTime { get; set; }
+    public bool RespectQuietHours { get; set; }
+    public string Language { get; set; } = "tr-TR";
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class UpdateUserNotificationPreferencesRequestModel
+{
+    public bool? EmailEnabled { get; set; }
+    public bool? EmailOrderUpdates { get; set; }
+    public bool? EmailPromotions { get; set; }
+    public bool? EmailNewsletter { get; set; }
+    public bool? EmailSecurityAlerts { get; set; }
+    public bool? SmsEnabled { get; set; }
+    public bool? SmsOrderUpdates { get; set; }
+    public bool? SmsPromotions { get; set; }
+    public bool? SmsSecurityAlerts { get; set; }
+    public bool? PushEnabled { get; set; }
+    public bool? PushOrderUpdates { get; set; }
+    public bool? PushPromotions { get; set; }
+    public bool? PushMerchantUpdates { get; set; }
+    public bool? PushSecurityAlerts { get; set; }
+    public bool? SoundEnabled { get; set; }
+    public bool? DesktopNotifications { get; set; }
+    public string? NotificationSound { get; set; }
+    public bool? NewOrderNotifications { get; set; }
+    public bool? StatusChangeNotifications { get; set; }
+    public bool? CancellationNotifications { get; set; }
+    public TimeSpan? QuietStartTime { get; set; }
+    public TimeSpan? QuietEndTime { get; set; }
+    public bool? RespectQuietHours { get; set; }
+    public string? Language { get; set; }
+}
+
+public class AddressResponse
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string FullAddress { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string District { get; set; } = string.Empty;
+    public decimal Latitude { get; set; }
+    public decimal Longitude { get; set; }
+    public bool IsDefault { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class CreateAddressRequestModel
+{
+    public string Title { get; set; } = string.Empty;
+    public string FullAddress { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string District { get; set; } = string.Empty;
+    public decimal Latitude { get; set; }
+    public decimal Longitude { get; set; }
+}
+
+public class UpdateAddressRequestModel : CreateAddressRequestModel { }
+
+public class AddToFavoritesRequestModel
+{
+    public Guid ProductId { get; set; }
+}
+
+public class FavoriteProductResponse
+{
+    public Guid Id { get; set; }
+    public Guid ProductId { get; set; }
+    public string ProductName { get; set; } = string.Empty;
+    public string? ProductDescription { get; set; }
+    public decimal Price { get; set; }
+    public string? ImageUrl { get; set; }
+    public Guid MerchantId { get; set; }
+    public string MerchantName { get; set; } = string.Empty;
+    public bool IsAvailable { get; set; }
+    public DateTime AddedAt { get; set; }
+}
+
+public class OrderResponseModel
+{
+    public Guid Id { get; set; }
+    public string OrderNumber { get; set; } = string.Empty;
+    public Guid UserId { get; set; }
+    public Guid MerchantId { get; set; }
+    public string MerchantName { get; set; } = string.Empty;
+    public Guid? CourierId { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public decimal SubTotal { get; set; }
+    public decimal DeliveryFee { get; set; }
+    public decimal Discount { get; set; }
+    public decimal Total { get; set; }
+    public string PaymentMethod { get; set; } = string.Empty;
+    public string PaymentStatus { get; set; } = string.Empty;
+    public string DeliveryAddress { get; set; } = string.Empty;
+    public decimal? DeliveryLatitude { get; set; }
+    public decimal? DeliveryLongitude { get; set; }
+    public DateTime? EstimatedDeliveryTime { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public List<OrderLineResponseModel> Items { get; set; } = new();
+}
+
+public class OrderLineResponseModel
+{
+    public Guid Id { get; set; }
+    public Guid ProductId { get; set; }
+    public Guid? ProductVariantId { get; set; }
+    public string ProductName { get; set; } = string.Empty;
+    public string? VariantName { get; set; }
+    public int Quantity { get; set; }
+    public decimal UnitPrice { get; set; }
+    public decimal TotalPrice { get; set; }
+    public List<OrderLineOptionResponseModel> Options { get; set; } = new();
+}
+
+public class OrderLineOptionResponseModel
+{
+    public Guid Id { get; set; }
+    public Guid ProductOptionId { get; set; }
+    public string OptionName { get; set; } = string.Empty;
+    public decimal ExtraPrice { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class OrderTimelineResponseModel
+{
+    public DateTime Timestamp { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string? ActorName { get; set; }
+}
+
+public class OrderDetailsResponseModel : OrderResponseModel
+{
+    public DateTime? CompletedAt { get; set; }
+    public List<OrderTimelineResponseModel> Timeline { get; set; } = new();
+}
+
+public class CancelOrderRequestModel
+{
+    public Guid OrderId { get; set; }
+    public string Reason { get; set; } = string.Empty;
+}
+
+// Geo analytics models
+public class NearbyMerchantResponse
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string Address { get; set; } = string.Empty;
+    public double DistanceKm { get; set; }
+    public decimal DeliveryFee { get; set; }
+    public int EstimatedDeliveryTimeMinutes { get; set; }
+    public decimal? Rating { get; set; }
+    public int TotalReviews { get; set; }
+    public bool IsOpen { get; set; }
+    public string? LogoUrl { get; set; }
+    public int? CategoryType { get; set; }
+}
+
+public class DeliveryEstimateResponse
+{
+    public int EstimatedDeliveryTimeMinutes { get; set; }
+    public decimal DeliveryFee { get; set; }
+    public bool IsInDeliveryZone { get; set; }
+    public string? ZoneName { get; set; }
+    public double DistanceKm { get; set; }
+}
+
+public class LocationSuggestionResponse
+{
+    public string Address { get; set; } = string.Empty;
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public string? District { get; set; }
+    public string? City { get; set; }
+    public double? DistanceKm { get; set; }
+}
+
+public class SaveUserLocationRequestModel
+{
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public string? Address { get; set; }
+}
+
+public class MerchantInAreaResponse
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public string? Description { get; set; }
+}
+
+public class UserLocationResponseModel
+{
+    public Guid Id { get; set; }
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public string? Address { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class LocationAnalyticsResponseModel
+{
+    public int TotalLocations { get; set; }
+    public int UniqueUsers { get; set; }
+    public List<LocationHeatmapDataModel> HeatmapData { get; set; } = new();
+}
+
+public class LocationHeatmapDataModel
+{
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public int Count { get; set; }
+}
+
+public class DeliveryZoneCoverageResponseModel
+{
+    public int TotalZones { get; set; }
+    public List<DeliveryZoneSummaryModel> Zones { get; set; } = new();
+}
+
+public class DeliveryZoneSummaryModel
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public int MerchantCount { get; set; }
+}
+
+// Audit logging models
+public class UserActivityLogResponse
+{
+    public Guid Id { get; set; }
+    public Guid UserId { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public string ActivityType { get; set; } = string.Empty;
+    public string ActivityDescription { get; set; } = string.Empty;
+    public string? EntityType { get; set; }
+    public string? EntityId { get; set; }
+    public string? ActivityData { get; set; }
+    public string? IpAddress { get; set; }
+    public string? UserAgent { get; set; }
+    public string? SessionId { get; set; }
+    public string? RequestId { get; set; }
+    public string? DeviceType { get; set; }
+    public string? Browser { get; set; }
+    public string? OperatingSystem { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
+    public string? Location { get; set; }
+    public DateTime Timestamp { get; set; }
+    public int Duration { get; set; }
+    public bool IsSuccess { get; set; }
+    public string? ErrorMessage { get; set; }
+}
+
+public class UserActivityQueryRequestModel
+{
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public Guid? UserId { get; set; }
+    public string? UserName { get; set; }
+    public string? ActivityType { get; set; }
+    public string? EntityType { get; set; }
+    public string? EntityId { get; set; }
+    public string? DeviceType { get; set; }
+    public string? Browser { get; set; }
+    public string? OperatingSystem { get; set; }
+    public bool? IsSuccess { get; set; }
+    public int PageNumber { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+    public string? SortBy { get; set; } = "Timestamp";
+    public string? SortDirection { get; set; } = "DESC";
+}
+
+public class SystemChangeLogResponse
+{
+    public Guid Id { get; set; }
+    public string ChangeType { get; set; } = string.Empty;
+    public string EntityType { get; set; } = string.Empty;
+    public string EntityId { get; set; } = string.Empty;
+    public string? EntityName { get; set; }
+    public string? OldValues { get; set; }
+    public string? NewValues { get; set; }
+    public string? ChangedFields { get; set; }
+    public string? ChangeReason { get; set; }
+    public string? ChangeSource { get; set; }
+    public Guid? ChangedByUserId { get; set; }
+    public string? ChangedByUserName { get; set; }
+    public string? IpAddress { get; set; }
+    public string? UserAgent { get; set; }
+    public string? SessionId { get; set; }
+    public string? RequestId { get; set; }
+    public string? CorrelationId { get; set; }
+    public DateTime Timestamp { get; set; }
+    public bool IsSuccess { get; set; }
+    public string? ErrorMessage { get; set; }
+    public string? Severity { get; set; }
+}
+
+public class SystemChangeQueryRequestModel
+{
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public string? ChangeType { get; set; }
+    public string? EntityType { get; set; }
+    public string? EntityId { get; set; }
+    public Guid? ChangedByUserId { get; set; }
+    public string? ChangedByUserName { get; set; }
+    public string? ChangeSource { get; set; }
+    public string? Severity { get; set; }
+    public bool? IsSuccess { get; set; }
+    public int PageNumber { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+    public string? SortBy { get; set; } = "Timestamp";
+    public string? SortDirection { get; set; } = "DESC";
+}
+
+public class SecurityEventLogResponse
+{
+    public Guid Id { get; set; }
+    public string EventType { get; set; } = string.Empty;
+    public string EventTitle { get; set; } = string.Empty;
+    public string EventDescription { get; set; } = string.Empty;
+    public string? Severity { get; set; }
+    public string? RiskLevel { get; set; }
+    public Guid? UserId { get; set; }
+    public string? UserName { get; set; }
+    public string? UserRole { get; set; }
+    public string? IpAddress { get; set; }
+    public string? UserAgent { get; set; }
+    public string? DeviceFingerprint { get; set; }
+    public string? SessionId { get; set; }
+    public string? RequestId { get; set; }
+    public string? CorrelationId { get; set; }
+    public string? EventData { get; set; }
+    public string? ThreatIndicators { get; set; }
+    public string? MitigationActions { get; set; }
+    public string? Source { get; set; }
+    public string? Category { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
+    public string? Location { get; set; }
+    public DateTime Timestamp { get; set; }
+    public bool IsResolved { get; set; }
+    public DateTime? ResolvedAt { get; set; }
+    public string? ResolvedBy { get; set; }
+    public string? ResolutionNotes { get; set; }
+    public bool RequiresInvestigation { get; set; }
+    public bool IsFalsePositive { get; set; }
+}
+
+public class SecurityEventQueryRequestModel
+{
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public string? EventType { get; set; }
+    public string? Severity { get; set; }
+    public string? RiskLevel { get; set; }
+    public Guid? UserId { get; set; }
+    public string? UserName { get; set; }
+    public string? UserRole { get; set; }
+    public string? IpAddress { get; set; }
+    public string? Source { get; set; }
+    public string? Category { get; set; }
+    public bool? IsResolved { get; set; }
+    public bool? RequiresInvestigation { get; set; }
+    public bool? IsFalsePositive { get; set; }
+    public int PageNumber { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+    public string? SortBy { get; set; } = "Timestamp";
+    public string? SortDirection { get; set; } = "DESC";
+}
+
+public class AuditLogAnalyticsRequestModel
+{
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public string? GroupBy { get; set; } = "DAY";
+    public string? EntityType { get; set; }
+    public string? Action { get; set; }
+    public string? UserId { get; set; }
+}
+
+public class AuditLogAnalyticsResponse
+{
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public string GroupBy { get; set; } = string.Empty;
+    public List<AuditLogAnalyticsData> Data { get; set; } = new();
+    public AuditLogAnalyticsSummary Summary { get; set; } = new();
+    public DateTime GeneratedAt { get; set; }
+}
+
+public class AuditLogAnalyticsData
+{
+    public string Period { get; set; } = string.Empty;
+    public int TotalEvents { get; set; }
+    public int SuccessfulEvents { get; set; }
+    public int FailedEvents { get; set; }
+    public int UniqueUsers { get; set; }
+    public Dictionary<string, int> ActionCounts { get; set; } = new();
+    public Dictionary<string, int> EntityTypeCounts { get; set; } = new();
+}
+
+public class AuditLogAnalyticsSummary
+{
+    public int TotalEvents { get; set; }
+    public int SuccessfulEvents { get; set; }
+    public int FailedEvents { get; set; }
+    public int UniqueUsers { get; set; }
+    public double SuccessRate { get; set; }
+    public Dictionary<string, int> TopActions { get; set; } = new();
+    public Dictionary<string, int> TopEntityTypes { get; set; } = new();
+    public Dictionary<string, int> TopUsers { get; set; } = new();
+    public List<string> Alerts { get; set; } = new();
+}
+
+public class LogAnalysisReportResponse
+{
+    public Guid Id { get; set; }
+    public string ReportType { get; set; } = string.Empty;
+    public string ReportTitle { get; set; } = string.Empty;
+    public string? ReportDescription { get; set; }
+    public DateTime ReportStartDate { get; set; }
+    public DateTime ReportEndDate { get; set; }
+    public string? TimeZone { get; set; }
+    public string? ReportData { get; set; }
+    public string? Summary { get; set; }
+    public string? Insights { get; set; }
+    public string? Alerts { get; set; }
+    public string? Charts { get; set; }
+    public string? Status { get; set; }
+    public string? Format { get; set; }
+    public string? FilePath { get; set; }
+    public string? FileName { get; set; }
+    public long? FileSizeBytes { get; set; }
+    public Guid? GeneratedByUserId { get; set; }
+    public string? GeneratedByUserName { get; set; }
+    public string? GeneratedByRole { get; set; }
+    public DateTime GeneratedAt { get; set; }
+    public DateTime? ExpiresAt { get; set; }
+    public bool IsPublic { get; set; }
+    public string? Recipients { get; set; }
+    public bool IsScheduled { get; set; }
+    public string? SchedulePattern { get; set; }
+    public DateTime? NextScheduledRun { get; set; }
+    public int GenerationTimeMs { get; set; }
+    public string? ErrorMessage { get; set; }
+}
+
+// Admin / platform models
+public class AdminDashboardResponse
+{
+    public AdminDashboardStats Stats { get; set; } = new();
+    public List<RecentMerchantApplicationResponse> RecentApplications { get; set; } = new();
+    public List<SystemMetricsResponse> SystemMetrics { get; set; } = new();
+    public List<AdminNotificationResponse> Notifications { get; set; } = new();
+}
+
+public class AdminDashboardStats
+{
+    public int TotalUsers { get; set; }
+    public int TotalMerchants { get; set; }
+    public int TotalCouriers { get; set; }
+    public int TotalOrders { get; set; }
+    public int PendingMerchantApplications { get; set; }
+    public int ActiveOrders { get; set; }
+    public decimal TotalRevenue { get; set; }
+    public decimal TodayRevenue { get; set; }
+    public int SystemUptime { get; set; }
+}
+
+public class RecentMerchantApplicationResponse
+{
+    public Guid Id { get; set; }
+    public string BusinessName { get; set; } = string.Empty;
+    public string OwnerName { get; set; } = string.Empty;
+    public string OwnerEmail { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public DateTime SubmittedAt { get; set; }
+    public string? RejectionReason { get; set; }
+}
+
+public class SystemMetricsResponse
+{
+    public string MetricName { get; set; } = string.Empty;
+    public decimal Value { get; set; }
+    public string Unit { get; set; } = string.Empty;
+    public DateTime Timestamp { get; set; }
+    public string Trend { get; set; } = "stable";
+}
+
+public class AdminNotificationResponse
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public bool IsRead { get; set; }
+}
+
+public class SystemStatisticsResponse
+{
+    public UserStatisticsResponse UserStats { get; set; } = new();
+    public MerchantStatisticsResponse MerchantStats { get; set; } = new();
+    public AdminOrderStatisticsResponse OrderStats { get; set; } = new();
+    public RevenueStatisticsResponse RevenueStats { get; set; } = new();
+    public PerformanceMetricsResponse PerformanceMetrics { get; set; } = new();
+}
+
+public class UserStatisticsResponse
+{
+    public int TotalUsers { get; set; }
+    public int ActiveUsers { get; set; }
+    public int NewUsersThisMonth { get; set; }
+    public int NewUsersToday { get; set; }
+    public List<UserGrowthDataResponse> UserGrowthData { get; set; } = new();
+}
+
+public class MerchantStatisticsResponse
+{
+    public int TotalMerchants { get; set; }
+    public int ActiveMerchants { get; set; }
+    public int PendingApplications { get; set; }
+    public int ApprovedThisMonth { get; set; }
+    public List<MerchantGrowthDataResponse> MerchantGrowthData { get; set; } = new();
+}
+
+public class AdminOrderStatisticsResponse
+{
+    public int TotalOrders { get; set; }
+    public int CompletedOrders { get; set; }
+    public int CancelledOrders { get; set; }
+    public int PendingOrders { get; set; }
+    public decimal AverageOrderValue { get; set; }
+    public List<AdminOrderTrendDataResponse> OrderTrendData { get; set; } = new();
+}
+
+public class RevenueStatisticsResponse
+{
+    public decimal TotalRevenue { get; set; }
+    public decimal MonthlyRevenue { get; set; }
+    public decimal DailyRevenue { get; set; }
+    public decimal AverageOrderValue { get; set; }
+    public List<RevenueTrendDataResponse> RevenueTrendData { get; set; } = new();
+}
+
+public class PerformanceMetricsResponse
+{
+    public decimal SystemUptime { get; set; }
+    public decimal AverageResponseTime { get; set; }
+    public int ActiveConnections { get; set; }
+    public decimal CpuUsage { get; set; }
+    public decimal MemoryUsage { get; set; }
+    public int DatabaseConnections { get; set; }
+}
+
+public class UserGrowthDataResponse
+{
+    public DateTime Date { get; set; }
+    public int NewUsers { get; set; }
+    public int TotalUsers { get; set; }
+}
+
+public class MerchantGrowthDataResponse
+{
+    public DateTime Date { get; set; }
+    public int NewMerchants { get; set; }
+    public int TotalMerchants { get; set; }
+}
+
+public class AdminOrderTrendDataResponse
+{
+    public DateTime Date { get; set; }
+    public int OrderCount { get; set; }
+    public decimal TotalValue { get; set; }
+}
+
+public class RevenueTrendDataResponse
+{
+    public DateTime Date { get; set; }
+    public decimal Revenue { get; set; }
+    public int OrderCount { get; set; }
+}
+
+public class AuditLogResponse
+{
+    public Guid Id { get; set; }
+    public Guid UserId { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public string Action { get; set; } = string.Empty;
+    public string EntityType { get; set; } = string.Empty;
+    public string EntityId { get; set; } = string.Empty;
+    public string Details { get; set; } = string.Empty;
+    public string IpAddress { get; set; } = string.Empty;
+    public string UserAgent { get; set; } = string.Empty;
+    public DateTime Timestamp { get; set; }
+}
+
+public class AuditLogStatsResponse
+{
+    public int TotalLogs { get; set; }
+    public int LogsToday { get; set; }
+    public int LogsThisWeek { get; set; }
+    public int LogsThisMonth { get; set; }
+    public List<AuditLogSummaryResponse> ActionSummary { get; set; } = new();
+    public List<AuditLogSummaryResponse> UserSummary { get; set; } = new();
+}
+
+public class AuditLogSummaryResponse
+{
+    public string Key { get; set; } = string.Empty;
+    public int Count { get; set; }
+    public decimal Percentage { get; set; }
+}
+
+public class PaginationQueryRequest
+{
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+}
+
 // Merchant Documents
 public class MerchantDocumentResponse
 {

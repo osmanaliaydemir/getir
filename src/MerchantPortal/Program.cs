@@ -138,6 +138,10 @@ builder.Services.AddScoped<IInternationalizationService, InternationalizationSer
 builder.Services.AddScoped<IRateLimitAdminService, RateLimitAdminService>();
 builder.Services.AddScoped<IRealtimeTrackingPortalService, RealtimeTrackingPortalService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<IAuditLoggingPortalService, AuditLoggingPortalService>();
+builder.Services.AddScoped<IPlatformAdminPortalService, PlatformAdminPortalService>();
+builder.Services.AddScoped<IUserSelfService, UserSelfService>();
+builder.Services.AddScoped<IGeoAnalyticsPortalService, GeoAnalyticsPortalService>();
 builder.Services.AddHttpClient<IMerchantDocumentService, MerchantDocumentService>(client =>
 {
 	client.BaseAddress = new Uri(apiSettings.BaseUrl);

@@ -162,6 +162,35 @@ public class ApiClient : IApiClient
     }
 
     /// <summary>
+    /// PUT isteği gönder (başarı durumu ile)
+    /// </summary>
+    /// <param name="endpoint">API endpoint</param>
+    /// <param name="data">Güncellenecek veri</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>İşlem başarı durumu</returns>
+    public async Task<bool> PutAsync(string endpoint, object? data = null, CancellationToken ct = default)
+    {
+        try
+        {
+            var json = JsonConvert.SerializeObject(data ?? new { });
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PutAsync(endpoint, content, ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("PUT request to {Endpoint} failed with status {StatusCode}", endpoint, response.StatusCode);
+            }
+
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during PUT request to {Endpoint}", endpoint);
+            return false;
+        }
+    }
+
+    /// <summary>
     /// DELETE isteği gönder (dönüş değeri ile)
     /// </summary>
     /// <typeparam name="T">Dönüş tipi</typeparam>
@@ -207,6 +236,33 @@ public class ApiClient : IApiClient
         {
             _logger.LogError(ex, "Error during DELETE request to {Endpoint}", endpoint);
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Byte dizisi dönen GET isteği gönder
+    /// </summary>
+    /// <param name="endpoint">API endpoint</param>
+    /// <param name="ct">İptal token'ı</param>
+    /// <returns>Byte dizisi</returns>
+    public async Task<byte[]?> GetByteArrayAsync(string endpoint, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(endpoint, ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("GET (byte[]) request to {Endpoint} failed with status {StatusCode}", endpoint, response.StatusCode);
+                return null;
+            }
+
+            return await response.Content.ReadAsByteArrayAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during GET (byte[]) request to {Endpoint}", endpoint);
+            return null;
         }
     }
 }
